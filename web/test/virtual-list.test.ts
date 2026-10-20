@@ -61,8 +61,15 @@ describe('auto-follow', () => {
     expect(scrolled(up, { scrollTop: total - viewport - FOLLOW_THRESHOLD + 1, viewport, total }).following).toBe(true);
   });
 
-  test('a small bounce within the threshold does not stop following', () => {
-    expect(scrolled(atEnd, { scrollTop: total - viewport - FOLLOW_THRESHOLD + 10, viewport, total }).following).toBe(true);
+  test('the reader scrolling up in small steps (a touch or trackpad scroll, a few pixels a frame) stops following at the first step', () => {
+    const step = scrolled(atEnd, { scrollTop: total - viewport - 20, viewport, total });
+    expect(step.following).toBe(false);
+    expect(scrolled(step, { scrollTop: total - viewport - 40, viewport, total }).following).toBe(false);
+  });
+
+  test('a rubber-band bounce past the end, settling back on it, does not stop following', () => {
+    const overshoot = scrolled(atEnd, { scrollTop: total - viewport + 60, viewport, total });
+    expect(scrolled(overshoot, { scrollTop: total - viewport, viewport, total }).following).toBe(true);
   });
 
   test('distance from the end is what the jump-to-latest button is shown by', () => {

@@ -55,17 +55,22 @@ export function visibleWindow({ layout, scrollTop, viewport, overscan }: { layou
 export interface FollowState {
   /** The page follows the reply as it grows. */
   following: boolean;
-  /** Where the page was scrolled to last time, to tell the reader scrolling up from the page growing. */
+  /** Where the page was scrolled to last time, to tell the reader scrolling up from the page growing. A scroll the page makes itself must set it, or the next scroll reads as the reader moving up. */
   lastTop: number;
 }
 
 export const distanceFromEnd = ({ scrollTop, viewport, total }: { scrollTop: number; viewport: number; total: number }) => Math.max(0, total - viewport - scrollTop);
 
-/** What a scroll does to following: reaching the end resumes it, moving up away from the end stops it, and the page merely growing changes nothing. */
+/**
+ * What a scroll does to following: any move up by the reader stops it, even inside the threshold (a touch or trackpad scroll moves a few
+ * pixels a frame, so a threshold check alone would pull the page back down at every step); being on the end (a bounce past it settles
+ * there) or moving down into the threshold resumes it; and the page merely growing changes nothing.
+ */
 export function scrolled(state: FollowState, now: { scrollTop: number; viewport: number; total: number }): FollowState {
   const distance = distanceFromEnd(now);
-  if (distance <= FOLLOW_THRESHOLD) return { following: true, lastTop: now.scrollTop };
-  return { following: state.following && now.scrollTop >= state.lastTop - 1, lastTop: now.scrollTop };
+  if (distance <= 1) return { following: true, lastTop: now.scrollTop };
+  if (now.scrollTop < state.lastTop - 1) return { following: false, lastTop: now.scrollTop };
+  return { following: state.following || distance <= FOLLOW_THRESHOLD, lastTop: now.scrollTop };
 }
 
 /** Jump to latest: follow again, from the last screen. */
