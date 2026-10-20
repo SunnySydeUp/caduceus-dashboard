@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-skin="nous" data-density="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Caduceus Dashboard: design system specimen</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+/* ===== Reference component styles. Every value comes from tokens.css. ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--cd-bg-canvas);
+  color: var(--cd-fg-default);
+  font: var(--cd-text-ui)/var(--cd-leading-ui) var(--cd-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible, .is-focus {
+  outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring);
+  outline-offset: var(--cd-focus-ring-offset);
+}
+::selection { background: var(--cd-selection); }
+svg.i { inline-size: var(--cd-icon); block-size: var(--cd-icon); flex: none; stroke: currentColor; fill: none; stroke-width: var(--cd-icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+svg.i-sm { inline-size: var(--cd-icon-sm); block-size: var(--cd-icon-sm); }
+.mono { font-family: var(--cd-font-mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--cd-fg-muted); }
+.subtle { color: var(--cd-fg-subtle); }
+.overline { font: var(--cd-weight-medium) var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); text-transform: uppercase; letter-spacing: var(--cd-tracking-label); color: var(--cd-fg-subtle); margin: 0; }
+.sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-gap); }
+.stack { display: grid; gap: var(--cd-gap); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+
+/* hit-area expansion: the visual stays small, the target reaches --cd-target-min */
+.hit { position: relative; }
+.hit::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
+
+/* ---- Specimen page chrome ---- */
+.page { max-inline-size: 80rem; margin-inline: auto; padding: var(--cd-space-6) var(--cd-page-px) var(--cd-space-16); }
+.page-head { display: flex; flex-wrap: wrap; gap: var(--cd-space-4); align-items: end; justify-content: space-between; padding-block-end: var(--cd-space-6); border-block-end: 1px solid var(--cd-border-subtle); }
+.wordmark { display: flex; align-items: center; gap: var(--cd-space-3); }
+.wordmark__glyph { flex: none; inline-size: 40px; block-size: 40px; border-radius: var(--cd-radius-lg); background: var(--cd-accent); color: var(--cd-on-accent); display: grid; place-items: center; font: var(--cd-weight-bold) var(--cd-text-xl)/1 var(--cd-font-display); }
+h1 { font: var(--cd-weight-semibold) var(--cd-text-2xl)/var(--cd-leading-2xl) var(--cd-font-display); letter-spacing: var(--cd-tracking-tight); margin: 0; }
+h2 { font: var(--cd-weight-semibold) var(--cd-text-xl)/var(--cd-leading-xl) var(--cd-font-sans); letter-spacing: var(--cd-tracking-tight); margin: 0; }
+h3 { font: var(--cd-weight-semibold) var(--cd-text-ui)/var(--cd-leading-ui) var(--cd-font-sans); margin: 0; }
+p { margin: 0; }
+section.sec { padding-block: var(--cd-space-10) 0; display: grid; gap: var(--cd-space-4); }
+.sec__head { display: grid; gap: var(--cd-space-1); max-inline-size: var(--cd-measure); }
+.grid { display: grid; gap: var(--cd-space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.grid--wide { grid-template-columns: repeat(auto-fill, minmax(min(100%, 34rem), 1fr)); }
+.spec { background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); padding: var(--cd-card-p); display: grid; gap: var(--cd-space-3); align-content: start; min-inline-size: 0; }
+.spec--bare { background: transparent; border: 0; padding: 0; }
+.controls { position: sticky; inset-block-start: 0; z-index: var(--cd-z-appbar); background: color-mix(in srgb, var(--cd-bg-canvas) 92%, transparent); backdrop-filter: blur(8px); border-block-end: 1px solid var(--cd-border-subtle); }
+@media (max-width: 40rem) { .controls { position: static; } }
+.controls__inner { max-inline-size: 80rem; margin-inline: auto; padding: var(--cd-space-2) var(--cd-page-px); display: flex; flex-wrap: wrap; gap: var(--cd-space-2) var(--cd-space-4); align-items: center; }
+.controls label.overline { margin-inline-end: var(--cd-space-1); }
+
+/* ---- Swatches ---- */
+.swatches { display: grid; gap: var(--cd-space-2); grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
+.sw { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); overflow: hidden; background: var(--cd-bg-surface); }
+.sw__chip { block-size: 3rem; display: grid; place-items: center; font: var(--cd-weight-semibold) var(--cd-text-sm)/1 var(--cd-font-sans); }
+.sw__meta { padding: var(--cd-space-1-5) var(--cd-space-2); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); color: var(--cd-fg-muted); overflow-wrap: anywhere; }
+.tone-table { display: grid; gap: var(--cd-space-1-5); }
+.tone-row { display: grid; grid-template-columns: 6.5rem 1fr; gap: var(--cd-space-2); align-items: center; }
+.tone-cells { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--cd-space-1-5); }
+.tone-cell { border-radius: var(--cd-radius-sm); padding: var(--cd-space-1) var(--cd-space-2); font: var(--cd-weight-medium) var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-sans); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- Tone plumbing: any element with data-tone exposes --t-* ---- */
+[data-tone="neutral"]  { --t-fg: var(--cd-tone-neutral-fg);  --t-solid: var(--cd-tone-neutral-solid);  --t-soft: var(--cd-tone-neutral-soft);  --t-border: var(--cd-tone-neutral-border);  --t-on: var(--cd-tone-neutral-on); }
+[data-tone="info"]     { --t-fg: var(--cd-tone-info-fg);     --t-solid: var(--cd-tone-info-solid);     --t-soft: var(--cd-tone-info-soft);     --t-border: var(--cd-tone-info-border);     --t-on: var(--cd-tone-info-on); }
+[data-tone="success"]  { --t-fg: var(--cd-tone-success-fg);  --t-solid: var(--cd-tone-success-solid);  --t-soft: var(--cd-tone-success-soft);  --t-border: var(--cd-tone-success-border);  --t-on: var(--cd-tone-success-on); }
+[data-tone="warning"]  { --t-fg: var(--cd-tone-warning-fg);  --t-solid: var(--cd-tone-warning-solid);  --t-soft: var(--cd-tone-warning-soft);  --t-border: var(--cd-tone-warning-border);  --t-on: var(--cd-tone-warning-on); }
+[data-tone="danger"]   { --t-fg: var(--cd-tone-danger-fg);   --t-solid: var(--cd-tone-danger-solid);   --t-soft: var(--cd-tone-danger-soft);   --t-border: var(--cd-tone-danger-border);   --t-on: var(--cd-tone-danger-on); }
+[data-tone="running"]  { --t-fg: var(--cd-tone-running-fg);  --t-solid: var(--cd-tone-running-solid);  --t-soft: var(--cd-tone-running-soft);  --t-border: var(--cd-tone-running-border);  --t-on: var(--cd-tone-running-on); }
+[data-tone="paused"]   { --t-fg: var(--cd-tone-paused-fg);   --t-solid: var(--cd-tone-paused-solid);   --t-soft: var(--cd-tone-paused-soft);   --t-border: var(--cd-tone-paused-border);   --t-on: var(--cd-tone-paused-on); }
+[data-tone="stale"]    { --t-fg: var(--cd-tone-stale-fg);    --t-solid: var(--cd-tone-stale-solid);    --t-soft: var(--cd-tone-stale-soft);    --t-border: var(--cd-tone-stale-border);    --t-on: var(--cd-tone-stale-on); }
+[data-tone="blocked"]  { --t-fg: var(--cd-tone-blocked-fg);  --t-solid: var(--cd-tone-blocked-solid);  --t-soft: var(--cd-tone-blocked-soft);  --t-border: var(--cd-tone-blocked-border);  --t-on: var(--cd-tone-blocked-on); }
+[data-tone="accent"]   { --t-fg: var(--cd-accent-fg);        --t-solid: var(--cd-accent);              --t-soft: var(--cd-accent-soft);        --t-border: var(--cd-accent-border);        --t-on: var(--cd-on-accent); }
+
+/* ---- Status badge ---- */
+.status { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); block-size: 1.5rem; padding-inline: var(--cd-space-2); border-radius: var(--cd-radius-full); background: var(--t-soft); color: var(--t-fg); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); white-space: nowrap; }
+.status svg.i { inline-size: 14px; block-size: 14px; stroke: var(--t-solid); stroke-width: 2; }
+.status--plain { background: transparent; padding-inline: 0; }
+.status--solid { background: var(--t-solid); color: var(--t-on); }
+.status--solid svg.i { stroke: currentColor; }
+.status--attn { box-shadow: inset 0 0 0 1px var(--t-border); font-weight: var(--cd-weight-semibold); }
+.dot { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--t-solid); flex: none; }
+.dot--hollow { background: transparent; box-shadow: inset 0 0 0 2px var(--t-solid); }
+.dot--dashed { background: transparent; border: 1.5px dashed var(--t-solid); }
+.spin { animation: hc-spin 1s linear infinite; transform-origin: center; }
+.pulse { position: relative; }
+.pulse::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--t-solid); opacity: 0; animation: hc-pulse var(--cd-dur-pulse) var(--cd-ease-standard) infinite; }
+@keyframes hc-spin { to { transform: rotate(360deg); } }
+@keyframes hc-pulse { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .spin, .pulse::after, .skel { animation: none !important; } }
+[data-motion="reduce"] .spin, [data-motion="reduce"] .pulse::after, [data-motion="reduce"] .skel { animation: none !important; }
+
+/* ---- Count badge ---- */
+.count { display: inline-grid; place-items: center; min-inline-size: 1.25rem; block-size: 1.25rem; padding-inline: var(--cd-space-1); border-radius: var(--cd-radius-full); background: var(--cd-tone-warning-solid); color: var(--cd-tone-warning-on); font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; }
+.count--accent { background: var(--cd-accent); color: var(--cd-on-accent); }
+
+/* ---- Buttons ---- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-control-px); border-radius: var(--cd-radius-md); border: 1px solid transparent; background: transparent; color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-ui)/1 var(--cd-font-sans); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: background-color var(--cd-dur-fast) var(--cd-ease-standard), border-color var(--cd-dur-fast) var(--cd-ease-standard), color var(--cd-dur-fast) var(--cd-ease-standard); }
+.btn { flex-shrink: 0; }
+.btn--primary { background: var(--cd-accent); color: var(--cd-on-accent); }
+.btn--secondary { background: var(--cd-bg-surface); border-color: var(--cd-border-default); }
+.btn--ghost { color: var(--cd-fg-muted); }
+.btn--danger { background: var(--cd-tone-danger-solid); color: var(--cd-tone-danger-on); }
+.btn--danger-quiet { color: var(--cd-tone-danger-fg); border-color: var(--cd-tone-danger-border); background: var(--cd-bg-surface); }
+@media (hover: hover) {
+  .btn--primary:hover { background: var(--cd-accent-hover); }
+  .btn--secondary:hover, .btn--ghost:hover { background: var(--cd-overlay-hover); color: var(--cd-fg-default); }
+  .btn--danger-quiet:hover { background: var(--cd-tone-danger-soft); }
+}
+.btn--primary.is-hover { background: var(--cd-accent-hover); }
+.btn--secondary.is-hover, .btn--ghost.is-hover { background: var(--cd-overlay-hover); color: var(--cd-fg-default); }
+.btn--primary:active, .btn--primary.is-active { background: var(--cd-accent-active); }
+.btn--secondary:active, .btn--ghost:active, .btn.is-active:not(.btn--primary) { background: var(--cd-overlay-pressed); }
+.btn:disabled, .btn[aria-disabled="true"] { background: var(--cd-bg-surface-2); color: var(--cd-fg-disabled); border-color: transparent; cursor: not-allowed; }
+.btn--sm { min-block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); padding-inline: var(--cd-space-2); font-size: var(--cd-text-sm); }
+.btn--lg { min-block-size: var(--cd-control-h-lg); padding-inline: var(--cd-space-5); font-size: var(--cd-text-base); }
+.btn--icon { padding: 0; inline-size: max(var(--cd-control-h), var(--cd-target-min)); }
+.btn--block { inline-size: 100%; }
+.btn .spinner { inline-size: 14px; block-size: 14px; border-radius: 50%; border: 2px solid currentColor; border-inline-end-color: transparent; animation: hc-spin 0.8s linear infinite; }
+kbd, .kbd { display: inline-grid; place-items: center; min-inline-size: 1.25rem; block-size: 1.25rem; padding-inline: var(--cd-space-1); border-radius: var(--cd-radius-sm); border: 1px solid var(--cd-border-default); border-block-end-width: 2px; background: var(--cd-bg-surface); color: var(--cd-fg-muted); font: var(--cd-text-xs)/1 var(--cd-font-mono); }
+
+/* ---- Chips ---- */
+.chip { position: relative; display: inline-flex; align-items: center; gap: var(--cd-space-1-5); block-size: var(--cd-control-h-sm); padding-inline: var(--cd-space-3); border-radius: var(--cd-radius-full); border: 1px solid var(--cd-border-default); background: var(--cd-bg-surface); color: var(--cd-fg-muted); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); cursor: pointer; white-space: nowrap; max-inline-size: 100%; }
+button.chip::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
+.chip[aria-pressed="true"], .chip[aria-selected="true"] { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); color: var(--cd-accent-fg); }
+@media (hover: hover) { .chip:hover { background: var(--cd-overlay-hover); color: var(--cd-fg-default); } .chip[aria-pressed="true"]:hover { background: var(--cd-accent-soft-hover); } }
+.chip svg.i { inline-size: 14px; block-size: 14px; }
+.chip__x { display: inline-grid; place-items: center; inline-size: 18px; block-size: 18px; margin-inline-end: calc(var(--cd-space-1) * -1); border-radius: 50%; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; }
+.chip--profile { padding-inline-start: var(--cd-space-1); color: var(--cd-fg-default); }
+.avatar { --av: var(--cd-avatar-8); inline-size: 1.5rem; block-size: 1.5rem; border-radius: 50%; display: inline-grid; place-items: center; background: var(--av); color: var(--cd-on-avatar); font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-sans); flex: none; }
+[data-av="1"] { --av: var(--cd-avatar-1); } [data-av="2"] { --av: var(--cd-avatar-2); } [data-av="3"] { --av: var(--cd-avatar-3); } [data-av="4"] { --av: var(--cd-avatar-4); }
+[data-av="5"] { --av: var(--cd-avatar-5); } [data-av="6"] { --av: var(--cd-avatar-6); } [data-av="7"] { --av: var(--cd-avatar-7); } [data-av="8"] { --av: var(--cd-avatar-8); }
+.avatar--sm { inline-size: 1.25rem; block-size: 1.25rem; font-size: 0.625rem; }
+
+/* ---- Segmented ---- */
+.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-subtle); }
+.seg button { min-block-size: max(calc(var(--cd-control-h) - 6px), var(--cd-target-min)); min-inline-size: var(--cd-target-min); justify-content: center; padding-inline: var(--cd-space-3); border: 0; border-radius: calc(var(--cd-radius-md) - 2px); background: transparent; color: var(--cd-fg-muted); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); cursor: pointer; display: inline-flex; align-items: center; gap: var(--cd-space-1-5); }
+.seg button[aria-checked="true"] { background: var(--cd-bg-surface); color: var(--cd-fg-default); box-shadow: var(--cd-shadow-raised), 0 0 0 1px var(--cd-border-default); }
+
+/* ---- Fields ---- */
+.field { display: grid; gap: var(--cd-space-1-5); min-inline-size: 0; }
+.field__label { font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-default); }
+.field__help { font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-sans); color: var(--cd-fg-subtle); }
+.field__error { display: flex; gap: var(--cd-space-1); align-items: center; font: var(--cd-weight-medium) var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-sans); color: var(--cd-tone-danger-fg); }
+.input { inline-size: 100%; min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-3); border-radius: var(--cd-radius-md); border: 1px solid var(--cd-border-control); background: var(--cd-bg-input); color: var(--cd-fg-default); font: var(--cd-text-input)/1.25 var(--cd-font-sans); transition: border-color var(--cd-dur-fast) var(--cd-ease-standard); }
+.input::placeholder { color: var(--cd-fg-subtle); }
+.input:focus-visible, .input.is-focus { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 0; border-color: var(--cd-focus-ring); }
+.input[aria-invalid="true"] { border-color: var(--cd-tone-danger-solid); }
+.input:disabled { background: var(--cd-bg-surface-2); color: var(--cd-fg-disabled); border-color: var(--cd-border-default); }
+textarea.input { padding-block: var(--cd-space-2); min-block-size: 5rem; resize: vertical; line-height: var(--cd-leading-ui); }
+.input--mono { font-family: var(--cd-font-mono); }
+.input-wrap { position: relative; display: flex; align-items: center; }
+.input-wrap > svg.i { position: absolute; inset-inline-start: var(--cd-space-3); color: var(--cd-fg-subtle); pointer-events: none; }
+.input-wrap > .input { padding-inline-start: calc(var(--cd-space-3) * 2 + var(--cd-icon)); }
+.input-wrap > kbd { position: absolute; inset-inline-end: var(--cd-space-2); }
+select.input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--cd-fg-muted) 50%), linear-gradient(135deg, var(--cd-fg-muted) 50%, transparent 50%); background-size: 5px 5px; background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%; background-repeat: no-repeat; padding-inline-end: var(--cd-space-8); }
+[dir="rtl"] select.input { background-position: 17px 55%, 12px 55%; }
+
+/* switch / checkbox / radio */
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-3); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); }
+.switch { position: relative; inline-size: 2.5rem; block-size: 1.5rem; flex: none; border-radius: var(--cd-radius-full); border: 1px solid var(--cd-border-control); background: var(--cd-bg-surface-2); cursor: pointer; padding: 0; transition: background-color var(--cd-dur-fast) var(--cd-ease-standard); }
+.switch::after { content: ""; position: absolute; inset-block: min(-1px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(-1px, calc((100% - var(--cd-target-min)) / 2)); }
+.switch::before { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 1.125rem; block-size: 1.125rem; border-radius: 50%; background: var(--cd-fg-muted); transition: translate var(--cd-dur-fast) var(--cd-ease-standard), background-color var(--cd-dur-fast); }
+.switch[aria-checked="true"] { background: var(--cd-accent); border-color: var(--cd-accent); }
+.switch[aria-checked="true"]::before { background: var(--cd-on-accent); translate: 1rem 0; }
+[dir="rtl"] .switch[aria-checked="true"]::before { translate: -1rem 0; }
+.switch:disabled { opacity: 1; background: var(--cd-bg-surface-2); border-color: var(--cd-border-default); cursor: not-allowed; }
+.switch:disabled::before { background: var(--cd-fg-disabled); }
+.check { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); cursor: pointer; }
+.check input { appearance: none; margin: 0; inline-size: 1.125rem; block-size: 1.125rem; border: 1.5px solid var(--cd-border-control); border-radius: var(--cd-radius-sm); background: var(--cd-bg-input); display: grid; place-items: center; flex: none; cursor: pointer; }
+.check input[type="radio"] { border-radius: 50%; }
+.check input:checked { background: var(--cd-accent); border-color: var(--cd-accent); }
+.check input[type="checkbox"]:checked::after { content: ""; inline-size: 0.35rem; block-size: 0.6rem; border: solid var(--cd-on-accent); border-width: 0 2px 2px 0; rotate: 45deg; translate: 0 -1px; }
+.check input[type="radio"]:checked::after { content: ""; inline-size: 0.45rem; block-size: 0.45rem; border-radius: 50%; background: var(--cd-on-accent); }
+
+/* ---- Banner / toast ---- */
+.banner { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cd-space-2) var(--cd-space-3); align-items: start; padding: var(--cd-space-3); border-radius: var(--cd-radius-lg); background: var(--t-soft); border: 1px solid var(--t-border); color: var(--cd-fg-default); }
+.banner > svg.i { color: var(--t-solid); margin-block-start: 2px; stroke-width: 2; }
+.banner__title { font-weight: var(--cd-weight-semibold); }
+.banner__body { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
+.banner__actions { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.toast { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cd-space-3); align-items: center; padding: var(--cd-space-3); padding-inline-end: var(--cd-space-2); border-radius: var(--cd-radius-lg); background: var(--cd-bg-overlay); box-shadow: var(--cd-shadow-popover); max-inline-size: 26rem; }
+.toast > svg.i { color: var(--t-solid); stroke-width: 2; }
+.toast__text { display: grid; gap: 2px; min-inline-size: 0; }
+.toast__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-xs); }
+.toast__actions { display: flex; align-items: center; gap: var(--cd-space-1); }
+
+/* ---- Overlays (rendered statically inside a stage) ---- */
+.stage { position: relative; border-radius: var(--cd-radius-lg); overflow: hidden; background: var(--cd-bg-canvas); border: 1px solid var(--cd-border-subtle); min-block-size: 22rem; display: grid; place-items: center; padding: var(--cd-space-4); isolation: isolate; }
+.stage__bg { position: absolute; inset: 0; padding: var(--cd-space-4); display: grid; gap: var(--cd-space-2); align-content: start; z-index: -2; }
+.stage__bg i { display: block; block-size: 0.75rem; border-radius: var(--cd-radius-xs); background: var(--cd-bg-surface-2); }
+.stage__scrim { position: absolute; inset: 0; background: var(--cd-scrim); z-index: -1; }
+.dialog { inline-size: min(100%, 26rem); background: var(--cd-bg-overlay); border-radius: var(--cd-radius-xl); box-shadow: var(--cd-shadow-overlay); padding: var(--cd-space-5); display: grid; gap: var(--cd-space-4); }
+.dialog__head { display: flex; gap: var(--cd-space-3); align-items: start; justify-content: space-between; }
+.dialog__foot { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); justify-content: flex-end; }
+.sheet { position: absolute; inset-inline: 0; inset-block-end: 0; background: var(--cd-bg-overlay); border-start-start-radius: var(--cd-radius-xl); border-start-end-radius: var(--cd-radius-xl); box-shadow: var(--cd-shadow-overlay); padding: var(--cd-space-2) var(--cd-space-4) calc(var(--cd-space-4) + var(--cd-safe-bottom)); display: grid; gap: var(--cd-space-2); }
+.sheet__grab { justify-self: center; inline-size: 2.25rem; block-size: 0.3rem; border-radius: var(--cd-radius-full); background: var(--cd-border-strong); opacity: 0.6; margin-block: var(--cd-space-1); }
+.drawer { position: absolute; inset-block: 0; inset-inline-end: 0; inline-size: 52%; background: var(--cd-bg-overlay); box-shadow: var(--cd-shadow-overlay); padding: var(--cd-space-4); display: grid; gap: var(--cd-space-3); align-content: start; }
+.drawer .kv { grid-template-columns: max-content minmax(0, 1fr); }
+.drawer .row { flex-wrap: nowrap; }
+.stage .menu--inline { position: relative; inline-size: 44%; min-inline-size: 0; margin: var(--cd-space-2) 0; }
+.menu--inline .menu__item { white-space: nowrap; overflow: hidden; }
+.stage--drawer { container-type: inline-size; }
+@container (max-width: 26rem) { .stage--drawer .drawer { inline-size: 58%; padding: var(--cd-space-3); } .stage--drawer .menu--inline { inline-size: 38%; } }
+.palette { inline-size: min(100%, 36rem); background: var(--cd-bg-overlay); border-radius: var(--cd-radius-xl); box-shadow: var(--cd-shadow-overlay); overflow: hidden; align-self: start; margin-block-start: var(--cd-space-4); }
+.palette__input { display: flex; align-items: center; gap: var(--cd-space-2); padding-inline: var(--cd-space-4); min-block-size: 3.25rem; border-block-end: 1px solid var(--cd-border-subtle); }
+.palette__input input { flex: 1; align-self: stretch; border: 0; background: transparent; color: var(--cd-fg-default); font: var(--cd-text-base)/1 var(--cd-font-sans); outline: none; min-inline-size: 0; }
+.palette__list { padding: var(--cd-space-2); display: grid; gap: 1px; max-block-size: 18rem; overflow: auto; }
+.palette__group { padding: var(--cd-space-2) var(--cd-space-2) var(--cd-space-1); }
+.palette__item { display: flex; align-items: center; gap: var(--cd-space-3); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-2); border-radius: var(--cd-radius-md); color: var(--cd-fg-default); }
+.palette__item[aria-selected="true"] { background: var(--cd-bg-selected); }
+.palette__item > svg.i { color: var(--cd-fg-subtle); }
+.palette__item .grow { flex: 1; min-inline-size: 0; }
+.palette__foot { display: flex; flex-wrap: wrap; gap: var(--cd-space-3); padding: var(--cd-space-2) var(--cd-space-4); border-block-start: 1px solid var(--cd-border-subtle); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }
+.menu { background: var(--cd-bg-overlay); border-radius: var(--cd-radius-lg); box-shadow: var(--cd-shadow-popover); padding: var(--cd-space-1); min-inline-size: 13rem; display: grid; }
+.menu__item { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-2); border-radius: var(--cd-radius-md); font-size: var(--cd-text-ui); }
+.menu__item.is-hover { background: var(--cd-overlay-hover); }
+.menu__item--danger { color: var(--cd-tone-danger-fg); }
+.menu__sep { block-size: 1px; background: var(--cd-border-subtle); margin-block: var(--cd-space-1); }
+.tooltip { display: inline-block; padding: var(--cd-space-1) var(--cd-space-2); border-radius: var(--cd-radius-sm); background: var(--cd-fg-default); color: var(--cd-bg-surface); font-size: var(--cd-text-xs); }
+
+/* ---- Shell (container-query driven: tabs < 600 <= rail < 960 <= sidebar) ---- */
+.shell-wrap { container-type: inline-size; }
+.shell { display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; grid-template-areas: "appbar" "main" "tabbar"; block-size: 34rem; border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-xl); overflow: hidden; background: var(--cd-bg-canvas); }
+.shell__side { grid-area: side; display: none; background: var(--cd-bg-sidebar); border-inline-end: 1px solid var(--cd-border-subtle); padding: var(--cd-space-3) var(--cd-space-2); gap: var(--cd-space-1); align-content: start; overflow: auto; }
+.shell__appbar { grid-area: appbar; display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: var(--cd-appbar-h); padding-inline: var(--cd-space-3); padding-block-start: var(--cd-safe-top); border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
+.shell__title { font-weight: var(--cd-weight-semibold); flex: 1; min-inline-size: 0; }
+.shell__main { grid-area: main; overflow: auto; padding: var(--cd-space-3); display: grid; gap: var(--cd-space-3); align-content: start; }
+.shell__tabbar { grid-area: tabbar; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--cd-bg-surface); border-block-start: 1px solid var(--cd-border-subtle); padding-block-end: var(--cd-safe-bottom); }
+.tab { position: relative; display: grid; justify-items: center; align-content: center; gap: 2px; min-block-size: var(--cd-tabbar-h); color: var(--cd-fg-subtle); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); text-decoration: none; }
+.tab[aria-current="page"] { color: var(--cd-accent-fg); }
+.tab[aria-current="page"]::before { content: ""; position: absolute; inset-block-start: 0; inline-size: 2rem; block-size: 2px; border-radius: 0 0 2px 2px; background: var(--cd-accent); }
+.tab .count { position: absolute; inset-block-start: 4px; inset-inline-start: calc(50% + 4px); min-inline-size: 1.125rem; block-size: 1.125rem; font-size: var(--cd-text-xs); }
+.nav-item { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-2); border-radius: var(--cd-radius-md); color: var(--cd-fg-muted); text-decoration: none; font-size: var(--cd-text-ui); }
+.nav-item[aria-current="page"] { background: var(--cd-bg-selected); color: var(--cd-accent-fg); font-weight: var(--cd-weight-medium); }
+.nav-item .count { margin-inline-start: auto; }
+.nav-group-btn { inline-size: 100%; border: 0; background: transparent; font: inherit; cursor: pointer; text-align: start; }
+.nav-group-btn .dot { margin-inline-end: var(--cd-space-1); }
+.nav-sub { padding-inline-start: calc(var(--cd-space-2) + var(--cd-icon) + var(--cd-space-2)); }
+.shell__side .nav-label { flex: 1; }
+.rail-only { display: none; }
+@media (max-width: 40rem) { .shell-wrap--rail { display: none; } }
+@container (min-width: 600px) {
+  .shell { grid-template-columns: var(--cd-rail-w) 1fr; grid-template-rows: auto 1fr; grid-template-areas: "side appbar" "side main"; }
+  .shell__tabbar { display: none; }
+  .shell__side { display: grid; padding-inline: var(--cd-space-1); }
+  .shell__side .nav-item { flex-direction: column; gap: 2px; justify-content: center; padding-block: var(--cd-space-1-5); font-size: var(--cd-text-xs); text-align: center; position: relative; }
+  .shell__side .nav-item .count { position: absolute; inset-block-start: 2px; inset-inline-end: 10px; margin: 0; }
+  .shell__side .side-only { display: none; }
+  .shell__side .nav-item.rail-only { display: flex; }
+}
+@container (min-width: 1200px) {
+  .shell { grid-template-columns: var(--cd-sidebar-w) 1fr; }
+  .shell__side { padding-inline: var(--cd-space-2); }
+  .shell__side .nav-item { flex-direction: row; gap: var(--cd-space-2); justify-content: flex-start; padding-block: 0; font-size: var(--cd-text-ui); text-align: start; }
+  .shell__side .nav-item .count { position: static; margin-inline-start: auto; }
+  .shell__side .side-only { display: block; }
+  .shell__side .nav-item.side-only, .shell__side .row.side-only { display: flex; }
+  .shell__side .nav-item.rail-only { display: none; }
+}
+.phone { inline-size: 100%; max-inline-size: 390px; margin-inline: auto; }
+.phone .shell { block-size: 40rem; }
+
+/* ---- Data list: table on wide containers, cards on narrow ---- */
+.dl-wrap { container-type: inline-size; }
+.dl { inline-size: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--cd-text-ui); }
+.dl th { text-align: start; font: var(--cd-weight-medium) var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); text-transform: uppercase; letter-spacing: var(--cd-tracking-label); color: var(--cd-fg-subtle); padding: var(--cd-space-2) var(--cd-space-3); border-block-end: 1px solid var(--cd-border-default); background: var(--cd-bg-surface-2); position: sticky; inset-block-start: 0; z-index: var(--cd-z-sticky); }
+.dl td { padding: var(--cd-space-2) var(--cd-space-3); block-size: var(--cd-row-h); border-block-end: 1px solid var(--cd-border-subtle); vertical-align: middle; }
+.dl tbody tr:hover td, .dl tr.is-hover td { background: var(--cd-overlay-hover); }
+.dl tr[aria-selected="true"] td { background: var(--cd-bg-selected); }
+.dl tr[aria-selected="true"] td:first-child { box-shadow: inset 2px 0 0 var(--cd-accent); }
+.dl .cell-title { font-weight: var(--cd-weight-medium); }
+.dl .cell-sub { color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }
+@container (max-width: 560px) {
+  .dl thead { display: none; }
+  .dl, .dl tbody, .dl tr, .dl td { display: block; }
+  .dl tr { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); padding: var(--cd-space-3); margin-block-end: var(--cd-space-2); background: var(--cd-bg-surface); display: grid; grid-template-columns: 1fr auto; gap: var(--cd-space-1) var(--cd-space-3); }
+  .dl td { padding: 0; block-size: auto; border: 0; display: flex; gap: var(--cd-space-2); align-items: center; font-size: var(--cd-text-sm); }
+  .dl td[data-label]::before { content: attr(data-label); color: var(--cd-fg-subtle); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); text-transform: uppercase; letter-spacing: var(--cd-tracking-label); min-inline-size: 4.5rem; }
+  .dl td.cell-main { grid-column: 1; grid-row: 1; display: block; font-size: var(--cd-text-ui); }
+  .dl td.cell-actions { grid-column: 2; grid-row: 1; justify-content: end; align-self: start; margin-block: calc(var(--cd-space-2) * -1); margin-inline-end: calc(var(--cd-space-2) * -1); }
+  .dl td.cell-status { grid-column: 1 / -1; grid-row: 2; margin-block: var(--cd-space-1); }
+  .dl td[data-label] { grid-column: 1 / -1; }
+  .dl tr[aria-selected="true"] td:first-child { box-shadow: none; }
+  .dl tr[aria-selected="true"] { border-color: var(--cd-accent-border); background: var(--cd-bg-selected); }
+}
+
+/* ---- Kanban ---- */
+.board-wrap { container-type: inline-size; display: grid; gap: var(--cd-space-3); }
+.board-seg { display: none; }
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(16rem, 1fr); gap: var(--cd-space-3); overflow-x: auto; padding-block-end: var(--cd-space-2); }
+.lane { background: var(--cd-bg-surface-2); border-radius: var(--cd-radius-lg); padding: var(--cd-space-2); display: grid; gap: var(--cd-space-2); align-content: start; }
+@container (max-width: 37.5rem) {
+  .board-seg { display: inline-flex; justify-self: start; max-inline-size: 100%; overflow-x: auto; }
+  .board { grid-auto-flow: row; overflow: visible; }
+  .board .lane:not(.is-current) { display: none; }
+  .board .lane { background: transparent; padding: 0; }
+  .board .lane__head { display: none; }
+}
+.lane__head { display: flex; align-items: center; gap: var(--cd-space-2); padding: var(--cd-space-1) var(--cd-space-1); }
+.lane__head .overline { flex: 1; }
+.kcard { background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); padding: var(--cd-space-3); display: grid; gap: var(--cd-space-2); }
+.kcard.is-selected { border-color: var(--cd-accent); box-shadow: 0 0 0 1px var(--cd-accent); }
+.kcard.is-dragging { box-shadow: var(--cd-shadow-popover); rotate: -1.5deg; }
+.kcard.is-attn { border-inline-start: 3px solid var(--cd-tone-warning-solid); }
+.kcard__top { display: flex; align-items: center; gap: var(--cd-space-2); }
+.kcard__title { font-weight: var(--cd-weight-medium); }
+.kcard__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }
+.progress { block-size: 4px; border-radius: var(--cd-radius-full); background: var(--cd-bg-surface-2); overflow: hidden; }
+.progress > i { display: block; block-size: 100%; inline-size: var(--p, 40%); background: var(--t-solid, var(--cd-accent)); border-radius: inherit; }
+
+/* ---- Run timeline ---- */
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.step { display: grid; grid-template-columns: 1.5rem 1fr; gap: var(--cd-space-3); position: relative; padding-block-end: var(--cd-space-4); }
+.step::before { content: ""; position: absolute; inset-inline-start: calc(0.75rem - 1px); inset-block: 1.6rem 0.1rem; inline-size: 2px; background: var(--cd-border-default); }
+.step:last-child::before { display: none; }
+.step__icon { inline-size: 1.5rem; block-size: 1.5rem; border-radius: 50%; display: grid; place-items: center; background: var(--t-soft); color: var(--t-solid); }
+.step__icon svg.i { inline-size: 14px; block-size: 14px; stroke-width: 2.25; }
+.step__body { display: grid; gap: var(--cd-space-1); min-inline-size: 0; padding-block-start: 1px; }
+.step__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--cd-space-1) var(--cd-space-2); }
+.step__title { font-weight: var(--cd-weight-medium); }
+.step__time { margin-inline-start: auto; color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }
+
+/* ---- Tool call card ---- */
+.tool { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface); overflow: hidden; }
+.tool > summary { list-style: none; display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-3); cursor: pointer; }
+.tool > summary::-webkit-details-marker { display: none; }
+.tool > summary .chev { transition: rotate var(--cd-dur-fast) var(--cd-ease-standard); color: var(--cd-fg-subtle); }
+.tool[open] > summary .chev { rotate: 90deg; }
+[dir="rtl"] .tool > summary .chev { scale: -1 1; }
+.tool__name { font: var(--cd-weight-medium) var(--cd-text-sm)/1.2 var(--cd-font-mono); flex: none; }
+.tool__args { font: var(--cd-text-sm)/1.2 var(--cd-font-mono); color: var(--cd-fg-subtle); flex: 1; }
+.tool__dur { font: var(--cd-text-xs)/1 var(--cd-font-mono); color: var(--cd-fg-subtle); }
+.tool__body { border-block-start: 1px solid var(--cd-border-subtle); padding: var(--cd-space-3); display: grid; gap: var(--cd-space-2); }
+.tool--failed { border-color: var(--cd-tone-danger-border); }
+.log { margin: 0; background: var(--cd-bg-inset); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); padding: var(--cd-space-2) var(--cd-space-3); font: var(--cd-text-code)/1.55 var(--cd-font-mono); color: var(--cd-fg-muted); overflow-x: auto; white-space: pre; max-block-size: 12rem; overscroll-behavior-x: contain; }
+
+/* ---- Approval ---- */
+.approval { border: 1px solid var(--cd-tone-warning-border); background: var(--cd-bg-surface); border-radius: var(--cd-radius-lg); padding: var(--cd-space-4); display: grid; gap: var(--cd-space-3); box-shadow: inset 3px 0 0 var(--cd-tone-warning-solid); }
+[dir="rtl"] .approval { box-shadow: inset -3px 0 0 var(--cd-tone-warning-solid); }
+.approval__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.approval__actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+
+/* ---- Chat ---- */
+.chat { display: grid; gap: var(--cd-space-5); max-inline-size: var(--cd-chat-max); }
+.msg-user { justify-self: end; max-inline-size: min(85%, 36rem); background: color-mix(in srgb, var(--cd-accent) 9%, var(--cd-bg-surface)); border: 1px solid color-mix(in srgb, var(--cd-accent) 18%, var(--cd-bg-surface)); border-radius: var(--cd-radius-xl); border-end-end-radius: var(--cd-radius-sm); padding: var(--cd-space-2) var(--cd-space-3); font-size: var(--cd-text-prose); line-height: 1.6; }
+.msg-agent { display: grid; gap: var(--cd-space-2); font-size: var(--cd-text-prose); line-height: 1.65; }
+.msg-agent__by { display: flex; align-items: center; gap: var(--cd-space-2); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }
+.msg-agent code { font: 0.9em var(--cd-font-mono); background: var(--cd-bg-surface-2); padding: 1px 4px; border-radius: var(--cd-radius-xs); }
+.thinking { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); min-block-size: var(--cd-target-min); color: var(--cd-fg-subtle); font-size: var(--cd-text-sm); }
+.msg-actions { display: flex; gap: 2px; color: var(--cd-fg-subtle); }
+.composer { border: 1px solid var(--cd-border-default); background: var(--cd-bg-surface); border-radius: var(--cd-radius-xl); box-shadow: var(--cd-shadow-raised); display: grid; max-inline-size: var(--cd-chat-max); }
+.composer:focus-within, .composer.is-focus { border-color: var(--cd-accent-border); outline: var(--cd-focus-ring-width) solid color-mix(in srgb, var(--cd-focus-ring) 35%, transparent); outline-offset: 0; }
+.composer textarea { border: 0; background: transparent; resize: none; color: var(--cd-fg-default); font: var(--cd-text-input)/1.5 var(--cd-font-sans); padding: var(--cd-space-3) var(--cd-space-3) var(--cd-space-1); min-block-size: 3.5rem; outline: none; }
+.composer__foot { display: flex; align-items: center; gap: var(--cd-space-1-5); padding: var(--cd-space-1-5); flex-wrap: nowrap; min-inline-size: 0; }
+.composer__chips { display: flex; align-items: center; gap: var(--cd-space-1-5); flex: 1; min-inline-size: 0; overflow-x: auto; scrollbar-width: none; padding-block: var(--cd-space-2); margin-block: calc(var(--cd-space-2) * -1); }
+.composer .chip { block-size: 1.75rem; padding-inline: var(--cd-space-2); font-size: var(--cd-text-xs); }
+.composer .btn--icon { inline-size: max(2.25rem, var(--cd-target-min)); min-block-size: max(2.25rem, var(--cd-target-min)); }
+.ring { --v: 38; inline-size: 1.25rem; block-size: 1.25rem; border-radius: 50%; background: conic-gradient(var(--cd-accent) calc(var(--v) * 1%), var(--cd-bg-surface-2) 0); display: inline-grid; place-items: center; flex: none; }
+.ring::after { content: ""; inline-size: 0.8rem; block-size: 0.8rem; border-radius: 50%; background: var(--cd-bg-surface); }
+.composer { container-type: inline-size; }
+.composer .narrow-only { display: none; }
+@container (max-width: 34rem) {
+  .composer .wide-only { display: none; }
+  .composer .narrow-only { display: inline-flex; }
+}
+.chat-grid { display: grid; gap: var(--cd-space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 64rem) { .chat-grid { grid-template-columns: minmax(0, 1fr) 390px; } }
+
+/* ---- States ---- */
+.empty { display: grid; justify-items: center; text-align: center; gap: var(--cd-space-2); padding: var(--cd-space-8) var(--cd-space-4); }
+.empty__icon { inline-size: 3rem; block-size: 3rem; border-radius: var(--cd-radius-lg); display: grid; place-items: center; background: var(--cd-bg-surface-2); color: var(--cd-fg-subtle); margin-block-end: var(--cd-space-1); }
+.empty p { max-inline-size: 30ch; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.skel { display: block; border-radius: var(--cd-radius-sm); background: linear-gradient(90deg, color-mix(in srgb, var(--cd-fg-default) 9%, var(--cd-bg-surface)) 0%, color-mix(in srgb, var(--cd-fg-default) 4%, var(--cd-bg-surface)) 50%, color-mix(in srgb, var(--cd-fg-default) 9%, var(--cd-bg-surface)) 100%); background-size: 200% 100%; animation: hc-shimmer 1.4s linear infinite; }
+@keyframes hc-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.skel-row { display: grid; grid-template-columns: 2rem 1fr 4rem; gap: var(--cd-space-3); align-items: center; }
+
+/* ---- Code / diff ---- */
+.code { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); overflow: hidden; background: var(--cd-bg-inset); }
+.code__head { display: flex; align-items: center; gap: var(--cd-space-2); padding-inline: var(--cd-space-3) var(--cd-space-1); min-block-size: 2.25rem; border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface-2); font: var(--cd-text-xs)/1 var(--cd-font-mono); color: var(--cd-fg-muted); }
+.code__head .grow { flex: 1; }
+.code pre { margin: 0; padding: var(--cd-space-3); overflow-x: auto; font: var(--cd-text-code)/1.6 var(--cd-font-mono); color: var(--cd-fg-default); }
+.k { color: var(--cd-code-keyword); } .s { color: var(--cd-code-string); } .n { color: var(--cd-code-number); } .c { color: var(--cd-code-comment); font-style: italic; } .f { color: var(--cd-code-function); } .t { color: var(--cd-code-type); } .p { color: var(--cd-code-punct); }
+.diff { display: grid; font: var(--cd-text-code)/1.6 var(--cd-font-mono); overflow-x: auto; padding-block: var(--cd-space-2); }
+.diff > span { display: grid; grid-template-columns: 2.5rem 1.25rem 1fr; padding-inline-end: var(--cd-space-3); white-space: pre; }
+.diff .ln { color: var(--cd-fg-subtle); text-align: end; padding-inline-end: var(--cd-space-2); user-select: none; }
+.diff .sg { user-select: none; text-align: center; }
+.diff .add { background: var(--cd-diff-add-bg); }
+.diff .add .ln, .diff .rem .ln { color: var(--cd-fg-muted); }
+.diff .add .sg { color: var(--cd-diff-add-fg); font-weight: var(--cd-weight-bold); }
+.diff .rem { background: var(--cd-diff-remove-bg); }
+.diff .rem .sg { color: var(--cd-diff-remove-fg); font-weight: var(--cd-weight-bold); }
+
+/* ---- Charts ---- */
+.chart svg { inline-size: 100%; block-size: auto; display: block; overflow: visible; }
+.chart text { font: 11px var(--cd-font-mono); fill: var(--cd-viz-axis); }
+.chart .grid line { stroke: var(--cd-viz-grid); stroke-width: 1; }
+.chart .axis { stroke: var(--cd-border-default); }
+.s1 { stroke: var(--cd-viz-1); } .s2 { stroke: var(--cd-viz-2); } .s3 { stroke: var(--cd-viz-3); } .s4 { stroke: var(--cd-viz-4); } .s5 { stroke: var(--cd-viz-5); } .s6 { stroke: var(--cd-viz-6); }
+.f1 { fill: var(--cd-viz-1); } .f2 { fill: var(--cd-viz-2); } .f3 { fill: var(--cd-viz-3); } .f4 { fill: var(--cd-viz-4); } .f5 { fill: var(--cd-viz-5); } .f6 { fill: var(--cd-viz-6); } .fo { fill: var(--cd-viz-other); }
+.chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart text.lbl { font-weight: 600; }
+.chart text.lbl.f1 { fill: var(--cd-viz-1); } .chart text.lbl.f2 { fill: var(--cd-viz-2); } .chart text.lbl.f3 { fill: var(--cd-viz-3); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-4); font-size: var(--cd-text-xs); color: var(--cd-fg-muted); }
+.legend span { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); }
+.legend i { inline-size: 1.25rem; block-size: 0; border-block-start: 2px solid; }
+.heat { display: grid; grid-template-columns: 2.25rem repeat(12, 1fr); gap: 2px; font: var(--cd-text-xs)/1 var(--cd-font-mono); color: var(--cd-fg-subtle); align-items: center; }
+.heat b { aspect-ratio: 1.6; border-radius: 2px; }
+.h1 { background: var(--cd-viz-seq-1); } .h2 { background: var(--cd-viz-seq-2); } .h3 { background: var(--cd-viz-seq-3); } .h4 { background: var(--cd-viz-seq-4); } .h5 { background: var(--cd-viz-seq-5); }
+.stat { display: grid; gap: var(--cd-space-1); }
+.stat__value { font: var(--cd-weight-semibold) var(--cd-text-2xl)/1 var(--cd-font-display); font-variant-numeric: tabular-nums; letter-spacing: var(--cd-tracking-tight); }
+.stat__delta { font-size: var(--cd-text-xs); color: var(--cd-tone-success-fg); display: inline-flex; align-items: center; gap: 2px; }
+
+/* ---- Token visualisers ---- */
+.space-bar { display: grid; grid-template-columns: 4.5rem 1fr; align-items: center; gap: var(--cd-space-2); font: var(--cd-text-xs)/1 var(--cd-font-mono); color: var(--cd-fg-muted); }
+.space-bar i { display: block; block-size: 0.75rem; background: var(--cd-accent-soft); border-inline-start: 2px solid var(--cd-accent); }
+.radius-box { inline-size: 4rem; block-size: 3rem; background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-default); display: grid; place-items: center; font: var(--cd-text-xs)/1 var(--cd-font-mono); color: var(--cd-fg-muted); }
+.elev-box { padding: var(--cd-space-4); border-radius: var(--cd-radius-lg); background: var(--cd-bg-overlay); font: var(--cd-text-xs)/1.4 var(--cd-font-mono); color: var(--cd-fg-muted); min-inline-size: 8rem; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--cd-space-1) var(--cd-space-4); font-size: var(--cd-text-sm); }
+.kv dt { font-family: var(--cd-font-mono); color: var(--cd-fg-muted); }
+.kv dd { margin: 0; }
+.type-row { display: grid; grid-template-columns: 7rem 1fr; gap: var(--cd-space-3); align-items: baseline; padding-block: var(--cd-space-2); border-block-end: 1px solid var(--cd-border-subtle); }
+.type-row:last-child { border: 0; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); border-radius: var(--cd-radius-lg); overflow: hidden; border: 1px solid var(--cd-border-default); }
+.pair > div { background: var(--cd-bg-canvas); color: var(--cd-fg-default); padding: var(--cd-space-4); display: grid; gap: var(--cd-space-3); }
+.skin-grid { display: grid; gap: var(--cd-space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); }
+.skin { background: var(--cd-bg-surface); color: var(--cd-fg-default); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); padding: var(--cd-space-3); display: grid; gap: var(--cd-space-2); }
+.skin__sw { display: flex; gap: 4px; }
+.skin__sw i { inline-size: 1.25rem; block-size: 1.25rem; border-radius: var(--cd-radius-sm); border: 1px solid var(--cd-border-subtle); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M17 7L7 17M7 7l10 10"/></symbol>
+    <symbol id="i-succeeded" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></symbol>
+    <symbol id="i-failed" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></symbol>
+    <symbol id="i-running" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 1-9 9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-queued" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01" stroke-width="2.6"/></symbol>
+    <symbol id="i-waiting" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01" stroke-width="2.4"/></symbol>
+    <symbol id="i-cancelled" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.8 18.2L18.2 5.8"/></symbol>
+    <symbol id="i-paused" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></symbol>
+    <symbol id="i-stale" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-offline" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3.1"/></symbol>
+    <symbol id="i-blocked" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></symbol>
+    <symbol id="i-draft" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V20H14.5v-5.5h-5V20H4z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-5 4v-4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13.5L6.2 5h11.6l2.2 8.5V19H4z"/><path d="M4 13.5h4.5l1 2h5l1-2H20"/></symbol>
+    <symbol id="i-work" viewBox="0 0 24 24"><rect x="4" y="4" width="4.5" height="16" rx="1"/><rect x="10" y="4" width="4.5" height="10" rx="1"/><rect x="16" y="4" width="4" height="13" rx="1"/></symbol>
+    <symbol id="i-agents" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="2.5"/><path d="M12 4.5V8M9.5 13v.01M14.5 13v.01M9.5 16h5" stroke-width="2"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="2.8"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+    <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M5 7l5 5-5 5M12.5 17.5H19"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M6.5 10.5L12 5l5.5 5.5"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M15.5 7.5l-7 7a2 2 0 0 0 2.8 2.8l7.2-7.2a4 4 0 0 0-5.7-5.7l-7.3 7.3a6 6 0 0 0 8.5 8.5l6-6"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.01" stroke-width="2.2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 15.5H3z"/><path d="M12 10v4M12 17v.01" stroke-width="2.2"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3.5 3.5l17 17M8.6 15.4a5 5 0 0 1 6.2-.4M5.2 12a9.6 9.6 0 0 1 4-2.2M12 19.5v.01M14.3 9.6A9.8 9.8 0 0 1 19 12" stroke-width="1.9"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6v.01M15 6v.01M9 12v.01M15 12v.01M9 18v.01M15 18v.01" stroke-width="2.6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6 7l1 13h10l1-13M9.5 7V4h5v3"/></symbol>
+    <symbol id="i-dots-v" viewBox="0 0 24 24"><path d="M12 5.5v.01M12 12v.01M12 18.5v.01" stroke-width="2.8"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6.5" cy="6" r="2"/><circle cx="6.5" cy="18" r="2"/><circle cx="17.5" cy="9" r="2"/><path d="M6.5 8v8M17.5 11c0 3-4 3-9.5 6"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v14H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></symbol>
+    <symbol id="i-gateway" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.2 2.2M16.2 16.2l2.2 2.2M5.6 18.4l2.2-2.2M16.2 7.8l2.2-2.2"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><path d="M5 6h14M5 10h14M5 14h9M5 18h6"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M7 14l5-5 5 5"/></symbol>
+    <symbol id="i-cmd" viewBox="0 0 24 24"><path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/></symbol>
+  </defs>
+</svg>
+
+<div class="controls" role="region" aria-label="Specimen controls">
+  <div class="controls__inner">
+    <div class="row" style="gap:var(--cd-space-2)">
+      <span class="overline" id="lbl-theme">Theme</span>
+      <div class="seg" role="radiogroup" aria-labelledby="lbl-theme" data-axis="theme">
+        <button role="radio" aria-checked="true" data-v="light">Light</button>
+        <button role="radio" aria-checked="false" data-v="dark">Dark</button>
+        <button role="radio" aria-checked="false" data-v="system">System</button>
+      </div>
+    </div>
+    <div class="row" style="gap:var(--cd-space-2)">
+      <label class="overline" for="skin-select">Skin</label>
+      <select id="skin-select" class="input" style="inline-size:auto;min-inline-size:9rem">
+        <option value="nous">Nous (default)</option>
+        <option value="hermes">Hermes Teal</option>
+        <option value="gold">Gold</option>
+        <option value="cherenkov">Cherenkov</option>
+        <option value="verdant">Verdant</option>
+        <option value="mono">Mono</option>
+      </select>
+    </div>
+    <div class="row" style="gap:var(--cd-space-2)">
+      <span class="overline" id="lbl-density">Density</span>
+      <div class="seg" role="radiogroup" aria-labelledby="lbl-density" data-axis="density">
+        <button role="radio" aria-checked="true" data-v="auto">Auto</button>
+        <button role="radio" aria-checked="false" data-v="compact">Compact</button>
+        <button role="radio" aria-checked="false" data-v="comfortable">Comfortable</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+  <header class="page-head">
+    <div class="wordmark">
+      <div class="wordmark__glyph" aria-hidden="true">C</div>
+      <div>
+        <h1>Caduceus Dashboard</h1>
+        <p class="muted">Design system specimen v1 · tokens.css · <span class="mono">light-dark()</span> + <span class="mono">data-theme</span> / <span class="mono">data-skin</span> / <span class="mono">data-density</span></p>
+      </div>
+    </div>
+    <div class="row">
+      <span class="status" data-tone="success"><svg class="i"><use href="#i-succeeded"/></svg>WCAG 2.2 AA pairs verified</span>
+    </div>
+  </header>
+
+  <!-- ================= SHELL ================= -->
+  <section class="sec" aria-labelledby="h-shell">
+    <div class="sec__head">
+      <p class="overline">01 · App shell</p>
+      <h2 id="h-shell">Bottom tabs → nav rail → sidebar</h2>
+      <p class="muted">One shell, three arrangements by window width (Material 3 classes): phone bottom tab bar (&lt;600), rail (600–1199), grouped sidebar (≥1200). The same five destinations, Home · Chat · Inbox · Work · More, everywhere. The profile chip and connection dot are always in the app bar; ⌘K opens the palette.</p>
+    </div>
+    <div class="grid grid--wide" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));">
+      <div class="shell-wrap" style="grid-column: 1 / -1;">
+        <div class="shell" id="shell-desktop">
+          <nav class="shell__side" aria-label="Primary">
+            <div class="row side-only" style="padding:var(--cd-space-1) var(--cd-space-2) var(--cd-space-2);gap:var(--cd-space-2)">
+              <div class="wordmark__glyph" style="inline-size:28px;block-size:28px;font-size:var(--cd-text-md)" aria-hidden="true">C</div>
+              <strong>Caduceus Dashboard</strong>
+            </div>
+            <a class="nav-item" href="#"><svg class="i"><use href="#i-home"/></svg><span class="nav-label">Home</span></a>
+            <a class="nav-item" href="#"><svg class="i"><use href="#i-chat"/></svg><span class="nav-label">Chat</span></a>
+            <a class="nav-item" href="#" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-label">Inbox</span><span class="count" aria-label="3 need you">3</span></a>
+            <a class="nav-item rail-only" href="#"><svg class="i"><use href="#i-work"/></svg><span class="nav-label">Work</span></a>
+            <a class="nav-item rail-only" href="#"><svg class="i"><use href="#i-more"/></svg><span class="nav-label">More</span></a>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="true"><svg class="i"><use href="#i-work"/></svg><span class="nav-label">Work</span><svg class="i i-sm"><use href="#i-chev-d"/></svg></button>
+            <a class="nav-item side-only nav-sub" href="#"><span class="nav-label">Board</span></a>
+            <a class="nav-item side-only nav-sub" href="#"><span class="nav-label">Tasks</span></a>
+            <a class="nav-item side-only nav-sub" href="#"><span class="nav-label">Playbooks</span></a>
+            <a class="nav-item side-only nav-sub" href="#"><span class="nav-label">Schedules</span><span class="mono subtle" style="margin-inline-start:auto;font-size:var(--cd-text-xs)">12</span></a>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="false"><svg class="i"><use href="#i-agents"/></svg><span class="nav-label">Agents</span><svg class="i i-sm"><use href="#i-chev-r"/></svg></button>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="false"><svg class="i"><use href="#i-gateway"/></svg><span class="nav-label">Connect</span><span class="dot" data-tone="success" aria-label="Gateway online"></span><svg class="i i-sm"><use href="#i-chev-r"/></svg></button>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="false"><svg class="i"><use href="#i-file"/></svg><span class="nav-label">Workspace</span><svg class="i i-sm"><use href="#i-chev-r"/></svg></button>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="false"><svg class="i"><use href="#i-chart"/></svg><span class="nav-label">Observe</span><svg class="i i-sm"><use href="#i-chev-r"/></svg></button>
+            <button class="nav-item side-only nav-group-btn" aria-expanded="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-label">System</span><svg class="i i-sm"><use href="#i-chev-r"/></svg></button>
+          </nav>
+          <header class="shell__appbar">
+            <span class="shell__title truncate">Inbox</span>
+            <button class="chip chip--profile hit" aria-label="Profile: research. Change profile for this tab"><span class="avatar avatar--sm">R</span>research<svg class="i"><use href="#i-chev-d"/></svg></button>
+            <span class="status status--plain" data-tone="success" role="status"><span class="dot"></span><span class="sr-only">Connected</span></span>
+            <button class="btn btn--ghost btn--icon" aria-label="Search and commands (⌘K)"><svg class="i"><use href="#i-search"/></svg></button>
+          </header>
+          <div class="shell__main">
+            <div class="banner" data-tone="warning" role="status">
+              <svg class="i"><use href="#i-waiting"/></svg>
+              <div><div class="banner__title">3 runs are waiting for you</div><div class="banner__body">Approvals pause the agent until you answer.</div></div>
+              <span></span>
+            </div>
+            <div class="dl-wrap">
+              <table class="dl" role="table" aria-label="Inbox">
+                <thead><tr><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Profile</th><th scope="col">Updated</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                  <tr aria-selected="true"><td class="cell-main"><div class="cell-title">Approve <span class="mono">rm -rf build/</span></div><div class="cell-sub mono">run_8f3a · terminal.exec</div></td><td class="cell-status"><span class="status status--attn" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>Waiting for you</span></td><td data-label="Profile">research</td><td data-label="Updated" class="mono">2m ago</td><td class="cell-actions"><button class="btn btn--ghost btn--icon" aria-label="Actions for approval"><svg class="i"><use href="#i-dots-v"/></svg></button></td></tr>
+                  <tr><td class="cell-main"><div class="cell-title">Nightly dependency audit</div><div class="cell-sub mono">cron · 0 3 * * *</div></td><td class="cell-status"><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running</span></td><td data-label="Profile">ops</td><td data-label="Updated" class="mono">now</td><td class="cell-actions"><button class="btn btn--ghost btn--icon" aria-label="Actions for audit"><svg class="i"><use href="#i-dots-v"/></svg></button></td></tr>
+                  <tr><td class="cell-main"><div class="cell-title">Summarise Telegram thread</div><div class="cell-sub mono">session · telegram</div></td><td class="cell-status"><span class="status" data-tone="success"><svg class="i"><use href="#i-succeeded"/></svg>Succeeded</span></td><td data-label="Profile">default</td><td data-label="Updated" class="mono">14m ago</td><td class="cell-actions"><button class="btn btn--ghost btn--icon" aria-label="Actions for summary"><svg class="i"><use href="#i-dots-v"/></svg></button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <nav class="shell__tabbar" aria-label="Primary">
+            <a class="tab" href="#"><svg class="i"><use href="#i-home"/></svg>Home</a>
+            <a class="tab" href="#"><svg class="i"><use href="#i-chat"/></svg>Chat</a>
+            <a class="tab" href="#" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg>Inbox<span class="count" aria-label="3 need you">3</span></a>
+            <a class="tab" href="#"><svg class="i"><use href="#i-work"/></svg>Work</a>
+            <a class="tab" href="#"><svg class="i"><use href="#i-more"/></svg>More</a>
+          </nav>
+        </div>
+      </div>
+      <div class="shell-wrap shell-wrap--rail" style="grid-column: 1 / -1; max-inline-size: 52rem;">
+        <p class="overline" style="margin-block-end:var(--cd-space-2)">Same shell in an 832px window · rail</p>
+        <div class="shell" style="block-size:22rem">
+          <nav class="shell__side" aria-label="Primary">
+            <a class="nav-item" href="#" aria-current="page"><svg class="i"><use href="#i-home"/></svg><span class="nav-label">Home</span></a>
+            <a class="nav-item" href="#"><svg class="i"><use href="#i-chat"/></svg><span class="nav-label">Chat</span></a>
+            <a class="nav-item" href="#"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-label">Inbox</span><span class="count" aria-label="3 need you">3</span></a>
+            <a class="nav-item rail-only" href="#"><svg class="i"><use href="#i-work"/></svg><span class="nav-label">Work</span></a>
+            <a class="nav-item rail-only" href="#"><svg class="i"><use href="#i-more"/></svg><span class="nav-label">More</span></a>
+          </nav>
+          <header class="shell__appbar">
+            <span class="shell__title truncate">Home</span>
+            <button class="chip chip--profile hit" aria-label="Profile: all profiles. Change scope"><span class="avatar avatar--sm" data-av="1">∗</span>All profiles<svg class="i"><use href="#i-chev-d"/></svg></button>
+            <span class="status status--plain" data-tone="warning" role="status"><span class="dot"></span><span class="sr-only">Reconnecting</span></span>
+            <button class="btn btn--ghost btn--icon" aria-label="Search and commands (⌘K)"><svg class="i"><use href="#i-search"/></svg></button>
+          </header>
+          <div class="shell__main">
+            <div class="row" style="gap:var(--cd-space-4)">
+              <span class="status status--plain" data-tone="success"><span class="dot"></span>Gateway</span>
+              <span class="status status--plain" data-tone="success"><span class="dot"></span>Scheduler</span>
+              <span class="status status--plain" data-tone="warning"><span class="dot"></span>Dispatcher · 1 stuck</span>
+              <span class="status status--plain" data-tone="neutral"><span class="dot dot--dashed"></span>Telegram offline</span>
+            </div>
+            <div class="row" style="gap:var(--cd-space-6);align-items:start">
+              <div class="stat"><span class="overline">Need you</span><span class="stat__value">3</span></div>
+              <div class="stat"><span class="overline">Running</span><span class="stat__value">5</span></div>
+              <div class="stat"><span class="overline">Spend · 7d</span><span class="stat__value">$41.82</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COLOUR ================= -->
+  <section class="sec" aria-labelledby="h-colour">
+    <div class="sec__head">
+      <p class="overline">02 · Colour</p>
+      <h2 id="h-colour">Neutrals, accent, tones</h2>
+      <p class="muted">Every text pair ≥ 4.5:1, every control boundary and status glyph ≥ 3:1, in both schemes and every skin. Colour never carries meaning alone.</p>
+    </div>
+    <div class="grid">
+      <div class="spec">
+        <h3>Surfaces</h3>
+        <div class="swatches">
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-canvas)">Aa</div><div class="sw__meta">bg-canvas</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-sidebar)">Aa</div><div class="sw__meta">bg-sidebar</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-surface)">Aa</div><div class="sw__meta">bg-surface</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-surface-2)">Aa</div><div class="sw__meta">bg-surface-2</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-overlay);box-shadow:var(--cd-shadow-popover)">Aa</div><div class="sw__meta">bg-overlay</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-bg-inset)">Aa</div><div class="sw__meta">bg-inset</div></div>
+        </div>
+      </div>
+      <div class="spec">
+        <h3>Text & borders</h3>
+        <div class="stack" style="gap:var(--cd-space-2)">
+          <div class="row" style="justify-content:space-between"><span>Default text</span><span class="mono subtle">fg-default</span></div>
+          <div class="row" style="justify-content:space-between"><span class="muted">Muted text, secondary metadata</span><span class="mono subtle">fg-muted</span></div>
+          <div class="row" style="justify-content:space-between"><span class="subtle">Subtle text, timestamps</span><span class="mono subtle">fg-subtle</span></div>
+          <div class="row" style="justify-content:space-between"><span style="color:var(--cd-fg-disabled)">Disabled (exempt)</span><span class="mono subtle">fg-disabled</span></div>
+          <div class="row" style="justify-content:space-between"><a href="#" style="color:var(--cd-accent-fg)">Link / accent text</a><span class="mono subtle">accent-fg</span></div>
+          <div class="row" style="gap:var(--cd-space-2)">
+            <span style="flex:1;block-size:2rem;border:1px solid var(--cd-border-subtle);border-radius:var(--cd-radius-sm)"></span>
+            <span style="flex:1;block-size:2rem;border:1px solid var(--cd-border-default);border-radius:var(--cd-radius-sm)"></span>
+            <span style="flex:1;block-size:2rem;border:1px solid var(--cd-border-control);border-radius:var(--cd-radius-sm)"></span>
+            <span style="flex:1;block-size:2rem;border:1px solid var(--cd-border-strong);border-radius:var(--cd-radius-sm)"></span>
+          </div>
+          <div class="row mono subtle" style="font-size:var(--cd-text-xs);justify-content:space-between"><span>subtle</span><span>default</span><span>control ≥3:1</span><span>strong</span></div>
+        </div>
+      </div>
+      <div class="spec">
+        <h3>Tones <span class="subtle" style="font-weight:400">· fg / solid / soft</span></h3>
+        <div class="tone-table">
+          <div class="tone-row" data-tone="neutral"><span class="mono subtle" style="font-size:var(--cd-text-xs)">neutral</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="info"><span class="mono subtle" style="font-size:var(--cd-text-xs)">info</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="success"><span class="mono subtle" style="font-size:var(--cd-text-xs)">success</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="warning"><span class="mono subtle" style="font-size:var(--cd-text-xs)">warning</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="danger"><span class="mono subtle" style="font-size:var(--cd-text-xs)">danger</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="running"><span class="mono subtle" style="font-size:var(--cd-text-xs)">running</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="paused"><span class="mono subtle" style="font-size:var(--cd-text-xs)">paused</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="stale"><span class="mono subtle" style="font-size:var(--cd-text-xs)">stale</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+          <div class="tone-row" data-tone="blocked"><span class="mono subtle" style="font-size:var(--cd-text-xs)">blocked</span><div class="tone-cells"><span class="tone-cell" style="color:var(--t-fg);background:var(--cd-bg-surface);box-shadow:inset 0 0 0 1px var(--cd-border-subtle)">Text</span><span class="tone-cell" style="background:var(--t-solid);color:var(--t-on)">Solid</span><span class="tone-cell" style="background:var(--t-soft);color:var(--t-fg)">Soft</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <h3>Status ladder <span class="subtle" style="font-weight:400">· icon + label + tone, never colour alone</span></h3>
+      <div class="row" style="gap:var(--cd-space-2)">
+        <span class="status status--attn" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>Waiting for you</span>
+        <span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running</span>
+        <span class="status" data-tone="neutral"><svg class="i"><use href="#i-queued"/></svg>Queued</span>
+        <span class="status" data-tone="paused"><svg class="i"><use href="#i-paused"/></svg>Paused</span>
+        <span class="status" data-tone="blocked"><svg class="i"><use href="#i-blocked"/></svg>Blocked</span>
+        <span class="status" data-tone="danger"><svg class="i"><use href="#i-failed"/></svg>Failed</span>
+        <span class="status" data-tone="stale"><svg class="i"><use href="#i-stale"/></svg>Stale</span>
+        <span class="status" data-tone="success"><svg class="i"><use href="#i-succeeded"/></svg>Succeeded</span>
+        <span class="status" data-tone="neutral"><svg class="i"><use href="#i-cancelled"/></svg>Cancelled</span>
+        <span class="status" data-tone="neutral"><svg class="i"><use href="#i-offline"/></svg>Offline</span>
+        <span class="status" data-tone="neutral"><svg class="i"><use href="#i-draft"/></svg>Draft</span>
+      </div>
+      <div class="row" style="gap:var(--cd-space-4)">
+        <span class="status status--plain" data-tone="success"><span class="dot"></span>Online</span>
+        <span class="status status--plain" data-tone="warning"><span class="dot"></span>Degraded</span>
+        <span class="status status--plain" data-tone="running"><span class="dot pulse"></span>Streaming</span>
+        <span class="status status--plain" data-tone="neutral"><span class="dot dot--hollow"></span>Queued</span>
+        <span class="status status--plain" data-tone="neutral"><span class="dot dot--dashed"></span>Offline</span>
+        <span class="status status--solid" data-tone="danger"><svg class="i"><use href="#i-failed"/></svg>2 failed</span>
+        <span class="status status--solid" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>3 need you</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <h3>Theme pair <span class="subtle" style="font-weight:400">· same markup, <span class="mono">data-theme</span> on the subtree</span></h3>
+      <div class="pair">
+        <div data-theme="light">
+          <div class="row"><button class="btn btn--primary">Run now</button><button class="btn btn--secondary">Edit</button><span class="status status--attn" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>Waiting for you</span></div>
+          <div class="row"><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running</span><span class="status" data-tone="success"><svg class="i"><use href="#i-succeeded"/></svg>Succeeded</span><span class="status" data-tone="danger"><svg class="i"><use href="#i-failed"/></svg>Failed</span></div>
+          <p class="muted" style="font-size:var(--cd-text-sm)">Light · <span class="mono">claude-sonnet-4.5</span> · 12.4k tokens</p>
+        </div>
+        <div data-theme="dark">
+          <div class="row"><button class="btn btn--primary">Run now</button><button class="btn btn--secondary">Edit</button><span class="status status--attn" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>Waiting for you</span></div>
+          <div class="row"><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running</span><span class="status" data-tone="success"><svg class="i"><use href="#i-succeeded"/></svg>Succeeded</span><span class="status" data-tone="danger"><svg class="i"><use href="#i-failed"/></svg>Failed</span></div>
+          <p class="muted" style="font-size:var(--cd-text-sm)">Dark · <span class="mono">claude-sonnet-4.5</span> · 12.4k tokens</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <h3>Skins <span class="subtle" style="font-weight:400">· accent family swaps; status tones never change</span></h3>
+      <div class="skin-grid">
+        <div class="skin" data-skin="nous"><div class="row" style="justify-content:space-between"><strong>Nous</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">default</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+        <div class="skin" data-skin="hermes"><div class="row" style="justify-content:space-between"><strong>Hermes Teal</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">neutrals too</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+        <div class="skin" data-skin="gold"><div class="row" style="justify-content:space-between"><strong>Gold</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">WebUI</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+        <div class="skin" data-skin="cherenkov"><div class="row" style="justify-content:space-between"><strong>Cherenkov</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">PatterStage</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+        <div class="skin" data-skin="verdant"><div class="row" style="justify-content:space-between"><strong>Verdant</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">github</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+        <div class="skin" data-skin="mono"><div class="row" style="justify-content:space-between"><strong>Mono</strong><span class="mono subtle" style="font-size:var(--cd-text-xs)">radius 0</span></div><div class="row"><button class="btn btn--primary btn--sm">Primary</button><a href="#" style="color:var(--cd-accent-fg)">Link</a></div><button class="chip" aria-pressed="true">Selected chip</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DATA VIZ ================= -->
+  <section class="sec" aria-labelledby="h-viz">
+    <div class="sec__head">
+      <p class="overline">03 · Data visualisation</p>
+      <h2 id="h-viz">Categorical, sequential, diverging</h2>
+      <p class="muted">Six series checked under deuteranopia, protanopia and tritanopia simulation, each ≥ 3:1 against the surface; lines also differ by dash pattern and carry direct labels.</p>
+    </div>
+    <div class="grid">
+      <div class="spec">
+        <h3>Categorical</h3>
+        <div class="swatches" style="grid-template-columns:repeat(auto-fill,minmax(6.5rem,1fr))">
+          <div class="sw"><div class="sw__chip f1" style="background:var(--cd-viz-1)"></div><div class="sw__meta">viz-1 blue</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-viz-2)"></div><div class="sw__meta">viz-2 orange</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-viz-3)"></div><div class="sw__meta">viz-3 green</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-viz-4)"></div><div class="sw__meta">viz-4 wine</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-viz-5)"></div><div class="sw__meta">viz-5 indigo</div></div>
+          <div class="sw"><div class="sw__chip" style="background:var(--cd-viz-6)"></div><div class="sw__meta">viz-6 ink</div></div>
+        </div>
+        <div class="legend">
+          <span><i style="border-color:var(--cd-viz-1)"></i>Input tokens</span>
+          <span><i style="border-color:var(--cd-viz-2);border-block-start-style:dashed"></i>Output tokens</span>
+          <span><i style="border-color:var(--cd-viz-3);border-block-start-style:dotted"></i>Cache read</span>
+        </div>
+      </div>
+      <div class="spec chart">
+        <div class="row" style="justify-content:space-between"><h3>Tokens · 14 days</h3><span class="mono subtle" style="font-size:var(--cd-text-xs)">k tokens/day</span></div>
+        <svg viewBox="0 0 340 160" role="img" aria-labelledby="ch1t">
+          <title id="ch1t">Daily tokens, last 14 days: input rising from 40k to 92k, output from 18k to 35k, cache read from 10k to 60k.</title>
+          <g class="grid"><line x1="28" x2="300" y1="20" y2="20"/><line x1="28" x2="300" y1="60" y2="60"/><line x1="28" x2="300" y1="100" y2="100"/><line x1="28" x2="300" y1="140" y2="140"/></g>
+          <text x="0" y="24">100</text><text x="6" y="64">66</text><text x="6" y="104">33</text><text x="14" y="144">0</text>
+          <polyline class="line s3" stroke-dasharray="2 3" points="28,128 49,126 70,121 91,118 112,113 133,104 154,99 175,92 196,88 217,83 238,79 259,74 280,72 300,68"/>
+          <polyline class="line s2" stroke-dasharray="6 3" points="28,118 49,117 70,113 91,115 112,110 133,108 154,104 175,105 196,101 217,99 238,97 259,98 280,96 300,98"/>
+          <polyline class="line s1" points="28,92 49,88 70,90 91,80 112,76 133,70 154,72 175,62 196,58 217,52 238,47 259,40 280,36 300,30"/>
+          <circle class="f1" cx="300" cy="30" r="3"/><circle class="f2" cx="300" cy="98" r="3"/><circle class="f3" cx="300" cy="68" r="3"/>
+          <text class="lbl f1" x="306" y="34">Input</text><text class="lbl f3" x="306" y="72">Cache</text><text class="lbl f2" x="306" y="102">Output</text>
+        </svg>
+      </div>
+      <div class="spec chart">
+        <div class="row" style="justify-content:space-between"><h3>Spend by model</h3><span class="mono subtle" style="font-size:var(--cd-text-xs)">USD · week</span></div>
+        <svg viewBox="0 0 320 128" role="img" aria-labelledby="ch2t">
+          <title id="ch2t">Spend by model this week, stacked by day; Sonnet is the largest share.</title>
+          <g class="grid"><line x1="0" x2="320" y1="110" y2="110"/></g>
+          <g>
+            <rect class="f1" x="8" y="50" width="30" height="60" rx="2"/><rect class="f2" x="8" y="30" width="30" height="18" rx="2"/><rect class="f3" x="8" y="18" width="30" height="10" rx="2"/>
+            <rect class="f1" x="52" y="64" width="30" height="46" rx="2"/><rect class="f2" x="52" y="48" width="30" height="14" rx="2"/><rect class="f3" x="52" y="40" width="30" height="6" rx="2"/>
+            <rect class="f1" x="96" y="40" width="30" height="70" rx="2"/><rect class="f2" x="96" y="22" width="30" height="16" rx="2"/><rect class="f3" x="96" y="12" width="30" height="8" rx="2"/>
+            <rect class="f1" x="140" y="58" width="30" height="52" rx="2"/><rect class="f2" x="140" y="40" width="30" height="16" rx="2"/><rect class="f3" x="140" y="30" width="30" height="8" rx="2"/>
+            <rect class="f1" x="184" y="70" width="30" height="40" rx="2"/><rect class="f2" x="184" y="58" width="30" height="10" rx="2"/><rect class="fo" x="184" y="52" width="30" height="4" rx="2"/>
+            <rect class="f1" x="228" y="86" width="30" height="24" rx="2"/><rect class="f2" x="228" y="78" width="30" height="6" rx="2"/>
+            <rect class="f1" x="272" y="80" width="30" height="30" rx="2"/><rect class="f2" x="272" y="70" width="30" height="8" rx="2"/><rect class="f3" x="272" y="64" width="30" height="4" rx="2"/>
+          </g>
+          <text x="14" y="124">Mon</text><text x="58" y="124">Tue</text><text x="102" y="124">Wed</text><text x="146" y="124">Thu</text><text x="190" y="124">Fri</text><text x="234" y="124">Sat</text><text x="278" y="124">Sun</text>
+        </svg>
+        <div class="legend"><span><i style="border-color:var(--cd-viz-1);border-block-start-width:8px"></i>sonnet</span><span><i style="border-color:var(--cd-viz-2);border-block-start-width:8px"></i>gpt-5</span><span><i style="border-color:var(--cd-viz-3);border-block-start-width:8px"></i>hermes-4</span><span><i style="border-color:var(--cd-viz-other);border-block-start-width:8px"></i>other</span></div>
+      </div>
+      <div class="spec">
+        <div class="row" style="justify-content:space-between"><h3>Activity heatmap</h3><span class="mono subtle" style="font-size:var(--cd-text-xs)">runs · hour × day</span></div>
+        <div class="heat" role="img" aria-label="Runs by hour and weekday; busiest weekday mornings">
+          <span>Mon</span><b class="h1"></b><b class="h2"></b><b class="h3"></b><b class="h4"></b><b class="h5"></b><b class="h4"></b><b class="h3"></b><b class="h3"></b><b class="h2"></b><b class="h2"></b><b class="h1"></b><b class="h1"></b>
+          <span>Tue</span><b class="h1"></b><b class="h2"></b><b class="h4"></b><b class="h5"></b><b class="h5"></b><b class="h4"></b><b class="h3"></b><b class="h2"></b><b class="h2"></b><b class="h1"></b><b class="h1"></b><b class="h1"></b>
+          <span>Wed</span><b class="h1"></b><b class="h1"></b><b class="h3"></b><b class="h4"></b><b class="h4"></b><b class="h3"></b><b class="h3"></b><b class="h2"></b><b class="h3"></b><b class="h2"></b><b class="h1"></b><b class="h1"></b>
+          <span>Thu</span><b class="h1"></b><b class="h2"></b><b class="h3"></b><b class="h3"></b><b class="h4"></b><b class="h5"></b><b class="h4"></b><b class="h3"></b><b class="h2"></b><b class="h1"></b><b class="h1"></b><b class="h1"></b>
+          <span>Fri</span><b class="h1"></b><b class="h1"></b><b class="h2"></b><b class="h3"></b><b class="h3"></b><b class="h2"></b><b class="h2"></b><b class="h1"></b><b class="h1"></b><b class="h1"></b><b class="h1"></b><b class="h1"></b>
+        </div>
+        <div class="row mono subtle" style="font-size:var(--cd-text-xs);gap:var(--cd-space-1)">0<b class="h1" style="inline-size:1rem;block-size:.6rem;border-radius:2px"></b><b class="h2" style="inline-size:1rem;block-size:.6rem;border-radius:2px"></b><b class="h3" style="inline-size:1rem;block-size:.6rem;border-radius:2px"></b><b class="h4" style="inline-size:1rem;block-size:.6rem;border-radius:2px"></b><b class="h5" style="inline-size:1rem;block-size:.6rem;border-radius:2px"></b>48 runs</div>
+      </div>
+      <div class="spec">
+        <h3>Stat tiles</h3>
+        <div class="row" style="gap:var(--cd-space-6);align-items:start">
+          <div class="stat"><span class="overline">Spend · 7d</span><span class="stat__value">$41.82</span><span class="stat__delta" style="color:var(--cd-fg-muted)">62% of $70 budget</span><div class="progress" style="inline-size:9rem" data-tone="warning"><i style="--p:62%"></i></div></div>
+          <div class="stat"><span class="overline">Runs · today</span><span class="stat__value">128</span><span class="stat__delta"><svg class="i i-sm"><use href="#i-arrow-up"/></svg>12% vs yesterday</span></div>
+          <div class="stat"><span class="overline">Cache hit</span><span class="stat__value">71%</span><svg viewBox="0 0 100 24" style="inline-size:7rem;block-size:1.5rem" aria-hidden="true"><polyline fill="none" stroke-width="2" style="stroke:var(--cd-viz-1)" points="0,20 12,18 24,19 36,14 48,15 60,10 72,11 84,6 100,4"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TYPE ================= -->
+  <section class="sec" aria-labelledby="h-type">
+    <div class="sec__head">
+      <p class="overline">04 · Typography</p>
+      <h2 id="h-type">System sans for people, mono for machines</h2>
+      <p class="muted">IDs, model names, paths, cron expressions, token counts, keys and timestamps are mono with tabular numerals. Everything is rem; the root is only ever a percentage (text-size setting), never px.</p>
+    </div>
+    <div class="grid grid--wide">
+      <div class="spec">
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">3xl 30/36</span><span style="font:var(--cd-weight-semibold) var(--cd-text-3xl)/var(--cd-leading-3xl) var(--cd-font-display);letter-spacing:var(--cd-tracking-tight)">$41.82</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">2xl 24/32</span><span style="font:var(--cd-weight-semibold) var(--cd-text-2xl)/var(--cd-leading-2xl) var(--cd-font-sans);letter-spacing:var(--cd-tracking-tight)">Page title</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">xl 20/28</span><span style="font:var(--cd-weight-semibold) var(--cd-text-xl)/var(--cd-leading-xl) var(--cd-font-sans)">Section heading</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">lg 18/26</span><span style="font:var(--cd-weight-medium) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans)">Dialog title</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">base 16/24</span><span style="font:var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans)">Comfortable body, chat prose, every input on touch.</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">md 14/20</span><span style="font:var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans)">Compact body and controls on desktop.</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">sm 13/18</span><span style="font:var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans)">Secondary text, dense table cells, help.</span></div>
+        <div class="type-row"><span class="mono subtle" style="font-size:var(--cd-text-xs)">xs 12/16</span><span style="font:var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-sans)">Badges, captions, meta. The floor.</span></div>
+      </div>
+      <div class="spec">
+        <p class="overline">Overline · mono · uppercase · 12px</p>
+        <p style="font-size:var(--cd-text-prose);line-height:1.65;max-inline-size:var(--cd-measure)">The agent ran <span class="mono">terminal.exec</span> in <span class="mono">~/code/caduceus-dashboard</span> using <span class="mono">anthropic/claude-sonnet-4.5</span>, spending <span class="mono">12,408</span> tokens. Next fire <span class="mono">0 3 * * *</span> → <span class="mono">2026-10-07 03:00</span>.</p>
+        <dl class="kv">
+          <dt>session</dt><dd class="mono truncate">sess_01J9X4K7Q2ZP8V3R6M</dd>
+          <dt>model</dt><dd class="mono">hermes-4-405b</dd>
+          <dt>cost</dt><dd class="mono">$0.0412</dd>
+          <dt>latency</dt><dd class="mono">1.84 s</dd>
+        </dl>
+        <div dir="rtl" lang="ar" class="stack" style="border-block-start:1px solid var(--cd-border-subtle);padding-block-start:var(--cd-space-3)">
+          <p class="overline" style="direction:ltr;text-align:start">RTL · logical properties</p>
+          <div class="row"><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>قيد التشغيل</span><button class="switch" role="switch" aria-checked="true" aria-label="تفعيل"></button><span class="chip chip--profile"><span class="avatar avatar--sm" data-av="5">ب</span>بحث</span></div>
+          <div class="msg-user" style="justify-self:end">لخّص آخر عشر رسائل من تيليجرام.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOKENS: space, shape, elevation, motion ================= -->
+  <section class="sec" aria-labelledby="h-tok">
+    <div class="sec__head">
+      <p class="overline">05 · Space, shape, elevation, motion</p>
+      <h2 id="h-tok">4px grid, crisp corners, flat surfaces</h2>
+    </div>
+    <div class="grid">
+      <div class="spec">
+        <h3>Spacing</h3>
+        <div class="stack" style="gap:var(--cd-space-1-5)">
+          <div class="space-bar"><span>1 · 4</span><i style="inline-size:var(--cd-space-1)"></i></div>
+          <div class="space-bar"><span>2 · 8</span><i style="inline-size:var(--cd-space-2)"></i></div>
+          <div class="space-bar"><span>3 · 12</span><i style="inline-size:var(--cd-space-3)"></i></div>
+          <div class="space-bar"><span>4 · 16</span><i style="inline-size:var(--cd-space-4)"></i></div>
+          <div class="space-bar"><span>6 · 24</span><i style="inline-size:var(--cd-space-6)"></i></div>
+          <div class="space-bar"><span>8 · 32</span><i style="inline-size:var(--cd-space-8)"></i></div>
+          <div class="space-bar"><span>12 · 48</span><i style="inline-size:var(--cd-space-12)"></i></div>
+          <div class="space-bar"><span>16 · 64</span><i style="inline-size:var(--cd-space-16)"></i></div>
+        </div>
+      </div>
+      <div class="spec">
+        <h3>Radius</h3>
+        <div class="row">
+          <div class="radius-box" style="border-radius:var(--cd-radius-xs)">xs 2</div>
+          <div class="radius-box" style="border-radius:var(--cd-radius-sm)">sm 4</div>
+          <div class="radius-box" style="border-radius:var(--cd-radius-md)">md 6</div>
+          <div class="radius-box" style="border-radius:var(--cd-radius-lg)">lg 8</div>
+          <div class="radius-box" style="border-radius:var(--cd-radius-xl)">xl 12</div>
+          <div class="radius-box" style="border-radius:var(--cd-radius-full)">full</div>
+        </div>
+        <h3>Elevation</h3>
+        <div class="row" style="gap:var(--cd-space-4);padding:var(--cd-space-2);background:var(--cd-bg-canvas);border-radius:var(--cd-radius-lg)">
+          <div class="elev-box" style="background:var(--cd-bg-surface);border:1px solid var(--cd-border-subtle)">0 flat<br>cards, lists</div>
+          <div class="elev-box" style="box-shadow:var(--cd-shadow-raised)">raised<br>sticky, segment</div>
+          <div class="elev-box" style="box-shadow:var(--cd-shadow-popover)">popover<br>menu, toast</div>
+          <div class="elev-box" style="box-shadow:var(--cd-shadow-overlay)">overlay<br>dialog, sheet</div>
+        </div>
+      </div>
+      <div class="spec">
+        <h3>Motion & layers</h3>
+        <dl class="kv">
+          <dt>fast 100ms</dt><dd>press, toggle, hover fill</dd>
+          <dt>base 160ms</dt><dd>fade, colour, tooltip out</dd>
+          <dt>moderate 220ms</dt><dd>menu, popover, toast in</dd>
+          <dt>slow 300ms</dt><dd>sheet, drawer, dialog in · <span class="mono">ease-sheet</span></dd>
+          <dt>exit 160ms</dt><dd>every dismissal (faster than entry)</dd>
+          <dt>reduced</dt><dd>all → 0ms; spinners and shimmer stop</dd>
+        </dl>
+        <dl class="kv">
+          <dt>10 sticky</dt><dd>table headers</dd>
+          <dt>20 / 30</dt><dd>app bar / tab bar, rail, sidebar</dd>
+          <dt>100 / 110</dt><dd>scrim / dialog, sheet, drawer</dd>
+          <dt>120 / 130</dt><dd>popover / command palette</dd>
+          <dt>140 / 150</dt><dd>toast + approvals / tooltip</dd>
+          <dt>200</dt><dd>reconnecting, re-auth</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTROLS ================= -->
+  <section class="sec" aria-labelledby="h-ctl">
+    <div class="sec__head">
+      <p class="overline">06 · Controls</p>
+      <h2 id="h-ctl">Buttons, chips, segmented, fields</h2>
+      <p class="muted">Rest · hover · focus-visible · pressed · disabled · busy. On coarse pointers every target is ≥ 44px; small visuals extend their hit area instead of growing.</p>
+    </div>
+    <div class="grid">
+      <div class="spec">
+        <h3>Buttons</h3>
+        <div class="row"><button class="btn btn--primary">Primary</button><button class="btn btn--primary is-hover">Hover</button><button class="btn btn--primary is-focus">Focus</button><button class="btn btn--primary is-active">Pressed</button><button class="btn btn--primary" disabled>Disabled</button><button class="btn btn--primary" aria-busy="true"><span class="spinner" aria-hidden="true"></span>Saving</button></div>
+        <div class="row"><button class="btn btn--secondary">Secondary</button><button class="btn btn--secondary is-hover">Hover</button><button class="btn btn--secondary is-focus">Focus</button><button class="btn btn--ghost">Ghost</button><button class="btn btn--ghost is-hover">Hover</button></div>
+        <div class="row"><button class="btn btn--danger"><svg class="i"><use href="#i-trash"/></svg>Delete profile</button><button class="btn btn--danger-quiet">Deny</button><button class="btn btn--secondary btn--icon" aria-label="Copy"><svg class="i"><use href="#i-copy"/></svg></button><button class="btn btn--ghost btn--icon" aria-label="More actions"><svg class="i"><use href="#i-dots-v"/></svg></button></div>
+        <div class="row"><button class="btn btn--primary btn--sm">Small</button><button class="btn btn--primary">Default</button><button class="btn btn--primary btn--lg">Large</button></div>
+        <div class="row subtle" style="font-size:var(--cd-text-xs)"><span><kbd>⌘</kbd> <kbd>K</kbd> palette</span><span><kbd>?</kbd> help</span><span><kbd>Esc</kbd> close top layer</span></div>
+      </div>
+      <div class="spec">
+        <h3>Chips & segmented</h3>
+        <div class="row" style="gap:var(--cd-space-2)"><button class="chip" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Running</button><button class="chip" aria-pressed="false">Needs you <span class="count" style="margin-inline-start:2px">3</span></button><button class="chip" aria-pressed="false">Failed</button></div>
+        <div class="row" style="gap:var(--cd-space-2)"><span class="chip">label:infra<button class="chip__x hit" aria-label="Remove label infra"><svg class="i i-sm"><use href="#i-x"/></svg></button></span><span class="chip mono">model:sonnet<button class="chip__x hit" aria-label="Remove model filter"><svg class="i i-sm"><use href="#i-x"/></svg></button></span><button class="chip chip--profile"><span class="avatar avatar--sm">R</span>research<svg class="i"><use href="#i-chev-d"/></svg></button></div>
+        <div class="seg" role="radiogroup" aria-label="Activity display"><button role="radio" aria-checked="false">Final only</button><button role="radio" aria-checked="true">Worklog</button><button role="radio" aria-checked="false">Stream</button></div>
+        <div class="seg" role="radiogroup" aria-label="Period"><button role="radio" aria-checked="false">24h</button><button role="radio" aria-checked="true">7d</button><button role="radio" aria-checked="false">30d</button><button role="radio" aria-checked="false">90d</button></div>
+        <div class="row"><span class="tooltip" role="tooltip">Open in new window <kbd style="background:transparent;color:inherit;border-color:currentColor">⌘⇧N</kbd></span></div>
+      </div>
+      <div class="spec">
+        <h3>Fields</h3>
+        <div class="field"><label class="field__label" for="f1">Job name</label><input id="f1" class="input" value="Nightly dependency audit"><span class="field__help">Shown in Inbox and notifications.</span></div>
+        <div class="field"><label class="field__label" for="f2">Schedule</label><input id="f2" class="input input--mono is-focus" value="0 3 * * *"><span class="field__help">Next: <span class="mono">Tue 03:00</span> · <span class="mono">Wed 03:00</span> · <span class="mono">Thu 03:00</span></span></div>
+        <div class="field"><label class="field__label" for="f3">Webhook URL</label><input id="f3" class="input input--mono" aria-invalid="true" aria-describedby="f3e" value="htps://hooks.example"><span class="field__error" id="f3e"><svg class="i i-sm"><use href="#i-failed"/></svg>Enter a full https:// URL.</span></div>
+        <div class="field"><label class="field__label" for="f4">Delivery</label><select id="f4" class="input"><option>Telegram · @ops</option><option>Discord · #alerts</option></select></div>
+        <div class="input-wrap"><svg class="i"><use href="#i-search"/></svg><input class="input" placeholder="Search sessions" aria-label="Search sessions"><kbd>/</kbd></div>
+      </div>
+      <div class="spec">
+        <h3>Toggles</h3>
+        <div class="switch-row"><span><span style="display:block">Notify when runs finish</span><span class="subtle" style="font-size:var(--cd-text-xs)">Web Push to this device</span></span><button class="switch" role="switch" aria-checked="true" aria-label="Notify when runs finish"></button></div>
+        <div class="switch-row"><span>Auto-approve read-only tools</span><button class="switch" role="switch" aria-checked="false" aria-label="Auto-approve read-only tools"></button></div>
+        <div class="switch-row"><span style="color:var(--cd-fg-disabled)">YOLO mode (locked by admin)</span><button class="switch" role="switch" aria-checked="false" disabled aria-label="YOLO mode"></button></div>
+        <label class="check"><input type="checkbox" checked> Include archived sessions</label>
+        <label class="check"><input type="checkbox"> Only this profile</label>
+        <div role="radiogroup" aria-label="Approval scope" style="display:grid">
+          <label class="check"><input type="radio" name="sc" checked> Once</label>
+          <label class="check"><input type="radio" name="sc"> This session</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEEDBACK ================= -->
+  <section class="sec" aria-labelledby="h-fb">
+    <div class="sec__head">
+      <p class="overline">07 · Feedback</p>
+      <h2 id="h-fb">Banners, toasts, empty, loading, error</h2>
+    </div>
+    <div class="grid">
+      <div class="spec spec--bare stack">
+        <div class="banner" data-tone="info" role="status"><svg class="i"><use href="#i-info"/></svg><div><div class="banner__title">Hermes v0.21.5 is available</div><div class="banner__body">12 fixes, 3 features. Updating restarts the gateway.</div></div><button class="btn btn--ghost btn--icon btn--sm" aria-label="Dismiss"><svg class="i"><use href="#i-x"/></svg></button><div class="banner__actions"><button class="btn btn--secondary btn--sm">What's new</button><button class="btn btn--primary btn--sm">Update</button></div></div>
+        <div class="banner" data-tone="warning" role="status"><svg class="i"><use href="#i-alert"/></svg><div><div class="banner__title">Gateway degraded</div><div class="banner__body">Telegram adapter retrying (3/5). Other channels are fine.</div></div><span></span><div class="banner__actions"><button class="btn btn--secondary btn--sm">Open logs</button></div></div>
+        <div class="banner" data-tone="danger" role="alert"><svg class="i"><use href="#i-failed"/></svg><div><div class="banner__title">Couldn't load cron jobs</div><div class="banner__body mono">GET /api/cron/jobs → 502 · gateway not reachable</div></div><span></span><div class="banner__actions"><button class="btn btn--primary btn--sm"><svg class="i"><use href="#i-refresh"/></svg>Retry</button><button class="btn btn--ghost btn--sm"><svg class="i"><use href="#i-copy"/></svg>Copy details</button></div></div>
+        <div class="banner" data-tone="neutral" role="status"><svg class="i"><use href="#i-wifi-off"/></svg><div><div class="banner__title">Offline · reconnecting in <span class="mono">4s</span></div><div class="banner__body">Showing cached data from 09:41. Actions queue until you're back.</div></div><span></span></div>
+      </div>
+      <div class="spec spec--bare stack" style="justify-items:start">
+        <div class="toast" data-tone="success" role="status"><svg class="i"><use href="#i-succeeded"/></svg><div class="toast__text"><strong>Run finished</strong><small class="mono">Nightly dependency audit · 2m 14s</small></div><div class="toast__actions"><button class="btn btn--ghost btn--sm">View</button><button class="btn btn--ghost btn--icon btn--sm" aria-label="Dismiss"><svg class="i"><use href="#i-x"/></svg></button></div></div>
+        <div class="toast" data-tone="danger" role="alert"><svg class="i"><use href="#i-failed"/></svg><div class="toast__text"><strong>Couldn't save config</strong><small>Your change was rolled back.</small></div><div class="toast__actions"><button class="btn btn--ghost btn--sm">Retry</button><button class="btn btn--ghost btn--icon btn--sm" aria-label="Dismiss"><svg class="i"><use href="#i-x"/></svg></button></div></div>
+        <div class="toast" data-tone="accent" role="status"><svg class="i"><use href="#i-trash"/></svg><div class="toast__text"><strong>Session archived</strong></div><div class="toast__actions"><button class="btn btn--ghost btn--sm" style="color:var(--cd-accent-fg)">Undo</button></div></div>
+        <div class="spec" style="inline-size:100%">
+          <div class="skel-row"><span class="skel" style="block-size:2rem;border-radius:50%"></span><span class="stack" style="gap:6px"><span class="skel" style="block-size:.8rem;inline-size:70%"></span><span class="skel" style="block-size:.6rem;inline-size:45%"></span></span><span class="skel" style="block-size:1.25rem"></span></div>
+          <div class="skel-row"><span class="skel" style="block-size:2rem;border-radius:50%"></span><span class="stack" style="gap:6px"><span class="skel" style="block-size:.8rem;inline-size:55%"></span><span class="skel" style="block-size:.6rem;inline-size:35%"></span></span><span class="skel" style="block-size:1.25rem"></span></div>
+          <span class="sr-only" role="status">Loading sessions</span>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="empty">
+          <div class="empty__icon"><svg class="i"><use href="#i-bolt"/></svg></div>
+          <h3>No scheduled jobs yet</h3>
+          <p>Cron jobs run agents or scripts on a schedule and deliver results to a channel.</p>
+          <div class="row" style="justify-content:center;margin-block-start:var(--cd-space-2)"><button class="btn btn--primary"><svg class="i"><use href="#i-plus"/></svg>New job</button><button class="btn btn--secondary">Browse blueprints</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= OVERLAYS ================= -->
+  <section class="sec" aria-labelledby="h-ov">
+    <div class="sec__head">
+      <p class="overline">08 · Overlays</p>
+      <h2 id="h-ov">Dialog, sheet, drawer, palette, menu</h2>
+      <p class="muted">Dialogs centre on desktop and become bottom sheets on phones. Focus is trapped, background is inert, Esc closes only the top layer, focus returns to the opener.</p>
+    </div>
+    <div class="grid">
+      <div class="stage" aria-label="Dialog example">
+        <div class="stage__bg" aria-hidden="true"><i style="inline-size:40%"></i><i></i><i style="inline-size:80%"></i><i></i><i style="inline-size:60%"></i></div><div class="stage__scrim"></div>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+          <div class="dialog__head"><div class="stack" style="gap:var(--cd-space-1)"><h3 id="dlg-t" style="font-size:var(--cd-text-lg)">Delete profile “research”?</h3><p class="muted" style="font-size:var(--cd-text-sm)">Removes its sessions, memory and cron jobs from this Hermes. This can't be undone.</p></div><button class="btn btn--ghost btn--icon btn--sm" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <div class="field"><label class="field__label" for="dlg-i">Type <span class="mono">research</span> to confirm</label><input id="dlg-i" class="input input--mono" value="resea"></div>
+          <div class="dialog__foot"><button class="btn btn--secondary">Cancel</button><button class="btn btn--danger" disabled>Delete profile</button></div>
+        </div>
+      </div>
+      <div class="stage" aria-label="Command palette example" style="place-items:start center">
+        <div class="stage__bg" aria-hidden="true"><i style="inline-size:40%"></i><i></i><i style="inline-size:80%"></i><i></i></div><div class="stage__scrim"></div>
+        <div class="palette" role="dialog" aria-label="Command palette">
+          <div class="palette__input"><svg class="i" style="color:var(--cd-fg-subtle)"><use href="#i-search"/></svg><input value="cron" aria-label="Search commands" role="combobox" aria-expanded="true" aria-controls="pl" aria-activedescendant="pl-1"><kbd>Esc</kbd></div>
+          <div class="palette__list" id="pl" role="listbox">
+            <p class="overline palette__group">Actions</p>
+            <div class="palette__item" id="pl-1" role="option" aria-selected="true"><svg class="i"><use href="#i-plus"/></svg><span class="grow">New cron job</span><kbd>↵</kbd></div>
+            <div class="palette__item" role="option" aria-selected="false"><svg class="i"><use href="#i-bolt"/></svg><span class="grow">Run “Nightly dependency audit” now</span></div>
+            <p class="overline palette__group">Go to</p>
+            <div class="palette__item" role="option" aria-selected="false"><svg class="i"><use href="#i-bolt"/></svg><span class="grow">Work › Cron</span><span class="mono subtle" style="font-size:var(--cd-text-xs)">G C</span></div>
+            <div class="palette__item" role="option" aria-selected="false"><svg class="i"><use href="#i-log"/></svg><span class="grow">Logs › cron</span></div>
+          </div>
+          <div class="palette__foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> run</span><span><kbd>⇥</kbd> scope: <span class="mono">research</span></span></div>
+        </div>
+      </div>
+      <div class="stage stage--drawer" aria-label="Drawer and menu example" style="place-items:start">
+        <div class="stage__bg" aria-hidden="true"><i style="inline-size:40%"></i><i></i><i style="inline-size:80%"></i><i></i></div>
+        <div class="menu menu--inline" role="menu" aria-label="Session actions">
+          <div class="menu__item" role="menuitem"><svg class="i"><use href="#i-chat"/></svg>Open</div>
+          <div class="menu__item is-hover" role="menuitem"><svg class="i"><use href="#i-git"/></svg>Fork</div>
+          <div class="menu__item" role="menuitem"><svg class="i"><use href="#i-copy"/></svg>Copy ID</div>
+          <div class="menu__sep" role="separator"></div>
+          <div class="menu__item menu__item--danger" role="menuitem"><svg class="i"><use href="#i-trash"/></svg>Delete…</div>
+        </div>
+        <aside class="drawer" aria-label="Run inspector">
+          <div class="row" style="justify-content:space-between"><h3>Run inspector</h3><button class="btn btn--ghost btn--icon btn--sm" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <dl class="kv"><dt>run</dt><dd class="mono">run_8f3a</dd><dt>status</dt><dd><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running</span></dd><dt>elapsed</dt><dd class="mono">01:42</dd><dt>tokens</dt><dd class="mono">8,112</dd></dl>
+          <button class="btn btn--secondary btn--block"><svg class="i"><use href="#i-paused"/></svg>Interrupt</button>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WORK ================= -->
+  <section class="sec" aria-labelledby="h-work">
+    <div class="sec__head">
+      <p class="overline">09 · Work</p>
+      <h2 id="h-work">Kanban, run timeline, tool calls, approvals</h2>
+      <p class="muted">Desktop: lanes side by side; cards move by drag or the “Move to…” menu. Phone: lanes become a status segmented control over one vertical list; long-press opens “Move to…”. Approvals reuse one card everywhere: chat, Inbox, push deep link.</p>
+    </div>
+    <div class="board-wrap">
+    <div class="seg board-seg" role="radiogroup" aria-label="Lane"><button role="radio" aria-checked="false">Ready · 4</button><button role="radio" aria-checked="true">In progress · 2</button><button role="radio" aria-checked="false">Done · 18</button></div>
+    <div class="board" role="list" aria-label="Board: Release 0.4">
+      <div class="lane" role="listitem">
+        <div class="lane__head"><span class="overline">Ready</span><span class="mono subtle" style="font-size:var(--cd-text-xs)">4</span><button class="btn btn--ghost btn--icon btn--sm" aria-label="Add task to Ready"><svg class="i"><use href="#i-plus"/></svg></button></div>
+        <article class="kcard"><div class="kcard__top"><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-142</span><span class="status status--plain" data-tone="neutral" style="margin-inline-start:auto"><svg class="i"><use href="#i-queued"/></svg>Queued</span></div><div class="kcard__title">Wire Web Push for approvals</div><div class="kcard__meta"><span class="chip chip--profile" style="block-size:1.5rem;font-size:var(--cd-text-xs)"><span class="avatar avatar--sm" data-av="2">O</span>ops</span><span>playbook · build</span></div></article>
+        <article class="kcard is-dragging" aria-grabbed="true"><div class="kcard__top"><svg class="i i-sm subtle"><use href="#i-grip"/></svg><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-139</span></div><div class="kcard__title">Profile chip in app bar</div><div class="kcard__meta"><span>dragging…</span></div></article>
+      </div>
+      <div class="lane is-current" role="listitem">
+        <div class="lane__head"><span class="overline">In progress</span><span class="mono subtle" style="font-size:var(--cd-text-xs)">2</span></div>
+        <article class="kcard is-attn"><div class="kcard__top"><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-131</span><span class="status status--attn" data-tone="warning" style="margin-inline-start:auto"><svg class="i"><use href="#i-waiting"/></svg>Needs you</span></div><div class="kcard__title">Migrate cron scripts to job type</div><div class="kcard__meta"><span class="chip chip--profile" style="block-size:1.5rem;font-size:var(--cd-text-xs)"><span class="avatar avatar--sm">R</span>research</span><span class="mono">stage 3/5</span></div><div class="progress" data-tone="warning"><i style="--p:60%"></i></div></article>
+        <article class="kcard is-selected"><div class="kcard__top"><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-128</span><span class="status status--plain" data-tone="running" style="margin-inline-start:auto"><svg class="i spin"><use href="#i-running"/></svg>Running</span></div><div class="kcard__title">Command palette scopes</div><div class="kcard__meta"><span class="mono">01:42</span><span class="mono">8.1k tok</span><button class="btn btn--ghost btn--sm" style="margin-inline-start:auto">Move to…</button></div><div class="progress" data-tone="running"><i style="--p:35%"></i></div></article>
+      </div>
+      <div class="lane" role="listitem">
+        <div class="lane__head"><span class="overline">Done</span><span class="mono subtle" style="font-size:var(--cd-text-xs)">18</span></div>
+        <article class="kcard"><div class="kcard__top"><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-120</span><span class="status status--plain" data-tone="success" style="margin-inline-start:auto"><svg class="i"><use href="#i-succeeded"/></svg>Succeeded</span></div><div class="kcard__title">Token pipeline</div></article>
+        <article class="kcard"><div class="kcard__top"><span class="mono subtle" style="font-size:var(--cd-text-xs)">HC-117</span><span class="status status--plain" data-tone="danger" style="margin-inline-start:auto"><svg class="i"><use href="#i-failed"/></svg>Failed</span></div><div class="kcard__title">Old SSE bridge</div></article>
+      </div>
+    </div>
+    </div>
+    <div class="grid grid--wide">
+      <div class="spec">
+        <div class="row" style="justify-content:space-between"><h3>Run timeline</h3><span class="status" data-tone="running"><svg class="i spin"><use href="#i-running"/></svg>Running · <span class="mono">04:12</span></span></div>
+        <ol class="timeline">
+          <li class="step" data-tone="success"><span class="step__icon"><svg class="i"><use href="#i-check"/></svg></span><div class="step__body"><div class="step__head"><span class="step__title">Plan</span><span class="subtle" style="font-size:var(--cd-text-xs)">research</span><span class="step__time mono">0:18</span></div></div></li>
+          <li class="step" data-tone="success"><span class="step__icon"><svg class="i"><use href="#i-check"/></svg></span><div class="step__body"><div class="step__head"><span class="step__title">Implement</span><span class="subtle" style="font-size:var(--cd-text-xs)">7 tool calls</span><span class="step__time mono">2:40</span></div></div></li>
+          <li class="step" data-tone="running"><span class="step__icon"><svg class="i spin"><use href="#i-running"/></svg></span><div class="step__body"><div class="step__head"><span class="step__title">Verify</span><span class="subtle" style="font-size:var(--cd-text-xs)">loop 2 of 3</span><span class="step__time mono">1:14</span></div><span class="muted" style="font-size:var(--cd-text-sm)">Running <span class="mono">pnpm test --filter caduceus</span></span></div></li>
+          <li class="step" data-tone="warning"><span class="step__icon"><svg class="i"><use href="#i-waiting"/></svg></span><div class="step__body"><div class="step__head"><span class="step__title">Human gate: review diff</span><span class="step__time mono">–</span></div><span class="muted" style="font-size:var(--cd-text-sm)">Will wait for you after Verify.</span></div></li>
+          <li class="step" data-tone="neutral"><span class="step__icon"><svg class="i"><use href="#i-queued"/></svg></span><div class="step__body"><div class="step__head"><span class="step__title subtle">Ship</span></div></div></li>
+        </ol>
+      </div>
+      <div class="stack">
+        <div class="approval" role="group" aria-labelledby="ap-t">
+          <div class="approval__head"><span class="status status--attn" data-tone="warning"><svg class="i"><use href="#i-waiting"/></svg>Waiting for you</span><span class="subtle mono" style="font-size:var(--cd-text-xs)">research · run_8f3a · 2m</span></div>
+          <h3 id="ap-t">Allow <span class="mono">terminal.exec</span>?</h3>
+          <pre class="log" style="color:var(--cd-fg-default)">rm -rf build/ &amp;&amp; pnpm build</pre>
+          <p class="muted" style="font-size:var(--cd-text-sm)">Deletes files in <span class="mono">~/code/caduceus-dashboard/build</span>. Flagged: recursive delete.</p>
+          <div class="approval__actions"><button class="btn btn--primary">Allow once <kbd style="background:transparent;color:inherit;border-color:currentColor;opacity:.8">↵</kbd></button><button class="btn btn--secondary">This session</button><button class="btn btn--secondary">Always…</button><button class="btn btn--danger-quiet">Deny</button></div>
+        </div>
+        <details class="tool" open>
+          <summary><svg class="i i-sm chev"><use href="#i-chev-r"/></svg><svg class="i" style="color:var(--cd-tone-success-solid)" aria-label="succeeded"><use href="#i-succeeded"/></svg><span class="tool__name">read_file</span><span class="tool__args truncate">src/shell/AppShell.tsx</span><span class="tool__dur">0.2s</span></summary>
+          <div class="tool__body"><pre class="log">export function AppShell({ children }: Props) {
+  const nav = useNavMode() // tabs | rail | sidebar
+  …</pre></div>
+        </details>
+        <details class="tool tool--failed">
+          <summary><svg class="i i-sm chev"><use href="#i-chev-r"/></svg><svg class="i" style="color:var(--cd-tone-danger-solid)" aria-label="failed"><use href="#i-failed"/></svg><span class="tool__name">web.fetch</span><span class="tool__args truncate">https://registry.npmjs.org/@tanstack/react-router</span><span class="tool__dur" style="color:var(--cd-tone-danger-fg)">timeout</span></summary>
+        </details>
+        <details class="tool">
+          <summary><svg class="i i-sm chev"><use href="#i-chev-r"/></svg><svg class="i spin" style="color:var(--cd-tone-running-solid)" aria-label="running"><use href="#i-running"/></svg><span class="tool__name">terminal.exec</span><span class="tool__args truncate">pnpm test --filter caduceus</span><span class="tool__dur">1:14</span></summary>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CHAT ================= -->
+  <section class="sec" aria-labelledby="h-chat">
+    <div class="sec__head">
+      <p class="overline">10 · Chat</p>
+      <h2 id="h-chat">Transcript and composer</h2>
+      <p class="muted">Agent turns are flat prose (no bubble); the user's turn is a tinted bubble. Profile, model, reasoning, workspace and context live in the composer's chip footer; on phones they fold into one chip that opens a sheet.</p>
+    </div>
+    <div class="chat-grid">
+      <div class="spec stack" style="gap:var(--cd-space-4)">
+        <div class="chat" role="log" aria-label="Conversation">
+          <div class="msg-user">Why did last night's audit fail, and can you fix it?</div>
+          <div class="msg-agent">
+            <div class="msg-agent__by"><span class="avatar avatar--sm">R</span><span>research</span><span class="mono">sonnet-4.5</span></div>
+            <button class="thinking btn--ghost" style="border:0;background:none;padding:0;cursor:pointer"><svg class="i i-sm"><use href="#i-chev-r"/></svg>Thought for 12s</button>
+            <p>The job hit a registry timeout in <code>web.fetch</code>, so the audit never ran. I've added a retry with backoff and re-queued it.</p>
+            <div class="msg-actions"><button class="btn btn--ghost btn--icon btn--sm" aria-label="Copy"><svg class="i"><use href="#i-copy"/></svg></button><button class="btn btn--ghost btn--icon btn--sm" aria-label="Fork from here"><svg class="i"><use href="#i-git"/></svg></button><button class="btn btn--ghost btn--icon btn--sm" aria-label="Regenerate"><svg class="i"><use href="#i-refresh"/></svg></button></div>
+          </div>
+        </div>
+        <div class="composer">
+          <label class="sr-only" for="cmp">Message research</label>
+          <textarea id="cmp" rows="2" placeholder="Message research… (/ for commands, @ for files)"></textarea>
+          <div class="composer__foot">
+            <button class="btn btn--ghost btn--icon" aria-label="Attach files"><svg class="i"><use href="#i-clip"/></svg></button>
+            <div class="composer__chips">
+              <button class="chip chip--profile wide-only"><span class="avatar avatar--sm">R</span>research</button>
+              <button class="chip mono wide-only">sonnet-4.5</button>
+              <button class="chip wide-only">High effort</button>
+              <button class="chip wide-only mono">~/code/caduceus</button>
+              <span class="chip wide-only" role="img" aria-label="Context 38% used"><span class="ring"></span>38%</span>
+              <button class="chip narrow-only"><svg class="i"><use href="#i-sliders"/></svg><span class="mono">sonnet</span> · High · 38%</button>
+            </div>
+            <button class="btn btn--ghost btn--icon" aria-label="Dictate"><svg class="i"><use href="#i-mic"/></svg></button>
+            <button class="btn btn--primary btn--icon" aria-label="Send" style="border-radius:var(--cd-radius-lg)"><svg class="i"><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="shell" data-density="comfortable" style="block-size:40rem;position:relative">
+          <header class="shell__appbar"><button class="btn btn--ghost btn--icon" aria-label="Back"><svg class="i" style="rotate:180deg"><use href="#i-chev-r"/></svg></button><span class="shell__title truncate">Audit failure</span><button class="chip chip--profile hit"><span class="avatar avatar--sm">R</span>research</button></header>
+          <div class="shell__main">
+            <div class="msg-user">Why did last night's audit fail?</div>
+            <div class="msg-agent"><div class="msg-agent__by"><span class="mono">sonnet-4.5</span><span>· 12s</span></div><p>A registry timeout in <code>web.fetch</code>. Retry added; job re-queued.</p></div>
+            <div class="composer" style="margin-block-start:auto">
+              <textarea rows="1" aria-label="Message" placeholder="Message research…" style="min-block-size:2.75rem"></textarea>
+              <div class="composer__foot"><button class="btn btn--ghost btn--icon" aria-label="Attach"><svg class="i"><use href="#i-clip"/></svg></button><div class="composer__chips"><button class="chip"><svg class="i"><use href="#i-sliders"/></svg><span class="mono">sonnet</span> · High · 38%</button></div><button class="btn btn--primary btn--icon" aria-label="Send" style="border-radius:var(--cd-radius-lg)"><svg class="i"><use href="#i-send"/></svg></button></div>
+            </div>
+          </div>
+          <div class="stage__scrim" style="position:absolute;z-index:1"></div>
+          <div class="sheet" style="z-index:2" role="dialog" aria-modal="true" aria-label="Chat settings">
+            <div class="sheet__grab" aria-hidden="true"></div>
+            <h3>Chat settings</h3>
+            <div class="menu__item" style="justify-content:space-between"><span>Model</span><span class="mono muted">sonnet-4.5 <svg class="i i-sm"><use href="#i-chev-r"/></svg></span></div>
+            <div class="menu__item" style="justify-content:space-between"><span>Reasoning</span><div class="seg" role="radiogroup" aria-label="Reasoning"><button role="radio" aria-checked="false">Low</button><button role="radio" aria-checked="true">High</button></div></div>
+            <div class="menu__item" style="justify-content:space-between"><span>Workspace</span><span class="mono muted">~/code/caduceus</span></div>
+            <div class="menu__item" style="justify-content:space-between"><span>Context</span><span class="row" style="gap:var(--cd-space-2)"><span class="ring"></span><span class="mono muted">38% · Compress</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CODE ================= -->
+  <section class="sec" aria-labelledby="h-code">
+    <div class="sec__head">
+      <p class="overline">11 · Code & diff</p>
+      <h2 id="h-code">Machine text blocks</h2>
+      <p class="muted">Added/removed lines carry a +/− sign as well as colour. Horizontal overflow scrolls inside the block, never the page.</p>
+    </div>
+    <div class="grid grid--wide">
+      <div class="code">
+        <div class="code__head"><svg class="i i-sm"><use href="#i-file"/></svg><span class="grow truncate">retry.ts · typescript</span><button class="btn btn--ghost btn--sm" aria-label="Copy code"><svg class="i i-sm"><use href="#i-copy"/></svg>Copy</button></div>
+<pre><span class="c">// exponential backoff with jitter</span>
+<span class="k">export async function</span> <span class="f">withRetry</span><span class="p">&lt;</span><span class="t">T</span><span class="p">&gt;(</span>fn<span class="p">:</span> <span class="p">() =&gt;</span> <span class="t">Promise</span><span class="p">&lt;</span><span class="t">T</span><span class="p">&gt;,</span> tries <span class="p">=</span> <span class="n">3</span><span class="p">) {</span>
+  <span class="k">for</span> <span class="p">(</span><span class="k">let</span> i <span class="p">=</span> <span class="n">0</span><span class="p">;</span> i <span class="p">&lt;</span> tries<span class="p">;</span> i<span class="p">++) {</span>
+    <span class="k">try</span> <span class="p">{</span> <span class="k">return await</span> <span class="f">fn</span><span class="p">() }</span> <span class="k">catch</span> <span class="p">{</span> <span class="k">await</span> <span class="f">sleep</span><span class="p">(</span><span class="n">2</span> <span class="p">**</span> i <span class="p">*</span> <span class="n">250</span><span class="p">) }</span>
+  <span class="p">}</span>
+  <span class="k">throw new</span> <span class="t">Error</span><span class="p">(</span><span class="s">"retries exhausted"</span><span class="p">)</span>
+<span class="p">}</span></pre>
+      </div>
+      <div class="code">
+        <div class="code__head"><svg class="i i-sm"><use href="#i-git"/></svg><span class="grow truncate">cron/audit.ts</span><span class="mono" style="color:var(--cd-diff-add-fg)">+3</span><span class="mono" style="color:var(--cd-diff-remove-fg)">−1</span><button class="btn btn--ghost btn--sm">Open</button></div>
+        <div class="diff" role="table" aria-label="Diff of cron/audit.ts">
+          <span><span class="ln">12</span><span class="sg"> </span>const res = await fetch(url)</span>
+          <span class="rem"><span class="ln">13</span><span class="sg">−</span>const body = await res.json()</span>
+          <span class="add"><span class="ln">13</span><span class="sg">+</span>const body = await withRetry(() =&gt;</span>
+          <span class="add"><span class="ln">14</span><span class="sg">+</span>  fetch(url).then((r) =&gt; r.json()),</span>
+          <span class="add"><span class="ln">15</span><span class="sg">+</span>)</span>
+          <span><span class="ln">16</span><span class="sg"> </span>return audit(body)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DENSITY ================= -->
+  <section class="sec" aria-labelledby="h-den">
+    <div class="sec__head">
+      <p class="overline">12 · Density</p>
+      <h2 id="h-den">Compact desktop, comfortable touch</h2>
+      <p class="muted">Same markup with <span class="mono">data-density</span> forced per subtree. Auto picks compact for a fine pointer at ≥ 1024px.</p>
+    </div>
+    <div class="grid">
+      <div class="spec" data-density="compact">
+        <p class="overline">compact · 32px controls · 14px UI</p>
+        <div class="row"><button class="btn btn--primary">Run</button><button class="btn btn--secondary">Edit</button><button class="chip" aria-pressed="true">Running</button><button class="switch" role="switch" aria-checked="true" aria-label="Enabled"></button></div>
+        <input class="input" value="0 3 * * *" aria-label="Schedule (compact)">
+      </div>
+      <div class="spec" data-density="comfortable">
+        <p class="overline">comfortable · 44px controls · 16px UI</p>
+        <div class="row"><button class="btn btn--primary">Run</button><button class="btn btn--secondary">Edit</button><button class="chip" aria-pressed="true">Running</button><button class="switch" role="switch" aria-checked="true" aria-label="Enabled"></button></div>
+        <input class="input" value="0 3 * * *" aria-label="Schedule (comfortable)">
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Specimen-only: read ?theme=&skin=&density=&motion= and wire the controls.
+  (function () {
+    const root = document.documentElement;
+    const q = new URLSearchParams(location.search);
+    const set = (axis, v) => {
+      if (!v) return;
+      root.setAttribute('data-' + axis, v);
+      document.querySelectorAll('[data-axis="' + axis + '"] [role="radio"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.v === v)));
+      if (axis === 'skin') document.getElementById('skin-select').value = v;
+    };
+    ['theme', 'skin', 'density', 'motion'].forEach(a => set(a, q.get(a)));
+    document.querySelectorAll('[data-axis]').forEach(g => g.addEventListener('click', e => {
+      const b = e.target.closest('[role="radio"]'); if (b) set(g.dataset.axis, b.dataset.v);
+    }));
+    document.getElementById('skin-select').addEventListener('change', e => set('skin', e.target.value));
+    document.querySelectorAll('.switch:not([disabled])').forEach(s => s.addEventListener('click', () => s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true'))));
+  })();
+</script>
+</body>
+</html>

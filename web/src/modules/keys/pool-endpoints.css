@@ -1,0 +1,24 @@
+/* System › Keys › Credential pools and Custom endpoints. Tokens only; logical properties throughout. */
+
+/* A tag that may wrap: values such as a variable name or a model id can be longer than a phone is wide. */
+.ky-pe-tag { block-size: auto; min-block-size: 1.25rem; padding-block: var(--cd-space-0-5); white-space: normal; overflow-wrap: anywhere; max-inline-size: 100%; line-height: var(--cd-leading-xs); }
+
+/* The quiet red of a button that takes something away. */
+.ky-pe-danger { color: var(--cd-tone-danger-fg); }
+@media (hover: hover) {
+  .ky-pe-danger:hover { background: var(--cd-tone-danger-soft); color: var(--cd-tone-danger-fg); }
+}
+
+/* ---- Credentials in a pool ---- */
+.ky-pe-entries { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.ky-pe-entry { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-2) var(--cd-space-3); padding: var(--cd-space-3); background: var(--cd-bg-surface-2); border-radius: var(--cd-radius-md); min-inline-size: 0; }
+.ky-pe-entry__main { flex: 1 1 12rem; min-inline-size: 0; display: grid; gap: var(--cd-space-1-5); justify-items: start; }
+.ky-pe-entry__label { overflow-wrap: anywhere; }
+
+/* ---- The endpoint form ---- */
+.ky-pe-check { display: grid; gap: var(--cd-space-2); justify-items: start; }
+.ky-pe-verdict { grid-template-columns: auto minmax(0, 1fr); }
+.ky-pe-verdict p { margin: 0; overflow-wrap: anywhere; }
+.ky-pe-models { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.ky-pe-model { block-size: auto; max-inline-size: 100%; white-space: normal; overflow-wrap: anywhere; text-align: start; }
+.ky-pe-model[aria-pressed="true"] { border-color: var(--cd-accent); color: var(--cd-accent-fg); }

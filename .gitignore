@@ -1,0 +1,16 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.tsbuildinfo
+.DS_Store
+
+# Local only: smoke-run screenshots and third-party product screenshots (kept on disk, not published)
+.scratch/**/*-smoke/**/*.png
+.scratch/**/*-smoke/**/*.jpg
+docs/research/images/
+
+# Local env and secrets
+.env
+.env.*
+!.env.example

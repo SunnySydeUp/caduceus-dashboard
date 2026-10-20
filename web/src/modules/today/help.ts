@@ -1,0 +1,118 @@
+import type { ModuleHelp } from '../../help.ts';
+
+export const todayHelp: ModuleHelp = {
+  pages: [
+    {
+      id: 'today',
+      title: 'Today',
+      summary: 'What needs you, what is ready for review, the day’s routines, and what happened while you were away.',
+      route: '/today',
+      keywords: 'home start overview inbox needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty',
+      body: [
+        { p: 'Today is where Caduceus opens. It answers four questions, in this order on a phone: what needs me, what is ready, what are my routines doing, and what happened while I was away. On a wide screen the first two sit in a column on the left and the schedule and the away list in a column on the right. Every block loads by itself. If one cannot be read, it says so inside the block with a Retry button, and the others carry on.' },
+        { h: 'Needs you' },
+        { p: 'One card for each thing that [[needs-decision|needs a decision]], in every [[profile-scope|profile]] you are looking at: an approval for a command, a question, a choice, or a decision about work such as a task to review. The card says who is asking, what for, and how long ago. The one that has waited longest is first. You answer on the card. Answer one here or anywhere else, and the card goes by itself.' },
+        { p: 'An agent that wants to run a risky command stops and asks. So does an agent that has a question. Caduceus collects those requests from every chat that is running, in every profile, so you do not have to find the right chat. It asks Hermes through its own [[observer-connection|observer connection]] and keeps nothing: when you answer in a chat, in Telegram or in the terminal instead, the card disappears by itself. An item that nobody answered disappears when Hermes gives up on it. Answering one that is already gone says so, instead of failing.' },
+        {
+          ul: [
+            'An approval shows the exact command and where it came from. Allow once lets this one command run. Allow for this session lets that kind of command run again in the same chat. Allow always is a standing permission, so it asks for a [[passkey|passkey]] first ([[risk-tiers|risk tiers]]). Deny stops the command, and you can say why: the agent is told, so it can try another way.',
+            'A question shows the choices the agent offers, and a box for your own words. A tap on the only choice sends it. A clock counts down to the time Hermes stops waiting; after that it carries on without an answer. Skip lets it do that now.',
+            'A task in [[review]] has Approve, which marks it done, and Reject + note, which posts your note as a comment and sends it back to work. A task that [[needs-input]] has Answer, which posts your answer and unblocks it. A person who asks to be paired has Approve. These go away on their own when the task changes anywhere else.',
+            'Read-only mode lets you Deny and blocks every other decision ([[read-only-mode|read-only mode]]).',
+          ],
+        },
+        { p: 'The same cards are in the Talk tray, above the composer, so you can answer a decision of another thread without leaving the one you are in. The count of what needs a decision is on the Today tab and on the app icon. Failed jobs, a gateway that is down and other news that needs no answer are in Control › Notices.' },
+        { h: 'Ready for review' },
+        { p: 'Work that is [[ready-for-review|ready for review]]: a Kanban task that reached Done, or a chat run that finished, and that you have not opened since. Review opens the task or the chat and counts as opening it, so it leaves this list. So does opening the chat any other way, and so does a run that finishes while you are looking at its chat. If the same task is finished again later, it comes back as new work. Work that finished before Caduceus began keeping your place, and anything older than two weeks, is not offered.' },
+        { h: 'Crew' },
+        { p: 'On a phone, a row of tiles you can swipe, one for each agent, with what it is doing now. Choose a tile to talk to that agent. On a wider screen the crew is in the sidebar or the rail instead.' },
+        { h: 'Today’s schedule' },
+        { p: 'A bar for the 24 hours from midnight to midnight with a Now marker, and a mark for each routine ([[routine|routine]]) that ran or will run today. A filled square ran, a hollow square is still to come and a ringed circle failed. Under the bar, the runs still to come are listed first, then those that have run, each in words. Hermes keeps the last run and the next run of a routine, so a routine that runs many times a day shows its latest and its coming one.' },
+        { h: 'While you were away' },
+        { p: 'What happened since you last opened Today, newest first: the chat runs that finished and the routines that ran, from Hermes’s own record. Opening Today again soon after (a reload) is the same visit, so the list does not empty under you; it starts again after about a quarter of an hour away. The first time you open Today there is nothing to be away from yet, and it says so.' },
+        { h: 'Empty blocks' },
+        { p: 'A block with nothing to show says why, and carries the action that fills it: Talk to an agent, Give the crew work, Schedule a routine or Add a profile.' },
+      ],
+      related: ['notices', 'profile-scope', 'chat', 'risk-tiers', 'getting-around'],
+    },
+    {
+      id: 'profile-scope',
+      title: 'Profile scope',
+      summary: 'Which Hermes profile a screen is working on, and how to change it.',
+      keywords: 'profile switch all profiles chip',
+      body: [
+        { p: '[[hermes]] keeps its settings, memory, skills and sessions in separate profiles. The profile scope is the profile this browser tab is working on.' },
+        { h: 'Choosing a profile' },
+        {
+          ul: [
+            'The profile chip in the app bar shows the scope. Open it to choose another profile: it opens as a sheet on a phone.',
+            'A choice applies to this tab only. Other tabs and other devices keep their own.',
+            'A new tab starts on the profile in its address (?profile=), else the one you last chose on this device, else Hermes’s own default.',
+            'Links inside Caduceus keep the profile you chose.',
+          ],
+        },
+        { h: 'All profiles' },
+        { p: 'A screen that looks across your whole setup, such as Today, also offers All profiles. A screen that works on one profile always uses the one you chose.' },
+        { h: 'What it never changes' },
+        { p: 'Choosing a profile here never changes Hermes’s own default profile, the one the command line and anything without a profile uses. The switcher shows that default so you can see the difference.' },
+      ],
+      related: ['today', 'getting-around'],
+    },
+  ],
+  glossary: [
+    {
+      id: 'ready-for-review',
+      term: 'Ready for review',
+      definition: 'Finished work you have not opened since it finished: a task that reached Done, or a chat run that ended. Hermes knows what finished; Caduceus remembers only which of it you opened.',
+      page: 'today',
+    },
+    {
+      id: 'routine',
+      term: 'Routine',
+      definition: 'A scheduled job of Hermes’s cron, such as a morning briefing or a nightly test run. It runs by itself at the times it was given.',
+      page: 'today',
+    },
+    {
+      id: 'needs-decision',
+      term: 'Needs decision',
+      definition: 'An item you answer with a button or a few words: a command to approve, a question, a task to review, a person asking to be paired. Only these count on the Today tab and on the app icon.',
+      page: 'today',
+    },
+    {
+      id: 'review',
+      term: 'Review',
+      definition: 'A Kanban task whose worker says it is finished and waits for you to look. Approve marks it done; Reject + note sends it back to work with your note as a comment.',
+      page: 'today',
+    },
+    {
+      id: 'needs-input',
+      term: 'Needs input',
+      definition: 'A Kanban task that is blocked because its worker asked a question. Your answer is posted as a comment and the task is unblocked.',
+      page: 'today',
+    },
+    {
+      id: 'observer-connection',
+      term: 'Observer connection',
+      definition: 'Caduceus’s own standing connection to Hermes. It asks which chats are waiting on you and listens for changes. It never answers a request itself: only you do.',
+      page: 'today',
+    },
+    {
+      id: 'hermes',
+      term: 'Hermes',
+      definition: 'The AI agent Caduceus controls. Caduceus runs its own private copy of Hermes in the background; your sessions, profiles, models and skills all belong to Hermes.',
+      page: 'today',
+    },
+    {
+      id: 'profile-scope',
+      term: 'Profile scope',
+      definition: 'Which Hermes profile a screen is working on. You set it for each browser tab with the profile chip, and some screens can show All profiles at once.',
+      page: 'profile-scope',
+    },
+    {
+      id: 'session',
+      term: 'Session',
+      definition: 'One conversation with Hermes, with its messages and tool calls. A signed-in device is a different thing: Settings › Security lists those.',
+      page: 'today',
+    },
+  ],
+};

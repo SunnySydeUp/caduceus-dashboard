@@ -1,0 +1,80 @@
+/* Talk (M8 #04): the agent's header, the Details panel and the sessions sheet. Tokens only; logical properties throughout. */
+/* The header stays under the app bar while the thread scrolls: its buttons are never half behind the bar. `--talk-header-h` (set by TalkHeader) is how far what else sticks must start
+   below it. It sits above the composer (which is sticky too), so that the menus it opens are not cut by the composer. */
+.talk__header { position: sticky; inset-block-start: var(--shell-top); z-index: calc(var(--cd-z-appbar) - 1); padding-block-start: var(--cd-space-2); background: var(--cd-bg-canvas); }
+.talk__details-button { position: relative; }
+.talk__details-button .count { position: absolute; inset-block-start: 2px; inset-inline-end: 2px; min-inline-size: 1rem; block-size: 1rem; }
+/* The header's state words and live line never push the buttons off a narrow screen. */
+.talk__header .page-header__sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.talk__header .page-header { padding-block-end: var(--cd-space-3); flex-wrap: nowrap; align-items: center; }
+.talk__header .page-header__who { flex: 1 1 0; }
+/* The name truncates rather than push the buttons off the screen; under 360 px the sigil (which the crew strip above already shows) gives its room to the name. */
+.talk__header .page-header__text { grid-template-columns: minmax(0, 1fr); }
+.talk__header h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 22.5rem) { .talk__header .page-header__who > .sigil { display: none; } }
+.talk__header .page-header__actions { flex: none; flex-wrap: nowrap; }
+
+/* The sessions list in a sheet (a phone): the list is its own scroller there, which the virtual rows follow. */
+.talk-sessions .overlay__body { overflow: hidden; grid-auto-rows: minmax(0, 1fr); padding-inline: var(--cd-space-3); }
+.talk-sessions .chat__list { overflow-y: auto; min-block-size: 0; block-size: 100%; align-content: start; }
+
+/* Details. */
+.td { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-5); min-inline-size: 0; }
+.td__who { display: flex; align-items: center; gap: var(--cd-space-3); min-inline-size: 0; }
+.td__who > div { min-inline-size: 0; }
+.td__who h2 { margin: 0; font-size: var(--cd-text-xl); overflow-wrap: anywhere; }
+.td__who p { margin: 0; overflow-wrap: anywhere; }
+.td__section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-2); min-inline-size: 0; }
+.td__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); flex-wrap: wrap; }
+.td__head h3 { margin: 0; font-size: var(--cd-text-sm); color: var(--cd-fg-muted); font-weight: var(--cd-weight-semibold); }
+.td__now { display: grid; gap: var(--cd-space-2); padding: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface); overflow-wrap: anywhere; }
+.td__now[data-tone="waiting"] { border-color: var(--cd-status-waiting); background: var(--cd-tone-warning-soft); }
+.td__now[data-tone="failed"] { border-color: var(--cd-status-failed); }
+.td__bar { inline-size: 100%; block-size: 0.25rem; accent-color: var(--cd-fg-default); }
+.td__preview { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.td__views { justify-self: start; max-inline-size: 100%; }
+.td__empty { margin: 0; padding: var(--cd-space-3); border: 1px dashed var(--cd-border-default); border-radius: var(--cd-radius-lg); overflow-wrap: anywhere; }
+.td__list { list-style: none; margin: 0; padding: 0; display: grid; }
+.td__list > li + li { border-block-start: 1px solid var(--cd-border-subtle); }
+.td__row { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: var(--cd-target-min); color: inherit; text-decoration: none; min-inline-size: 0; }
+.td__row svg { flex: none; color: var(--cd-fg-muted); }
+.td__title { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td__pill { flex: none; max-inline-size: 45%; padding: 1px var(--cd-space-2); border-radius: var(--cd-radius-full); background: var(--cd-bg-surface-2); color: var(--cd-fg-muted); font-size: var(--cd-text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td__pill[data-tone="waiting"] { background: var(--cd-tone-warning-soft); color: var(--cd-tone-warning-fg); }
+.td__pill[data-tone="running"] { background: var(--cd-tone-running-soft); color: var(--cd-tone-running-fg); }
+.td__pill[data-tone="failed"] { background: var(--cd-tone-danger-soft); color: var(--cd-tone-danger-fg); }
+.td__more { justify-self: start; }
+.td__about { display: grid; gap: var(--cd-space-2); margin: 0; }
+.td__about > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--cd-space-1) var(--cd-space-3); }
+.td__about dt { color: var(--cd-fg-muted); }
+.td__about dd { margin: 0; font-family: var(--cd-font-mono); font-size: var(--cd-text-sm); text-align: end; overflow-wrap: anywhere; min-inline-size: 0; }
+/* The panel beside the conversation on a large screen: it scrolls on its own, below the page's top bar. */
+.talk__panel { position: sticky; inset-block-start: calc(var(--shell-top) + var(--talk-header-h, 0px) + var(--cd-space-4)); max-block-size: calc(var(--chat-column-h) - var(--talk-header-h, 0px)); overflow-y: auto; min-inline-size: 0; padding-inline-end: var(--cd-space-1); }
+
+/* A run of the agent's cards folded into one line (M8 #09). The line is a quiet pill; the cards open under it. */
+.activity-fold { display: grid; gap: var(--cd-space-2); min-inline-size: 0; justify-items: start; }
+.activity-fold > div { inline-size: 100%; min-inline-size: 0; }
+.activity-fold > div[hidden] { display: none; }
+.activity-fold__toggle { display: inline-flex; align-items: center; gap: var(--cd-space-2); max-inline-size: 100%; min-block-size: var(--cd-target-min); padding-inline: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-full); background: var(--cd-bg-surface); color: var(--cd-fg-default); font: inherit; font-size: var(--cd-text-sm); cursor: pointer; }
+.activity-fold__toggle > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-fold__toggle svg { flex: none; color: var(--cd-fg-muted); }
+.activity-fold__toggle:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+@media (hover: hover) { .activity-fold__toggle:hover { background: var(--cd-bg-surface-2); } }
+.activity-fold[data-tone="failed"] .activity-fold__toggle { border-color: var(--cd-tone-danger-solid); }
+.activity-fold[data-tone="failed"] .activity-fold__toggle > svg:first-child { color: var(--cd-tone-danger-fg); }
+.activity-fold[data-tone="running"] .activity-fold__toggle { border-color: var(--cd-tone-running-solid); }
+.activity-fold[data-tone="done"] .activity-fold__toggle > svg:first-child { color: var(--cd-tone-success-fg); }
+
+/* The header (M8 #09): the agent and its session on one line, then the buttons. On a phone Details is an icon and its name is for a screen reader. */
+.talk__menu { max-inline-size: 20rem; }
+.talk__rule { inline-size: 100%; margin-block: var(--cd-space-1); border: 0; border-block-start: 1px solid var(--cd-border-subtle); }
+/* The View menu: the roles are switches with a tick, the activity mode is a segmented control that fills the panel. */
+.talk__view { min-inline-size: 15rem; }
+.talk__view .seg button { padding-inline: var(--cd-space-2); }
+.app[data-size="compact"] .talk__details-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.app[data-size="compact"] .talk__details-button { inline-size: max(var(--cd-control-h), var(--cd-target-min)); padding: 0; justify-content: center; }
+
+/* Details over the thread on a tablet: pinned to the end edge below the top bar, scrolling on its own. */
+.talk__panel--over { position: fixed; inset-block: var(--shell-top) 0; inset-inline-end: 0; /* the block start is set by DetailsPanel, below the Details button */ z-index: var(--cd-z-banner); inline-size: min(21rem, 100%); max-block-size: none; padding: var(--cd-space-4); background: var(--cd-bg-canvas); border-inline-start: 1px solid var(--cd-border-subtle); box-shadow: var(--cd-shadow-popover); }
+.talk__header h1 { font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); letter-spacing: normal; }
+.talk__header .page-header__sub { font-size: var(--cd-text-md); }

@@ -1,0 +1,39 @@
+/* Sigils (web/src/shell/Sigil.tsx): a profile's mark, four cells in one hue on a tile of that hue (The Desk, docs/design/mocks/desk/desk.css). Only `--cd-*` tokens.
+   The size is one custom property, `--u`; the cells' padding, the ring and the badge all follow it, so a sigil keeps its proportions at every size. */
+.sigil { --u: 2.75rem; --h: var(--cd-sigil-1); --tile: var(--cd-sigil-tile-1); position: relative; display: inline-grid; flex: none; grid-template: 1fr 1fr / 1fr 1fr; box-sizing: border-box;
+  inline-size: var(--u); block-size: var(--u); padding: calc(var(--u) * .19); border-radius: 28%; background: var(--tile); vertical-align: middle; }
+.sigil[data-size="xs"] { --u: 1.5rem; } .sigil[data-size="sm"] { --u: 2.125rem; } .sigil[data-size="lg"] { --u: 3.5rem; } .sigil[data-size="xl"] { --u: 4.75rem; }
+.sigil[data-hue="1"] { --h: var(--cd-sigil-1); --tile: var(--cd-sigil-tile-1); } .sigil[data-hue="2"] { --h: var(--cd-sigil-2); --tile: var(--cd-sigil-tile-2); }
+.sigil[data-hue="3"] { --h: var(--cd-sigil-3); --tile: var(--cd-sigil-tile-3); } .sigil[data-hue="4"] { --h: var(--cd-sigil-4); --tile: var(--cd-sigil-tile-4); }
+.sigil[data-hue="5"] { --h: var(--cd-sigil-5); --tile: var(--cd-sigil-tile-5); } .sigil[data-hue="6"] { --h: var(--cd-sigil-6); --tile: var(--cd-sigil-tile-6); }
+.sigil[data-hue="7"] { --h: var(--cd-sigil-7); --tile: var(--cd-sigil-tile-7); }
+
+.sigil > i { display: block; background: var(--h); }
+.sigil > i[data-cell="c"] { border-radius: 50%; } .sigil > i[data-cell="e"] { background: transparent; }
+.sigil > i[data-cell="tl"] { border-start-start-radius: 100%; } .sigil > i[data-cell="tr"] { border-start-end-radius: 100%; }
+.sigil > i[data-cell="bl"] { border-end-start-radius: 100%; } .sigil > i[data-cell="br"] { border-end-end-radius: 100%; }
+
+/* All profiles: the scope's icon on a neutral tile. */
+.sigil--all { grid-template: 1fr / 1fr; place-items: center; padding: 0; background: var(--cd-bg-surface-2); color: var(--cd-fg-muted); box-shadow: inset 0 0 0 1px var(--cd-border-default); }
+.sigil--all svg.i { inline-size: 60%; block-size: 60%; }
+/* Nobody: an empty tile with a dashed edge. */
+.sigil--none { background: transparent; border: 1.5px dashed var(--cd-border-strong); }
+
+/* State: a ring around the tile and a badge on its corner. Each state has its own ring (a pulse, an arc, a solid ring, a dashed ring) and its own badge icon. */
+.sigil::before { content: ""; position: absolute; inset: calc(var(--cd-space-1) * -1); border-radius: calc(28% + var(--cd-space-1)); border: 2px solid transparent; pointer-events: none; }
+.sigil[data-size="xs"]::before, .sigil[data-size="sm"]::before { inset: calc(var(--cd-space-0-5) * -1.5); border-width: 1.5px; }
+.sigil > b { position: absolute; inset-inline-end: calc(var(--cd-space-1) * -1.25); inset-block-end: calc(var(--cd-space-1) * -1.25); inline-size: max(0.9375rem, 38%); block-size: max(0.9375rem, 38%);
+  border-radius: 50%; background: var(--cd-bg-surface); box-shadow: 0 0 0 2px var(--cd-bg-surface); display: grid; place-items: center; color: var(--cd-fg-muted); }
+.sigil > b svg.i { inline-size: 100%; block-size: 100%; stroke-width: 2.2; }
+.sigil[data-size="xs"] > b { display: none; }
+.sigil[data-state="waiting"]::before { border-color: var(--cd-status-waiting); } .sigil[data-state="waiting"] > b { color: var(--cd-tone-warning-fg); }
+.sigil[data-state="working"]::before { border-color: var(--cd-fg-default) transparent transparent transparent; } .sigil[data-state="working"] > b { color: var(--cd-fg-default); }
+.sigil[data-state="done"]::before { border-color: var(--cd-status-succeeded); } .sigil[data-state="done"] > b { color: var(--cd-tone-success-fg); }
+.sigil[data-state="blocked"]::before { border-style: dashed; border-color: var(--cd-status-failed); } .sigil[data-state="blocked"] > b { color: var(--cd-tone-danger-fg); }
+
+@keyframes hc-sigil-spin { to { transform: rotate(360deg); } }
+@keyframes hc-sigil-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cd-status-waiting) 50%, transparent); } 100% { box-shadow: 0 0 0 0.5625rem transparent; } }
+.sigil[data-state="working"]::before { animation: hc-sigil-spin 1.5s linear infinite; }
+.sigil[data-state="waiting"]::before { animation: hc-sigil-pulse 2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .sigil[data-state="working"]::before, .sigil[data-state="waiting"]::before { animation: none !important; } }
+[data-motion="reduce"] .sigil[data-state="working"]::before, [data-motion="reduce"] .sigil[data-state="waiting"]::before { animation: none !important; }

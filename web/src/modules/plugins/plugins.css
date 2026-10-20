@@ -1,0 +1,40 @@
+/* System › Plugins. Tokens only (design system); logical properties throughout. */
+.pl { min-inline-size: 0; }
+.pl-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-4); min-inline-size: 0; }
+.pl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
+.pl-search { flex: 1 1 14rem; max-inline-size: 24rem; }
+.pl-category { flex: 0 1 14rem; min-inline-size: 0; }
+.pl-more { justify-self: start; }
+.pl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.pl-foot { padding: var(--cd-space-3) var(--cd-space-4); padding-inline-end: calc(var(--cd-space-4) + var(--cd-safe-right)); }
+
+/* ---- Sections and cards: one column on a phone ---- */
+.pl-section { display: grid; gap: var(--cd-space-3); min-inline-size: 0; border: 0; margin: 0; padding: 0; }
+.pl-section > legend { padding: 0; margin-block-end: var(--cd-space-1); font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); }
+.pl-section__title { display: flex; align-items: center; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); letter-spacing: 0; }
+.pl-section__count { color: var(--cd-fg-subtle); font: var(--cd-weight-regular) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); }
+.pl-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.pl-card { display: flex; flex-direction: column; gap: var(--cd-space-3); padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.pl-card__top { display: flex; align-items: flex-start; gap: var(--cd-space-3); }
+.pl-card__id { flex: 1; min-inline-size: 0; display: grid; gap: var(--cd-space-1); }
+.pl-card__name { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.pl-card__sub { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.pl-card__desc { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.pl-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin-block-start: auto; }
+.pl-danger { color: var(--cd-tone-danger-fg); }
+.pl-note { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.pl-warn { display: flex; align-items: flex-start; gap: var(--cd-space-2); margin: 0; color: var(--cd-tone-warning-fg); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.pl-error { color: var(--cd-tone-danger-fg); }
+.pl-code { font-family: var(--cd-font-mono); font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+
+/* ---- The install sheet ---- */
+.pl-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-4); min-inline-size: 0; }
+.pl-facts { margin: 0; display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: var(--cd-space-2) var(--cd-space-4); font-size: var(--cd-text-sm); }
+.pl-facts dt { color: var(--cd-fg-muted); }
+.pl-facts dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 30rem) { .pl-facts { grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); } .pl-facts dd { margin-block-end: var(--cd-space-2); } }
+
+/* ---- The live log ---- */
+.pl-log-sheet .dialog { inline-size: min(100%, 52rem); }
+.pl-log-state { margin: 0 0 var(--cd-space-3); display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.pl-log { margin: 0; padding: var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-block-size: 8rem; max-block-size: 30rem; overflow: auto; }

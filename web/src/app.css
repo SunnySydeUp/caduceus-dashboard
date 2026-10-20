@@ -1,0 +1,581 @@
+/* Screen-specific styles: the sign-in screen and Settings › Security. Everything shared lives in styles/. Only `--cd-*` tokens. */
+
+.help-text,
+.error-text {
+  margin: 0;
+  font-size: var(--cd-text-sm);
+  line-height: var(--cd-leading-sm);
+}
+
+.help-text {
+  color: var(--cd-fg-muted);
+}
+
+.error-text {
+  color: var(--cd-tone-danger-fg);
+}
+
+/* ---- Sign-in (outside the shell: nobody is signed in) ---- */
+.sign-in {
+  box-sizing: border-box;
+  min-block-size: 100dvh;
+  display: grid;
+  /* One column as wide as the card allows, but never wider than the screen. */
+  grid-template-columns: minmax(0, 24rem);
+  place-content: center;
+  padding-block: calc(var(--cd-space-6) + var(--cd-safe-top)) calc(var(--cd-space-6) + var(--cd-safe-bottom));
+  padding-inline: calc(var(--cd-page-px) + var(--cd-safe-left)) calc(var(--cd-page-px) + var(--cd-safe-right));
+}
+
+.sign-in-card {
+  display: grid;
+  gap: var(--cd-space-4);
+  padding: var(--cd-space-4);
+  background: var(--cd-bg-surface);
+  border: var(--cd-border-width) solid var(--cd-border-default);
+  border-radius: var(--cd-radius-lg);
+}
+
+@media (min-width: 37.5rem) {
+  .sign-in-card {
+    padding: var(--cd-space-6);
+  }
+}
+
+.sign-in-form {
+  display: grid;
+  gap: var(--cd-space-4);
+}
+
+.sign-in-field {
+  display: grid;
+  gap: var(--cd-space-2);
+}
+
+.sign-in-field label {
+  font-weight: var(--cd-weight-medium);
+}
+
+.sign-in-password {
+  display: flex;
+  gap: var(--cd-space-2);
+}
+
+.sign-in-password input {
+  /* Grow into the row, but never let the input's intrinsic width push the row past the card. */
+  flex: 1;
+  inline-size: 0;
+  min-block-size: max(var(--cd-control-h), var(--cd-target-min));
+  padding-inline: var(--cd-control-px);
+  font: inherit;
+  font-size: var(--cd-text-input);
+  color: var(--cd-fg-default);
+  background: var(--cd-bg-input);
+  border: var(--cd-border-width) solid var(--cd-border-control);
+  border-radius: var(--cd-radius-md);
+}
+
+.sign-in-password input[aria-invalid='true'] {
+  border-color: var(--cd-tone-danger-solid);
+}
+
+.sign-in-or {
+  margin: 0;
+  text-align: center;
+  color: var(--cd-fg-muted);
+  font-size: var(--cd-text-sm);
+  line-height: var(--cd-leading-sm);
+}
+
+/* ---- Settings › Security ---- */
+.page-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--cd-space-6);
+  max-inline-size: 48rem;
+}
+
+.settings-section {
+  display: grid;
+  gap: var(--cd-space-3);
+  padding: var(--cd-card-p);
+  background: var(--cd-bg-surface);
+  border: var(--cd-border-width) solid var(--cd-border-default);
+  border-radius: var(--cd-radius-lg);
+}
+
+.settings-section h2 {
+  margin: 0;
+  font-size: var(--cd-text-lg);
+  line-height: var(--cd-leading-lg);
+  font-weight: var(--cd-weight-semibold);
+}
+
+.settings-section p {
+  margin: 0;
+}
+
+.settings-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cd-space-2) var(--cd-space-4);
+  padding-block: var(--cd-space-3);
+  border-block-start: var(--cd-border-width) solid var(--cd-border-subtle);
+}
+
+.settings-row-text {
+  display: grid;
+  gap: var(--cd-space-0-5);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cd-space-2);
+}
+
+/* At large text sizes a long label wraps inside its button instead of pushing the page wide. */
+.settings-actions .btn {
+  max-inline-size: 100%;
+  white-space: normal;
+  line-height: var(--cd-leading-ui);
+  padding-block: var(--cd-space-2);
+}
+
+.settings-inline-form {
+  flex: 1 1 100%;
+  display: grid;
+  gap: var(--cd-space-2);
+}
+
+.settings-inline-form label {
+  font-weight: var(--cd-weight-medium);
+}
+
+.settings-confirm {
+  display: grid;
+  gap: var(--cd-space-2);
+}
+
+/* ---- Settings › Appearance ---- */
+/* Four choices at 200% text on a phone do not fit one row: the segmented control wraps. */
+.seg--wrap {
+  display: flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
+  inline-size: fit-content;
+}
+
+.seg--wrap button {
+  flex: 1 1 auto;
+}
+
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: var(--cd-gap);
+}
+
+/* A skin card is drawn in its own skin (`data-skin` on the button re-points every token), whichever skin the page uses. */
+.skin-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cd-space-3);
+  min-block-size: max(var(--cd-row-h), var(--cd-target-min));
+  padding: var(--cd-space-3);
+  font: inherit;
+  text-align: start;
+  color: var(--cd-fg-default);
+  background: var(--cd-bg-canvas);
+  border: var(--cd-border-width) solid var(--cd-border-control);
+  border-radius: var(--cd-radius-lg);
+  cursor: pointer;
+}
+
+.skin-card[aria-checked='true'] {
+  border-color: var(--cd-accent);
+  /* A second ring: the choice is shown by this and by the check in the swatch, never by colour alone. */
+  box-shadow: 0 0 0 var(--cd-focus-ring-width) var(--cd-accent);
+}
+
+.skin-card__swatch {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--cd-radius-full);
+  background: var(--cd-accent);
+  color: var(--cd-on-accent);
+}
+
+.skin-card__text {
+  display: grid;
+  gap: var(--cd-space-0-5);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.skin-card__name {
+  font-weight: var(--cd-weight-semibold);
+}
+
+.skin-card__about {
+  color: var(--cd-fg-muted);
+  font-size: var(--cd-text-sm);
+  line-height: var(--cd-leading-sm);
+}
+
+/* ---- Health (M0 #11): Repairs, then the subsystems; the two sit side by side on a large window ---- */
+.hl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--cd-space-6);
+  min-inline-size: 0;
+}
+
+.hl .page-header {
+  padding-block-end: 0;
+}
+
+.app[data-size='large'] .hl {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  column-gap: var(--cd-space-8);
+  align-items: start;
+}
+
+.app[data-size='large'] .hl > .page-header,
+.app[data-size='large'] .hl > .banner,
+.app[data-size='large'] .hl > [role='status'] {
+  grid-column: 1 / -1;
+}
+
+.hl-repair-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--cd-gap);
+}
+
+.hl-repair {
+  display: grid;
+  gap: var(--cd-space-2);
+  min-inline-size: 0;
+  padding: var(--cd-card-p);
+  padding-inline-start: calc(var(--cd-card-p) + 3px);
+  background: var(--cd-bg-surface);
+  border: var(--cd-border-width) solid var(--cd-border-default);
+  border-radius: var(--cd-radius-lg);
+  /* The severity is the bar and the word beside it, never the bar alone. */
+  box-shadow: inset 3px 0 0 var(--t-solid);
+}
+
+[dir='rtl'] .hl-repair {
+  box-shadow: inset -3px 0 0 var(--t-solid);
+}
+
+.hl-repair__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cd-space-1) var(--cd-space-3);
+  font-size: var(--cd-text-xs);
+}
+
+.hl-repair__title {
+  margin: 0;
+  font-size: var(--cd-text-md);
+  line-height: var(--cd-leading-md);
+}
+
+.hl-repair__cause {
+  color: var(--cd-fg-muted);
+  font-size: var(--cd-text-sm);
+  line-height: var(--cd-leading-sm);
+  max-inline-size: var(--cd-measure);
+  overflow-wrap: anywhere;
+}
+
+.hl-repair__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cd-space-2) var(--cd-space-3);
+  padding-block-start: var(--cd-space-1);
+}
+
+/* A long fix label wraps inside its button instead of pushing the page wide (200% text on a phone). */
+.hl-repair__foot .btn {
+  max-inline-size: 100%;
+  white-space: normal;
+  line-height: var(--cd-leading-ui);
+  padding-block: var(--cd-space-2);
+}
+
+.app[data-size='compact'] .hl-repair__foot .btn {
+  flex: 1 1 100%;
+}
+
+.hl-tier {
+  font-size: var(--cd-text-xs);
+  color: var(--cd-fg-subtle);
+}
+
+.hl-sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.hl-sublist > li + li {
+  border-block-start: var(--cd-border-width) solid var(--cd-border-subtle);
+}
+
+.hl-sub summary,
+.hl-sub__summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--cd-space-1) var(--cd-space-3);
+  min-block-size: max(var(--cd-row-h), var(--cd-target-min));
+  padding: var(--cd-space-2) var(--cd-card-p);
+  cursor: pointer;
+  list-style: none;
+}
+
+.hl-sub--flat .hl-sub__summary {
+  cursor: default;
+}
+
+.hl-sub summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (hover: hover) {
+  .hl-sub summary:hover {
+    background: var(--cd-overlay-hover);
+  }
+}
+
+.hl-sublist > li:first-child .hl-sub summary,
+.hl-sublist > li:first-child .hl-sub__summary {
+  border-start-start-radius: var(--cd-radius-lg);
+  border-start-end-radius: var(--cd-radius-lg);
+}
+
+.hl-sub__main {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.hl-sub__name {
+  font-weight: var(--cd-weight-medium);
+}
+
+/* The reason is the point of the row: it wraps rather than being cut off. */
+.hl-sub__reason {
+  color: var(--cd-fg-muted);
+  font-size: var(--cd-text-xs);
+  line-height: var(--cd-leading-xs);
+  overflow-wrap: anywhere;
+}
+
+.hl-sub__fix {
+  color: var(--cd-fg-default);
+  font-size: var(--cd-text-xs);
+  line-height: var(--cd-leading-xs);
+  overflow-wrap: anywhere;
+}
+
+/* “Came back: seen 3 times in the last 24 hours” is longer than a small phone is wide: it wraps inside its pill. */
+.hl-recurring {
+  font-weight: var(--cd-weight-medium);
+  block-size: auto;
+  min-block-size: 1.5rem;
+  padding-block: var(--cd-space-1);
+  white-space: normal;
+  max-inline-size: 100%;
+  line-height: var(--cd-leading-xs);
+  border-radius: var(--cd-radius-lg);
+}
+
+.hl-sub__end {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.hl-sub__ago {
+  font-size: var(--cd-text-xs);
+  color: var(--cd-fg-subtle);
+}
+
+.hl-sub__chev {
+  inline-size: var(--cd-icon);
+  color: var(--cd-fg-subtle);
+  transition: rotate var(--cd-dur-fast) var(--cd-ease-standard);
+}
+
+.hl-sub[open] .hl-sub__chev {
+  rotate: 180deg;
+}
+
+.hl-sub__body {
+  display: grid;
+  gap: var(--cd-space-3);
+  padding: 0 var(--cd-card-p) var(--cd-space-3);
+}
+
+.hl-meters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--cd-space-2);
+}
+
+.hl-meters li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--cd-space-1) var(--cd-space-2);
+  font-size: var(--cd-text-xs);
+}
+
+.hl-meters .progress {
+  grid-column: 1 / -1;
+  block-size: 6px;
+}
+
+.hl-facts {
+  margin: 0;
+  display: grid;
+  gap: var(--cd-space-1);
+  font-size: var(--cd-text-xs);
+}
+
+.hl-facts > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 40%) minmax(0, 1fr);
+  gap: var(--cd-space-2);
+}
+
+.hl-facts dt {
+  color: var(--cd-fg-subtle);
+}
+
+.hl-facts dd {
+  margin: 0;
+  color: var(--cd-fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.app[data-size='compact'] .hl-sub summary,
+.app[data-size='compact'] .hl-sub__summary {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.app[data-size='compact'] .hl-sub__end {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cd-space-2);
+  justify-items: start;
+}
+
+.app[data-size='compact'] .hl-sub .hl-sub__chev {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+/* Phone: the subsystem list is a stack of cards, each with its own state, reason, fix and check time, rather than rows of one panel. */
+.app[data-size='compact'] .hl-sublist {
+  gap: var(--cd-gap);
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.app[data-size='compact'] .hl-sublist > li {
+  background: var(--cd-bg-surface);
+  border: var(--cd-border-width) solid var(--cd-border-default);
+  border-radius: var(--cd-radius-lg);
+  overflow: hidden;
+}
+
+.app[data-size='compact'] .hl-sublist > li + li {
+  border-block-start: var(--cd-border-width) solid var(--cd-border-default);
+}
+
+/* ---- Install: the iOS "Add to Home Screen" guide, and the Today card ---- */
+.install-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--cd-space-3);
+}
+
+.install-steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cd-space-3);
+}
+
+.install-steps__icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--cd-radius-md);
+  background: var(--cd-accent-soft);
+  color: var(--cd-accent);
+}
+
+/* A choice inside a settings row (Settings › Notifications): as wide as its words, never wider than the row. */
+.settings-row .input {
+  inline-size: auto;
+  max-inline-size: 100%;
+  min-inline-size: 10rem;
+}
+
+/* ---- Security: sign-in methods and the audit log (M5 #15) ---- */
+.settings-form { display: grid; gap: var(--cd-space-2); padding-block: var(--cd-space-3); min-inline-size: 0; }
+.settings-form h3 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; }
+.settings-form label { font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); }
+.audit { min-inline-size: 0; }
+.audit-bar { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.audit-filters { display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); align-items: end; min-inline-size: 0; }
+.audit-filters label { display: grid; gap: var(--cd-space-1); font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); min-inline-size: 0; }
+.audit-filters .settings-actions { grid-column: 1 / -1; }
+.audit-table-wrap { overflow-x: auto; min-inline-size: 0; border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); }
+.audit-table { inline-size: 100%; border-collapse: collapse; font-size: var(--cd-text-sm); }
+.audit-table th, .audit-table td { text-align: start; padding: var(--cd-space-2) var(--cd-space-3); border-block-end: 1px solid var(--cd-border-subtle); vertical-align: top; }
+.audit-table__target { overflow-wrap: anywhere; max-inline-size: 28rem; }
+.audit-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); }
+.audit-card { padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.audit-card__top { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
+.audit-card__action { font-weight: var(--cd-weight-medium); overflow-wrap: anywhere; }
+.audit-card__target { margin: var(--cd-space-1) 0; font-family: var(--cd-font-mono); font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+.chip { display: inline-flex; align-items: center; padding: var(--cd-space-1) var(--cd-space-2); border-radius: var(--cd-radius-full); background: var(--cd-bg-surface-2); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); }
+.settings-form code { overflow-wrap: anywhere; font-family: var(--cd-font-mono); font-size: var(--cd-text-xs); }
+.settings-form .input, .settings-form .help-text { min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere; }

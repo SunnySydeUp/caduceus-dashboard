@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Talk, calmer (mock)</title>
+<link rel="stylesheet" href="desk.css">
+<link rel="stylesheet" href="talk-calm.css">
+</head>
+<body data-page="talk" data-agent="general" data-idle="general">
+<div class="app">
+  <div class="col">
+    <div class="cx" data-details="closed">
+
+      <aside class="cx-ses" aria-label="Sessions of general">
+        <div class="cx-ses__top"><h2>Sessions</h2><button class="b b--quiet b--icon" aria-label="New chat"><span data-i="plus"></span></button></div>
+        <label class="cx-search"><span data-i="search" data-c="s"></span><span class="sr">Search sessions</span><input type="search" placeholder="Search sessions"></label>
+        <div class="cx-ses__bar">
+          <button class="cx-tool" data-pop="filters" aria-expanded="false" aria-controls="m-filters"><span data-i="filter" data-c="s"></span>Filters<span class="count" id="filter-count" hidden>0</span></button>
+          <button class="cx-tool" data-pop="more" aria-expanded="false" aria-controls="m-more" aria-label="More session actions"><span data-i="dots-v"></span></button>
+          <div class="cx-pop" id="m-filters" hidden>
+            <div class="cx-seg" role="group" aria-label="Kind"><button aria-pressed="true">Chats</button><button aria-pressed="false">Automation</button></div>
+            <button class="cx-item" role="switch" aria-checked="false">Failed only<span class="tick"><span data-i="check"></span></span></button>
+            <button class="cx-item" role="switch" aria-checked="false">Hide API noise<span class="tick"><span data-i="check"></span></span></button>
+            <button class="cx-item" role="switch" aria-checked="false">All profiles<span class="tick"><span data-i="check"></span></span></button>
+            <button class="cx-item" role="switch" aria-checked="false">Archived<span class="tick"><span data-i="check"></span></span></button>
+            <button class="cx-item">Source<span class="v">Any</span></button>
+            <button class="cx-item">Project<span class="v">Any</span></button>
+          </div>
+          <div class="cx-pop" id="m-more" hidden>
+            <button class="cx-item"><span data-i="refresh"></span>Refresh</button>
+            <button class="cx-item"><span data-i="rows"></span>Compact view</button>
+            <button class="cx-item"><span data-i="check"></span>Select sessions</button>
+            <button class="cx-item"><span data-i="download"></span>Import</button>
+            <button class="cx-item"><span data-i="code"></span>Claude Code and Codex</button>
+            <button class="cx-item"><span data-i="trash"></span>Clean up</button>
+          </div>
+        </div>
+        <div class="cx-list">
+          <h3 class="cx-grp">Yesterday</h3>
+          <a class="cx-row" href="#" aria-current="true"><span class="t">Add recipe from Instagram</span><time>Yesterday</time></a>
+          <h3 class="cx-grp">This week</h3>
+          <a class="cx-row" href="#"><span class="t">Single word reply request</span><time>Fri</time></a>
+          <a class="cx-row" href="#"><span class="t">Book the plumber</span><time>Thu</time></a>
+          <h3 class="cx-grp">Older</h3>
+          <a class="cx-row" href="#"><span class="t">Plan small project</span><time>12 Oct</time></a>
+          <a class="cx-row" href="#"><span class="t">Compare Hermes options</span><time>12 Oct</time></a>
+          <a class="cx-row" href="#"><span class="t">Budget notes for October</span><time>9 Oct</time></a>
+          <a class="cx-row" href="#"><span class="t">Gift ideas for Mum</span><time>7 Oct</time></a>
+        </div>
+        <div class="cx-foot">88 sessions</div>
+      </aside>
+
+      <section class="cx-talk" aria-label="Conversation with general">
+        <nav class="bridge" aria-label="Switch agent">
+          <a href="talk-calm.html"><span data-sg="coder:sm"></span>coder</a>
+          <a href="talk-calm.html" aria-current="true"><span data-sg="general:sm:idle"></span>general</a>
+          <a href="talk-calm.html"><span data-sg="homeassistant:sm"></span>home</a>
+          <a href="talk-calm.html"><span data-sg="librarian:sm"></span>librarian</a>
+          <a href="talk-calm.html"><span data-sg="property:sm"></span>property</a>
+        </nav>
+        <header class="cx-head">
+          <span data-sg="general:sm:idle"></span>
+          <div class="cx-head__id"><b>general</b><span>Add recipe from Instagram</span></div>
+          <button class="b b--quiet b--icon cx-sesbtn" data-open="sessions" aria-label="Sessions"><span data-i="rows"></span></button>
+          <button class="b b--sm" data-details-toggle aria-label="Details" aria-expanded="false" aria-controls="details"><span data-i="sliders" data-c="s"></span><span class="lbl" aria-hidden="true">Details</span></button>
+          <button class="b b--quiet b--icon" data-pop="thread" aria-expanded="false" aria-controls="m-thread" aria-label="More for this chat"><span data-i="dots-v"></span></button>
+          <div class="cx-pop" id="m-thread" hidden>
+            <button class="cx-item"><span data-i="draft"></span>Rename</button>
+            <button class="cx-item"><span data-i="pin"></span>Pin</button>
+            <button class="cx-item"><span data-i="tasks"></span>Make this a task</button>
+            <button class="cx-item"><span data-i="archive"></span>Archive</button>
+          </div>
+        </header>
+
+        <div class="cx-thread" role="log" tabindex="0" aria-label="Messages">
+          <div class="me">Move the recipe note into the vault and merge it with the trimmed one.</div>
+          <div class="ag"><span data-sg="general:sm:idle"></span><div>
+            <span class="steps"><span data-i="check" data-c="s"></span><b>3 commands</b> ran, 1 failed</span>
+            <p><b>The move can't simply be retried.</b> The source file no longer exists, and the move would overwrite the trimmed note, which the card forbids without your decision.</p>
+            <p>Options:</p>
+            <ol>
+              <li><b>Merge (my recommendation):</b> keep the trimmed note and add back its <code>## Notes</code> and <code>## Original caption</code> sections. This keeps your edit and restores the flags the recipe has.</li>
+              <li><b>Replace:</b> restore the full version over the trimmed note.</li>
+              <li><b>Keep both:</b> add the full version as a second note.</li>
+              <li><b>Leave as is:</b> the consolidation is effectively done, and I close the thread.</li>
+            </ol>
+            <p>Tell me which option you want and I'll route it to librarian. A card closed as done can't be retried in place, so I'd open a new card for it.</p>
+          </div></div>
+        </div>
+
+        <div class="cx-dock">
+          <div class="cx-compwrap">
+            <div class="cx-comp" data-intent="ask" data-empty="true">
+              <span class="cx-chip"><span id="chip-text">Delegate</span><button data-intent-reset aria-label="Back to Ask"><span data-i="x" data-c="s"></span></button></span>
+              <label class="sr" for="msg">Message general</label>
+              <textarea id="msg" rows="1" placeholder="Message general"></textarea>
+              <div class="cx-comp__bar">
+                <button class="b b--quiet b--icon" data-pop="attach" aria-expanded="false" aria-controls="m-attach" aria-label="Add a file or a saved prompt"><span data-i="plus"></span></button>
+                <button class="cx-ctx" data-pop="chat" aria-expanded="false" aria-controls="m-chat" aria-label="Settings for this chat"><span class="mono">claude-haiku-5-5</span><span class="faint">hermes-dashboard</span><span data-i="chev-d" data-c="s"></span></button>
+                <span class="grow"></span>
+                <button class="b b--quiet b--icon cx-mic" aria-label="Voice"><span data-i="mic"></span></button>
+                <span class="cx-send"><button class="send" aria-label="Send"><span data-i="send"></span></button><button class="cx-send__more" data-pop="intent" aria-expanded="false" aria-controls="m-intent" aria-label="How to send"><span data-i="chev-u" data-c="s"></span></button></span>
+              </div>
+            </div>
+            <div class="cx-pop" id="m-attach" hidden>
+              <button class="cx-item"><span data-i="clip"></span>Attach a file</button>
+              <button class="cx-item"><span data-i="book"></span>Saved prompts</button>
+            </div>
+            <div class="cx-pop" id="m-chat" hidden>
+              <h3>This chat</h3>
+              <button class="cx-item">Model<span class="v mono">claude-haiku-5-5</span></button>
+              <button class="cx-item">Effort<span class="v">Default</span></button>
+              <button class="cx-item">Folder<span class="v mono">hermes-dashboard</span></button>
+              <button class="cx-item">Toolsets<span class="v">9 on</span></button>
+              <button class="cx-item" role="switch" aria-checked="false"><span data-i="bolt"></span>Fast mode<span class="tick"><span data-i="check"></span></span></button>
+            </div>
+            <div class="cx-pop" id="m-intent" hidden>
+              <h3>Send as</h3>
+              <button class="cx-item" data-intent-value="ask" aria-pressed="true"><span>Ask<small>general answers here, and you can follow along.</small></span><span class="tick"><span data-i="check"></span></span></button>
+              <button class="cx-item" data-intent-value="delegate" aria-pressed="false"><span>Delegate<small>Runs in the background. You are told when it needs you or finishes.</small></span><span class="tick"><span data-i="check"></span></span></button>
+              <button class="cx-item" data-intent-value="repeat" aria-pressed="false"><span>Repeat<small>Pick when it runs again. It shows up under Work.</small></span><span class="tick"><span data-i="check"></span></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="cx-det" id="details" tabindex="0" aria-label="general details">
+        <div class="cx-det__who"><span data-sg="general:lg:idle"></span><div><h2>general</h2><span class="muted">Idle since 2 h ago</span></div></div>
+        <section>
+          <h3>Last command</h3>
+          <div class="cx-cmd"><span class="mono">cd ~/Obsidian/Recipes &amp;&amp; ls -l</span><span class="pill pill--green">Done</span></div>
+        </section>
+        <section>
+          <h3>About</h3>
+          <dl class="dl"><dt>Model</dt><dd>claude-haiku-5-5</dd><dt>Folder</dt><dd>~/hermes-dashboard</dd><dt>Cost today</dt><dd>$0.00</dd><dt>Context</dt><dd>Not known yet</dd></dl>
+        </section>
+      </aside>
+
+    </div>
+  </div>
+</div>
+<div class="scrim"></div>
+<script type="module" src="desk.js"></script>
+<script type="module" src="talk-calm.js"></script>
+</body>
+</html>

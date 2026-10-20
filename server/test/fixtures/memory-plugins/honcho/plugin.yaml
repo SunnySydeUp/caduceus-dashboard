@@ -1,0 +1,4 @@
+name: honcho
+version: 1.0.0
+description: "Honcho — memory infrastructure for stateful agents."
+requires_env: []

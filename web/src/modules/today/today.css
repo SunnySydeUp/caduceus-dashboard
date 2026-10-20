@@ -1,0 +1,66 @@
+/* Today (M8 #03; docs/design/mocks/desk/today.html). Tokens only; logical properties throughout. A phone is one column in the order Needs you, Ready for review, Crew,
+   Today's schedule, While you were away; from the sidebar's width (75 rem) the schedule and the away list sit in a second column. */
+.today { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-2); min-inline-size: 0; }
+.today__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-8); min-inline-size: 0; align-items: start; }
+.today__col { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-8); align-content: start; min-inline-size: 0; }
+@media (min-width: 75rem) { .today__grid { grid-template-columns: minmax(0, 1fr) 22.5rem; gap: var(--cd-space-10); } }
+
+.today-block { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); align-content: start; min-inline-size: 0; }
+.today-block__title { display: flex; align-items: center; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); letter-spacing: var(--cd-tracking-tight); }
+.today-block__count { font-weight: var(--cd-weight-regular); }
+.today-pill { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); block-size: 1.75rem; padding-inline: var(--cd-space-3); border-radius: var(--cd-radius-full); background: var(--t-soft); color: var(--t-fg); border: 1px solid var(--t-border); font: var(--cd-weight-semibold) var(--cd-text-sm)/1 var(--cd-font-sans); }
+
+/* A block still loading holds the room of its usual answer, so that what is below it does not jump when it arrives: the empty panel with its words held but not shown, under a shimmer. */
+.today-empty { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-3); padding: var(--cd-card-p); }
+.today-empty p { margin: 0; max-inline-size: 60ch; }
+.today-empty--pending { position: relative; min-block-size: var(--room, 0); }
+.today-empty--pending > :not(.today-empty__shimmer, .sr-only) { visibility: hidden; }
+.today-empty__shimmer { position: absolute; inset: 0; border-radius: inherit; }
+/* A block that could not load holds the same room, with the error over it: a refresh that fails must not move what is below. */
+.today-room { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: var(--room, 0); }
+.today-room > * { grid-area: 1 / 1; min-inline-size: 0; }
+.today-room > .banner { align-self: start; }
+.today-room__held { visibility: hidden; }
+
+/* ---- Needs you ---- */
+.today-cards, .today-ready, .today-tiles, .today-when { list-style: none; margin: 0; padding: 0; }
+.today-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); }
+
+/* ---- Ready for review ---- */
+.today-ready { display: grid; grid-template-columns: minmax(0, 1fr); }
+.today-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--cd-space-3); align-items: center; padding: var(--cd-space-3) var(--cd-card-p); min-inline-size: 0; }
+.today-row + .today-row { border-block-start: 1px solid var(--cd-border-subtle); }
+.today-row__text { min-inline-size: 0; display: grid; }
+.today-row__text b { font-weight: var(--cd-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-row__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Crew: a phone's swipeable row of tiles. A wider screen has the crew in its sidebar and rail. ---- */
+.today-crew { display: none; }
+@media (max-width: 37.4375rem) { .today-crew { display: grid; } }
+.today-tiles { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 46%; gap: var(--cd-space-3); overflow-x: auto; scroll-snap-type: x mandatory; padding-block-end: var(--cd-space-2); }
+.today-tiles > li { min-inline-size: 0; display: grid; }
+.today-tile { scroll-snap-align: start; display: grid; gap: var(--cd-space-3); align-content: start; min-block-size: 8rem; padding: var(--cd-space-4); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); color: inherit; text-decoration: none; min-inline-size: 0; }
+.today-tile__text { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.today-tile__text b { font-weight: var(--cd-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-tile__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---- Today's schedule ---- */
+.today-ribbon { position: relative; block-size: 0.625rem; margin: var(--cd-space-6) var(--cd-space-1) var(--cd-space-3); border-radius: var(--cd-radius-full); background: var(--cd-bg-inset); }
+.today-ribbon::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: calc(var(--now) * 100%); border-radius: var(--cd-radius-full); background: var(--cd-border-strong); }
+.today-ribbon__m { position: absolute; inset-block-start: 50%; inset-inline-start: calc(var(--t) * 100%); inline-size: 0.875rem; block-size: 0.875rem; translate: -50% -50%; border-radius: var(--cd-radius-xs); background: var(--h); }
+/* The three kinds differ in shape as well as colour: a filled square ran, a hollow one is still to come, a ringed circle failed. */
+.today-ribbon__m[data-kind="next"] { background: var(--cd-bg-surface); box-shadow: inset 0 0 0 2px var(--h); }
+.today-ribbon__m[data-kind="failed"] { border-radius: 50%; box-shadow: 0 0 0 2px var(--cd-bg-surface), 0 0 0 4px var(--cd-tone-danger-solid); }
+.today-ribbon__now { position: absolute; inset-block: -0.5rem; inset-inline-start: calc(var(--now) * 100%); inline-size: 2px; background: var(--cd-fg-default); translate: -1px 0; border-radius: 2px; }
+.today-ribbon__now > span { position: absolute; inset-block-start: -1.25rem; inset-inline-start: 50%; translate: -50% 0; font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-sans); white-space: nowrap; }
+.today-hours { display: flex; justify-content: space-between; color: var(--cd-fg-subtle); font: var(--cd-text-xs)/1 var(--cd-font-mono); margin-block-end: var(--cd-space-4); }
+.today-when { display: grid; grid-template-columns: minmax(0, 1fr); }
+.today-when li { display: grid; grid-template-columns: 5.25rem auto minmax(0, 1fr); gap: var(--cd-space-3); align-items: center; padding-block: var(--cd-space-2); min-inline-size: 0; }
+.today-when li + li { border-block-start: 1px solid var(--cd-border-subtle); }
+.today-when time { font: var(--cd-text-xs)/1.2 var(--cd-font-mono); color: var(--cd-fg-subtle); }
+.today-when__t { display: block; min-inline-size: 0; overflow-wrap: anywhere; }
+.today-when__t small { display: block; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.today-when__link { display: block; min-block-size: var(--cd-target-min); color: inherit; text-decoration: none; }
+.today-when__link .today-when__t { display: grid; align-content: center; min-block-size: var(--cd-target-min); }
+.today-when li[data-kind="failed"] small, .today-when li[data-failed] small { color: var(--cd-tone-danger-fg); }
+.today-more { margin: var(--cd-space-2) 0 0; font-size: var(--cd-text-sm); }

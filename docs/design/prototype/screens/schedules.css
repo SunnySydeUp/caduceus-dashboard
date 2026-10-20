@@ -1,0 +1,108 @@
+/* Work › Schedules (+ schedule builder, also used by New task → Schedule). Tokens only. */
+.sched, .jd { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.sched > .page-header, .jd > .page-header { padding-block-end: 0; }
+.sched__fail { color: var(--cd-tone-danger-fg); font-weight: var(--cd-weight-semibold); }
+.sched__panel { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.sched__filters { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.sched__filters .chip .mono { font-size: var(--cd-text-xs); }
+.sched__lede { margin: 0; max-inline-size: var(--cd-measure); }
+.jtype svg.i { inline-size: 12px; block-size: 12px; }
+.tmenu__item--danger, .tmenu__item--danger > svg.i:first-child { color: var(--cd-tone-danger-fg); }
+
+/* ---- Job cards (compact / medium) ---- */
+.jcards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
+.jcard { display: grid; gap: var(--cd-space-2); padding: var(--cd-card-p); align-content: start; }
+.jcard.is-failed { border-inline-start: 3px solid var(--cd-tone-danger-solid); }
+.jcard__top { display: flex; align-items: center; gap: var(--cd-space-2); }
+.jcard__menu { margin-inline-start: auto; margin-block: calc(var(--cd-space-2) * -1); margin-inline-end: calc(var(--cd-space-2) * -1); color: var(--cd-fg-subtle); }
+.jcard__title { font-size: var(--cd-text-md); }
+.jcard__title a { color: inherit; text-decoration: none; }
+@media (hover: hover) { .jcard__title a:hover { text-decoration: underline; } }
+.jcard__when { margin: 0; display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-2); font-size: var(--cd-text-sm); }
+.jcard__when .mono { font-size: var(--cd-text-xs); align-self: center; }
+.jcard__kv { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--cd-space-2); padding-block: var(--cd-space-2); border-block: 1px solid var(--cd-border-subtle); }
+.jcard__kv div { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.jcard__kv dt { font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-mono); text-transform: uppercase; letter-spacing: var(--cd-tracking-label); color: var(--cd-fg-subtle); }
+.jcard__kv dd { margin: 0; font-size: var(--cd-text-sm); min-inline-size: 0; }
+.jcard__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
+.jcard__dl { display: inline-flex; align-items: center; gap: var(--cd-space-1); font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); }
+.jcard__acts { display: flex; gap: var(--cd-space-2); margin-inline-start: auto; }
+.jnext { display: inline-flex; flex-wrap: wrap; gap: 0 var(--cd-space-2); align-items: baseline; }
+.jnext .mono { font-size: var(--cd-text-xs); }
+
+/* ---- Job table (large) ---- */
+.jtable { overflow: hidden; }
+.jtable .dl td { vertical-align: middle; }
+.jrow__name { font-weight: var(--cd-weight-medium); color: inherit; text-decoration: none; }
+@media (hover: hover) { .jrow__name:hover { text-decoration: underline; } }
+.jrow__sub { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin-block-start: var(--cd-space-1); }
+.jrow__when { display: grid; gap: 2px; }
+.jrow__when .mono { font-size: var(--cd-text-xs); }
+.jrow__acts { display: flex; justify-content: flex-end; gap: 0; }
+
+/* ---- Blueprints gallery ---- */
+.bps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
+.bp { display: grid; gap: var(--cd-space-2); padding: var(--cd-card-p); grid-template-rows: auto auto 1fr auto auto; }
+.bp__top { display: flex; align-items: center; gap: var(--cd-space-2); }
+.bp__icon { inline-size: 2.25rem; block-size: 2.25rem; border-radius: var(--cd-radius-md); display: grid; place-items: center; background: var(--cd-accent-soft); color: var(--cd-accent-fg); margin-inline-end: auto; }
+.bp__title { font-size: var(--cd-text-md); }
+.bp__desc { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
+.bp__meta { margin: 0; display: grid; gap: 2px; font-size: var(--cd-text-xs); }
+.bp__use { justify-self: start; }
+
+/* ---- Job detail ---- */
+.jd__sub { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.jd__grid { display: grid; gap: var(--cd-space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
+.app[data-size="large"] .jd__grid { grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr); }
+.app[data-size="large"] .jd__def { order: 2; }
+.jd__def, .jd__runs { display: grid; gap: var(--cd-space-3); min-inline-size: 0; align-content: start; }
+.jd__prompt { margin: 0; padding: var(--cd-space-2) var(--cd-space-3); border-inline-start: 3px solid var(--cd-accent-border); background: var(--cd-bg-surface-2); border-radius: var(--cd-radius-sm); }
+.jd__def .kv dd { min-inline-size: 0; overflow-wrap: anywhere; }
+.jd__def .kv dd .mono.subtle { font-size: var(--cd-text-xs); }
+.jruns { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
+.jrun > summary { flex-wrap: wrap; row-gap: 0; padding-block: var(--cd-space-1); }
+.jrun__at { font-size: var(--cd-text-sm); }
+.jrun__meta { margin-inline-start: auto; font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); }
+.jrun .log { white-space: pre-wrap; overflow-wrap: anywhere; }
+.jrun__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.jrun__acts .mono { font-size: var(--cd-text-xs); margin-inline-end: auto; }
+
+/* ---- Schedule builder ("When") ---- */
+.sb { margin: 0; padding: 0; border: 0; display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.sb__legend { padding: 0; }
+.jb .sb__legend { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.sb__modes { display: flex; flex-wrap: wrap; max-inline-size: 100%; }
+.sb__modes button { flex: 1 0 auto; }
+.sb__fields { display: grid; gap: var(--cd-space-3); }
+.sb__row { display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+.sb__days { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.sb__days .chip { min-inline-size: 3.25rem; justify-content: center; }
+.sb__eg { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.sb__preview { display: grid; gap: var(--cd-space-2); padding: var(--cd-space-3); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-subtle); }
+.sb__preview .field__error { margin: 0; }
+.sb__expr { display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-3); align-items: baseline; }
+.sb__expr .mono { font-weight: var(--cd-weight-semibold); }
+.sb__fires { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); }
+.sb__fires li { display: grid; grid-template-columns: 1.5rem 1fr auto; gap: var(--cd-space-2); align-items: center; font-size: var(--cd-text-sm); min-block-size: 1.75rem; }
+.sb__fi { inline-size: 1.25rem; block-size: 1.25rem; border-radius: 50%; display: grid; place-items: center; background: var(--cd-bg-surface); border: 1px solid var(--cd-border-default); font-size: var(--cd-text-xs); color: var(--cd-fg-muted); }
+.sb__fires .mono.subtle { font-size: var(--cd-text-xs); }
+
+/* ---- Job builder sheet ---- */
+.jb { display: grid; gap: var(--cd-space-5); }
+.jb__sec { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.jb__sec + .jb__sec { padding-block-start: var(--cd-space-4); border-block-start: 1px solid var(--cd-border-subtle); }
+.jb__h { display: flex; align-items: center; gap: var(--cd-space-2); font-size: var(--cd-text-md); }
+.jb__n { inline-size: 1.5rem; block-size: 1.5rem; border-radius: 50%; display: grid; place-items: center; background: var(--cd-accent-soft); color: var(--cd-accent-fg); font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-mono); }
+.jb__types { display: grid; gap: var(--cd-space-2); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+.jb__type { display: flex; align-items: flex-start; gap: var(--cd-space-2); padding: var(--cd-space-2) var(--cd-space-3); min-block-size: var(--cd-target-min); border-radius: var(--cd-radius-md); border: 1px solid var(--cd-border-default); background: var(--cd-bg-surface); color: var(--cd-fg-default); text-align: start; cursor: pointer; font: inherit; }
+.jb__type > svg.i { color: var(--t-solid); margin-block-start: 2px; flex: none; }
+.jb__type span { display: grid; gap: 2px; }
+.jb__type strong { font-weight: var(--cd-weight-medium); font-size: var(--cd-text-sm); }
+.jb__type small { font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); line-height: var(--cd-leading-xs); }
+.jb__type[aria-checked="true"] { border-color: var(--cd-accent); box-shadow: 0 0 0 1px var(--cd-accent); background: var(--cd-accent-soft); }
+@media (hover: hover) { .jb__type:hover { border-color: var(--cd-border-strong); } }
+.jb__what { display: grid; gap: var(--cd-space-3); }
+.jb__row { display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.jb__foot-note { margin: 0; margin-inline-end: auto; align-self: center; font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); }
+.jb__foot-note:empty { display: none; }
+.jb .switch-row > span { display: grid; gap: 2px; }

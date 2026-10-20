@@ -1,0 +1,15 @@
+/* Workspace › Checkpoints. Tokens only (design system); logical properties throughout. */
+.cp { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.cp > .page-header { padding-block-end: 0; }
+.cp-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); align-items: start; min-inline-size: 0; }
+@media (min-width: 1024px) { .cp-split { grid-template-columns: minmax(16rem, 4fr) minmax(0, 8fr); } }
+.cp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.cp-item { display: flex; align-items: center; gap: var(--cd-space-2); inline-size: 100%; min-block-size: var(--cd-row-h); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); color: var(--cd-fg-default); font: inherit; text-align: start; cursor: pointer; }
+.cp-item[aria-pressed="true"] { background: var(--cd-bg-selected); border-color: var(--cd-accent-border); }
+.cp-item:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.cp-item__text { display: grid; min-inline-size: 0; overflow-wrap: anywhere; }
+.cp-item__text small { color: var(--cd-fg-subtle); }
+.cp-diff { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-2); min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.cp-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
+.cp-h { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; }
+.cp-stat { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cd-text-sm); }

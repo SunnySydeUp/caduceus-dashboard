@@ -1,0 +1,743 @@
+/* ==========================================================================
+   Caduceus Dashboard: design tokens (v1)
+   Source of truth for colour, type, space, shape, elevation, layering and
+   motion. Rationale and contrast evidence: ./design-system.md
+
+   Usage
+   - Plain CSS: link this file and read the `--cd-*` custom properties.
+   - Tailwind v4: `@import "tailwindcss"; @import "./tokens.css";` The
+     `@theme inline` block at the end maps every token to utilities
+     (`bg-surface`, `text-fg-muted`, `border-edge-control`, `rounded-control`,
+     `shadow-overlay`, `z-toast`, `h-control`, `ease-sheet`...). Browsers that read this
+     file without Tailwind skip the unknown at-rule.
+
+   Axes (all may be set on <html> or on any subtree)
+   - data-theme   = "light" | "dark" | "system" (absent = system)
+       Colours are `light-dark()` pairs resolved by `color-scheme`, so one
+       declaration serves light, dark and `prefers-color-scheme`.
+   - data-skin    = "desk" (default) | "nous" | "hermes" | "gold"
+                    | "cherenkov" | "verdant" | "mono"
+   - data-density = "auto" (default) | "compact" | "comfortable"
+       auto = compact for a fine pointer at >= 64rem, comfortable otherwise.
+       `pointer: coarse` always raises hit targets to 44px.
+   - data-motion  = "reduce" forces reduced motion (mirrors the OS setting).
+   - data-text-scale = "sm" | "lg" | "xl" on <html> only (absent = 100%).
+
+   Never hard-code a colour in a component. Status colour always travels
+   with an icon and a text label (WCAG 1.4.1).
+   Baseline: light-dark(), color-mix(), :where(), logical properties,
+   env(safe-area-inset-*) (Chrome 123 / Safari 17.5 / Firefox 120).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Colour scheme switch
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme="system"] {
+  color-scheme: light dark;
+}
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   2. Static tokens: type, space, shape, layers, motion, layout
+   -------------------------------------------------------------------------- */
+:root {
+  /* ---- Typography ------------------------------------------------------ */
+  --cd-font-sans: system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", "Noto Sans", Arial, sans-serif;
+  --cd-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  --cd-font-display: var(--cd-font-sans);
+
+  /* size / line-height pairs (rem; the root size is never changed so the
+     user's browser text size and zoom keep working) */
+  --cd-text-xs: 0.75rem;        --cd-leading-xs: 1rem;        /* 12/16 */
+  --cd-text-sm: 0.8125rem;      --cd-leading-sm: 1.125rem;    /* 13/18 */
+  --cd-text-md: 0.875rem;       --cd-leading-md: 1.25rem;     /* 14/20 */
+  --cd-text-base: 1rem;         --cd-leading-base: 1.5rem;    /* 16/24 */
+  --cd-text-lg: 1.125rem;       --cd-leading-lg: 1.625rem;    /* 18/26 */
+  --cd-text-xl: 1.25rem;        --cd-leading-xl: 1.75rem;     /* 20/28 */
+  --cd-text-2xl: 1.5rem;        --cd-leading-2xl: 2rem;       /* 24/32 */
+  --cd-text-3xl: 1.875rem;      --cd-leading-3xl: 2.25rem;    /* 30/36 */
+
+  --cd-weight-regular: 400;
+  --cd-weight-medium: 500;
+  --cd-weight-semibold: 600;
+  --cd-weight-bold: 700;
+
+  --cd-tracking-tight: -0.011em;  /* headings >= xl */
+  --cd-tracking-normal: 0;
+  --cd-tracking-label: 0.06em;    /* overline: mono, uppercase, xs */
+
+  /* ---- Spacing (4px grid) ---------------------------------------------- */
+  --cd-space-0: 0;
+  --cd-space-px: 1px;
+  --cd-space-0-5: 0.125rem;  /* 2 */
+  --cd-space-1: 0.25rem;     /* 4 */
+  --cd-space-1-5: 0.375rem;  /* 6 */
+  --cd-space-2: 0.5rem;      /* 8 */
+  --cd-space-3: 0.75rem;     /* 12 */
+  --cd-space-4: 1rem;        /* 16 */
+  --cd-space-5: 1.25rem;     /* 20 */
+  --cd-space-6: 1.5rem;      /* 24 */
+  --cd-space-8: 2rem;        /* 32 */
+  --cd-space-10: 2.5rem;     /* 40 */
+  --cd-space-12: 3rem;       /* 48 */
+  --cd-space-16: 4rem;       /* 64 */
+
+  /* ---- Shape ----------------------------------------------------------- */
+  --cd-radius-scale: 1;  /* skins: 0 = square (mono), 1.5 = soft */
+  --cd-radius-xs: calc(2px * var(--cd-radius-scale));   /* focus nubs, bars */
+  --cd-radius-sm: calc(4px * var(--cd-radius-scale));   /* badges, chips, kbd */
+  --cd-radius-md: calc(6px * var(--cd-radius-scale));   /* controls */
+  --cd-radius-lg: calc(8px * var(--cd-radius-scale));   /* cards, panels */
+  --cd-radius-xl: calc(12px * var(--cd-radius-scale));  /* dialogs, sheets, composer */
+  --cd-radius-full: 9999px;                             /* pills, dots, switches */
+
+  --cd-border-width: 1px;
+  --cd-focus-ring-width: 2px;
+  --cd-focus-ring-offset: 2px;
+
+  /* ---- Layering (gapped by 10; never use raw z-index across components) */
+  --cd-z-base: 0;
+  --cd-z-raised: 1;        /* drag ghost inside a list */
+  --cd-z-sticky: 10;       /* sticky table/list headers */
+  --cd-z-appbar: 20;       /* top app bar */
+  --cd-z-nav: 30;          /* bottom tab bar, nav rail, sidebar */
+  --cd-z-banner: 40;       /* inline system banners pinned to the shell */
+  --cd-z-scrim: 100;       /* modal backdrop */
+  --cd-z-overlay: 110;     /* dialog, sheet, drawer */
+  --cd-z-popover: 120;     /* menus, selects, popovers (also inside overlays) */
+  --cd-z-palette: 130;     /* command palette */
+  --cd-z-toast: 140;       /* toasts, approval stack */
+  --cd-z-tooltip: 150;
+  --cd-z-system: 200;      /* reconnecting / re-auth / boot surfaces */
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --cd-dur-instant: 0ms;
+  --cd-dur-fast: 100ms;      /* press, toggle, hover fill */
+  --cd-dur-base: 160ms;      /* fades, colour changes, tooltips out */
+  --cd-dur-moderate: 220ms;  /* popover, menu, toast enter */
+  --cd-dur-slow: 300ms;      /* sheet, drawer, dialog enter */
+  --cd-dur-exit: 160ms;      /* exits are ~30% faster than entrances */
+  --cd-dur-pulse: 1600ms;    /* running indicator loop */
+  --cd-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --cd-ease-enter: cubic-bezier(0, 0, 0, 1);
+  --cd-ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --cd-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --cd-safe-top: env(safe-area-inset-top, 0px);
+  --cd-safe-right: env(safe-area-inset-right, 0px);
+  --cd-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --cd-safe-left: env(safe-area-inset-left, 0px);
+  --cd-tabbar-h: 3.5rem;        /* 56 (>= 48 target) + --cd-safe-bottom; < 600px */
+  --cd-rail-w: 5rem;            /* 600-1199px */
+  --cd-sidebar-w: 16rem;        /* >= 1200px */
+  --cd-inspector-w: 22rem;      /* context panel, when the window has room */
+  --cd-measure: 70ch;           /* long prose */
+  --cd-chat-max: 48rem;         /* transcript + composer column */
+  --cd-page-max: 90rem;
+
+  /* ---- Icons ----------------------------------------------------------- */
+  --cd-icon-sm: 14px;
+  --cd-icon-stroke: 1.75;
+}
+
+/* --------------------------------------------------------------------------
+   3. Colour primitives: neutrals, tones, data-viz (light-dark pairs)
+   Evidence for every text/non-text pair: design-system.md §4.4. These are
+   Nous's values, the base every skin starts from; Desk, the default, replaces
+   them in section 4. They also apply, at zero specificity, to a subtree that
+   names any skin, so a skin card is self-contained inside a page in another
+   skin (`:root` keeps its own specificity; every skin block below still wins
+   over this one).
+   -------------------------------------------------------------------------- */
+:root,
+:where([data-skin]) {
+  /* ---- Neutrals -------------------------------------------------------- */
+  --cd-bg-canvas: light-dark(#f6f7f9, #0e1014);   /* app background */
+  --cd-bg-sidebar: light-dark(#eef0f4, #0a0c0f);  /* nav surfaces */
+  --cd-bg-surface: light-dark(#ffffff, #15181d);  /* cards, panels, lists */
+  --cd-bg-surface-2: light-dark(#f1f3f6, #1c2027);/* wells, zebra, headers */
+  --cd-bg-overlay: light-dark(#ffffff, #1b1e24);  /* menus, dialogs, sheets */
+  --cd-bg-inset: light-dark(#f3f4f7, #0b0d10);    /* code, logs, terminal */
+  --cd-bg-input: light-dark(#ffffff, #0e1014);
+
+  --cd-fg-default: light-dark(#15171c, #e8eaee);  /* >= 15:1 */
+  --cd-fg-muted: light-dark(#474e5c, #b4bac5);    /* >= 7:1 */
+  --cd-fg-subtle: light-dark(#5f6775, #8d95a2);   /* >= 4.5:1 on every surface */
+  --cd-fg-disabled: light-dark(#9aa1ad, #5b626d); /* exempt (inactive) */
+
+  --cd-border-subtle: light-dark(#e4e7ec, #22262d);  /* decorative dividers */
+  --cd-border-default: light-dark(#d5d9e0, #2d323a); /* cards, panels */
+  --cd-border-control: light-dark(#7f8794, #6d7582); /* inputs, switches: >= 3:1 */
+  --cd-border-strong: light-dark(#5f6775, #8d95a2);
+
+  --cd-overlay-hover: light-dark(rgb(21 23 28 / 0.05), rgb(232 234 238 / 0.06));
+  --cd-overlay-pressed: light-dark(rgb(21 23 28 / 0.09), rgb(232 234 238 / 0.11));
+  --cd-scrim: light-dark(rgb(10 12 16 / 0.45), rgb(0 0 0 / 0.62));
+  --cd-stroke-overlay: light-dark(rgb(21 23 28 / 0.1), rgb(232 234 238 / 0.1));
+
+  /* ---- Accent (skin: nous) --------------------------------------------- */
+  --cd-accent: light-dark(#0053fd, #4a84fe);        /* fills */
+  --cd-accent-hover: light-dark(#0046d6, #6b9bff);
+  --cd-accent-fg: light-dark(#0047d9, #86aeff);     /* accent as text/icon */
+  --cd-on-accent: light-dark(#ffffff, #0b0d12);     /* text on accent fill */
+  --cd-focus-ring: light-dark(#0053fd, #86aeff);
+
+  /* ---- Semantic tones: fg (text) / solid (dot, icon, fill) / on (text on
+          solid). soft + border are derived in §5. ------------------------ */
+  --cd-tone-neutral-fg: light-dark(#4f5765, #b4bac5);
+  --cd-tone-neutral-solid: light-dark(#6b7380, #8d95a2);
+  --cd-tone-neutral-on: light-dark(#ffffff, #0b0d12);
+
+  --cd-tone-info-fg: light-dark(#0a5bc4, #7db3ff);
+  --cd-tone-info-solid: light-dark(#1d6fe0, #4c95f5);
+  --cd-tone-info-on: light-dark(#ffffff, #0b0d12);
+
+  --cd-tone-success-fg: light-dark(#17704a, #5fd49a);
+  --cd-tone-success-solid: light-dark(#1b7f52, #3dbb7e);
+  --cd-tone-success-on: light-dark(#ffffff, #0b0d12);
+
+  --cd-tone-warning-fg: light-dark(#8a5300, #ffc15a);
+  --cd-tone-warning-solid: light-dark(#b87400, #f5a524);
+  --cd-tone-warning-on: light-dark(#15171c, #0b0d12);
+
+  --cd-tone-danger-fg: light-dark(#b42335, #ff8a96);
+  --cd-tone-danger-solid: light-dark(#d33447, #f2566a);
+  --cd-tone-danger-on: light-dark(#ffffff, #0b0d12);
+
+  --cd-tone-running-fg: light-dark(#08697a, #5fd3e6);
+  --cd-tone-running-solid: light-dark(#0e8da3, #2cb8cf);
+  --cd-tone-running-on: light-dark(#15171c, #0b0d12);
+
+  --cd-tone-paused-fg: light-dark(#5b3fc4, #b9a8ff);
+  --cd-tone-paused-solid: light-dark(#7458e0, #9a85fa);
+  --cd-tone-paused-on: light-dark(#ffffff, #0b0d12);
+
+  --cd-tone-stale-fg: light-dark(#6f5d2a, #d6c38c);
+  --cd-tone-stale-solid: light-dark(#9c8443, #b6a267);
+  --cd-tone-stale-on: light-dark(#15171c, #0b0d12);
+
+  --cd-tone-blocked-fg: light-dark(#a3400f, #ffa27a);
+  --cd-tone-blocked-solid: light-dark(#c24e14, #f07a45);
+  --cd-tone-blocked-on: light-dark(#ffffff, #0b0d12);
+
+  /* ---- Data visualisation (categorical; CVD-checked, >= 3:1 on surfaces).
+          Series are also distinguished by dash pattern + direct labels. ---- */
+  --cd-viz-1: light-dark(#155fc4, #6a98db);  /* blue    | solid     */
+  --cd-viz-2: light-dark(#cb4509, #fa7226);  /* orange  | dash 6 3  */
+  --cd-viz-3: light-dark(#009c5a, #34e281);  /* green   | dash 2 2  */
+  --cd-viz-4: light-dark(#9b317a, #c97394);  /* wine    | dash 8 3 2 3 */
+  --cd-viz-5: light-dark(#2206a2, #936bff);  /* indigo  | dash 1 3  */
+  --cd-viz-6: light-dark(#302a2e, #dfe4df);  /* ink     | dash 10 4 */
+  --cd-viz-other: light-dark(#7f8794, #6d7582);
+  --cd-viz-grid: light-dark(#e4e7ec, #262a31);
+  --cd-viz-axis: light-dark(#5f6775, #8d95a2);
+
+  /* ---- Profile identity (sigil marks, see web/src/shell/sigil-model.ts).
+          A sigil is four cells in one hue on a tile of that hue at 17% over
+          the surface (derived in §5). Picked by a stable hash of the profile
+          name; always shown next to the name, and every hue is >= 3:1 on its
+          own tile. Slate is ink-like and lightens in dark. -------------- */
+  --cd-sigil-1: light-dark(#2c3340, #c9d1e0);  /* slate  */
+  --cd-sigil-2: light-dark(#1f6fd0, #6ea8f5);  /* blue   */
+  --cd-sigil-3: light-dark(#b02f82, #f08cc8);  /* magenta */
+  --cd-sigil-4: light-dark(#0b7c8a, #4fcad9);  /* teal   */
+  --cd-sigil-5: light-dark(#7d4ad4, #b99cf5);  /* violet */
+  --cd-sigil-6: light-dark(#a05230, #e39a78);  /* clay   */
+  --cd-sigil-7: light-dark(#3d47c0, #8f9bf5);  /* indigo */
+
+  /* ---- Code & diff ----------------------------------------------------- */
+  --cd-code-keyword: light-dark(#a3267a, #f08ac8);
+  --cd-code-string: light-dark(#1a7a3e, #7fd69a);
+  --cd-code-number: light-dark(#9a4a00, #ffb46b);
+  --cd-code-comment: light-dark(#5f6775, #8d95a2);
+  --cd-code-function: light-dark(#0050c8, #86aeff);
+  --cd-code-type: light-dark(#6a3fc0, #c2a8ff);
+  --cd-code-punct: light-dark(#474e5c, #b4bac5);
+}
+
+/* The two static tokens a skin may change (Mono: square, Hermes Teal: display
+   face), restored for a skin subtree inside a page in such a skin. Only these
+   two: section 2 also holds the motion tokens, and re-declaring those on a
+   subtree would undo reduced motion there. */
+:where([data-skin]) {
+  --cd-radius-scale: 1;
+}
+:where([data-skin]:not([data-skin="hermes"])) {
+  --cd-font-display: var(--cd-font-sans);
+}
+
+/* --------------------------------------------------------------------------
+   4. Skins: accent swaps (and, for "hermes", the neutral family).
+   Every skin pair is contrast-checked; see design-system.md §4.3.
+   -------------------------------------------------------------------------- */
+/* "Desk" (the default, The Desk redesign): ink and neutrals carry the UI. Amber
+   is for "a person is needed", green and red for outcomes, and nothing else is
+   coloured but the agents' sigils. Primary buttons are ink (the accent is ink),
+   and the info, running, paused and stale tones are greys. `:root:not([data-skin])`
+   is a first visit, before a device has chosen anything. */
+:root:not([data-skin]),
+[data-skin="desk"] {
+  --cd-bg-canvas: light-dark(#f5f6f7, #0c0d0f);
+  --cd-bg-sidebar: light-dark(#eceef0, #101215);
+  --cd-bg-surface: light-dark(#ffffff, #15171a);
+  --cd-bg-surface-2: light-dark(#eef0f2, #1d2024);
+  --cd-bg-overlay: light-dark(#ffffff, #1b1e22);
+  --cd-bg-inset: light-dark(#f0f2f4, #0a0b0d);
+  --cd-bg-input: light-dark(#ffffff, #101215);
+  --cd-fg-default: light-dark(#101214, #eceef0);
+  --cd-fg-muted: light-dark(#575d66, #a0a6ae);
+  --cd-fg-subtle: light-dark(#5a616c, #969ca5);
+  --cd-border-subtle: light-dark(#e6e9ec, #1c1f23);
+  --cd-border-default: light-dark(#e1e4e8, #24282d);
+  --cd-border-strong: light-dark(#5f6775, #8d95a2);
+  --cd-accent: light-dark(#101214, #eceef0);
+  --cd-accent-hover: light-dark(#2a2e33, #ffffff);
+  --cd-accent-fg: light-dark(#101214, #eceef0);
+  --cd-on-accent: light-dark(#ffffff, #0c0d0f);
+  --cd-focus-ring: light-dark(#101214, #eceef0);
+  --cd-tone-info-fg: light-dark(#4f5765, #b4bac5);
+  --cd-tone-info-solid: light-dark(#6b7380, #8d95a2);
+  --cd-tone-info-on: light-dark(#ffffff, #0b0d12);
+  --cd-tone-running-fg: light-dark(#101214, #eceef0);
+  --cd-tone-running-solid: light-dark(#2c3138, #d7dbe1);
+  --cd-tone-running-on: light-dark(#ffffff, #0c0d0f);
+  --cd-tone-paused-fg: light-dark(#4f5765, #b4bac5);
+  --cd-tone-paused-solid: light-dark(#6b7380, #8d95a2);
+  --cd-tone-paused-on: light-dark(#ffffff, #0b0d12);
+  --cd-tone-stale-fg: light-dark(#575d66, #a0a6ae);
+  --cd-tone-stale-solid: light-dark(#6b7380, #8d95a2);
+  --cd-tone-stale-on: light-dark(#ffffff, #0b0d12);
+}
+[data-skin="hermes"] {
+  /* "Hermes Teal": the dashboard's canonical teal / cream / amber look */
+  --cd-bg-canvas: light-dark(#fbf6ee, #041c1c);
+  --cd-bg-sidebar: light-dark(#f4ede1, #031515);
+  --cd-bg-surface: light-dark(#fffdf9, #0a2525);
+  --cd-bg-surface-2: light-dark(#f3ece0, #0f2f2f);
+  --cd-bg-overlay: light-dark(#fffdf9, #0c2a2a);
+  --cd-bg-inset: light-dark(#f6f0e6, #021111);
+  --cd-bg-input: light-dark(#fffdf9, #041c1c);
+  --cd-fg-default: light-dark(#0e2120, #ffe6cb);
+  --cd-fg-muted: light-dark(#3c4c4a, #e2cdb3);
+  --cd-fg-subtle: light-dark(#586664, #b3a792);
+  --cd-border-subtle: light-dark(#ebe2d3, #123232);
+  --cd-border-default: light-dark(#ddd2c0, #1a3c3b);
+  --cd-border-control: light-dark(#7e8a86, #6e8582);
+  --cd-border-strong: light-dark(#586664, #b3a792);
+  --cd-accent: light-dark(#9a5a00, #ffbd38);
+  --cd-accent-hover: light-dark(#7f4a00, #ffcb66);
+  --cd-accent-fg: light-dark(#8a5100, #ffc85a);
+  --cd-on-accent: light-dark(#ffffff, #1a1206);
+  --cd-focus-ring: light-dark(#9a5a00, #ffbd38);
+  --cd-font-display: "Collapse", var(--cd-font-sans);
+}
+[data-skin="gold"] {
+  /* Hermes WebUI heritage */
+  --cd-accent: light-dark(#8b6508, #ffd700);
+  --cd-accent-hover: light-dark(#735305, #ffe14d);
+  --cd-accent-fg: light-dark(#7a5806, #ffd700);
+  --cd-on-accent: light-dark(#ffffff, #141006);
+  --cd-focus-ring: light-dark(#8b6508, #ffd700);
+}
+[data-skin="cherenkov"] {
+  /* PatterStage heritage */
+  --cd-accent: light-dark(#0071c2, #00bfff);
+  --cd-accent-hover: light-dark(#005fa3, #33ccff);
+  --cd-accent-fg: light-dark(#00609f, #33ddff);
+  --cd-on-accent: light-dark(#ffffff, #04131c);
+  --cd-focus-ring: light-dark(#0071c2, #33ddff);
+}
+[data-skin="verdant"] {
+  /* Desktop "github" preset */
+  --cd-accent: light-dark(#196d31, #4f9e5e);
+  --cd-accent-hover: light-dark(#145a28, #66b474);
+  --cd-accent-fg: light-dark(#17652d, #7cc88a);
+  --cd-on-accent: light-dark(#ffffff, #07120a);
+  --cd-focus-ring: light-dark(#196d31, #7cc88a);
+}
+[data-skin="mono"] {
+  --cd-accent: light-dark(#25282e, #e8eaee);
+  --cd-accent-hover: light-dark(#15171c, #ffffff);
+  --cd-accent-fg: light-dark(#25282e, #e8eaee);
+  --cd-on-accent: light-dark(#ffffff, #0e1014);
+  --cd-focus-ring: light-dark(#25282e, #e8eaee);
+  --cd-radius-scale: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. Derived tokens. Re-declared on every scoping attribute so a nested
+   skin/theme/density subtree recomputes them from its own inputs.
+   -------------------------------------------------------------------------- */
+:root,
+[data-skin],
+[data-theme],
+[data-density] {
+  --cd-accent-soft: color-mix(in srgb, var(--cd-accent) 12%, var(--cd-bg-surface));
+  --cd-accent-soft-hover: color-mix(in srgb, var(--cd-accent) 18%, var(--cd-bg-surface));
+  --cd-accent-border: color-mix(in srgb, var(--cd-accent) 45%, var(--cd-bg-surface));
+  --cd-accent-active: color-mix(in srgb, var(--cd-accent-hover) 86%, #000);
+  --cd-selection: color-mix(in srgb, var(--cd-accent) 28%, var(--cd-bg-surface));
+  /* selected rows hold fg-subtle metadata, so they tint less than accent-soft */
+  --cd-bg-selected: color-mix(in srgb, var(--cd-accent) 8%, var(--cd-bg-surface));
+
+  --cd-tone-neutral-soft: color-mix(in srgb, var(--cd-tone-neutral-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-info-soft: color-mix(in srgb, var(--cd-tone-info-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-success-soft: color-mix(in srgb, var(--cd-tone-success-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-warning-soft: color-mix(in srgb, var(--cd-tone-warning-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-danger-soft: color-mix(in srgb, var(--cd-tone-danger-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-running-soft: color-mix(in srgb, var(--cd-tone-running-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-paused-soft: color-mix(in srgb, var(--cd-tone-paused-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-stale-soft: color-mix(in srgb, var(--cd-tone-stale-solid) 14%, var(--cd-bg-surface));
+  --cd-tone-blocked-soft: color-mix(in srgb, var(--cd-tone-blocked-solid) 14%, var(--cd-bg-surface));
+
+  --cd-tone-neutral-border: color-mix(in srgb, var(--cd-tone-neutral-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-info-border: color-mix(in srgb, var(--cd-tone-info-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-success-border: color-mix(in srgb, var(--cd-tone-success-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-warning-border: color-mix(in srgb, var(--cd-tone-warning-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-danger-border: color-mix(in srgb, var(--cd-tone-danger-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-running-border: color-mix(in srgb, var(--cd-tone-running-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-paused-border: color-mix(in srgb, var(--cd-tone-paused-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-stale-border: color-mix(in srgb, var(--cd-tone-stale-solid) 40%, var(--cd-bg-surface));
+  --cd-tone-blocked-border: color-mix(in srgb, var(--cd-tone-blocked-solid) 40%, var(--cd-bg-surface));
+
+  /* a sigil's tile: its hue at 17% over the surface */
+  --cd-sigil-tile-1: color-mix(in srgb, var(--cd-sigil-1) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-2: color-mix(in srgb, var(--cd-sigil-2) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-3: color-mix(in srgb, var(--cd-sigil-3) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-4: color-mix(in srgb, var(--cd-sigil-4) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-5: color-mix(in srgb, var(--cd-sigil-5) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-6: color-mix(in srgb, var(--cd-sigil-6) 17%, var(--cd-bg-surface));
+  --cd-sigil-tile-7: color-mix(in srgb, var(--cd-sigil-7) 17%, var(--cd-bg-surface));
+
+  /* 10%: keeps the +/- sign (tone fg) and muted gutter numbers >= 4.5:1 */
+  --cd-diff-add-bg: color-mix(in srgb, var(--cd-tone-success-solid) 10%, var(--cd-bg-inset));
+  --cd-diff-add-fg: var(--cd-tone-success-fg);
+  --cd-diff-remove-bg: color-mix(in srgb, var(--cd-tone-danger-solid) 10%, var(--cd-bg-inset));
+  --cd-diff-remove-fg: var(--cd-tone-danger-fg);
+
+  /* sequential ramp (heatmaps): 5 steps of viz-1 over the surface */
+  --cd-viz-seq-1: color-mix(in srgb, var(--cd-viz-1) 12%, var(--cd-bg-surface));
+  --cd-viz-seq-2: color-mix(in srgb, var(--cd-viz-1) 32%, var(--cd-bg-surface));
+  --cd-viz-seq-3: color-mix(in srgb, var(--cd-viz-1) 54%, var(--cd-bg-surface));
+  --cd-viz-seq-4: color-mix(in srgb, var(--cd-viz-1) 76%, var(--cd-bg-surface));
+  --cd-viz-seq-5: var(--cd-viz-1);
+  /* diverging: viz-2 (below) <- neutral -> viz-1 (above) */
+  --cd-viz-div-neg: var(--cd-viz-2);
+  --cd-viz-div-mid: var(--cd-bg-surface-2);
+  --cd-viz-div-pos: var(--cd-viz-1);
+
+  /* ---- Status ladder (state -> tone). Always paired with icon + label. -- */
+  --cd-status-running: var(--cd-tone-running-solid);
+  --cd-status-queued: var(--cd-tone-neutral-solid);
+  --cd-status-waiting: var(--cd-tone-warning-solid);   /* waiting for you */
+  --cd-status-succeeded: var(--cd-tone-success-solid);
+  --cd-status-failed: var(--cd-tone-danger-solid);
+  --cd-status-cancelled: var(--cd-tone-neutral-solid);
+  --cd-status-paused: var(--cd-tone-paused-solid);
+  --cd-status-stale: var(--cd-tone-stale-solid);
+  --cd-status-offline: var(--cd-tone-neutral-solid);
+  --cd-status-blocked: var(--cd-tone-blocked-solid);
+  --cd-status-online: var(--cd-tone-success-solid);
+  --cd-status-degraded: var(--cd-tone-warning-solid);
+  --cd-status-draft: var(--cd-tone-neutral-solid);
+
+  /* ---- Elevation (flat by default; shadows only for floating layers) --- */
+  --cd-shadow-raised: 0 1px 2px light-dark(rgb(16 18 24 / 0.06), rgb(0 0 0 / 0.4));
+  --cd-shadow-popover:
+    0 0 0 1px var(--cd-stroke-overlay),
+    0 4px 16px light-dark(rgb(16 18 24 / 0.1), rgb(0 0 0 / 0.45)),
+    0 16px 32px -24px light-dark(rgb(16 18 24 / 0.22), rgb(0 0 0 / 0.6));
+  --cd-shadow-overlay:
+    0 0 0 1px var(--cd-stroke-overlay),
+    0 2px 4px -2px light-dark(rgb(16 18 24 / 0.08), rgb(0 0 0 / 0.4)),
+    0 8px 12px -6px light-dark(rgb(16 18 24 / 0.08), rgb(0 0 0 / 0.4)),
+    0 20px 28px -14px light-dark(rgb(16 18 24 / 0.1), rgb(0 0 0 / 0.5)),
+    0 36px 48px -28px light-dark(rgb(16 18 24 / 0.12), rgb(0 0 0 / 0.55));
+}
+
+/* --------------------------------------------------------------------------
+   6. Density. Comfortable (touch) is the base; compact for fine pointers.
+   -------------------------------------------------------------------------- */
+:root,
+[data-density="comfortable"] {
+  --cd-target-min: 24px;           /* WCAG 2.5.8 floor for fine pointers */
+  --cd-control-h: 2.75rem;         /* 44 */
+  --cd-control-h-sm: 2.25rem;      /* 36 */
+  --cd-control-h-lg: 3.25rem;      /* 52 */
+  --cd-row-h: 3.5rem;              /* 56: two-line list row */
+  --cd-row-h-dense: 2.75rem;       /* 44: single-line row */
+  --cd-control-px: 0.875rem;       /* 14 */
+  --cd-gap: 0.75rem;               /* 12 */
+  --cd-gap-tight: 0.5rem;          /* 8 */
+  --cd-card-p: 1rem;               /* 16 */
+  --cd-page-px: 1rem;              /* 16 */
+  --cd-appbar-h: 3.5rem;           /* 56 */
+  --cd-icon: 20px;
+  --cd-text-ui: var(--cd-text-base);
+  --cd-leading-ui: var(--cd-leading-base);
+  --cd-text-prose: var(--cd-text-base);
+  --cd-text-code: var(--cd-text-md);
+  --cd-text-input: var(--cd-text-base);  /* 16px stops iOS focus zoom */
+}
+
+[data-density="compact"] {
+  --cd-control-h: 2rem;            /* 32 */
+  --cd-control-h-sm: 1.5rem;       /* 24 */
+  --cd-control-h-lg: 2.5rem;       /* 40 */
+  --cd-row-h: 2.75rem;             /* 44 */
+  --cd-row-h-dense: 2rem;          /* 32 */
+  --cd-control-px: 0.625rem;       /* 10 */
+  --cd-gap: 0.5rem;
+  --cd-gap-tight: 0.375rem;
+  --cd-card-p: 0.75rem;
+  --cd-page-px: 1.5rem;
+  --cd-appbar-h: 3rem;
+  --cd-icon: 16px;
+  --cd-text-ui: var(--cd-text-md);
+  --cd-leading-ui: var(--cd-leading-md);
+  --cd-text-prose: 0.9375rem;      /* 15 */
+  --cd-text-code: var(--cd-text-sm);
+  --cd-text-input: var(--cd-text-md);
+}
+
+@media (pointer: fine) and (min-width: 64rem) {
+  :root:not([data-density]),
+  [data-density="auto"] {
+    --cd-control-h: 2rem;
+    --cd-control-h-sm: 1.5rem;
+    --cd-control-h-lg: 2.5rem;
+    --cd-row-h: 2.75rem;
+    --cd-row-h-dense: 2rem;
+    --cd-control-px: 0.625rem;
+    --cd-gap: 0.5rem;
+    --cd-gap-tight: 0.375rem;
+    --cd-card-p: 0.75rem;
+    --cd-page-px: 1.5rem;
+    --cd-appbar-h: 3rem;
+    --cd-icon: 16px;
+    --cd-text-ui: var(--cd-text-md);
+    --cd-leading-ui: var(--cd-leading-md);
+    --cd-text-prose: 0.9375rem;
+    --cd-text-code: var(--cd-text-sm);
+    --cd-text-input: var(--cd-text-md);
+  }
+}
+
+/* Coarse pointers: every interactive element gets >= 44px, whatever the
+   density, and inputs stay at 16px so iOS never zooms on focus. */
+@media (pointer: coarse) {
+  :root,
+  [data-density] {
+    --cd-target-min: 44px;
+    --cd-text-input: var(--cd-text-base);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Reduced motion: durations collapse; loops and shimmer stop.
+   Components must read the tokens (never literal ms) for this to hold.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cd-dur-fast: 0ms;
+    --cd-dur-base: 0ms;
+    --cd-dur-moderate: 0ms;
+    --cd-dur-slow: 0ms;
+    --cd-dur-exit: 0ms;
+    --cd-dur-pulse: 0ms;
+  }
+}
+[data-motion="reduce"] {
+  --cd-dur-fast: 0ms;
+  --cd-dur-base: 0ms;
+  --cd-dur-moderate: 0ms;
+  --cd-dur-slow: 0ms;
+  --cd-dur-exit: 0ms;
+  --cd-dur-pulse: 0ms;
+}
+
+/* User text size (Settings > Appearance). A percentage of the browser's own
+   default, so OS/browser text-size settings still compound. All type and
+   control tokens are rem, so everything scales together. */
+:root[data-text-scale="sm"] { font-size: 93.75%; }
+:root[data-text-scale="lg"] { font-size: 112.5%; }
+:root[data-text-scale="xl"] { font-size: 125%; }
+
+/* --------------------------------------------------------------------------
+   8. Tailwind v4 bridge. Consumed only when this file is imported into a
+   Tailwind entry stylesheet. `inline` makes utilities reference the
+   `--cd-*` variables, so skins/themes/density still switch at runtime.
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --font-sans: var(--cd-font-sans);
+  --font-mono: var(--cd-font-mono);
+  --font-display: var(--cd-font-display);
+
+  --color-canvas: var(--cd-bg-canvas);
+  --color-sidebar: var(--cd-bg-sidebar);
+  --color-surface: var(--cd-bg-surface);
+  --color-surface-2: var(--cd-bg-surface-2);
+  --color-overlay: var(--cd-bg-overlay);
+  --color-inset: var(--cd-bg-inset);
+  --color-input: var(--cd-bg-input);
+  --color-selected: var(--cd-bg-selected);
+  --color-scrim: var(--cd-scrim);
+  --color-hover: var(--cd-overlay-hover);
+  --color-pressed: var(--cd-overlay-pressed);
+
+  --color-fg: var(--cd-fg-default);
+  --color-fg-muted: var(--cd-fg-muted);
+  --color-fg-subtle: var(--cd-fg-subtle);
+  --color-fg-disabled: var(--cd-fg-disabled);
+
+  /* border-edge, border-edge-subtle, border-edge-control, divide-edge-subtle */
+  --color-edge-subtle: var(--cd-border-subtle);
+  --color-edge: var(--cd-border-default);
+  --color-edge-control: var(--cd-border-control);
+  --color-edge-strong: var(--cd-border-strong);
+
+  --color-accent: var(--cd-accent);
+  --color-accent-hover: var(--cd-accent-hover);
+  --color-accent-active: var(--cd-accent-active);
+  --color-accent-fg: var(--cd-accent-fg);
+  --color-accent-soft: var(--cd-accent-soft);
+  --color-accent-border: var(--cd-accent-border);
+  --color-on-accent: var(--cd-on-accent);
+  --color-ring: var(--cd-focus-ring);
+
+  --color-neutral-fg: var(--cd-tone-neutral-fg);
+  --color-neutral-solid: var(--cd-tone-neutral-solid);
+  --color-neutral-soft: var(--cd-tone-neutral-soft);
+  --color-info-fg: var(--cd-tone-info-fg);
+  --color-info-solid: var(--cd-tone-info-solid);
+  --color-info-soft: var(--cd-tone-info-soft);
+  --color-success-fg: var(--cd-tone-success-fg);
+  --color-success-solid: var(--cd-tone-success-solid);
+  --color-success-soft: var(--cd-tone-success-soft);
+  --color-warning-fg: var(--cd-tone-warning-fg);
+  --color-warning-solid: var(--cd-tone-warning-solid);
+  --color-warning-soft: var(--cd-tone-warning-soft);
+  --color-danger-fg: var(--cd-tone-danger-fg);
+  --color-danger-solid: var(--cd-tone-danger-solid);
+  --color-danger-soft: var(--cd-tone-danger-soft);
+  --color-running-fg: var(--cd-tone-running-fg);
+  --color-running-solid: var(--cd-tone-running-solid);
+  --color-running-soft: var(--cd-tone-running-soft);
+  --color-paused-fg: var(--cd-tone-paused-fg);
+  --color-paused-solid: var(--cd-tone-paused-solid);
+  --color-paused-soft: var(--cd-tone-paused-soft);
+  --color-stale-fg: var(--cd-tone-stale-fg);
+  --color-stale-solid: var(--cd-tone-stale-solid);
+  --color-stale-soft: var(--cd-tone-stale-soft);
+  --color-blocked-fg: var(--cd-tone-blocked-fg);
+  --color-blocked-solid: var(--cd-tone-blocked-solid);
+  --color-blocked-soft: var(--cd-tone-blocked-soft);
+
+  --color-viz-1: var(--cd-viz-1);
+  --color-viz-2: var(--cd-viz-2);
+  --color-viz-3: var(--cd-viz-3);
+  --color-viz-4: var(--cd-viz-4);
+  --color-viz-5: var(--cd-viz-5);
+  --color-viz-6: var(--cd-viz-6);
+  --color-viz-other: var(--cd-viz-other);
+  --color-sigil-1: var(--cd-sigil-1);
+  --color-sigil-2: var(--cd-sigil-2);
+  --color-sigil-3: var(--cd-sigil-3);
+  --color-sigil-4: var(--cd-sigil-4);
+  --color-sigil-5: var(--cd-sigil-5);
+  --color-sigil-6: var(--cd-sigil-6);
+  --color-sigil-7: var(--cd-sigil-7);
+
+  --text-xs: var(--cd-text-xs);
+  --text-xs--line-height: var(--cd-leading-xs);
+  --text-sm: var(--cd-text-sm);
+  --text-sm--line-height: var(--cd-leading-sm);
+  --text-md: var(--cd-text-md);
+  --text-md--line-height: var(--cd-leading-md);
+  --text-base: var(--cd-text-base);
+  --text-base--line-height: var(--cd-leading-base);
+  --text-lg: var(--cd-text-lg);
+  --text-lg--line-height: var(--cd-leading-lg);
+  --text-xl: var(--cd-text-xl);
+  --text-xl--line-height: var(--cd-leading-xl);
+  --text-2xl: var(--cd-text-2xl);
+  --text-2xl--line-height: var(--cd-leading-2xl);
+  --text-3xl: var(--cd-text-3xl);
+  --text-3xl--line-height: var(--cd-leading-3xl);
+  --text-ui: var(--cd-text-ui);
+  --text-ui--line-height: var(--cd-leading-ui);
+  --text-prose: var(--cd-text-prose);
+  --text-code: var(--cd-text-code);
+
+  --radius-xs: var(--cd-radius-xs);
+  --radius-sm: var(--cd-radius-sm);
+  --radius-md: var(--cd-radius-md);
+  --radius-lg: var(--cd-radius-lg);
+  --radius-xl: var(--cd-radius-xl);
+  --radius-control: var(--cd-radius-md);
+  --radius-card: var(--cd-radius-lg);
+  --radius-sheet: var(--cd-radius-xl);
+
+  --shadow-raised: var(--cd-shadow-raised);
+  --shadow-popover: var(--cd-shadow-popover);
+  --shadow-overlay: var(--cd-shadow-overlay);
+
+  --ease-standard: var(--cd-ease-standard);
+  --ease-enter: var(--cd-ease-enter);
+  --ease-exit: var(--cd-ease-exit);
+  --ease-sheet: var(--cd-ease-sheet);
+
+  --z-index-sticky: var(--cd-z-sticky);
+  --z-index-appbar: var(--cd-z-appbar);
+  --z-index-nav: var(--cd-z-nav);
+  --z-index-banner: var(--cd-z-banner);
+  --z-index-scrim: var(--cd-z-scrim);
+  --z-index-overlay: var(--cd-z-overlay);
+  --z-index-popover: var(--cd-z-popover);
+  --z-index-palette: var(--cd-z-palette);
+  --z-index-toast: var(--cd-z-toast);
+  --z-index-tooltip: var(--cd-z-tooltip);
+  --z-index-system: var(--cd-z-system);
+
+  --spacing-control: var(--cd-control-h);
+  --spacing-control-sm: var(--cd-control-h-sm);
+  --spacing-control-lg: var(--cd-control-h-lg);
+  --spacing-row: var(--cd-row-h);
+  --spacing-target: var(--cd-target-min);
+  --spacing-gap: var(--cd-gap);
+  --spacing-card: var(--cd-card-p);
+  --spacing-page: var(--cd-page-px);
+  --spacing-tabbar: var(--cd-tabbar-h);
+  --spacing-rail: var(--cd-rail-w);
+  --spacing-sidebar: var(--cd-sidebar-w);
+  --spacing-inspector: var(--cd-inspector-w);
+
+  /* Tailwind's defaults (sm 40rem, md 48rem, lg 64rem, xl 80rem, 2xl 96rem)
+     stay. Shell breakpoints follow Material 3 window classes
+     (information-architecture.md §2): `rail:`, `split:`, `sidebar:`. */
+  --breakpoint-rail: 37.5rem;     /* 600: bottom tab bar -> nav rail */
+  --breakpoint-split: 45rem;      /* 720: list/detail two panes */
+  --breakpoint-sidebar: 75rem;    /* 1200: nav rail -> grouped sidebar */
+}
+
+/* Tailwind `dark:` variant that honours data-theme and the OS setting.
+   (Rarely needed: colour tokens already switch by themselves.) */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:not(:where([data-theme="light"], [data-theme="light"] *)) {
+      @slot;
+    }
+  }
+}

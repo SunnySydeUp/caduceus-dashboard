@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Today (mock)</title>
+<link rel="stylesheet" href="desk.css">
+</head>
+<body data-page="today">
+<div class="app">
+  <div class="col">
+    <header class="top">
+      <h1>Today</h1><span class="muted">Mon 19 Oct</span>
+      <span class="grow"></span>
+      <span class="pill pill--amber">3 need you</span>
+    </header>
+
+    <main class="page">
+      <div class="today">
+        <div class="colgrid">
+          <section aria-labelledby="need">
+            <h2 class="sh" id="need">Needs you</h2>
+            <div class="stack">
+              <article class="dec rise">
+                <div class="dec__who"><span data-sg="homeassistant:sm"></span><span><b>homeassistant</b> is asking</span><span class="t">6 min ago</span></div>
+                <h3>Turn the heating off while you are away until Sunday?</h3>
+                <p>This changes 3 schedules in Home Assistant. It restores them on Sunday at 6 pm.</p>
+                <div class="acts"><button class="b b--ink">Yes, turn it off</button><button class="b">Not now</button></div>
+              </article>
+
+              <article class="dec rise" style="animation-delay:.05s">
+                <div class="dec__who"><span data-sg="coder:sm"></span><span><b>coder</b> wants to run a command</span><span class="t">2 min ago</span></div>
+                <h3>Push the webhook backoff branch to origin?</h3>
+                <pre>git push origin feat/x</pre>
+                <p>Publishes 2 commits. CI runs on push and collaborators can see the branch.</p>
+                <div class="acts"><button class="b b--ink">Allow once</button><button class="b">This session</button><button class="b b--quiet b--danger">Deny</button></div>
+              </article>
+
+              <article class="dec rise" style="animation-delay:.1s">
+                <div class="dec__who"><span data-sg="general:sm"></span><span><b>general</b> needs a choice</span><span class="t">9 min ago</span></div>
+                <h3>Which plumber slot should I book?</h3>
+                <div class="opts">
+                  <button class="opt"><span>Thursday 9:00 am<small>You are home. $180 quote.</small></span><span class="k">1</span></button>
+                  <button class="opt"><span>Friday 2:00 pm<small>You have a call at 3. Same quote.</small></span><span class="k">2</span></button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section aria-labelledby="rdy">
+            <h2 class="sh" id="rdy">Ready for review <span class="muted">2</span></h2>
+            <div class="ready">
+              <div class="row"><span data-sg="property:sm"></span><span><b>Lease renewal letter for Unit 2A</b><small>Draft v2 with the 3.1 percent CPI increase. 2 pages.</small></span><button class="b b--sm">Review</button></div>
+              <div class="row"><span data-sg="coder:sm:done"></span><span><b>Dependency updates, PR 213</b><small>2 packages bumped. Tests pass.</small></span><button class="b b--sm">Review</button></div>
+            </div>
+          </section>
+
+          <section class="tiles-wrap" aria-labelledby="crw">
+            <h2 class="sh" id="crw">Crew</h2>
+            <div class="tiles">
+              <a class="tile" href="talk.html"><span data-sg="librarian:sm"></span><span><b>librarian</b><small>Reading source 9 of about 15</small></span></a>
+              <a class="tile" href="talk.html"><span data-sg="property:sm"></span><span><b>property</b><small>Lease letter is ready</small></span></a>
+              <a class="tile" href="talk.html"><span data-sg="coder:sm"></span><span><b>coder</b><small>Wants to push feat/x</small></span></a>
+              <a class="tile" href="talk.html"><span data-sg="general:sm"></span><span><b>general</b><small>Two plumber slots free</small></span></a>
+              <a class="tile" href="talk.html"><span data-sg="homeassistant:sm"></span><span><b>homeassistant</b><small>Asked about the heating</small></span></a>
+            </div>
+          </section>
+        </div>
+
+        <aside class="colgrid" aria-label="Schedule and overnight">
+          <section aria-labelledby="day">
+            <h2 class="sh" id="day">Today's schedule</h2>
+            <div class="card">
+              <div class="ribbon" style="--now:.404" role="img" aria-label="Schedule from midnight to midnight, now is 9:41 am">
+                <i class="m" style="--t:.25;--h:#2c3340"></i><i class="m" style="--t:.333;--h:#2d7be0"></i><i class="m" style="--t:.375;--h:#8a56e0"></i>
+                <i class="m next" style="--t:.958;--h:#2c3340"></i><span class="now"></span>
+              </div>
+              <div class="hours"><span>12 am</span><span>6 am</span><span>12 pm</span><span>6 pm</span><span>12 am</span></div>
+              <ul class="when">
+                <li><time>11:00 pm</time><span data-sg="coder:xs:idle"></span><span class="t">Nightly test run<small>Next run tonight</small></span></li>
+                <li><time>9:00 am</time><span data-sg="property:xs:idle"></span><span class="t">Council planning watch<small>Ran. 2 new applications</small></span></li>
+                <li><time>8:00 am</time><span data-sg="general:xs:idle"></span><span class="t">Morning briefing<small>Ran. Sent to Telegram</small></span></li>
+              </ul>
+            </div>
+          </section>
+
+          <section aria-labelledby="ovn">
+            <h2 class="sh" id="ovn">While you were away</h2>
+            <ul class="when">
+              <li><time>6:00 am</time><span data-sg="coder:xs:idle"></span><span class="t">Checked dependencies<small>2 updates, opened PR 213</small></span></li>
+              <li><time>2:14 am</time><span data-sg="librarian:xs:idle"></span><span class="t">Found 3 new papers<small>On citation grounding</small></span></li>
+              <li><time>11:00 pm</time><span data-sg="coder:xs:idle"></span><span class="t">Ran the nightly tests<small>212 passed</small></span></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+<script type="module" src="desk.js"></script>
+</body>
+</html>

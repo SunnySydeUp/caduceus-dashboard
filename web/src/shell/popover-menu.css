@@ -1,0 +1,22 @@
+/* The Desk's anchored popover (M8 #09). Tokens only; logical properties. `align="fill"` has no box of its own: the panel spans the positioned parent. */
+.pop { position: relative; display: inline-flex; }
+.pop[data-align="fill"] { display: contents; }
+.pop__panel { position: absolute; z-index: var(--cd-z-popover); display: grid; gap: 2px; min-inline-size: 13rem; padding: var(--cd-space-1); background: var(--cd-bg-overlay); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); box-shadow: var(--cd-shadow-popover); }
+.pop__panel[hidden] { display: none; }
+.pop__panel[data-placement="bottom"] { inset-block-start: calc(100% + var(--cd-space-1)); max-block-size: var(--pop-fit, none); overflow-y: auto; overscroll-behavior: contain; }
+.pop__panel[data-placement="top"] { inset-block-end: calc(100% + var(--cd-space-2)); }
+.pop__panel[data-align="start"] { inset-inline-start: 0; }
+.pop__panel[data-align="end"] { inset-inline-end: 0; }
+.pop__panel[data-align="fill"] { inset-inline: var(--cd-space-3); }
+.pop__title { margin: var(--cd-space-1-5) var(--cd-space-2) var(--cd-space-1); font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-muted); }
+.pop__item { display: flex; align-items: center; gap: var(--cd-space-3); inline-size: 100%; min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding: var(--cd-space-2); border: 0; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-default); font: inherit; text-align: start; cursor: pointer; }
+.pop__item > svg.i { flex: none; color: var(--cd-fg-subtle); }
+.pop__item:disabled { color: var(--cd-fg-disabled); cursor: not-allowed; }
+@media (hover: hover) { .pop__item:not(:disabled):hover { background: var(--cd-overlay-hover); } }
+.pop__item:not(:disabled):active { background: var(--cd-overlay-pressed); }
+.pop__item:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+.pop__value { margin-inline-start: auto; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.pop__tick { margin-inline-start: auto; visibility: hidden; color: var(--cd-accent-fg); }
+.pop__item[aria-checked="true"] .pop__tick, .pop__item[aria-pressed="true"] .pop__tick { visibility: visible; }
+.pop__panel .seg { display: flex; margin: var(--cd-space-0-5); }
+.pop__panel .seg button { flex: 1; }

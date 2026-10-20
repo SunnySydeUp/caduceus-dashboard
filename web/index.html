@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- The title bar and status bar follow the chosen look once the page runs (web/src/shell/theme-color.ts); until then these are the default canvas colours of tokens.css, per the operating system's scheme. -->
+    <meta name="theme-color" content="#f5f6f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0d0f" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-title" content="Caduceus" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <script>
+      // No flash of the wrong theme: this device's appearance (kept by web/src/shell/appearance-store.ts) goes on <html> before
+      // the first paint, before any stylesheet or script of the bundle loads. It must read exactly what web/src/appearance.ts
+      // writes and tolerate everything else (web/test/appearance.test.ts runs this script). Keep it classic, small and first.
+      try {
+        var stored = JSON.parse(localStorage.getItem('caduceus.appearance')).appearance;
+        if (stored && typeof stored === 'object') {
+          var choices = { theme: ['light', 'dark', 'system'], skin: ['desk', 'nous', 'hermes', 'gold', 'cherenkov', 'verdant', 'mono'], density: ['auto', 'compact', 'comfortable'], textSize: ['sm', 'md', 'lg', 'xl'] };
+          var defaults = { theme: 'system', skin: 'desk', density: 'auto', textSize: 'md' };
+          var pick = function (name) {
+            return choices[name].indexOf(stored[name]) >= 0 ? stored[name] : defaults[name];
+          };
+          var root = document.documentElement;
+          root.setAttribute('data-theme', pick('theme'));
+          root.setAttribute('data-skin', pick('skin'));
+          root.setAttribute('data-density', pick('density'));
+          if (pick('textSize') !== 'md') root.setAttribute('data-text-scale', pick('textSize'));
+        }
+      } catch (error) {
+        // No copy yet, or storage is blocked: the defaults in tokens.css apply.
+      }
+    </script>
+    <title>Caduceus Dashboard</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- One polite live region for toasts, and the root layers (sheets, dialogs, drawers) render into. Both exist before any content, so announcements work. -->
+    <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+    <div id="overlays"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

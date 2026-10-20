@@ -1,0 +1,82 @@
+/* System › Config. Tokens only (design system); logical properties throughout. */
+.cf { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.cf > .page-header { padding-block-end: 0; }
+
+/* ---- Search, filters and Jump to ---- */
+.cf-tools { display: grid; gap: var(--cd-space-2); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }
+.cf-search, .cf-jump { min-inline-size: 0; }
+.cf-chips { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.app[data-size="large"] .cf-tools, .app[data-size="medium"] .cf-tools { grid-template-columns: minmax(12rem, 2fr) minmax(10rem, 1fr); }
+.app[data-size="large"] .cf-chips, .app[data-size="medium"] .cf-chips { grid-column: 1 / -1; }
+.cf-count { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+
+/* ---- Sections ---- */
+.cf-sections .cf-section { text-decoration: none; color: inherit; cursor: pointer; }
+.cf-back { justify-self: start; }
+.cf-group { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.cf-group__title { display: flex; align-items: baseline; gap: var(--cd-space-2); margin: 0; font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); }
+.cf-group__title .subtle { font-weight: var(--cd-weight-regular); font-size: var(--cd-text-sm); }
+
+/* ---- A setting: text on one side, its control on the other; on a phone they stack ---- */
+.cf-list { display: grid; min-inline-size: 0; }
+.cf-field { display: grid; gap: var(--cd-space-2) var(--cd-space-3); grid-template-columns: minmax(0, 1fr) auto; align-items: start; padding: var(--cd-space-3) var(--cd-card-p); border-block-end: 1px solid var(--cd-border-subtle); min-inline-size: 0; }
+.cf-field:last-child { border-block-end: 0; }
+.cf-field__text { grid-column: 1 / -1; display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.cf-field__control { grid-column: 1; min-inline-size: 0; }
+.cf-field__acts { grid-column: 2; display: flex; align-items: center; gap: var(--cd-space-1); justify-self: end; }
+.cf-field__label { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1-5); }
+.cf-field__name { font-weight: var(--cd-weight-medium); }
+.cf-field__key { justify-self: start; color: var(--cd-fg-subtle); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); overflow-wrap: anywhere; }
+.cf-field__help { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+.cf-field__help:empty { display: none; }
+.cf-field__default { color: var(--cd-fg-subtle); }
+.cf-field.is-pending { background: var(--cd-accent-soft); box-shadow: inset 3px 0 0 var(--cd-accent); }
+.cf-field.is-linked { background: var(--cd-bg-selected); box-shadow: inset 3px 0 0 var(--cd-accent), 0 0 0 2px var(--cd-focus-ring) inset; }
+.cf-readonly { display: block; padding: var(--cd-space-2); border-radius: var(--cd-radius-md); background: var(--cd-bg-inset); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); overflow-wrap: anywhere; }
+.cf-secret { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); align-items: center; }
+.cf-secret .input { flex: 1 1 10rem; min-inline-size: 0; }
+.app:not([data-size="compact"]) .cf-field { grid-template-columns: minmax(0, 3fr) minmax(12rem, 2fr) auto; align-items: center; }
+.app:not([data-size="compact"]) .cf-field__text { grid-column: 1; }
+.app:not([data-size="compact"]) .cf-field__control { grid-column: 2; }
+.app:not([data-size="compact"]) .cf-field__acts { grid-column: 3; }
+
+/* ---- The save bar: pinned above the tab bar on a phone ---- */
+.cf-savebar { position: sticky; inset-block-end: calc(var(--shell-bottom) + var(--cd-space-2)); z-index: var(--cd-z-sticky); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-2) var(--cd-space-3); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-accent-border); border-radius: var(--cd-radius-lg); background: var(--cd-bg-overlay); box-shadow: var(--cd-shadow-popover); }
+.cf-savebar__msg { margin: 0; min-inline-size: 0; font-size: var(--cd-text-sm); }
+.cf-savebar__acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+
+/* ---- Leaving with edits ---- */
+.cf-leave { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-banner); }
+.cf-leave .banner__content p { margin: 0; }
+
+/* ---- The review ---- */
+.cf-review { list-style: none; margin: 0; padding: 0; display: grid; }
+.cf-review__row { display: grid; gap: var(--cd-space-1); padding-block: var(--cd-space-2); border-block-end: 1px solid var(--cd-border-subtle); min-inline-size: 0; }
+.cf-review__row:last-child { border-block-end: 0; }
+.cf-review__name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--cd-space-1-5); }
+.cf-review__name code { color: var(--cd-fg-subtle); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); overflow-wrap: anywhere; }
+.cf-review__change { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); font: var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-mono); }
+.cf-review__old { color: var(--cd-fg-muted); text-decoration: line-through; overflow-wrap: anywhere; }
+.cf-review__new { color: var(--cd-accent-fg); font-weight: var(--cd-weight-semibold); overflow-wrap: anywhere; }
+
+/* ---- Views (Form | YAML) and the toolbar ---- */
+.cf-views ul { list-style: none; margin: 0; padding: 2px; display: inline-flex; gap: 2px; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-subtle); }
+.cf-views a { display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-1-5); min-block-size: max(calc(var(--cd-control-h) - 6px), var(--cd-target-min)); min-inline-size: var(--cd-target-min); padding-inline: var(--cd-space-3); border-radius: calc(var(--cd-radius-md) - 2px); color: var(--cd-fg-muted); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); text-decoration: none; }
+.cf-views a[aria-current="page"] { background: var(--cd-bg-surface); color: var(--cd-fg-default); box-shadow: var(--cd-shadow-raised), 0 0 0 1px var(--cd-border-default); }
+.cf-toolbar { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.cf-staged { margin: 0; overflow-wrap: anywhere; }
+.cf-output { margin: 0; padding: var(--cd-space-3); max-block-size: 50dvh; overflow: auto; border-radius: var(--cd-radius-md); background: var(--cd-bg-inset); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- The YAML editor ---- */
+.cf-yaml { min-inline-size: 0; }
+.cf-yaml__path { color: var(--cd-fg-subtle); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); overflow-wrap: anywhere; }
+.cf-yaml__editor { inline-size: 100%; min-block-size: 20rem; resize: vertical; white-space: pre; overflow: auto; tab-size: 2; font: var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-mono); }
+.cf-yaml__editor[aria-invalid="true"] { border-color: var(--cd-tone-danger-border); }
+.cf-yaml__status { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.cf-handoff .row { flex-wrap: wrap; }
+
+/* ---- Problems, each with its line ---- */
+.cf-problems { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); }
+.cf-problems__row { display: flex; align-items: flex-start; gap: var(--cd-space-2); color: var(--cd-tone-danger-fg); min-inline-size: 0; }
+.cf-problems__go { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--cd-space-2); min-inline-size: 0; padding: var(--cd-space-1) 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: start; overflow-wrap: anywhere; }
+button.cf-problems__go { cursor: pointer; min-block-size: var(--cd-target-min); text-decoration: underline; text-underline-offset: 2px; }

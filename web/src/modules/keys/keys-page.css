@@ -1,0 +1,30 @@
+/* System › Keys: the page itself, the key cards, the Add key sheet and the Nous Portal card. Tokens only; logical properties throughout. */
+.ky-search { max-inline-size: 28rem; }
+.ky-group { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ky-group + .ky-group { margin-block-start: var(--cd-space-3); }
+.ky-group__title { font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-muted); letter-spacing: 0; }
+
+/* ---- A key: masked, or revealed for a moment ---- */
+.ky-masked { color: var(--cd-fg-subtle); user-select: none; }
+.ky-reveal { display: grid; gap: var(--cd-space-2); padding: var(--cd-space-3); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-md); min-inline-size: 0; }
+.ky-reveal__value { display: block; overflow-wrap: anywhere; user-select: all; font-size: var(--cd-text-sm); }
+.ky-reveal__time { margin: 0; color: var(--cd-tone-warning-fg); font-size: var(--cd-text-xs); }
+.ky-verdict { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-2); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+
+/* ---- Add key: a search over the keys Hermes knows ---- */
+.ky-pick { display: grid; gap: var(--cd-space-3); min-inline-size: 0; border: 0; margin: 0; padding: 0; }
+.ky-pick__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
+.ky-pick__item { display: flex; align-items: flex-start; gap: var(--cd-space-3); min-block-size: var(--cd-target-min); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); cursor: pointer; }
+.ky-pick__item:has(input:checked) { border-color: var(--cd-accent); background: var(--cd-bg-selected); }
+.ky-pick__item:has(input:focus-visible) { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }
+.ky-pick__item input { margin-block-start: var(--cd-space-1); flex: none; }
+.ky-pick__main { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.ky-pick__name { overflow-wrap: anywhere; font-weight: var(--cd-weight-medium); }
+.ky-pick__sub { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.ky-foot { padding: var(--cd-space-3) var(--cd-space-4); padding-inline-end: calc(var(--cd-space-4) + var(--cd-safe-right)); }
+
+/* ---- Nous Portal ---- */
+.ky-portal__features { margin: 0; display: grid; gap: var(--cd-space-1); grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); }
+.ky-portal__feature { display: grid; gap: var(--cd-space-1); padding: var(--cd-space-2) var(--cd-space-3); background: var(--cd-bg-surface-2); border-radius: var(--cd-radius-md); min-inline-size: 0; }
+.ky-portal__feature dt { color: var(--cd-fg-muted); font-size: var(--cd-text-xs); }
+.ky-portal__feature dd { margin: 0; font-size: var(--cd-text-sm); overflow-wrap: anywhere; }

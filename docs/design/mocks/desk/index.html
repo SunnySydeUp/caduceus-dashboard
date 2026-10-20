@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>The Desk: design mocks</title>
+<link rel="stylesheet" href="desk.css">
+<style>
+  main { max-inline-size: 46rem; margin: 0 auto; padding: 48px 20px 80px; display: grid; gap: 28px; }
+  h1 { font-size: 34px; font-weight: 650; letter-spacing: -.03em; line-height: 1.1; }
+  .lead { color: var(--muted); font-size: 17px; max-inline-size: 52ch; }
+  ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; counter-reset: p; }
+  ol li { padding: 16px 18px; border: 1px solid var(--hair); border-radius: var(--r-card); background: var(--surface); }
+  ol li b { display: block; font-weight: 650; margin-block-end: 4px; } ol li span { color: var(--muted); }
+  .links { display: grid; gap: 8px; }
+  .links a { display: flex; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--hair-strong); border-radius: var(--r-ctl); background: var(--surface); font-weight: 500; }
+  .links a:hover { background: var(--raised); }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Desk</h1>
+  <p class="lead">An agent workspace designed for one owner who runs five persistent agents, mostly from a phone. Chat, work and agents come first. Everything else sits behind Control.</p>
+  <ol aria-label="Design rules">
+    <li><b>Colour means something</b><span>The interface is monochrome. Amber means a person is needed. Green and red are outcomes. Only agent sigils carry other colour.</span></li>
+    <li><b>Decide from anywhere</b><span>Approvals and questions are cards you answer where you are. A tray in every conversation lists what needs you in other agents.</span></li>
+    <li><b>Say what you want done</b><span>One composer, three intents: ask now, delegate in the background, or repeat on a schedule.</span></li>
+    <li><b>Agents are a crew</b><span>Each has a sigil, a live line and a state ring. Agents can hand work to each other, and the hand-off shows in the thread.</span></li>
+  </ol>
+  <nav class="links" aria-label="Mocks">
+    <a href="today.html">Today <span class="muted">Decide, review, catch up</span></a>
+    <a href="talk.html">Talk <span class="muted">A thread with one agent</span></a>
+    <a href="talk.html?tray=open&intent=delegate">Talk, tray open, Delegate chosen <span class="muted">Needs-you tray and intent</span></a>
+    <a href="talk-calm.html">Talk, calmer <span class="muted">One thread, one composer, the rest one tap away</span></a>
+    <a href="work.html">Work <span class="muted">Everything by state</span></a>
+  </nav>
+  <p class="faint">Add <code>?theme=dark</code>, <code>?motion=reduce</code> or <code>?sheet=context</code> (phone width). Mock data. Typeface: Geist and Geist Mono (SIL Open Font Licence).</p>
+</main>
+<script type="module">const q = new URLSearchParams(location.search); if (q.has('theme')) document.documentElement.dataset.theme = q.get('theme');</script>
+</body>
+</html>

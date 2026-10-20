@@ -1,0 +1,8 @@
+# gitleaks config: the default rules, minus the test fixtures (fake keys, RFC 8291 / RFC 6455 test vectors,
+# AWS's documented example key) that the redaction and secret-guard tests need in a real secret's shape.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Test fixtures and smoke scripts: fake secrets only"
+paths = ['''^server/test/''', '''^web/test/''', '''^\.scratch/.*-smoke/''']

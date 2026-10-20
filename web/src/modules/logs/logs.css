@@ -1,0 +1,35 @@
+/* Observe › Logs. Tokens only (design system); logical properties throughout. */
+.lg { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.lg > .page-header { padding-block-end: 0; }
+
+/* ---- Search and filters: one search box; on a phone the rest is a sheet ---- */
+.lg-tools { display: grid; gap: var(--cd-space-2); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }
+.lg-search { min-inline-size: 0; }
+.lg-fields { display: grid; gap: var(--cd-space-2); grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); min-inline-size: 0; }
+.lg-fields .field { min-inline-size: 0; }
+
+/* ---- Actions: always visible buttons ---- */
+.lg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.lg-bar__danger { margin-inline-start: auto; color: var(--cd-tone-danger-fg); }
+.lg-picked { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-accent-border); border-radius: var(--cd-radius-md); background: var(--cd-accent-soft); color: var(--cd-accent-fg); font-size: var(--cd-text-sm); }
+.lg-picked > span { margin-inline-end: auto; }
+
+/* ---- The log: a scroller of virtualised lines that wrap ---- */
+.lg-box { min-inline-size: 0; }
+.lg-scroll { block-size: clamp(18rem, calc(100dvh - 24rem), 60rem); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-md); background: var(--cd-bg-inset); }
+.lg-scroll:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.lg-lines { min-inline-size: 0; }
+.lg-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; border-inline-start: 3px solid transparent; font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); }
+.lg-row[data-level="DEBUG"] { color: var(--cd-fg-subtle); }
+.lg-row[data-level="WARNING"] { border-inline-start-color: var(--cd-tone-warning-solid); }
+.lg-row[data-level="ERROR"], .lg-row[data-level="CRITICAL"] { border-inline-start-color: var(--cd-tone-danger-solid); background: var(--cd-tone-danger-soft); }
+.lg-row[data-picked] { background: var(--cd-bg-selected); }
+.lg-pick { min-inline-size: 3.25rem; min-block-size: var(--cd-target-min); padding-inline: var(--cd-space-2); border: 0; background: none; color: var(--cd-fg-subtle); font: inherit; text-align: end; cursor: pointer; }
+.lg-pick[aria-pressed="true"] { color: var(--cd-accent-fg); font-weight: var(--cd-weight-semibold); }
+.lg-pick:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+.lg-text { padding-block: var(--cd-space-1); padding-inline-end: var(--cd-space-2); white-space: pre-wrap; overflow-wrap: anywhere; min-inline-size: 0; }
+.lg-text mark { background: var(--cd-accent-soft); color: inherit; border-radius: var(--cd-radius-xs); }
+@media (pointer: coarse) { .lg-pick { min-inline-size: var(--cd-target-min); } }
+
+.app[data-size="large"] .lg-tools, .app[data-size="medium"] .lg-tools { grid-template-columns: minmax(12rem, 1fr); }
+.app[data-size="large"] .lg-scroll { block-size: clamp(20rem, calc(100dvh - 22rem), 64rem); }

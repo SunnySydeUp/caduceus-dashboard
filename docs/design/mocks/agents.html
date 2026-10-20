@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-skin="nous" data-density="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Agents (mock)</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../prototype/components.css">
+<link rel="stylesheet" href="mocks.css">
+</head>
+<body data-page="agents" data-agent="coder">
+<div class="shell">
+  <div class="col">
+    <header class="top">
+      <h1>Agents</h1>
+      <span class="top__spacer"></span>
+      <button class="btn btn--secondary" aria-label="Search or jump to"><span data-i="search"></span><span class="lbl">Search or jump to</span></button>
+      <button class="btn btn--primary" aria-label="New agent"><span data-i="plus"></span><span class="lbl">New agent</span></button>
+    </header>
+
+    <main class="page">
+      <section aria-labelledby="needs">
+        <h2 class="sh" id="needs">Needs you <span class="count count--accent">3</span></h2>
+        <div class="needs">
+          <article class="need" data-tone="warning">
+            <div class="need__who"><span class="pa pa--sm" data-agent="homeassistant" data-state="waiting"></span>homeassistant</div>
+            <p class="need__what">Turn the heating off while you are away until Sunday?</p>
+            <p class="need__why">It will change 3 schedules in Home Assistant. Asked 6 minutes ago.</p>
+            <div class="need__act"><button class="btn btn--primary btn--sm">Yes, turn off</button><button class="btn btn--secondary btn--sm">Not now</button></div>
+          </article>
+          <article class="need">
+            <div class="need__who"><span class="pa pa--sm" data-agent="property" data-state="done"></span>property</div>
+            <p class="need__what">Lease renewal letter for Unit 2A is ready to review</p>
+            <p class="need__why">Draft v2 with the CPI-linked increase. 1 file, 2 pages.</p>
+            <div class="need__act"><button class="btn btn--primary btn--sm">Review</button><button class="btn btn--secondary btn--sm">Send back</button></div>
+          </article>
+          <article class="need" data-tone="warning">
+            <div class="need__who"><span class="pa pa--sm" data-agent="coder" data-state="waiting"></span>coder</div>
+            <p class="need__what">Allow <code>git push origin feat/x</code>?</p>
+            <p class="need__why">Publishes 2 commits to origin. Matches your approval rule for <code>git push*</code>.</p>
+            <div class="need__act"><button class="btn btn--primary btn--sm">Allow once</button><button class="btn btn--secondary btn--sm">Deny</button></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="agents" aria-label="Your agents">
+        <div>
+          <h2 class="sh">Your agents <span class="muted">5</span></h2>
+          <div class="roster">
+            <a class="arow" href="chat.html" aria-current="true">
+              <span class="pa pa--md" data-agent="coder" data-state="working"></span>
+              <span><span class="arow__name">coder <small>Coding</small></span>
+                <p class="arow__line">Running the webhook tests. 12 of 15 pass so far.</p>
+                <span class="arow__state" data-tone="running"><span data-i="running"></span>Running for 4 min</span></span>
+              <span class="arow__meta"><span class="mono">glm-5.3</span><span>$0.61 today</span></span>
+            </a>
+            <a class="arow" href="chat.html">
+              <span class="pa pa--md" data-agent="homeassistant" data-state="waiting"></span>
+              <span><span class="arow__name">homeassistant <small>Home</small></span>
+                <p class="arow__line">Should I turn the heating off while you are away?</p>
+                <span class="arow__state" data-tone="warning"><span data-i="waiting"></span>Waiting for you</span></span>
+              <span class="arow__meta"><span class="mono">glm-5.3-flash</span><span>$0.04 today</span></span>
+            </a>
+            <a class="arow" href="chat.html">
+              <span class="pa pa--md" data-agent="librarian" data-state="working"></span>
+              <span><span class="arow__name">librarian <small>Research</small></span>
+                <p class="arow__line">Reading source 9 of about 15 for the RAG citation survey.</p>
+                <span class="arow__state" data-tone="running"><span data-i="running"></span>Running for 11 min</span></span>
+              <span class="arow__meta"><span class="mono">glm-5.3</span><span>$0.38 today</span></span>
+            </a>
+            <a class="arow" href="chat.html">
+              <span class="pa pa--md" data-agent="property" data-state="done"></span>
+              <span><span class="arow__name">property <small>Property due diligence</small></span>
+                <p class="arow__line">Lease renewal letter for Unit 2A is ready to review.</p>
+                <span class="arow__state" data-tone="success"><span data-i="succeeded"></span>Finished 2 min ago</span></span>
+              <span class="arow__meta"><span class="mono">glm-5.3</span><span>$0.22 today</span></span>
+            </a>
+            <a class="arow" href="chat.html">
+              <span class="pa pa--md" data-agent="general" data-state="idle"></span>
+              <span><span class="arow__name">general <small>General assistant</small></span>
+                <p class="arow__line">Booked the plumber for Thursday 9 am.</p>
+                <span class="arow__state" data-tone="neutral">Idle since 2 h ago</span></span>
+              <span class="arow__meta"><span class="mono">glm-5.3-flash</span><span>$0.00 today</span></span>
+            </a>
+          </div>
+        </div>
+
+        <aside class="adetail" aria-label="coder">
+          <div class="adetail__head">
+            <span class="pa pa--lg" data-agent="coder" data-state="working"></span>
+            <div><h2>coder</h2><span class="muted">Coding agent on hermes-console</span></div>
+          </div>
+          <div class="now">
+            <span class="status" data-tone="running"><span data-i="running"></span><span>Running for 4 min</span></span>
+            <b>Running tests: <span class="mono">pnpm vitest</span></b>
+            <span class="muted">Step 6 of about 9. Next: push the branch, which needs your OK.</span>
+          </div>
+          <div class="chip-row" style="display:flex;gap:var(--cd-space-2)">
+            <a class="btn btn--primary" href="chat.html"><span data-i="chat"></span>Open chat</a>
+            <button class="btn btn--secondary"><span data-i="terminal"></span>Workspace</button>
+            <button class="btn btn--ghost btn--icon" aria-label="More"><span data-i="dots-v"></span></button>
+          </div>
+          <dl class="facts">
+            <div><dt>Model</dt><dd class="mono">glm-5.3</dd></div>
+            <div><dt>Cost today</dt><dd>$0.61</dd></div>
+            <div><dt>Context used</dt><dd>38%</dd></div>
+          </dl>
+          <div>
+            <h3 class="sh"><span data-i="calendar"></span>Routines <span class="muted">2</span></h3>
+            <ul class="list">
+              <li><span class="grow">Dependency check</span><span class="muted">Weekdays 6 am</span></li>
+              <li><span class="grow">Nightly test run</span><span class="muted">Every day 11 pm</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="sh"><span data-i="file"></span>Recent work</h3>
+            <ul class="list">
+              <li><span data-i="git"></span><span class="grow">feat(webhooks): exponential backoff</span><span class="diffstat"><span class="add">+14</span><span class="del">-10</span></span></li>
+              <li><span data-i="file"></span><span class="grow">backoff.test.ts</span><span class="diffstat"><span class="add">+6</span><span class="del">-2</span></span></li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+</div>
+<script type="module" src="mock.js"></script>
+</body>
+</html>

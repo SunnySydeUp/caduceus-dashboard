@@ -1,0 +1,39 @@
+/* The composer's bar and its popovers (M8 #09 step A): add, the quiet context button, the voice entry or the split Send, the chip above the field. Tokens only. */
+.composer__bar { gap: var(--cd-space-1); }
+.composer__grow { flex: 1 1 0; min-inline-size: 0; }
+/* The popovers span the composer (`align="fill"`): their wrappers have no box, so the buttons are the bar's own children, and the panels sit above the whole composer. */
+/* The context button gives way to the controls beside it: it is the one that truncates. */
+.composer__ctx { flex: 0 1 auto; display: inline-flex; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; max-inline-size: 100%; min-block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); padding-inline: var(--cd-space-2); border: 0; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-muted); font: inherit; font-size: var(--cd-text-sm); cursor: pointer; }
+.composer__ctx[aria-expanded="true"] { background: var(--cd-bg-surface-2); color: var(--cd-fg-default); }
+@media (hover: hover) { .composer__ctx:hover { background: var(--cd-bg-surface-2); color: var(--cd-fg-default); } }
+.composer__ctx:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+.composer__ctx > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer__ctx-folder { color: var(--cd-fg-subtle); }
+/* A phone-wide composer has room for the model only. */
+@container (max-width: 34rem) { .composer__ctx-folder { display: none; } }
+
+/* Send and its Send as chevron are one pill. */
+.composer__split { display: inline-flex; flex: none; }
+.composer__send { border-start-end-radius: 0; border-end-end-radius: 0; border-start-start-radius: var(--cd-radius-full); border-end-start-radius: var(--cd-radius-full); }
+.composer__more { display: grid; place-items: center; inline-size: max(2rem, var(--cd-target-min)); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); border: 0; border-inline-start: 1px solid color-mix(in srgb, var(--cd-on-accent) 25%, transparent); border-start-end-radius: var(--cd-radius-full); border-end-end-radius: var(--cd-radius-full); border-start-start-radius: 0; border-end-start-radius: 0; background: var(--cd-accent); color: var(--cd-on-accent); cursor: pointer; }
+@media (hover: hover) { .composer__more:not(:disabled):hover { background: var(--cd-accent-hover); } }
+.composer__more:disabled, .composer__send:disabled { opacity: 0.5; cursor: default; }
+.composer__more:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+
+/* The chip above the field names an intent other than Ask and clears it. */
+.composer__chip { display: inline-flex; align-items: center; gap: var(--cd-space-1); justify-self: start; max-inline-size: calc(100% - var(--cd-space-4)); margin: var(--cd-space-2) var(--cd-space-3) 0; padding-block: 2px; padding-inline: var(--cd-space-3) 2px; border-radius: var(--cd-radius-full); background: var(--cd-bg-surface-2); color: var(--cd-fg-default); font-size: var(--cd-text-sm); }
+.composer__chip > span:first-child { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer__chip-clear { display: grid; place-items: center; flex: none; inline-size: max(1.75rem, var(--cd-target-min)); block-size: max(1.75rem, var(--cd-target-min)); border: 0; border-radius: var(--cd-radius-full); background: transparent; color: var(--cd-fg-muted); cursor: pointer; }
+.composer__chip-clear:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+
+/* The popovers open upward over the composer's whole width; with room they are 22rem wide and hang from the side of their button (Add and This chat from the start, Send as from the end). */
+.composer__add-pop, .composer__chat-pop, .composer__sendas-pop, .composer__voice-pop { max-block-size: min(32rem, var(--pop-room, 70dvh)); overflow-y: auto; overscroll-behavior: contain; }
+@container (min-width: 34rem) {
+  .pop__panel.composer__add-pop[data-align], .pop__panel.composer__chat-pop[data-align] { inset-inline: var(--cd-space-3) auto; inline-size: 22rem; }
+  .pop__panel.composer__sendas-pop[data-align], .pop__panel.composer__voice-pop[data-align] { inset-inline: auto var(--cd-space-3); inline-size: 22rem; }
+}
+.composer__intent-item > span:first-child, .composer__add-pop .pop__item > span:not(.pop__tick):not(.pop__value), .composer__chat-pop .pop__item > span:first-of-type { min-inline-size: 0; }
+.composer__intent-item small, .pop__hint { display: block; font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); white-space: normal; }
+.pop__note { margin: var(--cd-space-1) var(--cd-space-2) var(--cd-space-1); font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); }
+.composer__value { display: inline-flex; align-items: center; gap: var(--cd-space-2); max-inline-size: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer__chat-pop .pop__item > .ring { flex: none; }

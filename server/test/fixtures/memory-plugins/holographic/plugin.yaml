@@ -1,0 +1,4 @@
+name: holographic
+version: 0.17.4
+description: "Local fact-store memory provider."
+requires_env: []

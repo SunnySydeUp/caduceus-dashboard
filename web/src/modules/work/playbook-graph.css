@@ -1,0 +1,53 @@
+/* ---- The playbook graph (M6 #04): plain SVG, drawn in units that scale with the root text size ---- */
+.pg { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.pg__scroll { min-inline-size: 0; max-inline-size: 100%; overflow: auto; padding: var(--cd-space-2); background: var(--cd-bg-inset); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.pg__svg { display: block; flex: none; inline-size: calc(var(--pg-w) * 1rem / 16); block-size: calc(var(--pg-h) * 1rem / 16); font-family: var(--cd-font-sans); }
+.pg__hint { margin: 0; font-size: var(--cd-text-sm); max-inline-size: 70ch; }
+
+/* Edges: a line, an arrow head and the condition on a small label. A loop-back is dashed; a failure or a rejection is drawn in the danger tone. */
+.pg__edge { --pg-edge: var(--cd-border-strong); --pg-edge-text: var(--cd-fg-muted); }
+.pg__edge[data-when="on_fail"], .pg__edge[data-when="on_reject"] { --pg-edge: var(--cd-tone-danger-fg); --pg-edge-text: var(--cd-tone-danger-fg); }
+.pg__line { fill: none; stroke: var(--pg-edge); stroke-width: 1.5; }
+.pg__edge[data-loop] .pg__line { stroke-dasharray: 6 4; }
+.pg__arrow { fill: var(--pg-edge); stroke: none; }
+.pg__label-box { fill: var(--cd-bg-inset); stroke: var(--cd-border-subtle); stroke-width: 1; }
+.pg__label { fill: var(--pg-edge-text); font-size: 11px; font-weight: var(--cd-weight-medium); }
+
+/* Nodes. */
+.pg__node { --pg-state: var(--cd-border-default); --pg-state-text: var(--cd-fg-muted); }
+.pg__hit { outline: none; cursor: pointer; }
+.pg__node[data-disabled] .pg__hit { cursor: default; }
+.pg__area { fill: transparent; stroke: none; }
+.pg__card { fill: var(--cd-bg-surface); stroke: var(--cd-border-default); stroke-width: 1; }
+.pg__strip { fill: var(--pg-state); }
+.pg__node:not([data-state]) .pg__strip { fill: var(--cd-border-default); }
+.pg__title { fill: var(--cd-fg-default); font-size: 13px; font-weight: var(--cd-weight-semibold); }
+.pg__num circle { fill: var(--cd-bg-inset); stroke: var(--cd-border-default); stroke-width: 1; }
+.pg__num text { fill: var(--cd-fg-muted); font-size: 11px; font-family: var(--cd-font-mono); }
+.pg__meta { fill: var(--cd-fg-muted); font-size: 11px; }
+.pg__status { fill: var(--pg-state-text); font-size: 11px; font-weight: var(--cd-weight-medium); }
+.pg__attempt { fill: var(--cd-fg-muted); font-size: 11px; }
+.pg__gate rect { fill: var(--cd-tone-warning-soft); stroke: var(--cd-tone-warning-border); stroke-width: 1; }
+.pg__gate text { fill: var(--cd-tone-warning-fg); font-size: 11px; font-weight: var(--cd-weight-medium); }
+.pg__gate[data-gate="clarify"] rect { fill: var(--cd-tone-info-soft); stroke: var(--cd-tone-info-border); }
+.pg__gate[data-gate="clarify"] text { fill: var(--cd-tone-info-fg); }
+
+/* A run's live status: a strip down the left edge and the words under the title, never the colour alone. */
+.pg__node[data-state="queued"] { --pg-state: var(--cd-status-queued); --pg-state-text: var(--cd-tone-neutral-fg); }
+.pg__node[data-state="running"] { --pg-state: var(--cd-status-running); --pg-state-text: var(--cd-tone-running-fg); }
+.pg__node[data-state="waiting"] { --pg-state: var(--cd-status-waiting); --pg-state-text: var(--cd-tone-warning-fg); }
+.pg__node[data-state="blocked"] { --pg-state: var(--cd-status-blocked); --pg-state-text: var(--cd-tone-blocked-fg); }
+.pg__node[data-state="done"] { --pg-state: var(--cd-status-succeeded); --pg-state-text: var(--cd-tone-success-fg); }
+.pg__node[data-state="failed"] { --pg-state: var(--cd-status-failed); --pg-state-text: var(--cd-tone-danger-fg); }
+.pg__node[data-state="rejected"] { --pg-state: var(--cd-status-failed); --pg-state-text: var(--cd-tone-danger-fg); }
+.pg__node[data-state="pending"] .pg__card { fill: transparent; stroke-dasharray: 5 4; }
+.pg__node[data-state="pending"] .pg__strip { fill: transparent; }
+.pg__node[data-state="rejected"] .pg__card { stroke: var(--cd-status-failed); stroke-dasharray: 5 4; }
+.pg__node[data-state="failed"] .pg__card, .pg__node[data-state="running"] .pg__card, .pg__node[data-state="waiting"] .pg__card { stroke: var(--pg-state); }
+
+@media (hover: hover) { .pg__node:not([data-disabled]):hover .pg__card { stroke: var(--cd-border-strong); } }
+.pg__node[data-selected] .pg__card { fill: var(--cd-accent-soft); stroke: var(--cd-accent-border); stroke-width: 2; }
+
+/* The focus ring is drawn around the node, outside its card, in the focus token; it follows the node's focus target. */
+.pg__ring { display: none; fill: none; stroke: var(--cd-focus-ring); stroke-width: var(--cd-focus-ring-width); }
+.pg__hit:focus-visible ~ .pg__ring { display: inline; }

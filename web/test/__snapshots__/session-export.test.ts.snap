@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the HTML file > is the same page for the same session (a snapshot) 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+<title>Plan &lt;the&gt; trip &amp; &quot;more&quot;</title>
+<style>
+:root{--cd-bg-canvas:value-0;--cd-bg-surface:value-1;--cd-bg-inset:value-2;--cd-fg-default:value-3;--cd-fg-muted:value-4;--cd-border-default:value-5;--cd-accent:value-6;--cd-accent-soft:value-7;--cd-font-sans:value-8;--cd-font-mono:value-9;--cd-radius-md:value-10;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cd-bg-canvas);color:var(--cd-fg-default);font-family:var(--cd-font-sans);line-height:1.55}
+main{max-inline-size:48rem;margin-inline:auto;padding:1.5rem 1rem 3rem}
+h1{font-size:1.5rem;margin:0 0 .75rem}
+h2{font-size:.8125rem;margin:0 0 .5rem;color:var(--cd-fg-muted);text-transform:uppercase;letter-spacing:.04em}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.125rem 1rem;margin:0 0 1.5rem;color:var(--cd-fg-muted);font-size:.875rem}
+dt{font-weight:600}
+dd{margin:0;overflow-wrap:anywhere}
+article{background:var(--cd-bg-surface);border:1px solid var(--cd-border-default);border-radius:var(--cd-radius-md);padding:.75rem 1rem;margin-block:.75rem}
+article.user{background:var(--cd-accent-soft);border-color:var(--cd-accent)}
+article.tool{background:var(--cd-bg-inset)}
+.text{margin:0 0 .5rem;white-space:pre-wrap;overflow-wrap:anywhere}
+pre{margin:0 0 .5rem;padding:.5rem .75rem;background:var(--cd-bg-inset);border:1px solid var(--cd-border-default);border-radius:var(--cd-radius-md);overflow-x:auto}
+code{font-family:var(--cd-font-mono);font-size:.875em}
+details{margin:0 0 .5rem;color:var(--cd-fg-muted)}
+summary{cursor:pointer}
+.label{margin:0 0 .25rem;font-weight:600;font-size:.875rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Plan &lt;the&gt; trip &amp; &quot;more&quot;</h1>
+<dl><dt>Session</dt><dd>trip-1</dd><dt>Source</dt><dd>cli</dd><dt>Model</dt><dd>gpt-test</dd><dt>Folder</dt><dd>/work/trip</dd><dt>Started</dt><dd>2026-10-18T17:12:33Z</dd><dt>Messages</dt><dd>4</dd></dl>
+<article class="user">
+<h2>You</h2>
+<p class="text">Where do we start?</p>
+</article>
+<article class="assistant">
+<h2>Hermes</h2>
+<details><summary>Reasoning</summary><p class="text">The user wants a plan.</p></details>
+<p class="text">Look at this:</p>
+<pre><code>const a = &quot;&lt;b&gt;&quot;;</code></pre>
+<p class="text">Then book.</p>
+<p class="label">Tool call: web_search</p><pre><code>{&quot;q&quot;:&quot;flights&quot;}</code></pre>
+</article>
+<article class="tool"><p class="label">Tool result: web_search</p><pre><code>three results</code></pre></article>
+<article class="user">
+<h2>You</h2>
+<p class="text">Thanks</p>
+</article>
+</main>
+</body>
+</html>
+"
+`;

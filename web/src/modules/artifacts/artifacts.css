@@ -1,0 +1,39 @@
+/* Workspace › Artifacts. Tokens only (design system); logical properties throughout. */
+.art { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.art > .page-header { padding-block-end: 0; }
+.art-filters { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); align-items: end; min-inline-size: 0; }
+.art-filters .field { min-inline-size: min(100%, 12rem); flex: 1 1 12rem; }
+.art-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); align-items: start; min-inline-size: 0; }
+@media (min-width: 1024px) { .art-split { grid-template-columns: minmax(18rem, 5fr) minmax(0, 7fr); } }
+@media (max-width: 1023.98px) { .art-split[data-open] .art-list { display: none; } }
+@media (min-width: 1024px) { .art-back { display: none; } }
+.art-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.art-item { display: flex; align-items: center; gap: var(--cd-space-2); inline-size: 100%; min-block-size: var(--cd-row-h); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); color: var(--cd-fg-default); font: inherit; text-align: start; cursor: pointer; }
+.art-item[aria-pressed="true"] { background: var(--cd-bg-selected); border-color: var(--cd-accent-border); }
+.art-item:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.art-item__text { display: grid; min-inline-size: 0; overflow-wrap: anywhere; }
+.art-item__text small { color: var(--cd-fg-subtle); }
+.art-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-2); min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.art-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.art-bar .grow { flex: 1 1 auto; min-inline-size: 0; }
+.art-h { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.art-facts { display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-3); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.art-view { min-inline-size: 0; overflow-wrap: anywhere; }
+.art-image { max-inline-size: 100%; block-size: auto; }
+.art-frame { inline-size: 100%; block-size: min(70dvh, 48rem); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
+.art-storage { display: flex; flex-wrap: wrap; align-items: end; gap: var(--cd-space-2); }
+.art-storage .field { min-inline-size: 8rem; }
+.ctx-art { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ctx-art > section { min-inline-size: 0; }
+.ctx-art__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.ctx-art__file { display: grid; gap: var(--cd-space-1); min-inline-size: 0; padding: var(--cd-space-2); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
+.ctx-art__name { display: flex; align-items: center; gap: var(--cd-space-2); inline-size: 100%; justify-content: flex-start; white-space: normal; text-align: start; overflow-wrap: anywhere; min-inline-size: 0; }
+.ctx-art__name > span { min-inline-size: 0; }
+.ctx-art__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
+.ctx-art__meta > .grow { flex: 1 1 auto; }
+.ctx-art__status { font: var(--cd-weight-semibold) var(--cd-text-sm)/1 var(--cd-font-mono); color: var(--cd-fg-muted); }
+.ctx-art__kept { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
+.ctx-art__kept > .ctx-art__link { flex: 1 1 8rem; min-inline-size: 0; justify-content: flex-start; white-space: normal; text-align: start; overflow-wrap: anywhere; }
+.ctx-art__note { overflow-wrap: anywhere; }
+.art-storage__summary { display: flex; align-items: center; min-block-size: var(--cd-target-min); cursor: pointer; }
+.art-source { justify-self: start; max-inline-size: 100%; white-space: normal; text-align: start; overflow-wrap: anywhere; }

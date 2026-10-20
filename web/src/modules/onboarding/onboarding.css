@@ -1,0 +1,39 @@
+/* The setup wizard (M5 #16). Tokens only (design system); logical properties throughout. On a phone one step fills the screen and the actions stay at the foot. */
+.ob { display: grid; gap: var(--cd-space-4); min-inline-size: 0; max-inline-size: 46rem; }
+
+.ob-progress { margin: 0; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); color: var(--cd-fg-muted); }
+.ob-progress__count { font-weight: var(--cd-weight-medium); color: var(--cd-fg-default); }
+.ob-steps { display: none; list-style: none; margin: 0; padding: 0; gap: var(--cd-space-2); }
+@media (min-width: 52rem) {
+  .ob-progress { display: none; }
+  .ob-steps { display: flex; flex-wrap: wrap; }
+}
+.ob-steps__item { min-inline-size: 0; }
+.ob-steps__button { display: inline-flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); padding-inline: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface); color: var(--cd-fg-muted); font: inherit; cursor: pointer; }
+.ob-steps__button[aria-current="step"] { border-color: var(--cd-accent); color: var(--cd-fg-default); font-weight: var(--cd-weight-medium); }
+.ob-steps__mark { display: inline-grid; place-items: center; inline-size: 1.5rem; block-size: 1.5rem; border-radius: 50%; background: var(--cd-bg-surface-2); font-size: var(--cd-text-xs); }
+.ob-steps__item[data-state="current"] .ob-steps__mark { background: var(--cd-accent); color: var(--cd-on-accent); }
+.ob-steps__item[data-state="done"] .ob-steps__mark { background: var(--cd-bg-surface-2); color: var(--cd-fg-default); }
+
+.ob-step { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ob-step__title { margin: 0; font-size: var(--cd-text-lg); line-height: var(--cd-leading-lg); }
+.ob-step p { margin: 0; }
+.ob-summary { color: var(--cd-fg-muted); }
+.ob-problem { display: flex; align-items: center; gap: var(--cd-space-2); color: var(--cd-tone-danger-fg); }
+
+.ob-checks { list-style: none; margin: 0; padding: 0; display: grid; }
+.ob-checks > li + li { border-block-start: 1px solid var(--cd-border-subtle); }
+.ob-check { display: grid; gap: var(--cd-space-1-5); padding: var(--cd-space-3) var(--cd-card-p); min-inline-size: 0; }
+.ob-check__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
+.ob-check__label { font-weight: var(--cd-weight-medium); }
+.ob-check__detail { margin: 0; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); color: var(--cd-fg-muted); overflow-wrap: anywhere; }
+.ob-check__fix { justify-self: start; }
+.ob-status { display: grid; gap: var(--cd-space-1-5); }
+.ob-block { display: grid; gap: var(--cd-space-2); justify-items: start; min-inline-size: 0; }
+.ob-block h3 { margin: 0; font-size: var(--cd-text-md); line-height: var(--cd-leading-md); }
+.ob-recommend { display: grid; gap: var(--cd-space-2); justify-items: start; }
+
+/* The actions stay on screen on a phone, above the tab bar; elsewhere they sit where the page ends. */
+.ob-bar { display: flex; gap: var(--cd-space-2); justify-content: flex-end; padding-block: var(--cd-space-3); background: var(--cd-bg-surface); border-block-start: 1px solid var(--cd-border-subtle); position: sticky; inset-block-end: var(--shell-bottom, 0px); z-index: var(--cd-z-sticky); }
+.ob-bar__primary { flex: 1 1 auto; justify-content: center; }
+@media (min-width: 52rem) { .ob-bar__primary { flex: 0 0 auto; } }

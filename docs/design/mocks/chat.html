@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-skin="nous" data-density="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Chat with an agent (mock)</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../prototype/components.css">
+<link rel="stylesheet" href="mocks.css">
+</head>
+<body data-page="chat" data-agent="coder">
+<div class="shell">
+  <div class="col">
+    <div class="chatgrid" data-panel="open" style="flex:1">
+      <aside class="sessions" aria-label="coder sessions">
+        <button class="btn btn--secondary btn--block"><span data-i="plus"></span>New chat with coder</button>
+        <div class="sess" aria-current="true"><b>Webhook retry backoff</b><span>Running tests. 12 of 15 pass so far.</span><span class="status" data-tone="running"><span data-i="running"></span><span>Running</span></span></div>
+        <div class="sess"><b>Refactor gateway client</b><span>Opened PR #212: coalesce reconnects</span></div>
+        <div class="sess"><b>Fix flaky inbox test</b><span>Found a missing await. Fixed.</span></div>
+        <div class="sess"><b>Upgrade vitest to 4</b><span>2 deprecation warnings left</span></div>
+      </aside>
+
+      <section class="talk" aria-label="Chat with coder">
+        <header class="chead">
+          <span class="pa pa--md" data-agent="coder" data-state="waiting"></span>
+          <div class="chead__id">
+            <b>coder</b>
+            <div><span class="status" data-tone="warning"><span data-i="waiting"></span><span>Waiting for you</span></span><span class="mono">glm-5.3</span><span>hermes-console</span></div>
+          </div>
+          <span style="flex:1"></span>
+          <button class="btn btn--secondary" data-open="workspace" aria-label="Workspace, live"><span class="live"></span><span data-i="terminal"></span><span class="lbl">Workspace</span></button>
+        </header>
+
+        <div class="tr" role="log" aria-label="Conversation">
+          <div class="msg msg--me"><div class="bubble">Add exponential backoff with jitter to the webhook retries, then run the tests.</div></div>
+
+          <div class="msg">
+            <span class="pa pa--sm" data-agent="coder" data-state="waiting"></span>
+            <div class="msg__body">
+              <p>Done. Backoff doubles from 1 second up to a 60 second cap. Each wait gets random jitter, so retries from different hooks do not line up.</p>
+              <div class="steps"><span data-i="check"></span><b>8 steps</b><span>2 files edited, tests running</span><span data-i="chev-r"></span></div>
+              <div class="event">
+                <span class="event__ic"><span data-i="git"></span></span>
+                <div class="grow"><b class="mono">src/webhooks/backoff.ts</b><small>Edited just now</small></div>
+                <span class="diffstat"><span class="add">+14</span><span class="del">-10</span></span>
+                <button class="btn btn--secondary btn--sm">View diff</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg msg--me"><div class="bubble">Also run a dependency check every weekday morning.</div></div>
+
+          <div class="msg">
+            <span class="pa pa--sm" data-agent="coder" data-state="waiting"></span>
+            <div class="msg__body">
+              <div class="event">
+                <span class="event__ic"><span data-i="calendar"></span></span>
+                <div class="grow"><b>Routine created: Dependency check</b><small>Weekdays at 6:00 am. Next run tomorrow.</small></div>
+                <button class="btn btn--secondary btn--sm">Open</button>
+              </div>
+              <p>Tests pass so far. The branch is ready to push, and that needs your OK.</p>
+              <div class="decision" role="group" aria-label="Approval needed">
+                <h3>Allow <code>git push origin feat/x</code>?</h3>
+                <p class="muted" style="font-size:var(--cd-text-sm)">Publishes 2 commits to origin. CI runs on push, and the branch becomes visible to collaborators.</p>
+                <div class="decision__act">
+                  <button class="btn btn--primary">Allow once</button>
+                  <button class="btn btn--secondary">This session</button>
+                  <button class="btn btn--secondary">Always</button>
+                  <button class="btn btn--danger-quiet">Deny</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dock">
+          <div class="compose">
+            <p>Message coder</p>
+            <div class="compose__row">
+              <button class="btn btn--ghost btn--icon" aria-label="Attach"><span data-i="clip"></span></button>
+              <span class="chip mono">glm-5.3</span><span class="chip">High effort</span><span class="chip mono">~/code/hermes-console</span><span class="chip">38% used</span>
+              <span class="grow"></span>
+              <button class="btn btn--ghost btn--icon" aria-label="Voice"><span data-i="mic"></span></button>
+              <button class="btn btn--primary btn--icon" aria-label="Send"><span data-i="send"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="ws" aria-label="coder's workspace">
+        <div class="ws__head">
+          <div class="ws__tabs" role="tablist">
+            <span class="ws__tab" role="tab" aria-selected="true"><span data-i="terminal"></span>Terminal</span>
+            <span class="ws__tab" role="tab"><span data-i="file"></span>Files</span>
+            <span class="ws__tab" role="tab"><span data-i="browser"></span>Browser</span>
+            <span class="ws__tab" role="tab"><span data-i="tasks"></span>Todo</span>
+          </div>
+          <span style="flex:1"></span>
+          <button class="btn btn--ghost btn--icon" aria-label="Full screen"><span data-i="external"></span></button>
+        </div>
+        <pre class="term"><span class="p">~/code/hermes-console $</span> <span class="hl">pnpm vitest webhooks</span>
+ RUN  v4.0.2
+
+ <span class="ok">✓</span> backoff.test.ts (6)
+ <span class="ok">✓</span> retry-queue.test.ts (4)
+ <span class="ok">✓</span> delivery.test.ts (2)
+ ... signing.test.ts
+ ... replay.test.ts
+
+ Tests  12 passed | 3 running</pre>
+        <div class="ws__foot"><span class="live"></span><span>Live: coder is working here</span><span style="flex:1"></span><button class="btn btn--secondary btn--sm">Take over</button></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Phone: the workspace is a sheet over the chat, never a second page. -->
+<div class="scrim"></div>
+<section class="sheet sheet--ws" aria-label="coder's workspace">
+  <div class="sheet__grab"></div>
+  <div class="ws">
+    <div class="ws__head">
+      <div class="ws__tabs"><span class="ws__tab" aria-selected="true"><span data-i="terminal"></span>Terminal</span><span class="ws__tab"><span data-i="file"></span>Files</span><span class="ws__tab"><span data-i="browser"></span>Browser</span></div>
+      <span style="flex:1"></span><button class="btn btn--ghost btn--icon" aria-label="Full screen"><span data-i="external"></span></button>
+    </div>
+    <pre class="term"><span class="p">$</span> <span class="hl">pnpm vitest webhooks</span>
+ <span class="ok">✓</span> backoff.test.ts (6)
+ <span class="ok">✓</span> retry-queue.test.ts (4)
+ <span class="ok">✓</span> delivery.test.ts (2)
+ ... signing.test.ts
+ Tests  12 passed | 3 running</pre>
+    <div class="ws__foot"><span class="live"></span><span>Live</span><span style="flex:1"></span><button class="btn btn--secondary btn--sm">Take over</button></div>
+  </div>
+</section>
+<section class="sheet sheet--ap" aria-label="Approval">
+  <div class="sheet__grab"></div>
+  <div class="decision" style="margin:var(--cd-space-4);">
+    <h3>Allow <code>git push origin feat/x</code>?</h3>
+    <p class="muted" style="font-size:var(--cd-text-sm)">Publishes 2 commits to origin. The branch becomes visible to collaborators.</p>
+    <div class="decision__act"><button class="btn btn--primary btn--lg" style="flex:1" data-close>Allow once</button><button class="btn btn--secondary btn--lg">Deny</button></div>
+    <div class="decision__act"><button class="btn btn--secondary">This session</button><button class="btn btn--secondary">Always</button></div>
+  </div>
+</section>
+<script type="module" src="mock.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+/* The export and import sheets (M1 #17). Tokens only; logical properties; 44px targets (--cd-target-min). */
+.ei__formats { display: grid; gap: var(--cd-space-1); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.ei__option { display: flex; align-items: center; gap: var(--cd-space-3); min-block-size: var(--cd-target-min); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-md); cursor: pointer; }
+.ei__option:has(input:checked) { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); }
+.ei__option:has(input:focus-visible) { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 0; }
+.ei__option input { inline-size: 1.125rem; block-size: 1.125rem; flex: none; accent-color: var(--cd-accent); }
+.ei__option > span { display: grid; gap: 2px; min-inline-size: 0; }
+.ei__option small { color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+.ei__file { padding-block: var(--cd-space-2); }
+.ei__problems { margin: var(--cd-space-1) 0 0; padding-inline-start: var(--cd-space-4); display: grid; gap: var(--cd-space-1); overflow-wrap: anywhere; }
+.ei__preview { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ei__preview p { margin: 0; overflow-wrap: anywhere; }
+.ei__sessions { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); }
+.ei__sessions li { display: flex; justify-content: space-between; gap: var(--cd-space-3); min-inline-size: 0; }
+.ei__sessions li > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+.ei__sessions small { color: var(--cd-fg-subtle); flex: none; }

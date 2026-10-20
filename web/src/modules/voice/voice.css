@@ -1,0 +1,31 @@
+/* Voice (M7 #07): the mic, the strip that says what it is doing, the notes, the hands-free panel and the audio players. Tokens only. */
+.voice-mic[data-active] { background: var(--cd-accent-soft); color: var(--cd-accent-fg); }
+.voice-mic[data-away] { background: var(--cd-tone-danger-soft); color: var(--cd-tone-danger-fg); }
+.voice-mic { touch-action: none; user-select: none; -webkit-touch-callout: none; }
+
+.voice-strip, .voice-note { display: flex; align-items: center; flex-wrap: wrap; gap: var(--cd-space-2); margin: var(--cd-space-2) var(--cd-space-3) 0; padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-accent-border); border-radius: var(--cd-radius-md); background: var(--cd-accent-soft); color: var(--cd-fg-default); font-size: var(--cd-text-sm); min-inline-size: 0; }
+.voice-strip__text { display: grid; flex: 1 1 10rem; min-inline-size: 0; gap: var(--cd-space-0-5); }
+.voice-strip__text small, .handsfree__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-xs); }
+.voice-strip__heard { overflow-wrap: anywhere; font-style: italic; }
+.voice-strip__dot { flex: none; inline-size: 0.625rem; block-size: 0.625rem; border-radius: var(--cd-radius-full); background: var(--cd-tone-danger-solid); }
+.voice-strip[data-phase="listening"] .voice-strip__dot { animation: voice-blink var(--cd-dur-pulse) var(--cd-ease-standard) infinite; }
+@keyframes voice-blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .voice-strip[data-phase="listening"] .voice-strip__dot { animation: none !important; } }
+[data-motion="reduce"] .voice-strip[data-phase="listening"] .voice-strip__dot { animation: none !important; }
+.voice-note--problem { border-color: var(--cd-tone-danger-border); background: var(--cd-tone-danger-soft); }
+.voice-note--problem span, .voice-note--reading span { flex: 1 1 10rem; min-inline-size: 0; overflow-wrap: anywhere; }
+.voice-note--reading { margin-block-start: 0; }
+
+.handsfree { display: grid; gap: var(--cd-space-2); margin: var(--cd-space-2) var(--cd-space-3) 0; padding: var(--cd-space-3); border: 1px solid var(--cd-accent-border); border-radius: var(--cd-radius-lg); background: var(--cd-accent-soft); min-inline-size: 0; }
+.handsfree[data-phase="speaking"] { border-color: var(--cd-tone-success-border); }
+.handsfree__state { display: flex; align-items: center; gap: var(--cd-space-3); flex-wrap: wrap; min-inline-size: 0; }
+.handsfree__icon { display: grid; place-items: center; flex: none; inline-size: 2.5rem; block-size: 2.5rem; border-radius: var(--cd-radius-full); background: var(--cd-accent); color: var(--cd-on-accent); }
+.handsfree__text { display: grid; flex: 1 1 10rem; min-inline-size: 0; }
+.handsfree__level { flex: 1 1 100%; inline-size: 100%; block-size: 0.5rem; }
+.handsfree__heard { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+.handsfree__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--cd-space-2); }
+.handsfree__stop { min-block-size: max(var(--cd-control-h), var(--cd-target-min)); }
+
+.voice-clip__player { inline-size: 100%; max-inline-size: 18rem; min-inline-size: 0; block-size: 2.25rem; }
+.voice-clip__play { max-inline-size: 100%; }
+.msg-att--audio { max-inline-size: 100%; }

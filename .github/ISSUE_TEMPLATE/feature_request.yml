@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest something Caduceus should do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do with Hermes, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: How Caduceus could help. Screens, flows or sketches are welcome.
+  - type: textarea
+    id: hermes
+    attributes:
+      label: Hermes support
+      description: Does Hermes already expose what this needs (REST, the gateway, an event)? Caduceus only talks to Hermes through its own interfaces.

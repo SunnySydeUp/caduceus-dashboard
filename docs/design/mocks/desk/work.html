@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Work (mock)</title>
+<link rel="stylesheet" href="desk.css">
+</head>
+<body data-page="work">
+<div class="app">
+  <div class="col">
+    <header class="top">
+      <h1>Work</h1>
+      <span class="grow"></span>
+      <button class="b b--ink"><span data-i="plus"></span>New task</button>
+    </header>
+    <main class="page">
+      <div class="filters" role="group" aria-label="Filter by agent">
+        <button class="chipf all" aria-pressed="true">All agents</button>
+        <button class="chipf" aria-pressed="false"><span data-sg="coder:xs:idle"></span>coder</button>
+        <button class="chipf" aria-pressed="false"><span data-sg="general:xs:idle"></span>general</button>
+        <button class="chipf" aria-pressed="false"><span data-sg="homeassistant:xs:idle"></span>homeassistant</button>
+        <button class="chipf" aria-pressed="false"><span data-sg="librarian:xs:idle"></span>librarian</button>
+        <button class="chipf" aria-pressed="false"><span data-sg="property:xs:idle"></span>property</button>
+      </div>
+
+      <section aria-labelledby="w1">
+        <div class="lbl" id="w1">Waiting on you <span class="count">3</span></div>
+        <div class="grp">
+          <div class="row"><span data-sg="coder:sm"></span><span><b>Webhook retry backoff</b><small>Needs your OK to push the branch</small></span><span class="prog"><span>Step 8 of 9</span><div class="bar2" style="--p:88%"></div></span><button class="b b--ink b--sm">Decide</button></div>
+          <div class="row"><span data-sg="homeassistant:sm"></span><span><b>Away mode for the heating</b><small>Asks to change 3 schedules</small></span><span class="prog n">Asked 6 min ago</span><button class="b b--ink b--sm">Decide</button></div>
+          <div class="row"><span data-sg="general:sm"></span><span><b>Book the plumber</b><small>Two slots are free</small></span><span class="prog n">Asked 9 min ago</span><button class="b b--ink b--sm">Decide</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="w2">
+        <div class="lbl" id="w2">Running <span class="muted" style="font-weight:450">1</span></div>
+        <div class="grp">
+          <div class="row"><span data-sg="librarian:sm"></span><span><b>RAG citation survey</b><small>Reading source 9 of about 15</small></span><span class="prog"><span>60%</span><div class="bar2" style="--p:60%"></div></span><button class="b b--sm">Open</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="w3">
+        <div class="lbl" id="w3">Ready for review <span class="muted" style="font-weight:450">2</span></div>
+        <div class="grp">
+          <div class="row"><span data-sg="property:sm"></span><span><b>Lease renewal letter for Unit 2A</b><small>Draft v2, 2 pages</small></span><span class="prog n">Finished 2 min ago</span><button class="b b--sm">Review</button></div>
+          <div class="row"><span data-sg="coder:sm:done"></span><span><b>Dependency updates, PR 213</b><small>2 packages bumped</small></span><span class="prog n">Finished 6:04 am</span><button class="b b--sm">Review</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="w4">
+        <div class="lbl" id="w4">Scheduled <span class="muted" style="font-weight:450">4</span></div>
+        <div class="grp">
+          <div class="row"><span data-sg="coder:sm:idle"></span><span><b>Nightly test run</b><small>Every day at 11:00 pm</small></span><span class="prog n">Next tonight</span><button class="b b--sm b--icon" aria-label="Pause Nightly test run"><span data-i="paused"></span></button></div>
+          <div class="row"><span data-sg="coder:sm:idle"></span><span><b>Dependency check</b><small>Weekdays at 6:00 am</small></span><span class="prog n">Next tomorrow</span><button class="b b--sm b--icon" aria-label="Pause Dependency check"><span data-i="paused"></span></button></div>
+          <div class="row"><span data-sg="general:sm:idle"></span><span><b>Morning briefing</b><small>Every day at 8:00 am</small></span><span class="prog n">Next tomorrow</span><button class="b b--sm b--icon" aria-label="Pause Morning briefing"><span data-i="paused"></span></button></div>
+          <div class="row"><span data-sg="property:sm:idle"></span><span><b>Council planning watch</b><small>Every Monday at 9:00 am</small></span><span class="prog n">Next Monday</span><button class="b b--sm b--icon" aria-label="Pause Council planning watch"><span data-i="paused"></span></button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script type="module" src="desk.js"></script>
+</body>
+</html>

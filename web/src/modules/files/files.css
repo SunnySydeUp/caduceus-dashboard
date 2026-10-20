@@ -1,0 +1,86 @@
+/* Workspace › Files. Tokens only (design system); logical properties throughout. */
+.fl { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.fl > .page-header { padding-block-end: 0; }
+.fl-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); min-inline-size: 0; align-items: start; }
+.app[data-size="large"] .fl[data-preview="open"] .fl-split, .app[data-size="medium"] .fl[data-preview="open"] .fl-split { grid-template-columns: minmax(16rem, 5fr) minmax(0, 7fr); }
+
+/* ---- The folder ---- */
+.fl-browser { display: grid; gap: var(--cd-space-3); min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.fl-browser[data-dragging] { border-color: var(--cd-accent-border); background: var(--cd-accent-soft); }
+.fl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-2); min-inline-size: 0; }
+.fl-crumbs { min-inline-size: 0; overflow-wrap: anywhere; font-size: var(--cd-text-sm); }
+.fl-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-block-size: var(--cd-target-min); min-inline-size: var(--cd-target-min); padding-inline: var(--cd-space-1); color: var(--cd-accent-fg); }
+.fl-crumbs a[aria-current="page"] { color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); text-decoration: none; }
+.fl-tools { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.fl-list { list-style: none; margin: 0; padding: 0; display: grid; min-inline-size: 0; }
+.fl-head, .fl-row { display: grid; grid-template-columns: minmax(0, 1fr) 6rem 12rem auto; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
+.fl-head { padding-inline: var(--cd-space-3); padding-block-end: var(--cd-space-1); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); border-block-end: 1px solid var(--cd-border-subtle); }
+.fl-row { border-radius: var(--cd-radius-md); padding-inline: var(--cd-space-3); min-block-size: var(--cd-row-h); }
+.fl-row[data-selected] { background: var(--cd-bg-selected); }
+.fl-row__name { display: flex; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; min-block-size: var(--cd-row-h); color: var(--cd-fg-default); text-decoration: none; }
+.fl-row__name > svg.i { flex: none; color: var(--cd-fg-subtle); }
+.fl-row__text { overflow-wrap: anywhere; min-inline-size: 0; }
+.fl-row__size, .fl-row__time { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+@media (hover: hover) { .fl-row:hover { background: var(--cd-overlay-hover); } }
+.app[data-size="medium"] .fl-head, .app[data-size="medium"] .fl-row, .app[data-size="large"] .fl[data-preview="open"] .fl-head, .app[data-size="large"] .fl[data-preview="open"] .fl-row { grid-template-columns: minmax(0, 1fr) 5rem auto; }
+.app[data-size="medium"] .fl-row__time, .app[data-size="medium"] .fl-head > :nth-child(3), .app[data-size="large"] .fl[data-preview="open"] .fl-row__time, .app[data-size="large"] .fl[data-preview="open"] .fl-head > :nth-child(3) { display: none; }
+
+/* Phone: each entry is a card with name, size, modified and ⋮ */
+.fl-list[data-compact] { gap: var(--cd-space-2); }
+.fl-list[data-compact] .fl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name more" "meta more"; padding-block: var(--cd-space-2); border: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
+.fl-list[data-compact] .fl-row__name { grid-area: name; }
+.fl-list[data-compact] .fl-row > button { grid-area: more; }
+.fl-list[data-compact] .fl-row__size, .fl-list[data-compact] .fl-row__time { display: inline; grid-area: meta; }
+.fl-list[data-compact] .fl-row__size { margin-inline-end: 0; }
+.fl-list[data-compact] .fl-row__size:not(:empty)::after { content: " · "; }
+
+/* ---- The preview: beside the folder, or the whole screen on a phone ---- */
+.fl-preview { display: grid; gap: var(--cd-space-3); min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.fl-preview__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
+.fl-preview__title { flex: 1; min-inline-size: 0; display: grid; }
+.fl-preview__title h2 { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.fl-preview__actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.fl-preview__body { min-inline-size: 0; display: grid; gap: var(--cd-space-3); }
+.fl-frame { inline-size: 100%; block-size: clamp(18rem, calc(100dvh - 18rem), 60rem); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); }
+.fl-image { max-inline-size: 100%; block-size: auto; border-radius: var(--cd-radius-md); }
+.fl-media { inline-size: 100%; max-block-size: 70dvh; }
+.fl-scroll { max-inline-size: 100%; overflow: auto; border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-md); max-block-size: 60dvh; }
+.fl-scroll:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.fl-csv { border-collapse: collapse; font-size: var(--cd-text-sm); min-inline-size: 100%; }
+.fl-csv th, .fl-csv td { padding: var(--cd-space-1) var(--cd-space-3); border-block-end: 1px solid var(--cd-border-subtle); text-align: start; white-space: nowrap; }
+.fl-csv th { position: sticky; inset-block-start: 0; background: var(--cd-bg-surface-2); padding: 0; }
+.fl-csv__sort { display: flex; align-items: center; gap: var(--cd-space-1); inline-size: 100%; min-block-size: var(--cd-target-min); padding: var(--cd-space-1) var(--cd-space-3); border: 0; background: none; color: inherit; font: inherit; font-weight: var(--cd-weight-semibold); text-align: start; cursor: pointer; }
+.fl-csv__sort:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+@media (pointer: coarse) { .fl-csv__sort { min-block-size: var(--cd-target-min); } }
+
+/* ---- The editor ---- */
+.fl-editor { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.fl-textarea { inline-size: 100%; min-block-size: 18rem; block-size: clamp(18rem, calc(100dvh - 22rem), 50rem); resize: vertical; tab-size: 2; white-space: pre; overflow: auto; }
+.fl-diff { margin: 0; padding: var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-block-size: 14rem; overflow: auto; }
+.fl-diff__row[data-kind="removed"] { background: var(--cd-diff-remove-bg); color: var(--cd-diff-remove-fg); }
+.fl-diff__row[data-kind="added"] { background: var(--cd-diff-add-bg); color: var(--cd-diff-add-fg); }
+
+/* ---- The Office editor ---- */
+.fl-office__paragraphs, .fl-office__sheets { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.fl-paragraph { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--cd-space-1) var(--cd-space-2); align-items: start; min-inline-size: 0; }
+.fl-paragraph__where { grid-column: 1 / -1; font-size: var(--cd-text-xs); }
+.fl-paragraph__text { inline-size: 100%; min-inline-size: 0; resize: vertical; line-height: var(--cd-leading-md); }
+.fl-paragraph__tools { display: flex; gap: var(--cd-space-1); }
+.fl-paragraph__read { grid-column: 1 / -1; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; min-block-size: 1lh; }
+.fl-sheet-tabs { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.fl-sheet-tabs [aria-selected="true"] { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); }
+.fl-sheet { border-collapse: collapse; font-size: var(--cd-text-sm); }
+.fl-sheet th { position: sticky; inset-block-start: 0; background: var(--cd-bg-surface-2); padding: var(--cd-space-1) var(--cd-space-3); color: var(--cd-fg-muted); font-weight: var(--cd-weight-semibold); text-align: center; border-block-end: 1px solid var(--cd-border-subtle); }
+.fl-sheet tbody th { inset-inline-start: 0; position: sticky; z-index: 1; }
+.fl-sheet td { padding: 0; border-block-end: 1px solid var(--cd-border-subtle); border-inline-end: 1px solid var(--cd-border-subtle); }
+.fl-sheet__cell { inline-size: 9rem; min-block-size: var(--cd-target-min); border-radius: 0; border-color: transparent; font-family: var(--cd-font-mono); }
+.fl-sheet__read { display: block; min-inline-size: 9rem; min-block-size: var(--cd-target-min); padding: var(--cd-space-2) var(--cd-space-3); white-space: pre-wrap; }
+.fl-versions summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; }
+.fl-versions__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
+.fl-versions__list li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
+.fl-crumb { min-inline-size: var(--cd-target-min); }
+.fl-crumb[aria-current="page"] { font-weight: var(--cd-weight-semibold); }
+
+/* A path in a dialog is as long as the folder is deep: the form stays as wide as the sheet and the path breaks anywhere instead of pushing the box past the edge. */
+.fl-form { grid-template-columns: minmax(0, 1fr); }
+.fl-wrap { overflow-wrap: anywhere; }

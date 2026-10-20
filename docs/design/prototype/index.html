@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-skin="nous" data-density="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f7f9">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1014">
+<title>Caduceus Dashboard (prototype)</title>
+<script>
+  // No flash of the wrong theme: apply per-device appearance before first paint.
+  try {
+    const p = JSON.parse(localStorage.getItem('hc-proto-prefs') || '{}');
+    const r = document.documentElement;
+    if (p.theme) r.dataset.theme = p.theme;
+    if (p.skin) r.dataset.skin = p.skin;
+    if (p.density) r.dataset.density = p.density;
+    if (p.text) r.dataset.textScale = p.text;
+  } catch {}
+</script>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="./components.css">
+<script type="module" src="./app.js"></script>
+</head>
+<body>
+<a class="skip-link" id="skip" href="#main" onclick="event.preventDefault(); document.getElementById('main').focus();">Skip to content</a>
+<div class="app" id="app" data-size="compact" data-nav="bar">
+  <nav class="side" id="side" aria-label="Main"></nav>
+  <div class="app__body">
+    <header class="appbar" id="appbar"></header>
+    <div class="subnav" id="subnav" hidden></div>
+    <div class="banners" id="banners" hidden></div>
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+</div>
+<div class="proto" id="proto" data-open="false"></div>
+<div class="ghint" id="ghint" hidden aria-hidden="true"><kbd>g</kbd> then a letter…</div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<div id="overlays"></div>
+</body>
+</html>

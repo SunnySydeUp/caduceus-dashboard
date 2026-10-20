@@ -1,0 +1,225 @@
+import type { ModuleHelp } from '../../help.ts';
+
+export const profilesHelp: ModuleHelp = {
+  pages: [
+    {
+      id: 'profiles',
+      title: 'Profiles',
+      summary: 'Every Hermes profile, with its gateway, model and description.',
+      route: '/agents/profiles',
+      keywords: 'agents profiles cards gateway default new create import clone',
+      body: [
+        { p: 'Each card is one [[profile|profile]] that [[hermes]] has. It shows the profile’s description, its model, how many skills it has and the state of its messaging [[gateway-status|gateway]]. Opening a card shows the profile itself.' },
+        { h: 'Keeping up to date' },
+        { p: 'The list updates by itself when Hermes reconnects, when its gateways or channels change and when you come back to the tab. If Hermes cannot be reached the list says so and offers Retry.' },
+        { h: 'What a card can do' },
+        {
+          ul: [
+            'Use in this tab makes this browser tab work on that profile ([[profile-scope|profile scope]]). Nothing in Hermes changes.',
+            'Make default sets the [[default-profile|default profile]]. It is a Tier 2 action ([[risk-tiers|risk tiers]]): you confirm, then with a [[passkey|passkey]].',
+            'Copy CLI command copies the command that starts Hermes on that profile.',
+            'Rename changes the profile’s name in Hermes. It needs no confirmation, and the message that follows lets you undo it for a few seconds.',
+            'Delete is a Tier 3 action: you type the profile’s name. It cannot be undone, and it is not allowed in [[read-only-mode|read-only mode]].',
+          ],
+        },
+        { p: 'On a phone the same actions are in the ⋮ button of a card, or by holding a card.' },
+        { h: 'New profile' },
+        { p: 'New profile opens the [[profile-builder|profile builder]]: five steps to a new profile, from nothing, from a persona or as a clone. Import profile makes a profile from an archive that Hermes exported ([[profile-export|export and import]]).' },
+      ],
+      related: ['profile-detail', 'profile-tabs', 'profile-scope', 'read-only-mode'],
+    },
+    {
+      id: 'profile-detail',
+      title: 'A profile’s overview',
+      summary: 'The numbers, description and gateway of one profile.',
+      route: '/agents/profiles/:name',
+      keywords: 'overview runs success rate tokens sessions description auto-describe use in this tab make default copy cli',
+      body: [
+        { p: 'A profile’s tabs run along the top on a phone and down the side on a wide screen. Tabs for what a profile holds, such as skills and memory, appear as they become available.' },
+        {
+          ul: [
+            'The counts are sessions and tokens over the last 30 days, skills, and MCP servers. They come from Hermes each time you look; Caduceus keeps no copy.',
+            'Runs are Kanban tasks assigned to the profile that have started. The success rate is the share of the finished ones that are done rather than blocked. A profile that has run nothing shows zeros.',
+            'The description is the profile’s role, which Kanban uses to route tasks. Edit it yourself, or use Auto-describe: Hermes asks its model for a description (Tier 1) and saves it as it writes it, so you then keep it, edit it or put the old text back.',
+            'The gateway card shows the [[gateway-status|gateway status]].',
+            'Use in this tab, Make default and Copy CLI command work as they do on the cards.',
+          ],
+        },
+      ],
+      related: ['profiles', 'profile-tabs', 'profile-scope'],
+    },
+    {
+      id: 'profile-tabs',
+      title: 'Identity, instructions, memory, files and the danger zone',
+      summary: 'The soul and display name, the instruction and memory files, config.yaml, and renaming or deleting a profile.',
+      route: '/agents/profiles/:name/:tab',
+      keywords: 'identity assistant display name soul agents hermes memory user config yaml files edit preview split history restore snapshot reset rename delete danger zone undo',
+      body: [
+        { h: 'Identity' },
+        { p: 'The assistant display name is what chat headers call this profile’s assistant. Caduceus keeps it for you; it is never written to the profile’s files or to Hermes. Leave it empty to use the profile’s name.' },
+        { p: 'Below it is the profile’s [[soul|SOUL]], who the agent is. Hermes keeps it in SOUL.md, and the editor here reads and writes that file.' },
+        { h: 'Instructions' },
+        { p: 'AGENTS.md and HERMES.md hold standing instructions for the profile. A file that does not exist yet is created by the first save.' },
+        { h: 'Memory' },
+        { p: 'MEMORY.md and USER.md are what the agent remembers and what it knows about you. The bar under each editor counts characters against the limit Hermes sets for it. Reset deletes one file or both; you type the profile’s name, and Caduceus keeps the text as a [[snapshot|snapshot]].' },
+        { h: 'Files' },
+        { p: 'The profile’s config.yaml, as Hermes keeps it. It is checked as YAML before it is saved, and an error shows its line and column. A credential is shown as ******** and keeps its real value when you save. On a phone it is read-only, with a link to open on a computer.' },
+        { h: 'Editing a file' },
+        {
+          ul: [
+            'Edit, Preview and Split show the text, how it reads as Markdown, or both side by side (Split only on a wide screen). On a phone the editor takes the whole screen.',
+            'Save is a Tier 3 action ([[risk-tiers|risk tiers]]): a step-up with your passkey, then you type the profile’s name. It is not allowed in [[read-only-mode|read-only mode]].',
+            'Before every save Caduceus keeps the text it replaces as a [[snapshot|snapshot]]. History lists them, newest first, with the time and size, and Restore saves one as the file’s text, which keeps the text it replaces as well.',
+            'If the file changed in Hermes after you opened it, the save is refused and a diff shows both texts. You can use Hermes’s text or save yours over it.',
+            'Leaving with unsaved edits asks whether to keep editing or discard them.',
+          ],
+        },
+        { h: 'Danger zone' },
+        { p: 'Rename, export, import and delete. Rename needs no confirmation and can be undone for a few seconds. Delete asks you to type the profile’s name, says that it cannot be undone, and is not allowed in [[read-only-mode|read-only mode]].' },
+        { p: 'Export packs the profile into an archive with Hermes’s own export and your browser downloads it. Import makes a profile from an archive. Both are Tier 3 actions, and read-only mode blocks both: see [[profile-export|profile export and import]].' },
+        { p: 'The root profile, called default, cannot be deleted, and renaming it only sets a display name. The default profile and the only profile cannot be deleted either: the page says why and, for the default profile, how to change it first.' },
+      ],
+      related: ['profiles', 'profile-detail', 'behaviour-files'],
+    },
+    {
+      id: 'profile-builder',
+      title: 'New profile: the builder',
+      summary: 'Five steps to a new profile: identity, model, skills, MCP servers and a review, from nothing, a persona or a clone.',
+      route: '/agents/profiles/new',
+      keywords: 'new profile builder wizard steps identity name display name description soul model skills hub mcp servers catalogue review finish retry persona clone blank restore resume',
+      body: [
+        { p: 'The builder makes a [[profile|profile]] in Hermes in five steps. The step you are on is shown as “Step n of 5”. Back keeps what you entered, each step says what is wrong before you go on, and the builder resumes where you were if you reload the page or visit another screen in the same tab. On a phone each step is a full-screen sheet with Back and Next fixed at the bottom.' },
+        { h: 'Starting' },
+        {
+          ul: [
+            'Blank starts with what Hermes gives every new profile: its own SOUL, no model and its bundled skills.',
+            'A [[persona|persona]] fills in a name, an assistant name, a description and a SOUL. Personas are part of Caduceus and match the personalities Hermes has built in; Caduceus keeps no record of which one you used. A persona marked Restore has no profile of its name, so Finish makes it in Hermes again.',
+            'A [[profile-clone|clone]] copies a profile Hermes has. Hermes copies its settings, SOUL and skills; the builder shows them so you can change them. The profile you clone is not changed.',
+          ],
+        },
+        { h: 'The steps' },
+        {
+          ul: [
+            'Identity: the name (also its name on the command line; the pattern and colour of its sigil come from it), an optional assistant display name that Caduceus keeps, an optional description and the [[soul|SOUL]].',
+            'Model: the main model, from Hermes’s live catalogue. A new profile cannot chat until it has one; a clone starts with the model it copies.',
+            'Skills: switch off skills the profile starts with, and choose skills from the hub to install. Hermes scans each hub skill; one with findings is left for Skills › Hub, where you read them and confirm.',
+            'MCP servers: copy servers of the default profile that have no keys or variables, and pick entries of Hermes’s catalogue that need no value. A server that runs a program asks you to type its name.',
+            'Review: lists what Finish does, in order, and which steps ask you to confirm.',
+          ],
+        },
+        { h: 'Finish' },
+        { p: 'Finish makes the profile (that is the Tier 1 confirmation) and then does each step through the same calls the other screens use, each with its own tier ([[risk-tiers|risk tiers]]): the SOUL is a Tier 3 action, so you type the new profile’s name. If a step fails or you decline it, the profile stays and the review lists what succeeded and what is left, with the reason. Retry runs only what is left; nothing is hidden. The builder is not allowed in [[read-only-mode|read-only mode]].' },
+      ],
+      related: ['profiles', 'profile-export'],
+    },
+    {
+      id: 'profile-export',
+      title: 'Exporting and importing a profile',
+      summary: 'Move a profile as an archive: Hermes writes it, your browser downloads it, and an import makes a profile from it.',
+      keywords: 'export import profile archive tar gz download upload backup move name conflict preview',
+      body: [
+        { p: 'Both live on the Danger zone tab of a profile, and Import is also on the Profiles page. Both are Tier 3 actions ([[risk-tiers|risk tiers]]): a passkey, then you type a name. Neither is allowed in [[read-only-mode|read-only mode]].' },
+        {
+          ul: [
+            'Export asks Hermes to pack the profile (settings, SOUL, memory and skills). Hermes leaves its credential files out and hides secrets in the text it keeps. The archive is saved in Hermes’s export folder on this computer, and your browser downloads it.',
+            'Import starts with the file. Before anything is sent, the page reads its list and shows the name the profile would get, what is in it and whether that name is taken. Choose another name to clear a conflict. An archive of the default profile must be given a new name.',
+            'Only then does the file go to Hermes (to a folder of its home, removed afterwards) and Hermes makes the new profile. It never replaces a profile that exists. Keys are not in an archive: add them to the new profile.',
+          ],
+        },
+      ],
+      related: ['profile-builder', 'profile-tabs'],
+    },
+    {
+      id: 'behaviour-files',
+      title: 'Behaviour files',
+      summary: 'The files that make up a profile’s character and memory, and how Caduceus edits them.',
+      keywords: 'soul agents.md hermes.md memory.md user.md config.yaml snapshot restore history',
+      body: [
+        { p: 'A profile’s behaviour is a few plain files in its folder. Hermes reads them; Caduceus edits them through Hermes and keeps no copy of its own except a [[snapshot|snapshot]] of what each save replaced.' },
+        {
+          ul: [
+            '[[soul|SOUL.md]] is the agent’s identity.',
+            '[[agents-md|AGENTS.md]] holds standing instructions, and HERMES.md instructions in Hermes’s own name.',
+            '[[memory-md|MEMORY.md]] and [[user-md|USER.md]] are written by the agent itself, within size limits.',
+            'config.yaml holds every setting of the profile.',
+          ],
+        },
+      ],
+      related: ['profile-tabs'],
+    },
+  ],
+  glossary: [
+    {
+      id: 'profile',
+      term: 'Profile',
+      definition: 'A separate Hermes setup with its own settings, memory, skills, sessions and gateway. Hermes can have many; each has a name.',
+      page: 'profiles',
+    },
+    {
+      id: 'persona',
+      term: 'Persona',
+      definition: 'A starting identity in the profile builder: a name, an assistant name, a description and a SOUL that match one of Hermes’s built-in personalities. It is part of Caduceus; the profile it makes is Hermes’s.',
+      page: 'profile-builder',
+    },
+    {
+      id: 'profile-clone',
+      term: 'Clone',
+      definition: 'A new profile that starts as a copy of another: Hermes copies the profile’s settings, SOUL and skills, and the profile that was cloned is not changed.',
+      page: 'profile-builder',
+    },
+    {
+      id: 'profile-builder',
+      term: 'Profile builder',
+      definition: 'The five-step screen that makes a new profile: identity, model, skills, MCP servers and a review. Finish does each step in Hermes and lists any that did not finish.',
+      page: 'profile-builder',
+    },
+    {
+      id: 'profile-export',
+      term: 'Profile export',
+      definition: 'An archive (.tar.gz) of a profile that Hermes writes, without its credential files. Import makes a new profile from one.',
+      page: 'profile-export',
+    },
+    {
+      id: 'default-profile',
+      term: 'Default profile',
+      definition: 'The profile Hermes uses when nothing names one: the command line, new gateway sessions and tabs with no profile of their own. Make default is the only action that changes it.',
+      page: 'profiles',
+    },
+    {
+      id: 'soul',
+      term: 'SOUL',
+      definition: 'SOUL.md, the file in a profile’s folder that says who the agent is. Hermes puts it at the start of every conversation with that profile.',
+      page: 'behaviour-files',
+    },
+    {
+      id: 'agents-md',
+      term: 'AGENTS.md',
+      definition: 'A file of standing instructions for the agent: conventions, rules and what to know about your work. Hermes reads it for the profile (and Claude Code and other tools read files of the same name).',
+      page: 'behaviour-files',
+    },
+    {
+      id: 'memory-md',
+      term: 'MEMORY.md',
+      definition: 'The file where the agent writes what it has learned and wants to remember. Hermes limits its size.',
+      page: 'behaviour-files',
+    },
+    {
+      id: 'user-md',
+      term: 'USER.md',
+      definition: 'The file where the agent writes what it knows about you: your name, habits and preferences. Hermes limits its size.',
+      page: 'behaviour-files',
+    },
+    {
+      id: 'snapshot',
+      term: 'Snapshot',
+      definition: 'Caduceus’s copy of a behaviour file’s previous text, taken just before a save or reset replaces it. History lists up to 20 per file, and Restore saves one back.',
+      page: 'behaviour-files',
+    },
+    {
+      id: 'gateway-status',
+      term: 'Gateway status',
+      definition: 'Whether the profile’s messaging gateway, the process that connects Hermes to chat platforms, is running, as Hermes reports it.',
+      page: 'profile-detail',
+    },
+  ],
+};

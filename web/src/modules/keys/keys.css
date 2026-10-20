@@ -1,0 +1,34 @@
+/* System › Keys. Tokens only (design system); logical properties throughout. The classes every part of the screen shares are here;
+   a part with styles of its own keeps them in its own file. */
+.ky { display: grid; gap: var(--cd-space-6); min-inline-size: 0; }
+.ky-head__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-3); }
+
+/* ---- A section of the page ---- */
+.ky-section { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ky-section__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
+.ky-section__title { flex: 1 1 auto; min-inline-size: 0; display: flex; align-items: center; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); letter-spacing: 0; }
+.ky-section__count { color: var(--cd-fg-subtle); font: var(--cd-weight-regular) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); }
+.ky-section__lead { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+
+/* ---- Cards: one column on a phone ---- */
+.ky-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.ky-card { display: flex; flex-direction: column; gap: var(--cd-space-3); padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.ky-card__top { display: flex; align-items: flex-start; gap: var(--cd-space-3); }
+.ky-card__id { flex: 1; min-inline-size: 0; display: grid; gap: var(--cd-space-1); }
+.ky-card__name { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.ky-card__name--mono { font-family: var(--cd-font-mono); }
+.ky-card__sub { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.ky-card__tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-2); min-inline-size: 0; }
+/* A tag that names a file (where a credential came from) is as long as the path: it wraps instead of widening the page. */
+.ky-card__tags .tag { max-inline-size: 100%; block-size: auto; min-block-size: 1.25rem; padding-block: var(--cd-space-0-5); white-space: normal; overflow-wrap: anywhere; line-height: var(--cd-leading-xs); }
+.ky-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin-block-start: auto; padding-block-start: var(--cd-space-3); border-block-start: 1px solid var(--cd-border-subtle); }
+.ky-card__actions .ky-card__more { margin-inline-start: auto; }
+.ky-url { display: block; padding: var(--cd-space-2) var(--cd-space-3); background: var(--cd-bg-surface-2); border-radius: var(--cd-radius-md); font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+
+/* ---- Forms and sheets ---- */
+.ky-form { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.ky-actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.ky-sheet .overlay__foot { position: sticky; inset-block-end: 0; background: var(--cd-bg-overlay); }
+.ky-note { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
+.ky-secret { display: flex; gap: var(--cd-space-2); align-items: stretch; }
+.ky-secret .input { flex: 1; min-inline-size: 0; }

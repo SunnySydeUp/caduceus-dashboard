@@ -1,0 +1,4 @@
+name: mem0
+version: 1.3.0
+description: "Mem0 memory provider."
+requires_env: []

@@ -1,0 +1,63 @@
+/* Notices (M2 #01, M8 #08): the Inbox's notices and activity feed, kept in Control. Tokens only (design system); logical properties throughout. A phone is one column of cards and a bottom sheet; a wider screen puts the list beside the notice. */
+.nt { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.nt-panes { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.nt-panes[data-wide] { grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); align-items: start; }
+.nt-list { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.nt-list__title { display: flex; align-items: baseline; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; }
+.nt-count-pill { color: var(--cd-fg-subtle); font-weight: var(--cd-weight-regular); font-size: var(--cd-text-sm); }
+
+/* ---- Cards ---- */
+.nt-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); min-inline-size: 0; }
+.nt-card { position: relative; overflow: hidden; display: grid; gap: var(--cd-space-2); padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-tone-warning-solid); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.nt-card[data-selected] { background: var(--cd-bg-selected); border-color: var(--cd-accent-border); }
+.nt-card__main { display: grid; gap: var(--cd-space-1); text-align: start; min-inline-size: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; border-radius: var(--cd-radius-sm); }
+.nt-card__main:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.nt-card__top { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
+.nt-card__kind { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); color: var(--cd-tone-warning-fg); font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-sans); }
+.nt-card__age { font-size: var(--cd-text-xs); }
+.nt-card__title { font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); overflow-wrap: anywhere; }
+.nt-card__preview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--cd-fg-default); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
+.nt-card__meta { font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+.nt-card__acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+
+/* ---- The notice beside the list ---- */
+.nt-detail { min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); position: sticky; inset-block-start: var(--cd-space-4); }
+
+/* ---- A request that is no longer waiting ---- */
+.nt-closed { display: grid; justify-items: center; text-align: center; gap: var(--cd-space-2); padding: var(--cd-space-6) var(--cd-space-4); }
+.nt-closed h2 { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; }
+.nt-closed p { margin: 0; max-inline-size: 36ch; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+
+/* ---- Groups, filters, views ---- */
+.nt-groups { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.nt-filter, .nt-views { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.nt-views .count { margin-inline-start: var(--cd-space-1); }
+.nt-empty { margin: 0; font-size: var(--cd-text-sm); }
+.nt-card[data-group="failed"] { border-color: var(--cd-tone-danger-solid); }
+.nt-card[data-group="fyi"] { border-color: var(--cd-border-subtle); }
+.nt-card[data-group="failed"] .nt-card__kind { color: var(--cd-tone-danger-fg); }
+.nt-card[data-group="fyi"] .nt-card__kind { color: var(--cd-fg-muted); }
+.nt-card__more { margin-inline-start: auto; }
+
+/* A swipe moves the card aside to show what letting go does; the sides are only there while a finger is moving it. */
+.nt-card > :not(.nt-swipe) { transform: translateX(var(--swipe, 0px)); transition: transform var(--cd-dur-fast) var(--cd-ease-standard); }
+.nt-card[data-swiping] > :not(.nt-swipe) { transition: none; }
+.nt-swipe { position: absolute; inset: 0; display: flex; justify-content: space-between; visibility: hidden; }
+.nt-card[data-swiping] .nt-swipe { visibility: visible; }
+.nt-swipe__side { display: flex; align-items: center; padding-inline: var(--cd-card-p); inline-size: 50%; font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); }
+.nt-swipe__side[data-side="archive"] { justify-content: flex-start; background: var(--cd-tone-info-solid); color: var(--cd-tone-info-on); }
+.nt-swipe__side[data-side="pin"] { justify-content: flex-end; background: var(--cd-tone-warning-solid); color: var(--cd-tone-warning-on); }
+
+/* ---- The card's menu ---- */
+.nt-menu { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); }
+.nt-menu__item { display: flex; align-items: center; inline-size: 100%; min-block-size: var(--cd-target-min); padding-inline: var(--cd-space-3); border: 0; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-default); font: inherit; text-align: start; text-decoration: none; cursor: pointer; }
+.nt-menu__item:hover { background: var(--cd-overlay-hover); }
+.nt-menu__custom { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); padding-inline: var(--cd-space-3); font-size: var(--cd-text-sm); }
+.nt-menu__custom .input { flex: 1; min-inline-size: 0; }
+
+/* ---- Snoozed, activity ---- */
+.nt-snoozed summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.nt-snoozed ul, .nt-activity { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
+.nt-snoozed li, .nt-activity li { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-3); padding: var(--cd-space-2) var(--cd-space-3); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); font-size: var(--cd-text-sm); min-block-size: var(--cd-target-min); }
+.nt-activity li { justify-content: flex-start; }
+.nt-activity__main { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }

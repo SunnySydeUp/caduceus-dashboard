@@ -1,0 +1,36 @@
+/* The decision's own look (M2 #01, M8 #03): the answers on a decision card (`InboxDecision`) wherever it is listed: Today, the Talk tray, a notice in Notices. Tokens only; logical properties throughout. */
+/* ---- The decision (in a card, or in a sheet) ---- */
+.ib-decision { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.ib-decision__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
+.ib-kind { margin: 0; display: inline-flex; align-items: center; gap: var(--cd-space-1-5); color: var(--cd-tone-warning-fg); font: var(--cd-weight-semibold) var(--cd-text-sm)/1 var(--cd-font-sans); }
+.ib-decision__q { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.ib-cmd { color: var(--cd-fg-default); white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cd-text-sm); max-block-size: 14rem; overflow-y: auto; }
+.ib-rule { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
+.ib-kv { margin: 0; display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-5); font-size: var(--cd-text-xs); }
+.ib-kv > div { display: flex; align-items: baseline; gap: var(--cd-space-2); min-inline-size: 0; }
+.ib-kv dt { color: var(--cd-fg-subtle); }
+.ib-kv dd { margin: 0; min-inline-size: 0; overflow-wrap: anywhere; }
+.ib-acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.ib-acts .btn { flex: 1 1 auto; }
+.ib-deny { display: grid; gap: var(--cd-space-2); padding-block-start: var(--cd-space-3); border-block-start: 1px solid var(--cd-border-subtle); }
+.ib-deny__acts { display: flex; justify-content: flex-end; gap: var(--cd-space-2); }
+.ib-count { display: inline-flex; align-items: center; gap: var(--cd-space-1); font-size: var(--cd-text-xs); color: var(--cd-fg-muted); font-variant-numeric: tabular-nums; }
+.ib-form { display: grid; gap: var(--cd-space-3); }
+.ib-question { display: grid; gap: var(--cd-space-2); }
+.ib-question__text { margin: 0; font-weight: var(--cd-weight-medium); overflow-wrap: anywhere; }
+.ib-choices { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.ib-free { display: flex; gap: var(--cd-space-2); }
+.ib-free .input { flex: 1; min-inline-size: 0; }
+.ib-skip { display: flex; justify-content: flex-end; }
+
+/* The sheet is the decision alone: its own card chrome would double the sheet's. */
+.sheet .ib-decision, .dialog .ib-decision { padding-block-end: var(--cd-space-2); }
+.sheet .ib-kind, .dialog .ib-kind { display: none; }
+.sheet .ib-acts [data-act="once"] { flex-basis: 100%; min-block-size: calc(var(--cd-target-min) + var(--cd-space-2)); order: 2; }
+.sheet .ib-acts [data-act="deny"] { order: 0; flex-basis: 100%; }
+.sheet .ib-acts [data-act="session"], .sheet .ib-acts [data-act="always"] { order: 1; }
+
+/* ---- A sheet that asks for words first (Reject + note, Answer, Reassign): it stays above the soft keyboard (`--kb-inset` is the height it covers) ---- */
+.ib-sheet .sheet { inset-block-end: var(--kb-inset); max-block-size: calc(100svh - var(--kb-inset) - var(--cd-safe-top) - var(--cd-space-6)); }
+.ib-note { display: grid; gap: var(--cd-space-3); }
+.ib-note .input { inline-size: 100%; min-block-size: 6rem; resize: vertical; }

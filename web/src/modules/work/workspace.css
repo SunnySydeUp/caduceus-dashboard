@@ -1,0 +1,28 @@
+/* The workspace field of the Brief editor and its folder picker. Tokens only (design system); logical properties throughout. */
+.ws { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.ws__folder { display: grid; gap: var(--cd-space-1-5); min-inline-size: 0; }
+.ws__path { display: flex; gap: var(--cd-space-2); align-items: stretch; }
+.ws__path .input { flex: 1 1 auto; min-inline-size: 0; }
+.ws__status { display: flex; align-items: center; gap: var(--cd-space-1); margin: 0; font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-sans); color: var(--cd-fg-subtle); }
+.ws__status[data-tone="ok"] { color: var(--cd-tone-success-fg); }
+
+/* the workspace of a task that exists */
+.ws__facts { display: grid; gap: var(--cd-space-3); margin: 0; }
+.ws__fact { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.ws__fact dt { font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-muted); }
+.ws__fact dd { margin: 0; font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+
+/* the folder picker */
+.ws-pick__here { display: flex; align-items: center; gap: var(--cd-space-2); }
+.ws-pick__path { flex: 1 1 auto; min-inline-size: 0; margin: 0; font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+.ws-pick__note { margin: 0; font-size: var(--cd-text-sm); color: var(--cd-fg-muted); }
+.ws-pick__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.ws-pick__row { display: flex; align-items: center; gap: var(--cd-space-2); inline-size: 100%; min-block-size: max(var(--cd-row-h), var(--cd-target-min)); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid transparent; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-default); font: inherit; font-size: var(--cd-text-sm); text-align: start; cursor: pointer; }
+.ws-pick__row svg.i { flex: none; color: var(--cd-fg-subtle); }
+@media (hover: hover) { .ws-pick__row:hover { background: var(--cd-overlay-hover); } }
+.ws-pick__row:active { background: var(--cd-overlay-pressed); }
+
+/* the registered workspaces offered above a task's folder */
+.ws__choices { display: grid; gap: var(--cd-space-1-5); min-inline-size: 0; }
+.ws__chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cd-space-2); min-inline-size: 0; }
+.ws__chips .chip { max-inline-size: 100%; }

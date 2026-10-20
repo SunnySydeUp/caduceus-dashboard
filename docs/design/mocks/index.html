@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-skin="nous">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Agent-first design mocks</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../prototype/components.css">
+<style>
+  main { max-inline-size: 44rem; margin: 0 auto; padding: var(--cd-space-8) var(--cd-space-4); display: grid; gap: var(--cd-space-5); }
+  h1 { margin: 0; font-size: var(--cd-text-2xl); line-height: var(--cd-leading-2xl); letter-spacing: var(--cd-tracking-tight); }
+  ul { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--cd-space-2); }
+  li a { display: grid; gap: 2px; padding: var(--cd-space-3) var(--cd-space-4); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); background: var(--cd-bg-surface); color: inherit; text-decoration: none; }
+  li a:hover { border-color: var(--cd-accent-border); }
+  li span { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+  p { margin: 0; color: var(--cd-fg-muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Agent-first design mocks</h1>
+  <p>Mock data on the real tokens. Serve <code>docs/design</code> over HTTP, then add <code>?theme=dark</code>, <code>?motion=reduce</code> or <code>?sheet=workspace|approval</code> (phone width) to any page.</p>
+  <ul>
+    <li><a href="agents.html"><b>Agents</b><span>Roster with presence avatars, a "Needs you" strip and the selected agent.</span></a></li>
+    <li><a href="chat.html?tip=homeassistant"><b>Chat with an agent</b><span>Agent identity in the header, one transcript for words, steps, events and approvals, and the agent's workspace beside it.</span></a></li>
+    <li><a href="chat.html?sheet=workspace"><b>Chat on a phone: workspace sheet</b><span>Open at phone width. The workspace is a sheet over the chat.</span></a></li>
+    <li><a href="work.html"><b>Work</b><span>Review queue first, then what is running, then routines.</span></a></li>
+    <li><a href="desk/index.html"><b>The Desk (ideal-case redesign)</b><span>A fresh design with its own tokens, sigils and a decide-anywhere tray. Not bound to today's look.</span></a></li>
+  </ul>
+</main>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "name": "caduceus-dashboard",
+  "description": "Mobile-first PWA dashboard for Hermes Agent, reached from your phone over Tailscale Serve.",
+  "license": "MIT",
+  "author": "Sunny Phung (https://github.com/SunnySydeUp)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SunnySydeUp/caduceus-dashboard.git"
+  },
+  "homepage": "https://github.com/SunnySydeUp/caduceus-dashboard#readme",
+  "bugs": "https://github.com/SunnySydeUp/caduceus-dashboard/issues",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "contracts",
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "npm run build -w web && npm run start -w server",
+    "test": "vitest run",
+    "test:e2e": "npm run build -w web && playwright test",
+    "smoke:real": "HERMES_REAL_SMOKE=1 vitest run server/test/real-hermes.smoke.test.ts",
+    "contracts:regenerate": "tsx server/scripts/regenerate-contracts.ts",
+    "lint:ui": "tsx server/scripts/lint-ui.ts",
+    "perf": "npm run build -w web && tsx server/scripts/perf.ts",
+    "caduceus": "tsx server/scripts/caduceus.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "axe-core": "^4.14.0",
+    "lighthouse": "^13.5.0",
+    "rolldown": "~1.2.11",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

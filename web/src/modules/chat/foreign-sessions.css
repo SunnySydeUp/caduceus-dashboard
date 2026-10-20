@@ -1,0 +1,21 @@
+/* The Claude Code and Codex sessions sheet (M1 #16). Tokens only; logical properties throughout. A row is at least a touch target tall. */
+.fs__list, .fs__preview { display: grid; gap: var(--cd-space-3); min-inline-size: 0; align-content: start; }
+.fs__filter { justify-self: start; max-inline-size: 100%; }
+.fs__rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
+.fs__row { inline-size: 100%; display: flex; align-items: center; gap: var(--cd-space-3); min-block-size: max(3.5rem, var(--cd-target-min)); padding: var(--cd-space-2) var(--cd-card-p); border: 0; border-radius: var(--cd-radius-md); background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; min-inline-size: 0; }
+@media (hover: hover) { .fs__row:hover { background: var(--cd-overlay-hover); } }
+.fs__row:active { background: var(--cd-overlay-pressed); }
+.fs__row:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: -2px; }
+.fs__icon { flex: none; inline-size: 2rem; block-size: 2rem; border-radius: var(--cd-radius-md); display: grid; place-items: center; background: var(--cd-bg-surface-2); color: var(--cd-fg-muted); }
+.fs__main { flex: 1 1 0; min-inline-size: 0; display: grid; gap: 2px; }
+.fs__title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--cd-weight-medium); }
+.fs__sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
+.fs__time { flex: none; color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
+.fs__more { justify-self: center; }
+.fs__preview-title { margin: 0; overflow-wrap: anywhere; }
+.fs__turns { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.fs__turn { display: grid; gap: var(--cd-space-1); min-inline-size: 0; padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); }
+.fs__turn[data-role="user"] { background: var(--cd-accent-soft); }
+.fs__turn-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
+/* The phone's sheet is full height (the detent is `full`); the dialog keeps to its own size. */
+.fs .overlay__foot .sl-sheet__actions { justify-content: space-between; }

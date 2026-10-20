@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en" data-theme="system" data-skin="nous" data-density="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Work (mock)</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../prototype/components.css">
+<link rel="stylesheet" href="mocks.css">
+</head>
+<body data-page="work">
+<div class="shell">
+  <div class="col">
+    <header class="top">
+      <h1>Work</h1>
+      <nav class="views" aria-label="Work views">
+        <a href="#" aria-current="page">Review <span class="count count--accent">2</span></a>
+        <a href="#">Running <span class="muted">2</span></a>
+        <a href="#">Routines <span class="muted">4</span></a>
+        <a href="#">Board</a>
+      </nav>
+      <span class="top__spacer"></span>
+      <button class="btn btn--primary"><span data-i="plus"></span>New task</button>
+    </header>
+
+    <main class="page">
+      <section aria-labelledby="rv">
+        <h2 class="sh" id="rv">Ready for your review</h2>
+        <div class="review">
+          <article class="rcard">
+            <div class="rcard__top"><span class="pa pa--md" data-agent="property" data-state="done"></span>
+              <div class="grow"><h3>Lease renewal letter for Unit 2A</h3><span class="muted">property finished 2 min ago</span></div></div>
+            <p class="muted" style="margin:0">Draft v2 with the CPI-linked increase of 3.1 percent. The notice period follows the state rules.</p>
+            <div class="diffstat"><span><span data-i="file" data-c="i-sm"></span> lease-renewal-v2.docx</span><span>2 pages</span></div>
+            <div class="need__act"><button class="btn btn--primary">Review</button><button class="btn btn--secondary">Send back with a note</button></div>
+          </article>
+          <article class="rcard">
+            <div class="rcard__top"><span class="pa pa--md" data-agent="general" data-state="done"></span>
+              <div class="grow"><h3>Plumber booked for Thursday 9 am</h3><span class="muted">general finished 2 h ago</span></div></div>
+            <p class="muted" style="margin:0">Quote is $180 for the tap and the leak under the sink. Added to your calendar with a reminder the evening before.</p>
+            <div class="diffstat"><span><span data-i="calendar" data-c="i-sm"></span> Thu 9:00 am</span><span>1 calendar event</span></div>
+            <div class="need__act"><button class="btn btn--primary">Looks good</button><button class="btn btn--secondary">Change it</button></div>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="run">
+        <h2 class="sh" id="run">Running now</h2>
+        <div class="group">
+          <div class="lrow"><span class="pa pa--md" data-agent="coder" data-state="waiting"></span>
+            <div><b>Webhook retry backoff</b><small>coder is waiting for your OK to push the branch</small></div>
+            <div class="prog"><span class="tnum">Step 6 of about 9</span><i style="--p:66%"></i></div>
+            <button class="btn btn--primary btn--sm">Decide</button></div>
+          <div class="lrow"><span class="pa pa--md" data-agent="librarian" data-state="working"></span>
+            <div><b>RAG citation survey</b><small>librarian is reading source 9 of about 15</small></div>
+            <div class="prog"><span class="tnum">Source 9 of about 15</span><i style="--p:60%"></i></div>
+            <button class="btn btn--secondary btn--sm">Open</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="rt">
+        <h2 class="sh" id="rt">Routines</h2>
+        <div class="group">
+          <div class="lrow"><span class="pa pa--md" data-agent="general" data-state="idle"></span>
+            <div><b>Morning briefing</b><small>general. Every day at 8:00 am</small></div>
+            <div class="prog"><span>Ran today at 8:00. 1 result</span></div><span class="sw" data-on="true" role="switch" aria-checked="true" aria-label="Morning briefing on"></span></div>
+          <div class="lrow"><span class="pa pa--md" data-agent="coder" data-state="working"></span>
+            <div><b>Dependency check</b><small>coder. Weekdays at 6:00 am</small></div>
+            <div class="prog"><span>Next run tomorrow at 6:00</span></div><span class="sw" data-on="true" role="switch" aria-checked="true" aria-label="Dependency check on"></span></div>
+          <div class="lrow"><span class="pa pa--md" data-agent="property" data-state="done"></span>
+            <div><b>Council planning watch</b><small>property. Every Monday at 9:00 am</small></div>
+            <div class="prog"><span>Ran Monday. 2 new applications</span></div><span class="sw" data-on="true" role="switch" aria-checked="true" aria-label="Council planning watch on"></span></div>
+          <div class="lrow"><span class="pa pa--md" data-agent="homeassistant" data-state="idle"></span>
+            <div><b>Away mode check</b><small>homeassistant. Paused</small></div>
+            <div class="prog"><span>Paused since Friday</span></div><span class="sw" data-on="false" role="switch" aria-checked="false" aria-label="Away mode check off"></span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script type="module" src="mock.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+/* The decision card (M8 #03, #05): one waiting decision as Today lists it and as the Talk tray lists it. Tokens only; logical properties throughout. */
+.today-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); align-content: start; min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid color-mix(in srgb, var(--cd-tone-warning-solid) 55%, var(--cd-border-subtle)); border-radius: var(--cd-radius-lg); }
+.today-card__who { display: flex; align-items: center; gap: var(--cd-space-3); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); min-inline-size: 0; }
+.today-card__who b { color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); }
+.today-card__ask { min-inline-size: 0; overflow-wrap: anywhere; }
+.today-card__age { margin-inline-start: auto; flex: none; font-size: var(--cd-text-xs); }
+.today-card__q { font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); letter-spacing: var(--cd-tracking-tight); overflow-wrap: anywhere; }
+.today-card__where { margin: 0; font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
+/* The head above says who asks and how long ago, so the decision's own kind line and its profile, session and age list are not repeated. */
+.today-card .ib-kind, .today-card .ib-kv { display: none; }
+.today-card .ib-decision__q { font-size: var(--cd-text-lg); line-height: var(--cd-leading-lg); letter-spacing: var(--cd-tracking-tight); }
+/* The room the answers take while their code loads, so that the card does not grow when they arrive. */
+.today-card__pending { min-block-size: calc(var(--cd-control-h) * 2 + var(--cd-space-2)); }

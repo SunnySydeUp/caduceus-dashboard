@@ -1,0 +1,4 @@
+name: hindsight
+version: 1.2.3
+description: "Hindsight — long-term memory with knowledge graph, entity resolution, and multi-strategy retrieval."
+requires_env: []

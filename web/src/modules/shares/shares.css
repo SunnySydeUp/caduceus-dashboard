@@ -1,0 +1,7 @@
+/* Share links (M7 #06): the sheet and the public page. Tokens only. */
+.sh__choices { display: grid; gap: var(--cd-space-1); border: 0; padding: 0; margin: 0; }
+.sh__choices legend { font-weight: var(--cd-weight-semibold); padding: 0; margin-block-end: var(--cd-space-1); }
+.sh__choice { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: var(--cd-target-min); }
+.sh-page { max-inline-size: 48rem; margin-inline: auto; padding: var(--cd-space-4); display: grid; gap: var(--cd-space-4); min-inline-size: 0; color: var(--cd-fg-default); }
+.sh-page h1 { font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); overflow-wrap: anywhere; }
+.sh-page__transcript { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }

@@ -1,0 +1,18 @@
+/* Connect › Pairing. Tokens only (design system); logical properties throughout. */
+.pr { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.pr-head__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-3); }
+.pr-section { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.pr-section__title { display: flex; align-items: baseline; gap: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; }
+.pr-count { color: var(--cd-fg-subtle); font-weight: var(--cd-weight-regular); font-size: var(--cd-text-sm); }
+
+/* ---- Cards: one column on a phone ---- */
+.pr-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-gap); grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+.pr-card { display: flex; flex-direction: column; gap: var(--cd-space-3); padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.pr-card[data-kind="pending"] { border-color: var(--cd-tone-warning-solid); }
+.pr-card__top { display: flex; align-items: center; gap: var(--cd-space-3); }
+.pr-card__id { flex: 1; min-inline-size: 0; display: grid; gap: var(--cd-space-1); }
+.pr-card__name { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: 0; overflow-wrap: anywhere; }
+.pr-card__meta { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+.pr-card__actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); margin-block-start: auto; padding-block-start: var(--cd-space-3); border-block-start: 1px solid var(--cd-border-subtle); align-items: center; }
+.pr-card__actions .pr-card__more { margin-inline-start: auto; }
+.pr-note { font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); color: var(--cd-fg-subtle); margin: 0; }

@@ -1,0 +1,17 @@
+/* Workspace › Terminal. Tokens only (design system); logical properties throughout. */
+.tm { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.tm > .page-header { padding-block-end: 0; }
+.tm-bar { display: grid; gap: var(--cd-space-3); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }
+.app[data-size="large"] .tm-bar, .app[data-size="medium"] .tm-bar { grid-template-columns: minmax(12rem, 22rem) minmax(0, 1fr); }
+.tm-folder { min-inline-size: 0; }
+.tm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--cd-space-2); min-inline-size: 0; }
+.tm-cwd { margin: 0; overflow-wrap: anywhere; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.term-host { box-sizing: border-box; min-inline-size: 0; block-size: min(70dvh, 48rem); min-block-size: 16rem; padding: var(--cd-space-2); background: var(--cd-bg-inset); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); overflow: hidden; }
+.term-host:focus-within { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }
+.term-host .xterm { block-size: 100%; }
+.term-host .xterm-viewport { background: transparent; }
+.tm-keys .btn { min-inline-size: 2.75rem; }
+.tm-keys { display: none; flex-wrap: wrap; gap: var(--cd-space-2); }
+@media (pointer: coarse) { .tm-keys { display: flex; } }
+.tm-hint { margin: 0; }
+.tm-hint:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }

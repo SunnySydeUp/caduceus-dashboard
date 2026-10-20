@@ -1,0 +1,45 @@
+/* Work › Run. Tokens only (design system); logical properties throughout. */
+.rv { min-inline-size: 0; }
+.rv > * { min-inline-size: 0; }
+.rv-facts { padding: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
+.rv-outcome { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.rv-bar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--cd-space-3); }
+.rv-density { display: grid; gap: var(--cd-space-1); }
+
+/* ---- Steps and log, with the transcript beside them on a wide window ---- */
+.rv-grid { display: grid; gap: var(--cd-space-4); grid-template-columns: minmax(0, 1fr); align-items: start; min-inline-size: 0; }
+.rv-main { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+@media (min-width: 1024px) {
+  .rv-grid[data-open] { grid-template-columns: minmax(0, 1fr) minmax(24rem, 38%); }
+  .rv-panel { position: sticky; inset-block-start: var(--cd-space-4); max-block-size: calc(100dvh - var(--cd-space-8)); overflow-y: auto; }
+}
+.rv-section-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin-block-end: var(--cd-space-2); }
+.rv-section-head > h2 { margin: 0; margin-inline-end: auto; }
+
+.rv-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
+.rv-step { all: unset; box-sizing: border-box; display: grid; gap: var(--cd-space-1); inline-size: 100%; min-block-size: var(--cd-target-min); padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); color: var(--cd-fg-default); cursor: pointer; }
+.rv-step:hover { background: var(--cd-bg-hover); }
+.rv-step[aria-pressed="true"] { background: var(--cd-bg-selected); border-color: var(--cd-accent-border); }
+.rv-step:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
+.rv-step__head { display: flex; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
+.rv-step__n { flex-shrink: 0; color: var(--cd-fg-muted); min-inline-size: 1.5rem; }
+.rv-step__title { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-step__facts { display: flex; flex-wrap: wrap; gap: var(--cd-space-1) var(--cd-space-3); font-size: var(--cd-text-xs); padding-inline-start: calc(1.5rem + var(--cd-space-2)); }
+
+/* ---- A step's transcript ---- */
+.rv-panel { padding: var(--cd-space-3); display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.rv-panel__head { display: flex; align-items: start; gap: var(--cd-space-2); }
+.rv-panel__title { margin: 0; flex: 1; min-inline-size: 0; font-size: var(--cd-text-md); overflow-wrap: anywhere; }
+.rv-transcript { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.rv-transcript__failure { margin: 0; padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-tone-danger-soft); color: var(--cd-tone-danger-fg); overflow-wrap: anywhere; white-space: pre-wrap; }
+.rv-say { display: grid; gap: var(--cd-space-1); min-inline-size: 0; padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); }
+.rv-say[data-role="assistant"] { background: transparent; padding-inline: 0; }
+.rv-say > .overline { margin: 0; }
+.rv-raw { margin: 0; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cd-text-xs); max-block-size: 60dvh; }
+
+/* ---- The worker log reuses the Logs screen's scroller ---- */
+.rv-log { min-inline-size: 0; }
+.rv-log__note { margin: 0 0 var(--cd-space-2); font-size: var(--cd-text-sm); }
+.rv-log__refused { margin: 0 0 var(--cd-space-2); color: var(--cd-tone-danger-fg); }
+.rv-log .lg-scroll { block-size: clamp(16rem, calc(100dvh - 20rem), 40rem); }
+.rv-raw:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }

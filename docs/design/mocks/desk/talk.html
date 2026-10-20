@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Talk to coder (mock)</title>
+<link rel="stylesheet" href="desk.css">
+</head>
+<body data-page="talk" data-agent="coder">
+<div class="app">
+  <div class="col">
+    <div class="talkgrid">
+      <section class="talk" aria-label="Conversation with coder">
+        <header class="thead">
+          <span data-sg="coder"></span>
+          <div><h1>coder</h1><small>Waiting for you. Webhook retry backoff</small></div>
+          <span class="grow"></span>
+          <button class="b b--sm" data-open="context"><span data-i="sliders" data-c="s"></span>Details</button>
+        </header>
+        <nav class="bridge" aria-label="Switch agent">
+          <a href="talk.html" aria-current="true"><span data-sg="coder:sm"></span>coder</a>
+          <a href="talk.html"><span data-sg="general:sm"></span>general</a>
+          <a href="talk.html"><span data-sg="homeassistant:sm"></span>home</a>
+          <a href="talk.html"><span data-sg="librarian:sm"></span>librarian</a>
+          <a href="talk.html"><span data-sg="property:sm"></span>property</a>
+          <button class="b b--quiet b--icon more" data-open="context" aria-label="Details for coder"><span data-i="sliders"></span></button>
+        </nav>
+
+        <div class="thread" role="log" aria-label="Messages">
+          <div class="me">Add exponential backoff with jitter to the webhook retries. Ask librarian whether vitest 4 changes timer mocks first.</div>
+
+          <div class="ag"><span data-sg="coder:sm:idle"></span><div>
+            <div class="ev">
+              <span class="pair"><span data-sg="coder:xs:idle"></span><span data-i="arrow-r" data-c="s"></span><span data-sg="librarian:xs:idle"></span></span>
+              <span class="grow"><b>Asked librarian</b><small>Do fake timers behave differently in vitest 4?</small></span>
+            </div>
+            <div class="ev">
+              <span class="pair"><span data-sg="librarian:xs:idle"></span><span data-i="arrow-r" data-c="s"></span><span data-sg="coder:xs:idle"></span></span>
+              <span class="grow"><b>librarian answered</b><small>Only <code>useFakeTimers</code> defaults changed. Your tests set them explicitly.</small></span>
+            </div>
+            <p>Good. Backoff now doubles from 1 second up to a 60 second cap, with random jitter on each wait. The hooks no longer retry in lockstep.</p>
+            <span class="steps"><span data-i="check" data-c="s"></span><b>8 steps</b> 2 files edited, tests passed</span>
+            <div class="ev">
+              <span class="ic"><span data-i="git"></span></span>
+              <span class="grow"><b class="nm mono">src/webhooks/backoff.ts</b><small>Edited 1 min ago</small></span>
+              <span class="mono"><span style="color:var(--green)">+14</span> <span style="color:var(--red)">-10</span></span>
+              <button class="b b--sm">View diff</button>
+            </div>
+          </div></div>
+
+          <div class="me">Also check dependencies every weekday morning.</div>
+
+          <div class="ag"><span data-sg="coder:sm"></span><div>
+            <div class="ev">
+              <span class="ic"><span data-i="calendar"></span></span>
+              <span class="grow"><b>Routine created: Dependency check</b><small>Weekdays at 6:00 am. Next run tomorrow.</small></span>
+              <button class="b b--sm">Open</button>
+            </div>
+            <p>The branch is ready, and pushing it needs your OK.</p>
+            <article class="dec" style="padding:16px;gap:12px">
+              <h3 style="font-size:17px">Push to origin?</h3>
+              <pre>git push origin feat/x</pre>
+              <div class="acts"><button class="b b--ink">Allow once</button><button class="b">This session</button><button class="b b--quiet b--danger">Deny</button></div>
+            </article>
+          </div></div>
+        </div>
+
+        <div class="dock">
+          <div class="tray" data-open="false">
+            <button class="tray__btn" aria-expanded="false">
+              <span class="faces"><span data-sg="homeassistant:xs"></span><span data-sg="general:xs"></span></span>
+              2 more need you elsewhere <span data-i="chev-u" data-c="s"></span>
+            </button>
+            <div class="tray__list">
+              <div class="mini"><div class="l"><span data-sg="homeassistant:sm"></span><span><b>homeassistant</b><br><span class="muted">Turn the heating off until Sunday?</span></span></div><div class="acts"><button class="b b--ink b--sm">Yes, turn it off</button><button class="b b--sm">Not now</button></div></div>
+              <div class="mini"><div class="l"><span data-sg="general:sm"></span><span><b>general</b><br><span class="muted">Which plumber slot should I book?</span></span></div><div class="acts"><button class="b b--sm">Thu 9:00 am</button><button class="b b--sm">Fri 2:00 pm</button></div></div>
+            </div>
+          </div>
+          <div class="composer" data-intent="ask">
+            <div class="in" role="textbox" aria-label="Message coder">Message coder</div>
+            <div class="bar">
+              <button class="b b--quiet b--icon" aria-label="Attach"><span data-i="clip"></span></button>
+              <div class="intent" role="group" aria-label="What should coder do">
+                <button data-v="ask" aria-pressed="true">Ask</button><button data-v="delegate" aria-pressed="false">Delegate</button><button data-v="repeat" aria-pressed="false">Repeat</button>
+              </div>
+              <span class="grow" style="flex:1"></span>
+              <button class="b b--quiet b--icon" aria-label="Voice"><span data-i="mic"></span></button>
+              <button class="send" aria-label="Send"><span data-i="send"></span></button>
+            </div>
+            <p class="hint hint--ask">coder answers here, and you can follow along.</p>
+            <p class="hint hint--delegate">Runs in the background. You are told only when it needs you or finishes.</p>
+            <p class="hint hint--repeat">Pick when it should run again. It shows up under Work.</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="ctx" aria-label="coder details">
+        <div class="ctx__who"><span data-sg="coder:lg"></span><div><h2>coder</h2><span class="muted">Coding on hermes-console</span></div></div>
+        <div>
+          <h3>Right now</h3>
+          <div class="now-box"><b>Waiting for your OK to push</b><span class="muted">Step 8 of 9</span><div class="bar2" style="--p:88%"></div></div>
+        </div>
+        <div>
+          <h3>Workspace <button class="b b--sm b--quiet">Take over</button></h3>
+          <pre class="term"><span class="p">$</span> pnpm vitest webhooks
+<span class="ok">✓</span> backoff.test.ts (6)
+<span class="ok">✓</span> retry-queue.test.ts (4)
+<span class="ok">✓</span> delivery.test.ts (5)
+Tests  15 passed</pre>
+        </div>
+        <div>
+          <h3>Work</h3>
+          <ul class="lst">
+            <li><span data-sg="coder:xs:idle"></span><span class="grow">Webhook retry backoff</span><span class="pill pill--amber">Waiting</span></li>
+            <li><span data-sg="coder:xs:idle"></span><span class="grow">Dependency check</span><span class="faint">Weekdays 6 am</span></li>
+            <li><span data-sg="coder:xs:idle"></span><span class="grow">Nightly test run</span><span class="faint">11 pm</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>About</h3>
+          <dl class="dl"><dt>Model</dt><dd>glm-5.3</dd><dt>Folder</dt><dd>~/code/hermes-console</dd><dt>Cost today</dt><dd>$0.61</dd><dt>Context</dt><dd>38% used</dd></dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div class="scrim"></div>
+<section class="sheet sheet--ctx" aria-label="coder details">
+  <div class="ctx__who"><span data-sg="coder:lg"></span><div><h2 style="font-size:22px">coder</h2><span class="muted">Coding on hermes-console</span></div></div>
+  <div><h3 style="font-size:14px;color:var(--muted);margin-block-end:8px">Workspace</h3>
+    <pre class="term"><span class="p">$</span> pnpm vitest webhooks
+<span class="ok">✓</span> backoff.test.ts (6)
+<span class="ok">✓</span> retry-queue.test.ts (4)
+Tests  15 passed</pre>
+    <div class="acts" style="margin-block-start:10px"><button class="b b--ink" style="flex:1">Take over</button><button class="b">Full screen</button></div>
+  </div>
+  <div><h3 style="font-size:14px;color:var(--muted);margin-block-end:8px">Work</h3>
+    <ul class="lst"><li><span data-sg="coder:xs:idle"></span><span class="grow">Webhook retry backoff</span><span class="pill pill--amber">Waiting</span></li><li><span data-sg="coder:xs:idle"></span><span class="grow">Dependency check</span><span class="faint">6 am</span></li></ul></div>
+  <dl class="dl"><dt>Model</dt><dd>glm-5.3</dd><dt>Cost today</dt><dd>$0.61</dd><dt>Context</dt><dd>38% used</dd></dl>
+</section>
+<script type="module" src="desk.js"></script>
+</body>
+</html>
