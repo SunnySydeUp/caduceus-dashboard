@@ -1,5 +1,5 @@
 /* Connect › Gateway. Tokens only (design system); logical properties throughout. */
-.gw { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.gw { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .gw-section { font-size: var(--cd-text-md); line-height: var(--cd-leading-md); }
 .gw-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
 .gw-health-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }

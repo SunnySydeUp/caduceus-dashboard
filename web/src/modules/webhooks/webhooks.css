@@ -1,5 +1,5 @@
 /* Connect › Webhooks. Tokens only (design system); logical properties throughout. */
-.wh { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.wh { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .wh-head__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-3); }
 
 /* ---- The receiver ---- */

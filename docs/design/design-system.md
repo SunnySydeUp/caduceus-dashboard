@@ -229,6 +229,7 @@ Other pairs:
 ### 4.6 Space, density and targets
 
 - **Spacing scale.** 4 px grid: `--cd-space-{0,px,0-5,1,1-5,2,3,4,5,6,8,10,12,16}` = 0, 1, 2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64 px. Section rhythm is 16 / 24 / 40.
+- **Page rhythm.** A screen's root is `.main`'s child: the `PageHeader`, then the screen's blocks, `gap: var(--page-gap)`. `--page-gap` is 16 px (set on `.main`); a screen of headed sections or card groups (Channels, Gateway, Pairing, Webhooks, Keys, Health, Settings, Control, Work's landing) sets `--page-gap: var(--cd-space-6)` on its root. The header's bottom padding is `24 px − --page-gap`, so the header always stands 24 px above the first block. A screen never overrides the header's padding. A bordered card or panel pads with `--cd-card-p`, never a fixed step.
 
 | Token | Compact (fine pointer ≥ 64 rem) | Comfortable (default, touch) |
 |---|---|---|

@@ -1,6 +1,5 @@
 /* Workspace › Checkpoints. Tokens only (design system); logical properties throughout. */
-.cp { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.cp > .page-header { padding-block-end: 0; }
+.cp { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .cp-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); align-items: start; min-inline-size: 0; }
 @media (min-width: 1024px) { .cp-split { grid-template-columns: minmax(16rem, 4fr) minmax(0, 8fr); } }
 .cp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-1); min-inline-size: 0; }

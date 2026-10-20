@@ -1,5 +1,5 @@
 /* Connect › Channels. Tokens only (design system); logical properties throughout. */
-.ch { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.ch { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .ch-head__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-3); }
 .ch-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
 .ch-search { flex: 1 1 14rem; max-inline-size: 24rem; }

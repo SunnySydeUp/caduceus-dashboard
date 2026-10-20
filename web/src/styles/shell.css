@@ -36,7 +36,8 @@ a.btn { text-decoration: none; }
 
 /* ---- Frame ---- */
 .app__body { min-block-size: 100dvh; display: flex; flex-direction: column; padding-inline-start: max(var(--shell-start), var(--cd-safe-left)); padding-inline-end: var(--cd-safe-right); padding-block-end: var(--shell-bottom); }
-.main { flex: 1 0 auto; inline-size: 100%; max-inline-size: var(--cd-page-max); margin-inline: auto; padding: var(--cd-space-4) var(--cd-page-px) var(--cd-space-16); min-inline-size: 0; }
+/* `--page-gap` is a screen's rhythm: the room between the blocks of its root (16 px; a screen of headed sections sets 24 px). Every screen root uses it as its gap. */
+.main { flex: 1 0 auto; inline-size: 100%; max-inline-size: var(--cd-page-max); margin-inline: auto; padding: var(--cd-space-4) var(--cd-page-px) var(--cd-space-16); min-inline-size: 0; --page-gap: var(--cd-space-4); }
 .app[data-size="large"] .main { padding-block-start: var(--cd-space-6); }
 
 /* ---- Wordmark ---- */
@@ -80,7 +81,8 @@ a.btn { text-decoration: none; }
 
 /* ---- Rail + sidebar ---- */
 .side { position: fixed; z-index: var(--cd-z-nav); inset-block: 0; inset-inline-start: 0; inline-size: var(--shell-start); padding-inline-start: var(--cd-safe-left); background: var(--cd-bg-sidebar); border-inline-end: 1px solid var(--cd-border-subtle); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.rail { display: grid; gap: var(--cd-space-1); padding: calc(var(--cd-safe-top) + var(--cd-space-2)) var(--cd-space-1) var(--cd-space-4); }
+/* One column as wide as the rail: a long agent name is cut with an ellipsis, it never widens the column (which would push every item off centre). */
+.rail { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); padding: calc(var(--cd-safe-top) + var(--cd-space-2)) var(--cd-space-1) var(--cd-space-4); }
 .rail__toggle { justify-self: center; margin-block-end: var(--cd-space-2); }
 .rail__item { flex-direction: column; justify-content: center; gap: var(--cd-space-1); min-block-size: 3.5rem; padding: var(--cd-space-1) 0; font-size: var(--cd-text-xs); font-weight: var(--cd-weight-medium); text-align: center; }
 .rail__item[aria-current="page"] { background: transparent; }
@@ -93,9 +95,10 @@ a.btn { text-decoration: none; }
 .sidebar__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); padding-inline-start: var(--cd-space-2); min-block-size: var(--cd-appbar-h); margin-block-start: calc(var(--cd-space-2) * -1); }
 .nav-list { display: grid; gap: 1px; }
 .nav-label { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rail__item .nav-label { flex: none; }
+.rail__item .nav-label { flex: none; max-inline-size: 100%; }
 .nav-meta { font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); }
-button.nav-item--button { inline-size: 100%; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; }
+/* A nav item that is a button (Search) drops the browser's button look. No weight of its own: the nav item's and the rail's type sizes still apply to it. */
+:where(button.nav-item--button) { inline-size: 100%; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; }
 .nav-foot { margin-block-start: auto; padding-block-start: var(--cd-space-3); border-block-start: 1px solid var(--cd-border-subtle); }
 
 /* ---- The crew (sidebar, drawer and rail): one row for each agent, the ones that need the owner first ---- */
@@ -110,9 +113,8 @@ button.nav-item--button { inline-size: 100%; border: 0; background: transparent;
 .mate__name { font-weight: var(--cd-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mate__line { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mate__time { align-self: start; padding-block-start: var(--cd-space-0-5); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); white-space: nowrap; }
-.rail__crew { list-style: none; margin: var(--cd-space-2) 0; padding: var(--cd-space-2) 0; border-block: 1px solid var(--cd-border-subtle); display: grid; gap: var(--cd-space-1); }
+.rail__crew { list-style: none; margin: var(--cd-space-2) 0; padding: var(--cd-space-2) 0; border-block: 1px solid var(--cd-border-subtle); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); }
 .rail__mate { padding-inline: var(--cd-space-1); gap: var(--cd-space-1-5); }
-.rail__mate .nav-label { flex: 0 1 auto; max-inline-size: 100%; }
 
 /* ---- Talk on a phone: the bridge, a row of the crew's sigils to switch agent ---- */
 .bridge { border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
@@ -140,7 +142,8 @@ button.nav-item--button { inline-size: 100%; border: 0; background: transparent;
 .banners__more { justify-self: start; }
 
 /* ---- Page header + sections (shared by every screen) ---- */
-.page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cd-space-3) var(--cd-space-4); padding-block-end: var(--cd-space-5); }
+/* The header always stands 24 px above the screen's first block, whatever the screen's `--page-gap`. */
+.page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cd-space-3) var(--cd-space-4); padding-block-end: calc(var(--cd-space-6) - var(--page-gap, 0px)); }
 .page-header__who { display: flex; align-items: center; gap: var(--cd-space-3); flex: 1 1 14rem; min-inline-size: 0; }
 .page-header__text { display: grid; gap: var(--cd-space-1); min-inline-size: 0; max-inline-size: var(--cd-measure); }
 .page-header__sub { color: var(--cd-fg-muted); }
@@ -340,7 +343,7 @@ html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--
 /* ==========================================================================
    Control + module placeholder
    ========================================================================== */
-.control { display: grid; gap: var(--cd-space-6); max-inline-size: 48rem; }
+.control { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); max-inline-size: 48rem; }
 .control__search { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-sticky); }
 .control__results { display: grid; gap: var(--cd-space-6); }
 .control__group { display: grid; gap: var(--cd-space-2); }
@@ -348,6 +351,6 @@ html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--
 .settings-search { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-sticky); }
 [data-setting-field][data-highlight="true"] { background: var(--cd-bg-selected); outline: var(--cd-focus-ring-width) solid var(--cd-accent-border); outline-offset: var(--cd-space-1); border-radius: var(--cd-radius-md); transition: background var(--cd-dur-fast) var(--cd-ease-standard), outline-color var(--cd-dur-fast) var(--cd-ease-standard); }
 @media (prefers-reduced-motion: reduce) { [data-setting-field][data-highlight="true"] { transition: none; } }
-.module-page { display: grid; gap: var(--cd-space-5); max-inline-size: 48rem; }
+.module-page { display: grid; gap: var(--page-gap); max-inline-size: 48rem; }
 /* A screen's own app bar buttons (a portal: the chat's Todo and run on a phone). */
 .appbar__slot { display: contents; }

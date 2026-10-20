@@ -1,5 +1,5 @@
 /* Agents › Profiles. Tokens only (design system); logical properties throughout. */
-.pf { display: grid; gap: var(--cd-space-5); min-inline-size: 0; }
+.pf { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .pf-note { font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
 .pf-gap-lg { gap: var(--cd-space-6); }
 .pf-row-sm { gap: var(--cd-space-2); }

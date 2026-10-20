@@ -1,6 +1,5 @@
 /* Workspace › Git. Tokens only (design system); logical properties throughout. */
-.gt { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.gt > .page-header { padding-block-end: 0; }
+.gt { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .gt-top { display: grid; gap: var(--cd-space-3); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }
 .gt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); min-inline-size: 0; }
 .gt-branchchip { gap: var(--cd-space-1); }

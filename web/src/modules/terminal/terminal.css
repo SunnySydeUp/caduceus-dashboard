@@ -1,6 +1,5 @@
 /* Workspace › Terminal. Tokens only (design system); logical properties throughout. */
-.tm { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.tm > .page-header { padding-block-end: 0; }
+.tm { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .tm-bar { display: grid; gap: var(--cd-space-3); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }
 .app[data-size="large"] .tm-bar, .app[data-size="medium"] .tm-bar { grid-template-columns: minmax(12rem, 22rem) minmax(0, 1fr); }
 .tm-folder { min-inline-size: 0; }

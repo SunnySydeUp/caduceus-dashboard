@@ -1,6 +1,6 @@
 /* System › Keys. Tokens only (design system); logical properties throughout. The classes every part of the screen shares are here;
    a part with styles of its own keeps them in its own file. */
-.ky { display: grid; gap: var(--cd-space-6); min-inline-size: 0; }
+.ky { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .ky-head__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-1) var(--cd-space-3); }
 
 /* ---- A section of the page ---- */

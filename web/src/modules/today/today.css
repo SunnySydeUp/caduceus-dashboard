@@ -1,6 +1,6 @@
 /* Today (M8 #03; docs/design/mocks/desk/today.html). Tokens only; logical properties throughout. A phone is one column in the order Needs you, Ready for review, Crew,
    Today's schedule, While you were away; from the sidebar's width (75 rem) the schedule and the away list sit in a second column. */
-.today { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-2); min-inline-size: 0; }
+.today { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--page-gap); min-inline-size: 0; }
 .today__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-8); min-inline-size: 0; align-items: start; }
 .today__col { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-8); align-content: start; min-inline-size: 0; }
 @media (min-width: 75rem) { .today__grid { grid-template-columns: minmax(0, 1fr) 22.5rem; gap: var(--cd-space-10); } }

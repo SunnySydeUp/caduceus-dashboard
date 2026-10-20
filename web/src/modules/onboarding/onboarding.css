@@ -1,5 +1,5 @@
 /* The setup wizard (M5 #16). Tokens only (design system); logical properties throughout. On a phone one step fills the screen and the actions stay at the foot. */
-.ob { display: grid; gap: var(--cd-space-4); min-inline-size: 0; max-inline-size: 46rem; }
+.ob { display: grid; gap: var(--page-gap); min-inline-size: 0; max-inline-size: 46rem; }
 
 .ob-progress { margin: 0; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); color: var(--cd-fg-muted); }
 .ob-progress__count { font-weight: var(--cd-weight-medium); color: var(--cd-fg-default); }

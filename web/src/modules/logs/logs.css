@@ -1,6 +1,5 @@
 /* Observe › Logs. Tokens only (design system); logical properties throughout. */
-.lg { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.lg > .page-header { padding-block-end: 0; }
+.lg { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 
 /* ---- Search and filters: one search box; on a phone the rest is a sheet ---- */
 .lg-tools { display: grid; gap: var(--cd-space-2); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }

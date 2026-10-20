@@ -1,6 +1,5 @@
 /* Workspace › Files. Tokens only (design system); logical properties throughout. */
-.fl { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.fl > .page-header { padding-block-end: 0; }
+.fl { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .fl-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); min-inline-size: 0; align-items: start; }
 .app[data-size="large"] .fl[data-preview="open"] .fl-split, .app[data-size="medium"] .fl[data-preview="open"] .fl-split { grid-template-columns: minmax(16rem, 5fr) minmax(0, 7fr); }
 

@@ -1,6 +1,5 @@
 /* Workspace › Artifacts. Tokens only (design system); logical properties throughout. */
-.art { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.art > .page-header { padding-block-end: 0; }
+.art { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .art-filters { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); align-items: end; min-inline-size: 0; }
 .art-filters .field { min-inline-size: min(100%, 12rem); flex: 1 1 12rem; }
 .art-split { display: grid; gap: var(--cd-gap); grid-template-columns: minmax(0, 1fr); align-items: start; min-inline-size: 0; }

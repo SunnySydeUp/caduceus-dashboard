@@ -1,30 +1,37 @@
 /* The sessions pane (M1 #13). Tokens only; logical properties throughout. A row's height is one fixed value per density (the page measures the first
    row and the first header and lays the rest out from them), so nothing in a row may wrap or grow. */
 /* The pane is a column: the title and New chat, search, the Filters and More buttons, the list (the part that scrolls), and the footer. */
-.sl { align-content: start; }
-.app:not([data-size="compact"]) .chat__list.sl { display: flex; flex-direction: column; gap: var(--cd-space-2); overflow-y: visible; block-size: calc(100dvh - var(--shell-top) - var(--cd-space-8)); }
-.talk-sessions .chat__list.sl { display: flex; flex-direction: column; gap: var(--cd-space-2); overflow-y: visible; }
+/* One inset for the whole pane: the title, the Filters icon, the group headings, the rows and the footer all start `--sl-inset` from its edge, the boxes
+   (search, rows' highlight) span it. `--sl-gap` is the room between the pane's parts. */
+.sl { --sl-inset: var(--cd-card-p); --sl-gap: var(--cd-space-2); align-content: start; }
+.app:not([data-size="compact"]) .chat__list.sl { display: flex; flex-direction: column; gap: var(--sl-gap); overflow-y: visible; block-size: calc(100dvh - var(--shell-top) - var(--cd-space-8)); }
+.talk-sessions .chat__list.sl { display: flex; flex-direction: column; gap: var(--sl-gap); overflow-y: visible; }
 .sl__top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); min-block-size: var(--cd-target-min); }
-.sl__title-text { margin: 0; padding-inline-start: var(--cd-space-2); font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); }
+.sl__title-text { margin: 0; padding-inline-start: var(--sl-inset); font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); }
 .sl__new { margin-inline-start: auto; }
 .sl__bar { position: relative; flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
 .sl__tool { color: var(--cd-fg-muted); }
+/* The Filters button's icon lines up with the rows' text; the button itself still starts at the pane's edge, under the search box. */
+.sl__bar .btn--sm.sl__tool { padding-inline-start: calc(var(--sl-inset) - var(--cd-border-width)); }
 .sl__tool[aria-expanded="true"] { background: var(--cd-bg-surface-2); color: var(--cd-fg-default); }
 .sl__tool[hidden] { display: none; }
 .sl__more-menu { margin-inline-start: auto; }
 .sl__tool .count { margin-inline-start: var(--cd-space-0-5); }
 .sl__found { flex: 1 1 0; min-block-size: 0; overflow-y: auto; }
-.sl__foot { flex: none; margin: 0; padding: var(--cd-space-2) var(--cd-space-2) 0; border-block-start: 1px solid var(--cd-border-subtle); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
-/* The list is the part of the pane that scrolls, and the virtual rows follow it. */
-.sl__body { flex: 1 1 0; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: var(--cd-space-2); min-inline-size: 0; align-content: start; }
+.sl__foot { flex: none; margin: 0; padding: var(--cd-space-2) var(--sl-inset) 0; border-block-start: 1px solid var(--cd-border-subtle); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
+/* The list is the part of the pane that scrolls, and the virtual rows follow it. It sits right under the bar: a group heading carries its own room above it
+   (`--sl-head`), so the first heading stands as far below the Filters bar as every later one stands below the row before it. */
+.sl__body { flex: 1 1 0; min-block-size: 0; margin-block-start: calc(var(--sl-gap) * -1); overflow-y: auto; overscroll-behavior: contain; display: grid; gap: var(--cd-space-2); min-inline-size: 0; align-content: start; }
 .sl__status { margin: 0; }
 .sl__pull { overflow: hidden; display: flex; align-items: center; justify-content: center; gap: var(--cd-space-2); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+/* At rest the pull has no height: it must not take a gap of the list either. */
+.sl__pull[aria-hidden="true"] { display: none; }
 .sl__pull[data-armed] { color: var(--cd-accent-fg); }
 
 .sl__rows { --sl-row: 3rem; --sl-head: 2.25rem; list-style: none; margin: 0; padding: 0; min-inline-size: 0; overflow-anchor: none; }
 .sl__rows[data-density="compact"] { --sl-row: max(2.25rem, var(--cd-target-min)); }
 .sl__spacer { display: block; }
-.sl__header { block-size: var(--sl-head); display: flex; align-items: flex-end; gap: var(--cd-space-2); padding-inline: var(--cd-card-p); padding-block-end: var(--cd-space-1); }
+.sl__header { block-size: var(--sl-head); display: flex; align-items: flex-end; gap: var(--cd-space-2); padding-inline: var(--sl-inset); padding-block-end: var(--cd-space-1); }
 /* Grouped by project, every header is a project's, with its colour, its count and its edit button. */
 .sl__rows[data-grouping="project"] { --sl-head: max(2.75rem, var(--cd-target-min)); }
 .sl__rows[data-grouping="project"] .sl__header { align-items: center; padding-block-end: 0; }
@@ -33,14 +40,14 @@
 .sl-dot { flex: none; inline-size: 0.625rem; block-size: 0.625rem; border-radius: 50%; background: var(--t-solid, var(--cd-tone-neutral-solid)); }
 .sl__header h3 { margin: 0; font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--cd-fg-muted); }
 .sl__item { block-size: var(--sl-row); min-inline-size: 0; position: relative; display: flex; align-items: center; overflow: hidden; border-radius: var(--cd-radius-md); touch-action: pan-y; }
-.sl__row { flex: 1 1 0; display: flex; align-items: center; gap: var(--cd-space-3); block-size: 100%; padding-inline: var(--cd-card-p); color: inherit; text-decoration: none; border-radius: var(--cd-radius-md); min-inline-size: 0; -webkit-touch-callout: none; }
+.sl__row { flex: 1 1 0; display: flex; align-items: center; gap: var(--cd-space-3); block-size: 100%; padding-inline: var(--sl-inset); color: inherit; text-decoration: none; border-radius: var(--cd-radius-md); min-inline-size: 0; -webkit-touch-callout: none; }
 /* A swipe moves the row (and its menu button) aside to show what letting go does; the sides are only there while a finger is moving the row. */
 .sl__item > :not(.sl__swipe) { transform: translateX(var(--swipe, 0px)); transition: transform var(--cd-dur-fast) var(--cd-ease-standard); }
 .sl__item[data-swiping] > :not(.sl__swipe) { transition: none; }
 .sl__item[data-swiping] > .sl__row { background: var(--cd-bg-surface); }
 .sl__swipe { position: absolute; inset: 0; display: flex; justify-content: space-between; visibility: hidden; }
 .sl__item[data-swiping] .sl__swipe { visibility: visible; }
-.sl__swipe-side { display: flex; align-items: center; gap: var(--cd-space-2); padding-inline: var(--cd-card-p); inline-size: 50%; font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); }
+.sl__swipe-side { display: flex; align-items: center; gap: var(--cd-space-2); padding-inline: var(--sl-inset); inline-size: 50%; font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); }
 .sl__swipe-side[data-side="archive"] { justify-content: flex-start; background: var(--cd-tone-info-solid); color: var(--cd-tone-info-on); }
 .sl__swipe-side[data-side="pin"] { justify-content: flex-end; background: var(--cd-tone-warning-solid); color: var(--cd-tone-warning-on); }
 .sl__item[data-swipe="archive"] .sl__swipe-side[data-side="archive"], .sl__item[data-swipe="pin"] .sl__swipe-side[data-side="pin"] { font-weight: var(--cd-weight-bold); text-decoration: underline; }
@@ -82,9 +89,10 @@
   .sl__item > .sl__kebab { pointer-events: none; }
   .sl__item:focus-within > .sl__kebab { pointer-events: auto; }
 }
-/* On the narrowest phones the title needs the room: the gaps shrink. */
+/* On the narrowest phones the title needs the room: the gaps and the pane's inset shrink. */
 @media (max-width: 380px) {
-  .sl__row { gap: var(--cd-space-2); padding-inline: var(--cd-space-2); }
+  .sl { --sl-inset: var(--cd-space-2); }
+  .sl__row { gap: var(--cd-space-2); }
   .sl__icon { display: none; }
 }
 .sl__more { justify-self: center; }

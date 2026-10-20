@@ -15,7 +15,7 @@ export function Settings() {
   const searching = query.trim() !== '';
   const searchId = useId();
   return (
-    <div className="stack">
+    <div className="page-stack">
       <PageHeader title="Settings" subtitle="Choose a section, or search for a setting." />
       <div className="settings-search">
         <label className="sr-only" htmlFor={searchId}>

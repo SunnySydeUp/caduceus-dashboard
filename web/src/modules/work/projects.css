@@ -1,5 +1,5 @@
 /* ---- Work › Projects, one project's overview, and the workspace registry. Tokens only (design system); logical properties throughout. ---- */
-.pj { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-4); max-inline-size: 64rem; min-inline-size: 0; }
+.pj { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--page-gap); max-inline-size: 64rem; min-inline-size: 0; }
 .pj__tree, .pj__workspaces { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
 .pj__head { align-items: center; justify-content: space-between; gap: var(--cd-space-2); flex-wrap: wrap; }
 .pj__head > h2 { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); }

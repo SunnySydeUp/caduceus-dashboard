@@ -1,6 +1,5 @@
 /* Work › Board and the task page. Tokens only (design system); logical properties throughout. */
-.bpage { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
-.bpage > .page-header { padding-block-end: 0; }
+.bpage { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .wb-repair p { margin: var(--cd-space-1) 0 0; font-size: var(--cd-text-sm); }
 .wb-repair a { color: inherit; text-decoration: underline; }
 
@@ -146,8 +145,7 @@ th[aria-sort="ascending"] .tt__sort svg, th[aria-sort="descending"] .tt__sort sv
 @container (max-width: 57.99rem) { .tt td.tt__proj, .tt th.tt__proj { display: none !important; } }
 
 /* ---- Work › Schedules: filters, then jobs that are cards on a narrow container and a table on a wide one ---- */
-.sched { display: grid; gap: var(--cd-space-4); min-inline-size: 0; align-content: start; }
-.sched > .page-header { padding-block-end: 0; }
+.sched { display: grid; gap: var(--page-gap); min-inline-size: 0; align-content: start; }
 .sched__menus { display: grid; gap: var(--cd-space-2); grid-template-columns: repeat(2, minmax(0, 1fr)); min-inline-size: 0; }
 .sched .empty .row { flex-wrap: wrap; justify-content: center; }
 .jtype svg { flex: none; }
@@ -229,7 +227,7 @@ th[aria-sort="ascending"] .tt__sort svg, th[aria-sort="descending"] .tt__sort sv
 
 /* ---- Work › Schedules › the builder and the blueprints ---- */
 .sb { container-type: inline-size; max-inline-size: 46rem; }
-.sb__section { display: grid; gap: var(--cd-space-4); min-inline-size: 0; align-content: start; padding: var(--cd-space-4); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.sb__section { display: grid; gap: var(--cd-space-4); min-inline-size: 0; align-content: start; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
 .sb__section > h2 { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); }
 .sb__when { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
 .sb__row { display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); min-inline-size: 0; }
@@ -256,7 +254,7 @@ th[aria-sort="ascending"] .tt__sort svg, th[aria-sort="descending"] .tt__sort sv
 .sb__bar .btn--primary { margin-inline-start: auto; }
 
 .bp__grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
-.bp__card { display: grid; gap: var(--cd-space-2); align-content: start; padding: var(--cd-space-4); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
+.bp__card { display: grid; gap: var(--cd-space-2); align-content: start; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); min-inline-size: 0; }
 .bp__card .row { justify-content: space-between; align-items: flex-start; gap: var(--cd-space-2); }
 .bp__title { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-ui)/var(--cd-leading-ui) var(--cd-font-sans); overflow-wrap: anywhere; }
 .bp__desc { margin: 0; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }

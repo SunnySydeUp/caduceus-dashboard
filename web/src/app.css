@@ -87,11 +87,12 @@
   line-height: var(--cd-leading-sm);
 }
 
-/* ---- Settings › Security ---- */
+/* ---- Settings screens: one column of setting sections ---- */
 .page-stack {
+  --page-gap: var(--cd-space-6);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--cd-space-6);
+  gap: var(--page-gap);
   max-inline-size: 48rem;
 }
 
@@ -240,15 +241,12 @@
 
 /* ---- Health (M0 #11): Repairs, then the subsystems; the two sit side by side on a large window ---- */
 .hl {
+  --page-gap: var(--cd-space-6);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: var(--cd-space-6);
+  gap: var(--page-gap);
   min-inline-size: 0;
-}
-
-.hl .page-header {
-  padding-block-end: 0;
 }
 
 .app[data-size='large'] .hl {

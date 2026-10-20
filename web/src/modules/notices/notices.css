@@ -1,5 +1,5 @@
 /* Notices (M2 #01, M8 #08): the Inbox's notices and activity feed, kept in Control. Tokens only (design system); logical properties throughout. A phone is one column of cards and a bottom sheet; a wider screen puts the list beside the notice. */
-.nt { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.nt { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .nt-panes { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
 .nt-panes[data-wide] { grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); align-items: start; }
 .nt-list { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }

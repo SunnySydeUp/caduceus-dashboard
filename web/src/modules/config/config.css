@@ -1,6 +1,5 @@
 /* System › Config. Tokens only (design system); logical properties throughout. */
-.cf { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
-.cf > .page-header { padding-block-end: 0; }
+.cf { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 
 /* ---- Search, filters and Jump to ---- */
 .cf-tools { display: grid; gap: var(--cd-space-2); grid-template-columns: minmax(0, 1fr); align-items: end; min-inline-size: 0; }

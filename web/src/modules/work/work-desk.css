@@ -1,6 +1,6 @@
 /* Work's landing view (M8 #07, docs/design/mocks/desk/work.html). Tokens only; logical properties throughout. A row is the agent's sigil, the title with what it is
    doing, its time and one action; on a phone the time moves under the title, as the mock collapses its progress column. */
-.bpage.wd { gap: var(--cd-space-6); }
+.bpage.wd { --page-gap: var(--cd-space-6); }
 .wd-filters { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); min-inline-size: 0; }
 .wd-group { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
 .wd-label { display: flex; align-items: center; gap: var(--cd-space-2); margin: 0; font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); }

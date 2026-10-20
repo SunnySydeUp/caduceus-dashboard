@@ -1,5 +1,5 @@
 /* Observe › Insights and budgets (M5 #05). Tokens only (design system); logical properties throughout. */
-.ins { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
+.ins { display: grid; gap: var(--page-gap); min-inline-size: 0; }
 .ins-period { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
 .ins-period__custom { display: inline-flex; align-items: center; gap: var(--cd-space-2); font-size: var(--cd-text-sm); color: var(--cd-fg-muted); }
 .ins-period__custom .input { inline-size: 5.5rem; }

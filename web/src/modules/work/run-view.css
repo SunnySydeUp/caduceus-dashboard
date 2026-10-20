@@ -1,7 +1,7 @@
 /* Work › Run. Tokens only (design system); logical properties throughout. */
 .rv { min-inline-size: 0; }
 .rv > * { min-inline-size: 0; }
-.rv-facts { padding: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
+.rv-facts { padding: var(--cd-card-p); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
 .rv-outcome { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
 .rv-bar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--cd-space-3); }
 .rv-density { display: grid; gap: var(--cd-space-1); }
