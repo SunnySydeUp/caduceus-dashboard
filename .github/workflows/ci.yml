@@ -13,7 +13,7 @@ jobs:
     # The server tests start a real `hermes serve`, so CI runs the checks that need no Hermes: typecheck, design lint, web tests.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
