@@ -22,4 +22,4 @@ jobs:
       - run: npx tsc -p server --noEmit
       - run: npx tsc -p web --noEmit
       - run: npm run lint:ui
-      - run: npx vitest run web/test
+      - run: npm run test:web

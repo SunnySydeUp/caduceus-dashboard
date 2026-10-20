@@ -21,7 +21,7 @@ npm run lint:ui                                           # design lint (UI chan
 npm test                                                  # server and web tests
 ```
 
-`npm test` starts real `hermes serve` processes in temporary homes, so it needs `hermes` installed. CI runs the typecheck, the design lint and the web tests only.
+`npm test` starts real `hermes serve` processes in temporary homes, so it needs `hermes` installed. `npm run test:web` runs only the web app's tests and needs no Hermes. CI runs the typecheck, the design lint and `npm run test:web`.
 
 ## Rules
 

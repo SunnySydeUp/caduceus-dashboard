@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "npm run build -w web && npm run start -w server",
     "test": "vitest run",
+    "test:web": "vitest run --config vitest.web.config.ts",
     "test:e2e": "npm run build -w web && playwright test",
     "smoke:real": "HERMES_REAL_SMOKE=1 vitest run server/test/real-hermes.smoke.test.ts",
     "contracts:regenerate": "tsx server/scripts/regenerate-contracts.ts",
