@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>New chat launcher (mock)</title>
+<link rel="stylesheet" href="desk.css">
+<link rel="stylesheet" href="talk-calm.css">
+<link rel="stylesheet" href="new-chat.css">
+</head>
+<body data-page="talk" data-agent="general" data-idle="general">
+<div class="app">
+  <div class="col">
+    <div class="cx" data-details="closed">
+
+      <aside class="cx-ses" aria-label="Sessions">
+        <div class="cx-ses__top"><h2>Sessions</h2><a class="b b--quiet b--icon" href="#" data-new="$" aria-label="New chat"><span data-i="plus"></span></a></div>
+        <label class="cx-search"><span data-i="search" data-c="s"></span><span class="sr">Search sessions</span><input type="search" placeholder="Search sessions"></label>
+        <div class="cx-list">
+          <h3 class="cx-grp nc-landed">Today</h3>
+          <a class="cx-row nc-landed" href="#" aria-current="true"><span class="t">New chat</span><time>Now</time></a>
+          <h3 class="cx-grp">Yesterday</h3>
+          <a class="cx-row" href="#" aria-current="true"><span class="t">Add recipe from Instagram</span><time>Yesterday</time></a>
+          <h3 class="cx-grp">This week</h3>
+          <a class="cx-row" href="#"><span class="t">Single word reply request</span><time>Fri</time></a>
+          <a class="cx-row" href="#"><span class="t">Book the plumber</span><time>Thu</time></a>
+          <h3 class="cx-grp">Older</h3>
+          <a class="cx-row" href="#"><span class="t">Plan small project</span><time>12 Oct</time></a>
+          <a class="cx-row" href="#"><span class="t">Compare Hermes options</span><time>12 Oct</time></a>
+          <a class="cx-row" href="#"><span class="t">Budget notes for October</span><time>9 Oct</time></a>
+        </div>
+        <div class="cx-foot">88 sessions</div>
+      </aside>
+
+      <section class="cx-talk" aria-label="Conversation">
+        <nav class="bridge" aria-label="Switch agent">
+          <a href="#"><span data-sg="coder:sm"></span>coder</a>
+          <a href="#" aria-current="true"><span data-sg="general:sm:idle"></span>general</a>
+          <a href="#"><span data-sg="homeassistant:sm"></span>home</a>
+          <a href="#"><span data-sg="librarian:sm"></span>librarian</a>
+          <a href="#"><span data-sg="property:sm"></span>property</a>
+        </nav>
+
+        <header class="cx-head nc-was">
+          <span data-sg="general:sm:idle"></span>
+          <div class="cx-head__id"><b>general</b><span>Add recipe from Instagram</span></div>
+          <a class="b b--sm nc-open" href="#" data-new="general"><span data-i="plus" data-c="s"></span><span class="nc-lbl">New<span class="nc-lbl-x"> chat</span></span></a>
+          <button class="b b--quiet b--icon cx-sesbtn" aria-label="Sessions"><span data-i="rows"></span></button>
+          <button class="b b--quiet b--icon" aria-label="More for this chat"><span data-i="dots-v"></span></button>
+        </header>
+        <header class="cx-head nc-landed">
+          <span data-sg="$:sm:idle"></span>
+          <div class="cx-head__id"><b class="js-agent">general</b><span>New chat</span></div>
+          <a class="b b--sm nc-open" href="#" data-new="$"><span data-i="plus" data-c="s"></span><span class="nc-lbl">New<span class="nc-lbl-x"> chat</span></span></a>
+          <button class="b b--quiet b--icon cx-sesbtn" aria-label="Sessions"><span data-i="rows"></span></button>
+          <button class="b b--quiet b--icon" aria-label="More for this chat"><span data-i="dots-v"></span></button>
+        </header>
+
+        <div class="cx-thread nc-was" role="log" tabindex="0" aria-label="Messages">
+          <div class="me">Move the recipe note into the vault and merge it with the trimmed one.</div>
+          <div class="ag"><span data-sg="general:sm:idle"></span><div>
+            <span class="steps"><span data-i="check" data-c="s"></span><b>3 commands</b> ran, 1 failed</span>
+            <p><b>The move can't simply be retried.</b> The source file no longer exists, and the move would overwrite the trimmed note.</p>
+            <p>Merge is my recommendation: keep the trimmed note and add back its <code>## Notes</code> section. Tell me which option you want.</p>
+          </div></div>
+        </div>
+        <div class="cx-thread nc-landed" aria-label="Messages">
+          <div class="nc-empty">
+            <span data-sg="$:lg:idle"></span>
+            <h2>New chat with <span class="js-agent">general</span></h2>
+            <div class="nc-switch" role="group" aria-label="Start with another agent instead">
+              <span class="muted">Someone else?</span>
+              <a href="#" data-new="coder" aria-label="New chat with coder"><span data-sg="coder:xs"></span>coder</a>
+              <a href="#" data-new="general" aria-label="New chat with general"><span data-sg="general:xs:idle"></span>general</a>
+              <a href="#" data-new="homeassistant" aria-label="New chat with homeassistant"><span data-sg="homeassistant:xs"></span>home</a>
+              <a href="#" data-new="librarian" aria-label="New chat with librarian"><span data-sg="librarian:xs"></span>librarian</a>
+              <a href="#" data-new="property" aria-label="New chat with property"><span data-sg="property:xs"></span>property</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="cx-dock">
+          <div class="cx-compwrap">
+            <div class="cx-comp" data-intent="ask" data-empty="true">
+              <span class="cx-chip"><span class="js-intent">Delegate</span><button aria-label="Back to Ask"><span data-i="x" data-c="s"></span></button></span>
+              <label class="sr" for="msg">Message</label>
+              <textarea id="msg" rows="2" placeholder="Message general"></textarea>
+              <div class="cx-comp__bar">
+                <button class="b b--quiet b--icon" aria-label="Add a file or a saved prompt"><span data-i="plus"></span></button>
+                <button class="cx-ctx" aria-label="Settings for this chat"><span class="mono">claude-haiku-5-5</span><span class="faint">hermes-dashboard</span><span data-i="chev-d" data-c="s"></span></button>
+                <span class="grow"></span>
+                <button class="b b--quiet b--icon cx-mic" aria-label="Voice"><span data-i="mic"></span></button>
+                <span class="cx-send"><button class="send" aria-label="Send"><span data-i="send"></span></button><button class="cx-send__more" aria-label="How to send"><span data-i="chev-u" data-c="s"></span></button></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<script>
+  // Fills the page for the agent in the address before desk.js draws sigils (`$` in data-sg is the agent).
+  {
+    const q = new URLSearchParams(location.search);
+    const agent = q.get('agent') ?? 'general';
+    if (q.get('step') === 'landed') document.body.dataset.step = 'landed';
+    for (const el of document.querySelectorAll('[data-sg^="$"]')) el.dataset.sg = el.dataset.sg.replace('$', agent);
+    for (const el of document.querySelectorAll('.js-agent')) el.textContent = agent;
+    for (const el of document.querySelectorAll('[data-new="$"]')) el.dataset.new = agent;
+    if (document.body.dataset.step === 'landed') {
+      document.body.dataset.agent = agent;
+      document.body.dataset.idle = agent;
+      for (const a of document.querySelectorAll('.bridge a')) {
+        if (a.querySelector('[data-sg]').dataset.sg.startsWith(`${agent}:`)) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      }
+      // The switcher lists the other agents only.
+      document.querySelector(`.nc-switch [data-new="${agent}"]`)?.remove();
+      const msg = document.getElementById('msg');
+      msg.placeholder = `Message ${agent}`;
+      if (q.has('draft')) { msg.value = q.get('draft'); document.querySelector('.cx-comp').dataset.empty = 'false'; }
+    }
+  }
+</script>
+<script type="module" src="desk.js"></script>
+<script type="module" src="new-chat.js"></script>
+</body>
+</html>

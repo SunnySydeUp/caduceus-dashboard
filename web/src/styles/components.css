@@ -96,7 +96,7 @@ kbd, .kbd { display: inline-grid; place-items: center; min-inline-size: 1.25rem;
 
 /* ---- Chips ---- */
 .chip { position: relative; display: inline-flex; align-items: center; gap: var(--cd-space-1-5); block-size: var(--cd-control-h-sm); padding-inline: var(--cd-space-3); border-radius: var(--cd-radius-full); border: 1px solid var(--cd-border-default); background: var(--cd-bg-surface); color: var(--cd-fg-muted); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); cursor: pointer; white-space: nowrap; max-inline-size: 100%; }
-button.chip::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
+:is(button, a).chip::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
 .chip[aria-pressed="true"], .chip[aria-selected="true"] { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); color: var(--cd-accent-fg); }
 @media (hover: hover) { .chip:hover { background: var(--cd-overlay-hover); color: var(--cd-fg-default); } .chip[aria-pressed="true"]:hover { background: var(--cd-accent-soft-hover); } }
 .chip[aria-pressed="true"] .subtle, .chip[aria-selected="true"] .subtle { color: inherit; }

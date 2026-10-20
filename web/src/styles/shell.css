@@ -115,6 +115,21 @@ a.btn { text-decoration: none; }
 .mate__time { align-self: start; padding-block-start: var(--cd-space-0-5); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); white-space: nowrap; }
 .rail__crew { list-style: none; margin: var(--cd-space-2) 0; padding: var(--cd-space-2) 0; border-block: 1px solid var(--cd-border-subtle); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); }
 .rail__mate { padding-inline: var(--cd-space-1); gap: var(--cd-space-1-5); }
+/* A new chat with one agent (Nav.tsx): a + on its crew row, over the row's time in the sidebar and on the sigil's corner in the rail. It shows while the pointer is
+   over the row or the keyboard is on it (a touch screen has no hover: there it shows only for a keyboard); while hidden it lets taps through to the row, which
+   opens the agent's latest chat. */
+.crew__slot { position: relative; }
+.crew__new { position: absolute; inset-block-start: 50%; inset-inline-end: var(--cd-space-2); translate: 0 -50%; opacity: 0; pointer-events: none; transition: opacity var(--cd-dur-fast) var(--cd-ease-standard); }
+.crew__slot:has(:focus-visible) .crew__new { opacity: 1; pointer-events: auto; }
+.crew__slot:has(:focus-visible) .mate__time { visibility: hidden; }
+@media (hover: hover) {
+  .crew__slot:hover .crew__new { opacity: 1; pointer-events: auto; }
+  .crew__slot:hover .mate__time { visibility: hidden; }
+}
+.rail__crew .crew__new { inset-block-start: 0; inset-inline-end: 0; translate: none; inline-size: 1.5rem; block-size: 1.5rem; min-block-size: 0; min-inline-size: 0; padding: 0; border-radius: var(--cd-radius-full); }
+/* A finger (shown to a keyboard on a touch screen) gets the full target in the sidebar and the rail. */
+@media (pointer: coarse) { .crew__slot .crew__new { inline-size: var(--cd-target-min); block-size: var(--cd-target-min); } }
+@media (prefers-reduced-motion: reduce) { .crew__new { transition: none; } }
 
 /* ---- Talk on a phone: the bridge, a row of the crew's sigils to switch agent ---- */
 .bridge { border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
@@ -124,13 +139,13 @@ a.btn { text-decoration: none; }
 .bridge__item:active { background: var(--cd-overlay-pressed); }
 .bridge__item[aria-current="page"] { background: var(--cd-bg-surface-2); color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); }
 .bridge__name { max-inline-size: 4.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* New chat, first in the strip: a + in a sigil-sized square with a dashed edge, so it reads as an action and not as one more agent. */
+.bridge__plus { display: grid; place-items: center; inline-size: 2.125rem; block-size: 2.125rem; border-radius: 28%; border: 1.5px dashed var(--cd-border-strong); color: var(--cd-fg-default); }
 
 /* ---- Work sub-navigation: chips for the modules placed in Work ---- */
 .subnav { border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
 .subnav__inner { display: flex; gap: var(--cd-space-2); overflow-x: auto; scrollbar-width: none; padding: var(--cd-space-2) var(--cd-page-px); max-inline-size: var(--cd-page-max); margin-inline: auto; }
 .subnav .chip { text-decoration: none; flex: none; }
-/* A link chip gets the hit area a button chip has (`button.chip::after`): 44 px for a finger. */
-.subnav .chip::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
 .subnav .chip[aria-current="page"] { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); color: var(--cd-accent-fg); }
 
 /* ---- Banner stack ---- */

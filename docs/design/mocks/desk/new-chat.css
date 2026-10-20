@@ -1,0 +1,27 @@
+/* New chat, no launcher (mock). Each way in opens the new chat with its agent chosen; the empty chat offers the other agents until the first
+   message. Tokens from desk.css; classes start with nc- because desk.css and talk-calm.css own the short ones. */
+
+/* ---- Ways in: New chat in Talk's header, and a + on each crew sigil (hover or focus on a computer) ---- */
+.nc-lbl { line-height: 1; }
+.mate-wrap { position: relative; inline-size: 100%; }
+.mate-new { position: absolute; inset-block-start: 0; inset-inline-end: 10px; inline-size: 26px; block-size: 26px; border-radius: 50%;
+  background: var(--ink); color: var(--on-ink); display: grid; place-items: center; box-shadow: 0 0 0 2px var(--side); opacity: 0; scale: .8;
+  transition: opacity .15s var(--ease), scale .15s var(--ease); }
+.mate-new svg.i { inline-size: 14px; block-size: 14px; stroke-width: 2.4; }
+.mate-wrap:hover .mate-new, .mate-wrap:focus-within .mate-new, .mate-wrap[data-hover] .mate-new { opacity: 1; scale: 1; }
+@media (max-width: 899px), (pointer: coarse) { .mate-new { display: none; } }
+
+/* ---- The new chat ---- */
+body:not([data-step="landed"]) .nc-landed, body[data-step="landed"] .nc-was { display: none; }
+.cx-thread.nc-landed { align-content: center; }
+.nc-empty { display: grid; justify-items: center; gap: 14px; text-align: center; }
+.nc-empty h2 { font-size: 20px; font-weight: 650; letter-spacing: -.02em; }
+.nc-switch { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; max-inline-size: 520px; font-size: 14px; }
+.nc-switch > span { flex-basis: 100%; margin-block-end: 2px; }
+.nc-switch a { display: inline-flex; align-items: center; gap: 8px; min-block-size: 36px; padding: 0 12px 0 6px; border: 1px solid var(--hair); border-radius: 999px; background: var(--surface); color: var(--muted); font-weight: 500; }
+.nc-switch a:hover { border-color: var(--hair-strong); color: var(--ink); }
+@media (pointer: coarse) { .nc-switch a { min-block-size: 44px; } }
+
+@media (max-width: 899px) {
+  .nc-lbl-x { display: none; }
+}

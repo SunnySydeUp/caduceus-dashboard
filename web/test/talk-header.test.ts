@@ -38,17 +38,18 @@ describe('every control the header had is still reachable', () => {
 });
 
 describe('the header', () => {
-  test('is Details, View and More on a large screen, with Sessions first on a phone', () => {
-    expect(headerControls({ compact: false, titled: true, viewable: true })).toEqual(['details', 'view', 'more']);
+  test('is New chat, Details, View and More on a large screen; on a phone Sessions, Details, View and More, with no room for New chat beside the name', () => {
+    expect(headerControls({ compact: false, titled: true, viewable: true })).toEqual(['new', 'details', 'view', 'more']);
     expect(headerControls({ compact: true, titled: true, viewable: true })).toEqual(['sessions', 'details', 'view', 'more']);
   });
 
-  test('has no More menu before the chat has a session to act on', () => {
+  test('has no New chat and no More menu before the chat has a session: it is a new chat already', () => {
     expect(headerControls({ compact: false, titled: false, viewable: true })).toEqual(['details', 'view']);
+    expect(headerControls({ compact: true, titled: false, viewable: true })).toEqual(['sessions', 'details', 'view']);
   });
 
   test('has no View menu in a Fast chat, which has no activity and no transcript tools', () => {
-    expect(headerControls({ compact: false, titled: true, viewable: false })).toEqual(['details', 'more']);
+    expect(headerControls({ compact: false, titled: true, viewable: false })).toEqual(['new', 'details', 'more']);
   });
 });
 

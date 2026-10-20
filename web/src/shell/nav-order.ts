@@ -39,6 +39,8 @@ export interface CrewRow {
   since: number | undefined;
   /** Talk, scoped to this agent's profile. */
   path: string;
+  /** A new chat with this agent: Talk's new-chat screen, scoped to its profile. Absent when no module is placed in Talk. */
+  newChat?: string;
 }
 
 export interface ControlSection<Screen> {
@@ -78,7 +80,15 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
   });
   const talk = destinations.find(({ id }) => id === 'talk');
   const rows = [...crew].sort(byNeed).map(
-    ({ profile, state, line, since }): CrewRow => ({ profile, state, stateLabel: crewStateLabel[state], line, since, path: withProfile(talk?.path ?? '/', profile) }),
+    ({ profile, state, line, since }): CrewRow => ({
+      profile,
+      state,
+      stateLabel: crewStateLabel[state],
+      line,
+      since,
+      path: withProfile(talk?.path ?? '/', profile),
+      ...(talk ? { newChat: withProfile(`${talk.path}/new`, profile) } : {}),
+    }),
   );
   return { destinations, crew: rows, control: registry.controlGroups() };
 }

@@ -71,8 +71,17 @@
 /* The View menu: the roles are switches with a tick, the activity mode is a segmented control that fills the panel. */
 .talk__view { min-inline-size: 15rem; }
 .talk__view .seg button { padding-inline: var(--cd-space-2); }
-.app[data-size="compact"] .talk__details-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* On a phone Details is an icon; its word stays for screen readers. */
+.app[data-size="compact"] .talk__button-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .app[data-size="compact"] .talk__details-button { inline-size: max(var(--cd-control-h), var(--cd-target-min)); padding: 0; justify-content: center; }
+
+/* The start of a new chat (NewChatStart.tsx): the agent, and the rest of the crew as chips. Rows of chips are spaced so their enlarged targets do not overlap. */
+.chat__start { display: grid; justify-items: center; gap: var(--cd-space-3); padding-block: var(--cd-space-12) var(--cd-space-8); text-align: center; }
+.chat__start-title { margin: 0; font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); }
+.chat__start-others { display: grid; justify-items: center; gap: var(--cd-space-2); }
+.chat__start-others p { margin: 0; }
+.chat__start-others ul { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--cd-space-3) var(--cd-space-2); margin: 0; padding: 0; list-style: none; }
+.chat__start-others .chip { text-decoration: none; }
 
 /* Details over the thread on a tablet: pinned to the end edge below the top bar, scrolling on its own. */
 .talk__panel--over { position: fixed; inset-block: var(--shell-top) 0; inset-inline-end: 0; /* the block start is set by DetailsPanel, below the Details button */ z-index: var(--cd-z-banner); inline-size: min(21rem, 100%); max-block-size: none; padding: var(--cd-space-4); background: var(--cd-bg-canvas); border-inline-start: 1px solid var(--cd-border-subtle); box-shadow: var(--cd-shadow-popover); }

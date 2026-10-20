@@ -3,14 +3,15 @@
 // Pure: the screen gives each line its `run`.
 import type { IconName } from '../../icons.tsx';
 
-export type HeaderControl = 'sessions' | 'details' | 'view' | 'more';
+export type HeaderControl = 'new' | 'sessions' | 'details' | 'view' | 'more';
 
 /**
- * The buttons in the header, in order: Sessions only on a phone (where the list is a sheet), View unless the chat is a Fast one (no agent activity, no transcript to
- * work on), and More only once the chat has a session to act on.
+ * The buttons in the header, in order: New chat once the chat has a session (before that it is a new chat already) and only above a phone's width (a phone has no
+ * room for it beside the agent's name: its agent strip starts a new chat), Sessions only on a phone (where the list is a sheet), View unless the chat is a Fast one
+ * (no agent activity, no transcript to work on), and More only once the chat has a session to act on.
  */
 export function headerControls({ compact, titled, viewable }: { compact: boolean; titled: boolean; viewable: boolean }): HeaderControl[] {
-  return [...(compact ? ['sessions' as const] : []), 'details', ...(viewable ? ['view' as const] : []), ...(titled ? ['more' as const] : [])];
+  return [...(titled && !compact ? ['new' as const] : []), ...(compact ? ['sessions' as const] : []), 'details', ...(viewable ? ['view' as const] : []), ...(titled ? ['more' as const] : [])];
 }
 
 export type ThreadActionId = 'rename' | 'pin' | 'task' | 'archive' | 'regenerate-title' | 'fork' | 'undo' | 'handoff-summary' | 'branch' | 'export' | 'share' | 'terminal';

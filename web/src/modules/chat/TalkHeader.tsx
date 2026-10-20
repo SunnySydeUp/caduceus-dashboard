@@ -1,10 +1,12 @@
-// Talk's header (M8 #09): the agent's sigil with its state, its name, the session's title, a Details button, a View menu and a More menu. Nothing else: the breadcrumb, the
-// terminal button and the profile chip are gone from this screen's top bar, and what the header used to hold (Make this a task, the Chat actions) is a line
-// of the More menu. On a phone a Sessions button opens the list as a sheet. What each button does is the screen's (`Chat.tsx`); the menu's lines are `talk-header.ts`'s.
+// Talk's header (M8 #09): the agent's sigil with its state, its name, the session's title, a New chat button, a Details button, a View menu and a More menu. Nothing
+// else: the breadcrumb, the terminal button and the profile chip are gone from this screen's top bar, and what the header used to hold (Make this a task, the Chat
+// actions) is a line of the More menu. New chat starts a new chat with this agent; it is absent while the chat is new itself, and on a phone, where the agent
+// strip has it. On a phone a Sessions button opens the list as a sheet. What each button does is the screen's (`Chat.tsx`); the menu's lines are `talk-header.ts`'s.
 // The header stays under the app bar while the thread scrolls (`talk.css`), so that a button is never half behind the bar, and it tells the conversation how tall it is
 // (`--talk-header-h`) for what else sticks under it: the find bar, the Details column, the outline.
 import { Fragment, useLayoutEffect, useRef, type ReactNode, type Ref } from 'react';
 import { Icon } from '../../icons.tsx';
+import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { PopoverMenu } from '../../shell/PopoverMenu.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
@@ -68,6 +70,12 @@ export function TalkHeader({ profile, member, subtitle, compact, detailsOpen, de
         subtitle={subtitle}
         actions={
           <>
+            {controls.includes('new') && (
+              <AppLink className="btn btn--secondary btn--sm talk__new-button" to={`/chat/new?profile=${encodeURIComponent(profile)}`}>
+                <Icon name="plus" small />
+                <span className="talk__button-label">New chat</span>
+              </AppLink>
+            )}
             {controls.includes('sessions') && (
               <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label="Sessions" aria-haspopup="dialog" onClick={onSessions}>
                 <Icon name="rows" />
@@ -75,7 +83,7 @@ export function TalkHeader({ profile, member, subtitle, compact, detailsOpen, de
             )}
             <button ref={detailsButton} type="button" className="btn btn--secondary btn--sm talk__details-button" aria-expanded={detailsOpen} aria-controls={detailsControls} onClick={onDetails}>
               <Icon name="sliders" small />
-              <span className="talk__details-label">Details</span>
+              <span className="talk__button-label">Details</span>
               {waiting > 0 && (
                 <>
                   <span className="count" aria-hidden="true">

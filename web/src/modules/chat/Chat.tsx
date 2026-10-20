@@ -91,6 +91,7 @@ import { editableText, plainText, removedByEdit, type MessageActionId } from './
 import { closeAllLayers } from '../../overlays/layers.ts';
 import { offerPrefill, takePrefill } from './prefill-handoff.ts';
 import { useNewChatStart } from './use-new-chat-start.ts';
+import { NewChatStart } from './NewChatStart.tsx';
 import { WorktreeBar } from './Worktree.tsx';
 import { interruptionOf } from './turn-recovery.ts';
 import type { SessionItem } from './sessions-model.ts';
@@ -971,6 +972,7 @@ function Conversation({ profile, storedId }: { profile: string; storedId: string
             onAct={act}
             tail={
               <>
+                {storedId === undefined && !started && <NewChatStart profile={profile} />}
                 {state.turn?.status === 'waiting' && (
                   <p className="subtle" role="status">
                     Hermes is starting…

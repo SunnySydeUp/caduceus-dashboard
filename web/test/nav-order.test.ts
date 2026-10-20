@@ -82,7 +82,7 @@ describe('the crew rows', () => {
     expect(order([member('z', 'idle'), member('a', 'idle'), member('m', 'idle')])).toEqual(['z', 'a', 'm']);
   });
 
-  test('give each row the sigil name, state, state words, live line and time, and open that agent in Talk, scoped to its profile', () => {
+  test('give each row the sigil name, state, state words, live line and time, open that agent in Talk, and start a new chat with it, scoped to its profile', () => {
     const [row] = deskNavigation(registry, [{ profile: 'coder', state: 'waiting', line: 'Wants to push feat/x', since: 1_700_000_000_000 }]).crew;
     expect(row).toEqual({
       profile: 'coder',
@@ -91,7 +91,13 @@ describe('the crew rows', () => {
       line: 'Wants to push feat/x',
       since: 1_700_000_000_000,
       path: '/chat?profile=coder',
+      newChat: '/chat/new?profile=coder',
     });
+  });
+
+  test('offer no new chat when no module is placed in Talk', () => {
+    const [row] = deskNavigation(registryOf(testModule('home', 'today')), [member('coder', 'idle')]).crew;
+    expect(row).not.toHaveProperty('newChat');
   });
 
   test('do not change the crew they were given', () => {

@@ -68,10 +68,10 @@ export const shellHelp: ModuleHelp = {
         { h: 'The crew' },
         {
           ul: [
-            'The crew is one row for each agent (each [[profile-scope|profile]]): its sigil, its name, one line about what it is doing or asking, and since when. Choose a row to open that agent in Talk.',
+            'The crew is one row for each agent (each [[profile-scope|profile]]): its sigil, its name, one line about what it is doing or asking, and since when. Choose a row to open that agent’s latest conversation in Talk. On a computer, pointing at a row (or tabbing to it) shows a + that starts a new chat with that agent instead.',
             'The ring and the small badge on a sigil show how the agent stands: waiting for you, working, finished something you have not opened, or blocked. The words are always written next to it as well.',
             'The agents that need you come first, so the top of the list is where to look.',
-            'On a phone, Talk has a row of the same sigils under the app bar. Choose one to switch agent.',
+            'On a phone, Talk has a row of the same sigils under the app bar. Choose one to switch agent. New chat, first in the row, starts a new chat with the agent you are on.',
           ],
         },
         { h: 'The app bar' },

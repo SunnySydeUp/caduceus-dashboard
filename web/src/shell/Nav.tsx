@@ -141,12 +141,13 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
       {crew.length > 0 && (
         <ul className="rail__crew" aria-label="Crew">
           {crew.map((row) => (
-            <li key={row.profile}>
+            <li key={row.profile} className="crew__slot">
               <AppLink className="nav-item rail__item rail__mate" to={row.path} aria-current={isCurrentAgent(row) ? 'page' : undefined}>
                 <Sigil name={row.profile} size="sm" state={row.state} />
                 <span className="nav-label">{row.profile}</span>
                 <span className="sr-only">{row.stateLabel}</span>
               </AppLink>
+              <NewChatWith row={row} />
             </li>
           ))}
         </ul>
@@ -157,18 +158,34 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   );
 }
 
+/**
+ * A new chat with one agent of the crew: a small + on its row that shows when the pointer is over the row or the keyboard is on it. The row itself still opens the
+ * agent's latest chat.
+ */
+function NewChatWith({ row }: { row: CrewRow }) {
+  if (row.newChat === undefined) return null;
+  return (
+    <AppLink className="btn btn--secondary btn--icon btn--sm crew__new" to={row.newChat} aria-label={`New chat with ${row.profile}`} title={`New chat with ${row.profile}`}>
+      <Icon name="plus" small />
+    </AppLink>
+  );
+}
+
 /** One agent of the crew in the sidebar: its sigil with the live state, its name, what it is doing and since when. It opens that agent's thread. */
 function CrewMate({ row, now, current }: { row: CrewRow; now: number; current: boolean }) {
   return (
-    <AppLink className="mate" to={row.path} aria-current={current ? 'page' : undefined}>
-      <Sigil name={row.profile} size="md" state={row.state} />
-      <span className="mate__text">
-        <span className="mate__name">{row.profile}</span>
-        <span className="sr-only">: {row.stateLabel}. </span>
-        <small className="mate__line">{row.line}</small>
-      </span>
-      <span className="mate__time">{crewAge(row.since, now)}</span>
-    </AppLink>
+    <>
+      <AppLink className="mate" to={row.path} aria-current={current ? 'page' : undefined}>
+        <Sigil name={row.profile} size="md" state={row.state} />
+        <span className="mate__text">
+          <span className="mate__name">{row.profile}</span>
+          <span className="sr-only">: {row.stateLabel}. </span>
+          <small className="mate__line">{row.line}</small>
+        </span>
+        <span className="mate__time">{crewAge(row.since, now)}</span>
+      </AppLink>
+      <NewChatWith row={row} />
+    </>
   );
 }
 
@@ -196,7 +213,7 @@ function DeskNav() {
           </h2>
           <ul>
             {crew.map((row) => (
-              <li key={row.profile}>
+              <li key={row.profile} className="crew__slot">
                 <CrewMate row={row} now={now} current={isCurrentAgent(row)} />
               </li>
             ))}
@@ -265,15 +282,28 @@ export function SubNav() {
   );
 }
 
-/** Talk on a phone: a row of the crew's sigils to switch agent without going back to the list. */
+/**
+ * Talk on a phone: a row of the crew's sigils to switch agent without going back to the list. It starts with New chat, a new chat with the agent the tab is on: a
+ * phone's Talk header has no room for that button beside the agent's name.
+ */
 export function Bridge() {
   const { crew } = useDesk();
   const current = useCurrentPlacement();
   const isCurrentAgent = useIsCurrentAgent();
   if (current !== 'talk' || crew.length === 0) return null;
+  const agent = crew.find(isCurrentAgent);
   return (
     <nav className="bridge" aria-label="Switch agent">
       <ul className="bridge__list">
+        <li>
+          {/* With no agent of the crew current, the address keeps the tab's own profile (AppLink). */}
+          <AppLink className="bridge__item bridge__new" to={agent?.newChat ?? '/chat/new'} aria-label={agent ? `New chat with ${agent.profile}` : 'New chat'}>
+            <span className="bridge__plus">
+              <Icon name="plus" />
+            </span>
+            <span className="bridge__name">New chat</span>
+          </AppLink>
+        </li>
         {crew.map((row) => (
           <li key={row.profile}>
             <AppLink className="bridge__item" to={row.path} aria-current={isCurrentAgent(row) ? 'page' : undefined}>
