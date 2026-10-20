@@ -1,6 +1,6 @@
 {
   "name": "caduceus-dashboard",
-  "description": "Mobile-first PWA dashboard for Hermes Agent, reached from your phone over Tailscale Serve.",
+  "description": "Your Hermes agents, in your pocket. A mobile-first dashboard to chat with your agents, approve what they ask, review finished work and run their schedules. Self-hosted on your Mac, reached privately over Tailscale. Unofficial companion to Hermes Agent.",
   "license": "MIT",
   "author": "Sunny Phung (https://github.com/SunnySydeUp)",
   "repository": {

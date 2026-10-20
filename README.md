@@ -1,8 +1,8 @@
 # Caduceus Dashboard
 
-A mobile-first dashboard for [Hermes Agent](https://github.com/NousResearch/hermes-agent). Talk to your agents, answer their approvals and questions, plan and review their work, and look after Hermes, from your phone.
+**Your Hermes agents, in your pocket.** A mobile-first dashboard for [Hermes Agent](https://github.com/NousResearch/hermes-agent): chat with your agents, approve what they ask, review finished work and run their schedules, all from your phone. It is self-hosted on your Mac and reached privately over Tailscale.
 
-Hermes stays the source of truth. Caduceus launches its own private `hermes serve` on loopback and talks to it only through Hermes's own interfaces (REST, the `/api/ws` JSON-RPC gateway and a few WebSockets). You reach it from your phone over [Tailscale Serve](https://tailscale.com/kb/1312/serve), on your tailnet only.
+Hermes stays the source of truth. Caduceus launches its own private `hermes serve` on loopback and talks to it only through Hermes's own interfaces (REST, the `/api/ws` JSON-RPC gateway and a few WebSockets). Your phone reaches it through [Tailscale Serve](https://tailscale.com/kb/1312/serve), on your tailnet only.
 
 > **Unofficial.** Caduceus is a personal project. It is not made by or affiliated with Nous Research.
 
