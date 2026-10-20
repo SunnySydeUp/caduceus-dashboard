@@ -1,86 +1,203 @@
-# Caduceus Dashboard
+<!-- prettier-ignore -->
+<div align="center">
 
-**Your Hermes agents, in your pocket.** A mobile-first dashboard for [Hermes Agent](https://github.com/NousResearch/hermes-agent): chat with your agents, approve what they ask, review finished work and run their schedules, all from your phone. It is self-hosted on your Mac and reached privately over Tailscale.
+<img src="web/public/icons/icon.svg" alt="" align="center" height="88" />
 
-Hermes stays the source of truth. Caduceus launches its own private `hermes serve` on loopback and talks to it only through Hermes's own interfaces (REST, the `/api/ws` JSON-RPC gateway and a few WebSockets). Your phone reaches it through [Tailscale Serve](https://tailscale.com/kb/1312/serve), on your tailnet only.
+# Caduceus
 
-> **Unofficial.** Caduceus is a personal project. It is not made by or affiliated with Nous Research.
+**Your Hermes agents, in your pocket.**
 
-<p align="center"><img src="docs/design/mocks/desk/screenshots/today-390-light.png" width="300" alt="Today on a phone: cards for approvals and questions that need you, with the Today, Talk, Work and More tabs below (design mock)"></p>
+[![Build](https://img.shields.io/github/actions/workflow/status/SunnySydeUp/caduceus-dashboard/ci.yml?style=flat-square&label=Build)](https://github.com/SunnySydeUp/caduceus-dashboard/actions)
+[![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-0.22.2-0053fd?style=flat-square)](https://github.com/NousResearch/hermes-agent)
+![Node.js](https://img.shields.io/badge/Node.js->=22.12-3c873a?style=flat-square)
+![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey?style=flat-square&logo=apple)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
-## What it does
+⭐ If you find Caduceus useful, star it on GitHub. It helps a lot!
 
-- **Today**: what needs you (approvals, questions, task reviews), work that is ready for review, the day's schedule, and what happened while you were away.
-- **Talk**: chat with each agent, with its sessions beside the thread (search, pin, archive, fork). Ask, delegate a background run, or turn a message into a schedule.
-- **Work**: everything with a lifecycle by state: waiting on you, running, ready for review, scheduled. Board, tasks, schedules, playbooks and projects.
-- **Control**: profiles, keys, channels, memory, skills, files, terminal, git, logs, insights, health, backups and settings.
-- **An installable PWA**: works on a phone, a tablet and a desktop; push notifications; offline help.
+[Features](#features) • [How it works](#how-it-works) • [Get started](#getting-started) • [Use it from your phone](#use-it-from-your-phone) • [Security](#security) • [Documentation](#documentation) • [FAQ](#faq)
 
-## Security model
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/today-desktop-dark.png">
+  <img src="docs/images/today-desktop-light.png" alt="Caduceus on a desktop: Today shows the approvals and questions that need you, today's schedule and what happened while you were away, with the crew of agents in the sidebar" width="900">
+</picture>
 
-Caduceus can make an AI agent run commands and change files, so its defaults are strict:
+</div>
 
-- It listens on `127.0.0.1` only. Remote access is through Tailscale Serve (never Funnel), for the Tailscale logins you name.
-- Sign-in uses an owner password, then passkeys (WebAuthn).
-- **Risk tiers.** Every Hermes operation has a tier in `contracts/policy/`. Anything not in the map is denied. Riskier actions need a confirmation, a fresh passkey check, or a typed name. Every action is audited.
-- **A file guard** blocks secrets, credentials, keys and places that run code later (shell startup files, Hermes hooks, skills, plugins).
-- Secrets never reach the browser, the logs or share links. A strict CSP is on every answer.
+Caduceus is a mobile-first dashboard for [Hermes Agent](https://github.com/NousResearch/hermes-agent). Chat with your agents, answer what they ask, hand them work, review what they finished and keep their schedules, from your phone or any browser. It runs on your Mac next to Hermes and is reached privately over your [Tailscale](https://tailscale.com) network, so nothing is exposed to the internet.
 
-Details: [`AGENTS.md`](AGENTS.md) ("Security rules") and [`docs/design/architecture.md`](docs/design/architecture.md). To report a vulnerability, see [`SECURITY.md`](SECURITY.md).
+> [!IMPORTANT]
+> Caduceus is an independent, community project. It is not made by or affiliated with Nous Research.
 
-## Requirements
+## Features
 
-- macOS. The background service is a LaunchAgent, and Caduceus is built and tested on macOS only. `npm run dev` may work on Linux, but that is untested.
-- Node 22.12 or newer.
-- Hermes Agent at the version Caduceus is pinned to: see `contracts/hermes/pin.json` (now 0.22.2). With a different version, Caduceus goes read-only until it is re-pinned.
-- Tailscale with HTTPS certificates enabled, to use it from your phone.
+- **Today**: one screen for what needs you right now. Approvals, questions and task reviews are answered in place, next to the day's schedule and what your agents did while you were away.
+- **Talk**: a thread per agent with all its sessions beside it (search, pin, archive, fork). Ask a question, delegate a background run, or turn a message into a recurring schedule.
+- **Work**: everything with a lifecycle, grouped by state: waiting on you, running, ready for review, scheduled. Board, tasks, schedules, playbooks and projects are views of the same work.
+- **Your crew at a glance**: every Hermes profile is an agent with its own sigil and live status line, so you always see who is busy and who is waiting.
+- **Control**: profiles, models, keys, messaging channels (Telegram, Slack, WhatsApp), memory, skills, tools, plugins, files, git, logs, insights, health, backups and settings.
+- **Built for the phone**: an installable PWA with push notifications, voice input, gestures with visible alternatives, a command palette (<kbd>⌘</kbd> <kbd>K</kbd>) and help on every screen, even offline.
+- **Safe by default**: passkeys, risk tiers for every action, a file guard and an audit log. See [Security](#security).
 
-## Quick start
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/today-phone-dark.png">
+        <img src="docs/images/today-phone-light.png" alt="Today on a phone: an approval card asking to turn the heating off, with answer buttons" width="260">
+      </picture>
+      <br><b>Today</b>: decide in place
+    </td>
+    <td align="center" width="33%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/talk-phone-dark.png">
+        <img src="docs/images/talk-phone-light.png" alt="Talk on a phone: the crew's sigils at the top and a conversation with the general agent" width="260">
+      </picture>
+      <br><b>Talk</b>: one thread per agent
+    </td>
+    <td align="center" width="33%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/images/work-phone-dark.png">
+        <img src="docs/images/work-phone-light.png" alt="Work on a phone: tasks grouped as waiting on you, running and ready for review" width="260">
+      </picture>
+      <br><b>Work</b>: everything by state
+    </td>
+  </tr>
+</table>
 
-```sh
+<details>
+<summary><b>More screenshots (desktop)</b></summary>
+<br>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/talk-desktop-dark.png">
+  <img src="docs/images/talk-desktop-light.png" alt="Talk on a desktop: the crew rail, the agent's sessions list and the conversation" width="900">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/work-desktop-dark.png">
+  <img src="docs/images/work-desktop-light.png" alt="Work on a desktop: work grouped by state with agent filters" width="900">
+</picture>
+
+</details>
+
+## How it works
+
+Hermes stays the source of truth. Caduceus starts its own private `hermes serve` on loopback and talks to it only through Hermes's own interfaces: REST, the `/api/ws` JSON-RPC gateway and a few WebSockets. It keeps no copy of your agents' data, only what Hermes has no place for (sign-in, passkeys, the audit log), in `~/.hermes/caduceus/`.
+
+```mermaid
+flowchart LR
+  phone["Phone or browser<br/>(installed PWA)"] -- "HTTPS, tailnet only<br/>Tailscale Serve :9443" --> server
+  subgraph mac["Your Mac"]
+    server["Caduceus server<br/>127.0.0.1:9130<br/>sign-in · policy proxy · audit"] -- "REST + JSON-RPC<br/>(loopback)" --> hermes["hermes serve<br/>(private)"]
+    hermes --> data[("~/.hermes")]
+    server --> store[("~/.hermes/caduceus")]
+  end
+```
+
+The server is Node.js with [Hono](https://hono.dev) and `node:sqlite`. The web app is React 19, Vite and TanStack Router. Hermes's REST and gateway contracts are pinned in `contracts/` and their types are generated, never hand-written.
+
+## Getting started
+
+### Prerequisites
+
+- **macOS**. The background service is a LaunchAgent. `npm run dev` may work on Linux, but that is untested.
+- **[Node.js](https://nodejs.org) 22.12** or newer.
+- **[Hermes Agent](https://github.com/NousResearch/hermes-agent) 0.22.2** on your `PATH`. Caduceus is pinned to this version (`contracts/hermes/pin.json`).
+- **[Tailscale](https://tailscale.com/download)** with [HTTPS certificates](https://tailscale.com/kb/1153/enabling-https) enabled, to use it from your phone.
+
+### Try it locally
+
+```bash
 git clone https://github.com/SunnySydeUp/caduceus-dashboard.git
 cd caduceus-dashboard
 npm install
-npm run dev        # builds the web app, starts Caduceus on http://127.0.0.1:9130 with a private Hermes
+npm run dev
 ```
 
-Open `http://localhost:9130` on the same machine and set the owner password. This works only from that machine, and only once. Set `CADUCEUS_PORT` to use another port.
+This builds the web app and starts Caduceus on <http://127.0.0.1:9130> with a private Hermes backend. Open it on the same Mac and set the owner password. This works only from that Mac, and only once. A setup guide then helps you check Hermes, add a model provider and turn on notifications.
 
-Caduceus keeps its own store in `caduceus/` inside the Hermes home (`~/.hermes/caduceus/`, owner-only), so `hermes backup` includes it. **Backups therefore contain Caduceus secrets** (the password hash, sessions and the audit log). For a throwaway run, point `HERMES_HOME` at a temp folder.
+> [!TIP]
+> To try Caduceus without touching your real agents, point `HERMES_HOME` at an empty folder: `HERMES_HOME=$(mktemp -d) npm run dev`. The first start is slower, because Hermes prepares a separate runtime in that folder. Set `CADUCEUS_PORT` if port 9130 is taken.
 
-## Run it from your phone
+## Use it from your phone
 
-```sh
+Install Caduceus as a background service and expose it on your tailnet:
+
+```bash
 npm run build -w web
-npm run caduceus -- setup           # shows the plan and changes nothing
-npm run caduceus -- setup --yes     # installs the LaunchAgent; asks again before it touches Tailscale Serve
-npm run caduceus -- status
+npm run caduceus -- setup          # shows the plan, changes nothing
+npm run caduceus -- setup --yes    # installs the service; asks again before it touches Tailscale Serve
+npm run caduceus -- status         # checks the service, Serve and Funnel
 ```
 
-Then open `https://<your-mac>.<your-tailnet>.ts.net:9443` on your phone, sign in, add a passkey in Settings › Security, and add the app to your Home Screen. Upgrading, changing who may reach it, uninstalling and troubleshooting: [`docs/RUNNING.md`](docs/RUNNING.md).
+Then open `https://<your-mac>.<your-tailnet>.ts.net:9443` on your phone, sign in, add a passkey in **Settings › Security**, and add Caduceus to your Home Screen.
+
+> [!WARNING]
+> Tailscale's HTTPS certificates are logged in public Certificate Transparency logs, so your Mac's tailnet hostname becomes public. Nothing is reachable from outside your tailnet, but choose the hostname with that in mind.
+
+Upgrading, changing who may sign in, uninstalling and troubleshooting are covered in [docs/RUNNING.md](docs/RUNNING.md).
+
+## Security
+
+Caduceus can make an AI agent run commands and change files, so its defaults are strict:
+
+- **Loopback only.** The server listens on `127.0.0.1`. Remote access is through Tailscale Serve, never Funnel, and only for the Tailscale logins you allow.
+- **Passkeys.** Sign in with a password set once on the Mac, then with passkeys (WebAuthn).
+- **Risk tiers.** Every Hermes operation has a tier, and anything unknown is denied. Riskier actions need a confirmation, a fresh passkey check, or a typed name. Every action is audited.
+- **File guard.** Credentials, keys and places that run code later (shell startup files, Hermes hooks, skills and plugins) are off limits to Caduceus's file tools.
+- **No secrets in the browser.** Credentials are masked before they leave the server, and share links redact secrets.
+
+> [!NOTE]
+> When Hermes is updated and no longer matches the pinned contracts, Caduceus switches itself to read-only until it is re-pinned. A changed API can never be called by mistake.
+
+Found a vulnerability? Please report it privately, as described in [SECURITY.md](SECURITY.md).
 
 ## Documentation
 
-- [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md): every screen, risk tiers, keyboard shortcuts, where data lives, backup and restore, troubleshooting.
-- [`docs/RUNNING.md`](docs/RUNNING.md): the background service and Tailscale Serve.
-- [`docs/STATUS.md`](docs/STATUS.md): open decisions and known limits.
-- [`AGENTS.md`](AGENTS.md): the developer guide (layout, commands, test rules, code and security rules). Written for humans and coding agents.
-- [`docs/design/`](docs/design/README.md): architecture, information architecture, work model, mobile spec, design system.
-- [`docs/research/`](docs/research/README.md): notes on the Hermes protocol, API coverage and other dashboards.
+| Guide | What it covers |
+|---|---|
+| [User guide](docs/USER-GUIDE.md) | Every screen, risk tiers, keyboard shortcuts, where your data lives, backup and restore |
+| [Running the service](docs/RUNNING.md) | The LaunchAgent, Tailscale Serve, upgrades and troubleshooting |
+| [Status](docs/STATUS.md) | Open decisions and known limits |
+| [Architecture](docs/design/architecture.md) | How Caduceus, Hermes and Tailscale fit together, and the security model in depth |
+| [Design](docs/design/README.md) | Information architecture, work model, mobile patterns and the design system |
+| [Developer guide](AGENTS.md) | Project layout, commands, test rules, code and security rules |
 
-## Develop and test
+## FAQ
 
-```sh
-npm test           # server and web tests; starts real `hermes serve` processes in throwaway homes
-npx tsc -p server --noEmit && npx tsc -p web --noEmit
-npm run lint:ui    # design lint: tokens only, no vh, named icon buttons, zoom never locked, reduced motion
-npm run test:e2e   # the few Playwright checks; rebuilds web/dist, so never run it while the service runs
-```
+<details>
+<summary><b>Do I need Tailscale?</b></summary>
 
-After a Hermes update, re-pin the contracts: `npm run contracts:regenerate`, then `npm test` names anything that changed. At runtime, `GET /_caduceus/api/compatibility` reports whether the running Hermes still matches the pins.
+Only to reach Caduceus from another device, such as your phone. On the Mac itself, it works at `http://localhost:9130`, including passkeys. Your phone needs HTTPS for passkeys, push notifications and the installed app, and Tailscale Serve provides it without opening anything to the internet.
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) before you open a pull request.
+</details>
 
-## License
+<details>
+<summary><b>Does Caduceus replace the Hermes dashboard or Hermes itself?</b></summary>
 
-[MIT](LICENSE). `contracts/vendor/hermes-shared` is vendored from Hermes Agent under its MIT licence (© Nous Research). The Geist fonts in `docs/design/mocks/desk/fonts` keep their own licence.
+No. Caduceus runs its own private Hermes backend on your existing `~/.hermes`, beside anything else you already run. Your agents, chats, tasks and schedules stay in Hermes.
+
+</details>
+
+<details>
+<summary><b>What happens when I update Hermes?</b></summary>
+
+Caduceus notices that Hermes differs from the version it was built for and turns read-only. Re-pin it with `npm run contracts:regenerate`, run `npm test`, then rebuild and restart. The steps are in [AGENTS.md](AGENTS.md#after-hermes-is-updated-first-done-for-0222).
+
+</details>
+
+<details>
+<summary><b>Does it work on Linux or Windows?</b></summary>
+
+Not yet. The background service uses macOS launchd. `npm run dev` may work on Linux, but it is untested.
+
+</details>
+
+<details>
+<summary><b>How do I run the tests?</b></summary>
+
+`npm test` runs the server and web tests against real `hermes serve` processes in throwaway homes. `npm run lint:ui` checks the design rules. [CONTRIBUTING.md](CONTRIBUTING.md) lists everything to run before a pull request.
+
+</details>
