@@ -7,7 +7,7 @@
 
 **Your Hermes agents, in your pocket.**
 
-[![Build](https://img.shields.io/github/actions/workflow/status/SunnySydeUp/caduceus-dashboard/ci.yml?style=flat-square&label=Build)](https://github.com/SunnySydeUp/caduceus-dashboard/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/SunnySydeUp/caduceus-dashboard/ci.yml?branch=main&event=push&style=flat-square&label=Build)](https://github.com/SunnySydeUp/caduceus-dashboard/actions/workflows/ci.yml?query=branch%3Amain)
 [![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-0.22.2-0053fd?style=flat-square)](https://github.com/NousResearch/hermes-agent)
 ![Node.js](https://img.shields.io/badge/Node.js->=22.12-3c873a?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey?style=flat-square&logo=apple)
