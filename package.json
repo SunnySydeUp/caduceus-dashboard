@@ -31,12 +31,12 @@
     "caduceus": "tsx server/scripts/caduceus.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.4",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
     "axe-core": "^4.14.0",
     "lighthouse": "^13.5.0",
-    "rolldown": "~1.2.11",
+    "rolldown": "~1.2.14",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }
