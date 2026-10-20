@@ -28,6 +28,7 @@ import { createFileGuard } from './file-guard.ts';
 import { createGatewayObserver } from './gateway-observer.ts';
 import { createGatewayPolicy, type GatewayPolicy } from './gateway-policy.ts';
 import { createGatewayProxy, type GatewayProxyOptions } from './gateway-proxy.ts';
+import { mountReminders } from './reminders.ts';
 import { mountToday } from './today.ts';
 import { createBudgetGuard, type BudgetGuard } from './budget-guard.ts';
 import { createBudgets } from './budgets.ts';
@@ -126,6 +127,8 @@ export interface CaduceusServerOptions {
    * `localhost` (development, at `http://localhost:<port>`); ticket 13 sets the tailnet hostname.
    */
   rpId?: string;
+  /** The `remindctl` command Today's reminders are read with (a path); found on the PATH by default. A test gives a stand-in. */
+  remindctl?: string;
   /** Built web app to serve at `/`. Hermes's own `/` (its token page) is never forwarded. */
   webRoot?: string;
   /** Where the running Hermes is installed (`findHermesInstall`); its published gateway contract is read from there. */
@@ -465,6 +468,7 @@ export async function startCaduceusServer(options: CaduceusServerOptions): Promi
   const inbox = createInbox({ sources, activity, runs: liveRequests.runs, store, now, live: () => observer.up });
   const inboxRoutes = mountInbox(app, { inbox, requests: liveRequests, policy });
   mountToday(app, { store, backend, activity, now });
+  mountReminders(app, { command: options.remindctl, now });
   const pushSubscriptions = mountPush(app, { store, now, test: (device) => pushWatcher.sendTest(device), policy, allowLoopback: options.allowLoopbackPush === true });
   const presence = createPresence(now);
   mountPresence(app, presence);

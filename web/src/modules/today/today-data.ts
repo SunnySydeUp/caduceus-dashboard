@@ -4,7 +4,7 @@
 import type { ReadyItem, ReadyOpened, ReadyState, TodayVisit } from '@caduceus/contracts/today';
 
 /** The words Caduceus answered with, or what the status says when it said none. */
-async function failure(res: Response): Promise<Error> {
+export async function failure(res: Response): Promise<Error> {
   const body: unknown = await res.json().catch(() => undefined);
   const message = typeof body === 'object' && body !== null && 'message' in body && typeof body.message === 'string' ? body.message : undefined;
   return new Error(message ?? `Caduceus answered HTTP ${res.status}.`);

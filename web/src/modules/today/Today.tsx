@@ -22,6 +22,8 @@ import './today.css';
 
 /** The setup guide's offer is below the first screen and Today paints without it: its code is fetched once the page has settled. */
 const OnboardingCard = lazy(() => import('../onboarding/OnboardingCard.tsx').then((m) => ({ default: m.OnboardingCard })));
+/** So is the reminders calendar: it is last in its column, so its arrival moves nothing above it, and its code and its read wait for the page to settle. */
+const RemindersBlock = lazy(() => import('./RemindersBlock.tsx').then((m) => ({ default: m.RemindersBlock })));
 
 /** How often the times on the screen ("6 min ago", the Now marker) are read again. */
 const CLOCK_MS = 30_000;
@@ -112,6 +114,11 @@ export function Today() {
         <aside className="today__col" aria-label="Schedule and what happened while you were away">
           <ScheduleBlock block={schedule} now={now} to={to} />
           <AwayBlock block={away} now={now} to={to} />
+          {settled && (
+            <Suspense fallback={null}>
+              <RemindersBlock now={now} />
+            </Suspense>
+          )}
         </aside>
       </div>
       {/* After the blocks, so that their arrival moves nothing on the first screen: the browser says it can install the app, and the setup offer is read from the server, both after Today has painted. */}

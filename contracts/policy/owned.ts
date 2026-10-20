@@ -11,6 +11,8 @@ export interface OwnedPolicy extends Policy {
 }
 
 export const CADUCEUS_OPERATIONS: Readonly<Record<string, OwnedPolicy>> = {
+  /** Today's calendar of Apple Reminders: Caduceus runs `remindctl export` with a fixed argument list and sends back the dated reminders. A read; nothing in Reminders is ever written. */
+  'GET /_caduceus/api/today/reminders': { tier: 'T0', read: true },
   /** Empties one of Hermes's log files (M5 #06). The owner types the file's name. */
   'POST /_caduceus/api/logs/truncate': { tier: 'T3', read: false },
   /** Creates a Kanban task through `hermes kanban create` (M3 #07), for the fields the Kanban REST API cannot set. The same tier as the plugin's own `POST /tasks`. */

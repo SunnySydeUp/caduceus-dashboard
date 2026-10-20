@@ -5,9 +5,9 @@ export const todayHelp: ModuleHelp = {
     {
       id: 'today',
       title: 'Today',
-      summary: 'What needs you, what is ready for review, the day’s routines, and what happened while you were away.',
+      summary: 'What needs you, what is ready for review, the day’s routines, what happened while you were away, and the reminders due.',
       route: '/today',
-      keywords: 'home start overview inbox needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty',
+      keywords: 'home start overview inbox needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty reminders apple calendar due date remindctl week month agenda tomorrow overdue',
       body: [
         { p: 'Today is where Caduceus opens. It answers four questions, in this order on a phone: what needs me, what is ready, what are my routines doing, and what happened while I was away. On a wide screen the first two sit in a column on the left and the schedule and the away list in a column on the right. Every block loads by itself. If one cannot be read, it says so inside the block with a Retry button, and the others carry on.' },
         { h: 'Needs you' },
@@ -30,6 +30,17 @@ export const todayHelp: ModuleHelp = {
         { p: 'A bar for the 24 hours from midnight to midnight with a Now marker, and a mark for each routine ([[routine|routine]]) that ran or will run today. A filled square ran, a hollow square is still to come and a ringed circle failed. Under the bar, the runs still to come are listed first, then those that have run, each in words. Hermes keeps the last run and the next run of a routine, so a routine that runs many times a day shows its latest and its coming one.' },
         { h: 'While you were away' },
         { p: 'What happened since you last opened Today, newest first: the chat runs that finished and the routines that ran, from Hermes’s own record. Opening Today again soon after (a reload) is the same visit, so the list does not empty under you; it starts again after about a quarter of an hour away. The first time you open Today there is nothing to be away from yet, and it says so.' },
+        { h: 'Reminders' },
+        { p: 'Your [[apple-reminders|Apple Reminders]] that have a due date, last on the page after the others have loaded. A strip of this week sits on top, with the number of reminders still to do under each day (a tick when everything that day is done). Under it: what is overdue (reminders you have not completed that were due on an earlier day), then today and tomorrow. Choose a day in the strip to list that day instead; the arrows move a week at a time. Choose the month’s name to open the whole month, where the arrows move a month at a time; choosing a day there closes it again. Today brings you back.' },
+        {
+          ul: [
+            'Reminders are shown, never changed: Caduceus does not add, complete or delete one. Do that in the Reminders app.',
+            'A reminder with a time sits on the day that time falls on where you are. An all-day reminder sits on the day Reminders names, wherever you are.',
+            'A completed reminder stays for 90 days; one you have not completed stays however late it is. Reminders with no due date are not shown.',
+            'They are read again when you come back to the tab. A reminder that changes while you are looking at Today shows after you leave and return.',
+            'If the block says it could not be loaded, read its message: either remindctl is not installed on the Mac that runs Caduceus, or it has no access to Reminders. Run remindctl status on that Mac, then choose Retry.',
+          ],
+        },
         { h: 'Empty blocks' },
         { p: 'A block with nothing to show says why, and carries the action that fills it: Talk to an agent, Give the crew work, Schedule a routine or Add a profile.' },
       ],
@@ -64,6 +75,12 @@ export const todayHelp: ModuleHelp = {
       id: 'ready-for-review',
       term: 'Ready for review',
       definition: 'Finished work you have not opened since it finished: a task that reached Done, or a chat run that ended. Hermes knows what finished; Caduceus remembers only which of it you opened.',
+      page: 'today',
+    },
+    {
+      id: 'apple-reminders',
+      term: 'Apple Reminders',
+      definition: 'The Reminders app on your Mac, iPhone and iPad. Caduceus reads the reminders that have a due date through the remindctl command on the Mac it runs on, and only reads them.',
       page: 'today',
     },
     {

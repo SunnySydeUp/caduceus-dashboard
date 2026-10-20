@@ -1,0 +1,57 @@
+/* Today's reminders: a week strip that unfolds into the month, over an agenda. Tokens only; logical properties throughout. Seven columns on a phone (390 px and
+   up fit 44 px cells; below 24 rem the calendar runs to the edges of the page so that 320 px still gives each day 44 px). */
+.rem { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); padding: var(--cd-space-3); min-inline-size: 0; }
+/* The month's name on the start side and the controls on the end, so the Today button coming and going moves nothing. */
+.rem__bar { display: flex; align-items: center; gap: var(--cd-space-1); }
+.rem__month { flex: 1 1 auto; display: flex; margin: 0; font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); min-inline-size: 0; }
+/* The month's name is the fold: it says which month the strip is in and opens the whole of it. */
+.rem__fold { display: inline-flex; align-items: center; gap: var(--cd-space-1); min-block-size: var(--cd-control-h); padding-inline: var(--cd-space-2); border: 0; border-radius: var(--cd-radius-md); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.rem__fold .i { color: var(--cd-fg-muted); }
+@media (pointer: coarse) { .rem__fold { min-block-size: var(--cd-target-min); } }
+@media (hover: hover) { .rem__fold:hover { background: var(--cd-overlay-hover); } }
+
+.rem__grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; view-transition-name: rem-grid; }
+.rem__grid th { padding-block: var(--cd-space-1); color: var(--cd-fg-subtle); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); text-align: center; }
+.rem__grid td { padding: 0; text-align: center; }
+.rem__week { view-transition-name: rem-week; }
+.rem__day { display: grid; grid-template-rows: auto var(--cd-leading-xs); align-content: center; justify-items: center; gap: var(--cd-space-0-5); inline-size: 100%; min-block-size: var(--cd-control-h); margin: 0; padding: 0; border: 1px solid transparent; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-default); font: var(--cd-text-sm)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (pointer: coarse) { .rem__day { min-block-size: var(--cd-target-min); } }
+@media (hover: hover) { .rem__day:hover { background: var(--cd-overlay-hover); } }
+.rem__day[data-out] { color: var(--cd-fg-subtle); }
+.rem__day[data-today] { border-color: var(--cd-accent); font-weight: var(--cd-weight-semibold); }
+.rem__day[data-selected] { background: var(--cd-accent); color: var(--cd-on-accent); }
+/* How much is due that day: a number, so a heavy day reads as heavy. A tick when all of it is done. */
+.rem__load { display: grid; place-items: center; color: var(--cd-fg-muted); font: var(--cd-weight-semibold) var(--cd-text-xs)/1 var(--cd-font-sans); }
+.rem__load .i { color: var(--cd-tone-success-fg); }
+.rem__day[data-selected] .rem__load, .rem__day[data-selected] .rem__load .i { color: inherit; }
+
+.rem__list { display: grid; gap: var(--cd-space-4); min-inline-size: 0; view-transition-name: rem-list; }
+.rem__heading { display: flex; align-items: baseline; gap: var(--cd-space-2); margin-block: 0 var(--cd-space-1); margin-inline: 0; font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); }
+.rem__heading[data-tone="danger"] { color: var(--cd-tone-danger-fg); }
+.rem__none { margin: 0; }
+.rem__rows { list-style: none; margin: 0; padding: 0; display: grid; }
+/* A row is when, then what. Nothing in it is a control: the block only reads Reminders. The when column is one width for every row, so the titles line up, and
+   fits a ticked 12-hour time (`✓ 10:30 AM`) and a short date (`Sat 17 Oct`). */
+.rem-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--cd-space-3); align-items: baseline; padding-block: var(--cd-space-2); min-inline-size: 0; }
+.rem-row + .rem-row { border-block-start: 1px solid var(--cd-border-subtle); }
+.rem-row__when { display: inline-flex; align-items: center; gap: var(--cd-space-1); color: var(--cd-fg-muted); font: var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); font-variant-numeric: tabular-nums; }
+.rem-row__when .i { color: var(--cd-tone-success-fg); flex: none; }
+.rem-row__text { display: grid; min-inline-size: 0; }
+.rem-row__text b { font-weight: var(--cd-weight-medium); overflow-wrap: anywhere; }
+.rem-row[data-done] .rem-row__text b { font-weight: var(--cd-weight-regular); color: var(--cd-fg-muted); text-decoration: line-through; }
+.rem-row__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
+
+/* Folding and unfolding (a View Transition, started only when reduced motion is off; the durations are tokens, which are 0 under it anyway): the grid's frame
+   grows from the top and clips what is not there yet, the strip's week travels to its row in the month, and the agenda slides with the frame's edge. */
+::view-transition-group(rem-grid), ::view-transition-group(rem-week), ::view-transition-group(rem-list) { animation-duration: var(--cd-dur-slow); animation-timing-function: var(--cd-ease-sheet); }
+::view-transition-image-pair(rem-grid) { overflow: clip; }
+::view-transition-old(rem-grid), ::view-transition-new(rem-grid), ::view-transition-old(rem-week), ::view-transition-new(rem-week), ::view-transition-old(rem-list), ::view-transition-new(rem-list) { animation-duration: var(--cd-dur-base); }
+/* The rest of the page does not take part: no browser cross-fade over it, whose time no token sets. The old snapshot is hidden and the new one drawn plainly, since
+   the browser's own `plus-lighter` blend would add the two full-opacity snapshots into a white flash. */
+::view-transition-old(root) { display: none; }
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+@media (max-width: 23.9375rem) {
+  .rem { margin-inline: calc(-1 * var(--cd-page-px)); padding-inline: 0; border-inline: 0; border-radius: 0; }
+  .rem__bar, .rem__list { padding-inline: var(--cd-page-px); }
+}
