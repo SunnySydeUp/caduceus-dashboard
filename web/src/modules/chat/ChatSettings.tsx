@@ -87,6 +87,9 @@ export function ChatSettings() {
       <Setting id="auto-follow" label="Auto-follow" scope="device" about="A reply that is arriving keeps the conversation scrolled to its end, until you scroll up.">
         <Switch label="Auto-follow" on={device.autoFollow} onChange={(autoFollow) => saveDevice({ autoFollow })} />
       </Setting>
+      <Setting id="finished-marks" label="Finished marks on agents" scope="device" about="The green ring and tick on an agent that has finished work you have not opened yet. Off hides them; the work stays in Ready for review.">
+        <Switch label="Finished marks on agents" on={device.finishedMarks} onChange={(finishedMarks) => saveDevice({ finishedMarks })} />
+      </Setting>
       <Setting id="pin-limit" label="Pin limit" scope="account" about={`How many sessions can be pinned at once (${MIN_PIN_LIMIT} to ${MAX_PIN_LIMIT}).`}>
         <input id={pinId} className="input cs-pin" type="number" inputMode="numeric" min={MIN_PIN_LIMIT} max={MAX_PIN_LIMIT} aria-label="Pin limit" value={pin} onChange={(event) => setPin(event.target.value)} onBlur={commitPin} onKeyDown={(event) => event.key === 'Enter' && commitPin()} />
       </Setting>

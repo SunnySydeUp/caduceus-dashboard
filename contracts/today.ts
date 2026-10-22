@@ -1,12 +1,12 @@
 // Today's API (`/_caduceus/api/today`), shared by the Caduceus server and the web app (M8 #03). Hermes says what finished; Caduceus owns the one concept Hermes
 // lacks, "ready for review": work that is done and has not been opened since. The server derives the list on every ask and stores only which items were opened.
 
-/** What an item that is ready for review is: a Kanban task that reached Done, or a chat run that finished. */
+/** What an item that is ready for review is: a Kanban task that reached Done, or a run that finished (a chat's, or a scheduled job's agent run). */
 export type ReadyKind = 'task' | 'run';
 
 /** One finished piece of work waiting for the owner's look. Nothing here is stored; it is read from Hermes each time. */
 export interface ReadyItem {
-  /** What the owner's opening is kept against: `task:<board>:<task id>` or `run:<stored session id>`. */
+  /** What the owner's opening is kept against: `task:<board>:<task id>` or `run:<session id>`. */
   id: string;
   /** Changes when the finish changes again (a task done a second time, a chat that answered again), so an item that was opened comes back as new work. */
   stamp: string;

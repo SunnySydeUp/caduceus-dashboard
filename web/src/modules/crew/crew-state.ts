@@ -1,6 +1,7 @@
-// What each agent of the crew is doing, for the Desk's sigils and lists. Pure: it reads what Hermes and Caduceus already say (the Inbox's items and its live runs
-// and the activity feed) and stores nothing.
-import type { ActivityEvent, LiveRun, InboxApproval, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
+// What each agent of the crew is doing, for the Desk's sigils and lists. Pure: it reads what Hermes and Caduceus already say (the Inbox's items and its live runs,
+// and what is ready for review) and stores nothing.
+import type { LiveRun, InboxApproval, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
+import type { ReadyItem } from '@caduceus/contracts/today';
 
 /** How an agent stands: a person is needed, it is working, it finished something not yet looked at, something failed, or nothing is going on. */
 export type CrewStateName = 'waiting' | 'working' | 'done' | 'blocked' | 'idle';
@@ -22,7 +23,7 @@ export interface CrewMember {
   since: number | undefined;
 }
 
-/** What the crew is read from. All of it is already on the page (the Inbox's feed); none of it is kept here. */
+/** What the crew is read from. All of it is already on the page (the Inbox's feed and the ready list); none of it is kept here. */
 export interface CrewInput {
   /** The agents, in the order they are listed. The result has one member for each. */
   profiles: readonly string[];
@@ -30,10 +31,8 @@ export interface CrewInput {
   items: readonly InboxItem[];
   /** The live runs, as `session.active_list` reports them. */
   running: readonly LiveRun[];
-  /** The finished runs, newest first. */
-  activity: readonly ActivityEvent[];
-  /** How many of the newest `activity` events this device has not opened yet (the feed's `unseen`). */
-  unseen: number;
+  /** What is ready for review (finished and not opened since), newest first: Today's list. Opening an item anywhere takes it off, and with it the agent's Finished state. */
+  ready: readonly ReadyItem[];
 }
 
 /** A line is one short sentence: longer text is cut with an ellipsis. */
@@ -60,10 +59,9 @@ const withOthers = (line: string, others: number, word: string): string => (othe
 
 /**
  * One member for each profile. Precedence, when more than one is true of a profile: waiting, working, blocked, done, idle.
- * Waiting and working report what has gone on longest (the oldest request, the oldest run); blocked and done report the newest failure and the newest finished run.
+ * Waiting and working report what has gone on longest (the oldest request, the oldest run); blocked and done report the newest failure and the newest finished work.
  */
-export function deriveCrew({ profiles, items, running, activity, unseen }: CrewInput): CrewMember[] {
-  const unopened = activity.slice(0, unseen);
+export function deriveCrew({ profiles, items, running, ready }: CrewInput): CrewMember[] {
   return profiles.map((profile): CrewMember => {
     const mine = items.filter((item) => item.profile === profile);
     const waits: Waiting[] = [
@@ -79,9 +77,9 @@ export function deriveCrew({ profiles, items, running, activity, unseen }: CrewI
     const [newestFailure] = failed;
     if (newestFailure) return { profile, state: 'blocked', line: withOthers(newestFailure.kind === 'notice' ? shorten(newestFailure.title) : 'Something failed', failed.length - 1, 'failed'), since: newestFailure.at };
 
-    const finishedRuns = unopened.filter((event) => event.profile === profile);
-    const [newestRun] = finishedRuns;
-    if (newestRun) return { profile, state: 'done', line: withOthers(shorten(`Finished “${newestRun.title}”`), finishedRuns.length - 1, 'finished'), since: newestRun.at };
+    const finished = ready.filter((item) => item.profile === profile);
+    const [newest] = finished;
+    if (newest) return { profile, state: 'done', line: withOthers(shorten(`Finished “${newest.title}”`), finished.length - 1, 'finished'), since: newest.at };
 
     return { profile, state: 'idle', line: 'Nothing going on', since: undefined };
   });

@@ -148,10 +148,11 @@ export function activityLabel(seconds: number, clock: Clock & { locale?: string 
   return new Intl.DateTimeFormat(locale, { timeZone, month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) }).format(at);
 }
 
-/** The sources that are not a person talking to Hermes: scheduled jobs, Kanban workers, webhooks and the API server. The Automation tab is these, and the Chats tab is everything else. */
+/** The sources that are not a person talking to Hermes: scheduled jobs, Kanban workers, webhooks and the API server. The Automation kind is these, and the Chats kind is everything else. */
 export const AUTOMATION_SOURCES: readonly string[] = ['cron', 'kanban', 'webhook', 'api_server'];
 
-export type SessionsTab = 'chats' | 'automation';
+/** Which kind of session the list shows: every session (chats and automation in one list, the default), only the chats, or only the automation. */
+export type SessionsTab = 'all' | 'chats' | 'automation';
 
 /** The filters that are on, as the address carries them (`?tab=automation&source=cron&failed=1&quiet=1&all=1`). */
 export interface SessionsView {
@@ -180,7 +181,7 @@ export type ListScope = 'everyone' | 'agent';
 export function readSessionsView(search: Record<string, unknown>, scope: ListScope = 'everyone'): SessionsView {
   const source = typeof search.source === 'string' && search.source.trim() !== '' ? search.source.trim() : undefined;
   return {
-    tab: search.tab === 'automation' ? 'automation' : 'chats',
+    tab: search.tab === 'automation' || search.tab === 'chats' ? search.tab : 'all',
     ...(source === undefined ? {} : { source }),
     failed: flag(search.failed),
     quiet: flag(search.quiet),
@@ -190,10 +191,10 @@ export function readSessionsView(search: Record<string, unknown>, scope: ListSco
   };
 }
 
-/** The query that carries a view; the default view (Chats, nothing narrowed, and the scope's own default of whose sessions) is no query at all. Narrowing the Chat list to this tab's profile is `all=0`; widening Talk's is `all=1`. */
+/** The query that carries a view; the default view (every kind, nothing narrowed, and the scope's own default of whose sessions) is no query at all. Narrowing the Chat list to this tab's profile is `all=0`; widening Talk's is `all=1`. */
 export function sessionsSearch({ tab, source, failed, quiet, all, archived, group }: SessionsView, scope: ListScope = 'everyone'): Record<string, string> {
   return {
-    ...(tab === 'automation' ? { tab } : {}),
+    ...(tab === 'all' ? {} : { tab }),
     ...(source === undefined ? {} : { source }),
     ...(failed ? { failed: '1' } : {}),
     ...(quiet ? { quiet: '1' } : {}),
@@ -203,7 +204,7 @@ export function sessionsSearch({ tab, source, failed, quiet, all, archived, grou
   };
 }
 
-export const isInTab = (source: string, tab: SessionsTab): boolean => AUTOMATION_SOURCES.includes(source) === (tab === 'automation');
+export const isInTab = (source: string, tab: SessionsTab): boolean => tab === 'all' || AUTOMATION_SOURCES.includes(source) === (tab === 'automation');
 
 /** The view with another tab. A source that belongs to the tab being left would leave nothing to see, so it goes. */
 export function withTab(view: SessionsView, tab: SessionsTab): SessionsView {
@@ -224,7 +225,7 @@ export function listPath(view: SessionsView, { profile, offset, limit }: { profi
   const query = new URLSearchParams({ order: 'recent', min_messages: '1', limit: String(limit), offset: String(offset), profile: view.all ? 'all' : profile });
   if (view.source !== undefined) query.set('source', view.source);
   if (view.archived) query.set('archived', 'only');
-  query.set(view.tab === 'automation' ? 'sources' : 'exclude_sources', AUTOMATION_SOURCES.join(','));
+  if (view.tab !== 'all') query.set(view.tab === 'automation' ? 'sources' : 'exclude_sources', AUTOMATION_SOURCES.join(','));
   return `${view.all ? '/api/profiles/sessions' : '/api/sessions'}?${query}`;
 }
 

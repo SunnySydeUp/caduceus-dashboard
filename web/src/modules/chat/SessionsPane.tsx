@@ -39,6 +39,7 @@ import { useDensity, setDensity } from './sessions-prefs.ts';
 import { useDraftIndexLoaded, useHasDraft } from './draft-index.ts';
 import {
   activityLabel,
+  AUTOMATION_SOURCES,
   flattenGroups,
   groupSessions,
   isInTab,
@@ -267,6 +268,12 @@ function SessionRow({ item, index, total, view, scope, profile, open, tabbable, 
             <>
               <Icon name="pin" small />
               <span className="sr-only">Pinned: </span>
+            </>
+          )}
+          {AUTOMATION_SOURCES.includes(item.source) && (
+            <>
+              <Icon name={sourceIcon(item.source)} small />
+              <span className="sr-only">{sourceLabel(item.source)}: </span>
             </>
           )}
           {item.unread && <span className="sr-only">Unread: </span>}

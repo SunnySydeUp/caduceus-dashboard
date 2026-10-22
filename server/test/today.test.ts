@@ -6,6 +6,7 @@ import type { ReadyState, TodayVisit } from '@caduceus/contracts/today';
 import { startCaduceusServer, type CaduceusServer } from '../src/caduceus-server.ts';
 import { ownerCookie } from './fixtures/owner.ts';
 import { HERMES_WORK_TIMEOUT_MS, launchTestHermes, type TestHermes } from './fixtures/real-hermes.ts';
+import { seedSessions } from './fixtures/seed-session.ts';
 
 // Today's review state (M8 #03) in front of the real Hermes in a throwaway HERMES_HOME. "Ready for review" is finished work that has not been opened since:
 // Hermes says what finished (Kanban tasks that reached Done), Caduceus keeps only which of them the owner opened. Tasks are made and finished the way the CLI
@@ -95,6 +96,23 @@ describe('ready for review', () => {
     await finished('Done long ago');
     // A clock a day ahead: Today began after the task finished, however fast this test runs.
     const page = await open(() => Date.now() + 86_400_000);
+    expect((await page.ready()).items).toEqual([]);
+  }, HERMES_WORK_TIMEOUT_MS);
+
+  test('a scheduled job\'s agent run that finished is ready, once for each job by its newest run; opening that run clears it', async () => {
+    const page = await open();
+    await seedSessions(hermes.home, [
+      { id: 'cron_aa11bb22_20261022_080000', source: 'cron', title: 'Morning brief', endReason: 'cron_complete' },
+      { id: 'cron_cc33dd44_20261022_090000', source: 'cron', title: 'Broken digest', endReason: 'error' },
+      { id: 'cron_ee55ff66_20261022_090000', source: 'cron', title: 'Still going' },
+      { id: 'chat-not-a-job', source: 'cli', title: 'A chat', endReason: 'cli_close' },
+      { id: 'cron_aa11bb22_20261022_090000', source: 'cron', title: 'Morning brief #2', endReason: 'cron_complete' },
+    ]);
+    const { items } = await page.ready();
+    // Only the job's newest finished run is offered: a failed run is a notice, a run still going is not done, and a chat is not a scheduled job.
+    expect(items).toEqual([expect.objectContaining({ id: 'run:cron_aa11bb22_20261022_090000', kind: 'run', title: 'Morning brief #2', profile: 'default', to: '/chat/cron_aa11bb22_20261022_090000' })]);
+
+    expect((await page.open(items[0]!.id, items[0]!.stamp)).status).toBe(200);
     expect((await page.ready()).items).toEqual([]);
   }, HERMES_WORK_TIMEOUT_MS);
 

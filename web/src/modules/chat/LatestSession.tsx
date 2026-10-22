@@ -16,7 +16,8 @@ export function LatestSession({ profile }: { profile: string }) {
   useEffect(() => {
     const abort = new AbortController();
     setFailure(undefined);
-    readHermes(listPath(readSessionsView({}, TALK_SCOPE), { profile, offset: 0, limit: LOOK_AT }), abort.signal).then(
+    // Only the chats are read: the agent's automation runs would otherwise fill the page that is looked at, and Talk never opens on one.
+    readHermes(listPath(readSessionsView({ tab: 'chats' }, TALK_SCOPE), { profile, offset: 0, limit: LOOK_AT }), abort.signal).then(
       (body) => {
         const latest = latestSession(parseSessions(body).items);
         void navigate(latest === undefined ? '/chat/new' : `/chat/${encodeURIComponent(latest.id)}`, { replace: true });

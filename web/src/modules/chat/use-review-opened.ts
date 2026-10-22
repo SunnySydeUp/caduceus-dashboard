@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useInbox } from '../inbox/inbox-feed.ts';
-import { markOpened, readReady } from '../today/today-data.ts';
+import { readReady } from '../today/today-data.ts';
+import { markOpened } from '../today/ready-feed.ts';
 import { finishSeqIn, readyToOpen } from './talk-review.ts';
 
 /**

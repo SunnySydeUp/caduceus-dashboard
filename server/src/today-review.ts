@@ -92,3 +92,28 @@ export function runCandidates(events: readonly ActivityEvent[]): ReadyItem[] {
   }
   return [...items.values()];
 }
+
+/** Hermes's name for a scheduled job's run (`cron_<job id>_<YYYYmmdd>_<HHMMSS>`, `cron/scheduler.py`): the job is everything between the prefix and the time. */
+const CRON_RUN = /^cron_(.+)_\d{8}_\d{6}$/;
+
+/**
+ * The scheduled jobs' runs that finished, from Hermes's session list of the `cron` source (any order), one item for each job: its latest finished run. A run is
+ * finished when Hermes closed it with `cron_complete`; one that failed is a notice, and one still going is not done. The item is a run like a chat's, so opening
+ * its session in Talk is what takes it off the list, and a job's next run is new work. A script job starts no agent and leaves no session, so it is not here.
+ */
+export function automationCandidates(rows: readonly unknown[]): ReadyItem[] {
+  const latest = new Map<string, ReadyItem>();
+  for (const row of rows) {
+    if (!isRecord(row) || row.source !== 'cron' || row.end_reason !== 'cron_complete') continue;
+    const session = text(row.id);
+    const ended = typeof row.ended_at === 'number' && Number.isFinite(row.ended_at) ? row.ended_at : undefined;
+    if (session === undefined || ended === undefined) continue;
+    const job = CRON_RUN.exec(session)?.[1] ?? session;
+    const profile = text(row.profile);
+    const key = `${profile ?? ''}:${job}`;
+    const known = latest.get(key);
+    if (known && Number(known.stamp) >= ended) continue;
+    latest.set(key, { id: `run:${session}`, stamp: String(ended), kind: 'run', title: text(row.title) ?? 'A scheduled job', summary: 'Scheduled job ran', profile, at: Math.round(ended * 1000), to: `/chat/${encodeURIComponent(session)}` });
+  }
+  return [...latest.values()];
+}

@@ -23,7 +23,7 @@ export const todayHelp: ModuleHelp = {
         },
         { p: 'The same cards are in the Talk tray, above the composer, so you can answer a decision of another thread without leaving the one you are in. The count of what needs a decision is on the Today tab and on the app icon. Failed jobs, a gateway that is down and other news that needs no answer are in Control › Notices.' },
         { h: 'Ready for review' },
-        { p: 'Work that is [[ready-for-review|ready for review]]: a Kanban task that reached Done, or a chat run that finished, and that you have not opened since. Review opens the task or the chat and counts as opening it, so it leaves this list. So does opening the chat any other way, and so does a run that finishes while you are looking at its chat. If the same task is finished again later, it comes back as new work. Work that finished before Caduceus began keeping your place, and anything older than two weeks, is not offered.' },
+        { p: 'Work that is [[ready-for-review|ready for review]]: a Kanban task that reached Done, a chat run that finished, or a [[routine|routine]] whose agent run finished, and that you have not opened since. A routine is offered once, by its latest run. Review opens the task or the run’s session in Talk and counts as opening it, so it leaves this list. So does opening the session any other way, and so does a run that finishes while you are looking at its chat. If the same task is finished again later, or the routine runs again, it comes back as new work. A routine that only runs a script starts no agent, so it has no run to review. Work that finished before Caduceus began keeping your place, and anything older than two weeks, is not offered.' },
         { h: 'Crew' },
         { p: 'On a phone, a row of tiles you can swipe, one for each agent, with what it is doing now. Choose a tile to talk to that agent. On a wider screen the crew is in the sidebar or the rail instead.' },
         { h: 'Today’s schedule' },
@@ -74,7 +74,7 @@ export const todayHelp: ModuleHelp = {
     {
       id: 'ready-for-review',
       term: 'Ready for review',
-      definition: 'Finished work you have not opened since it finished: a task that reached Done, or a chat run that ended. Hermes knows what finished; Caduceus remembers only which of it you opened.',
+      definition: 'Finished work you have not opened since it finished: a task that reached Done, a chat run that ended, or a routine’s latest run. Hermes knows what finished; Caduceus remembers only which of it you opened.',
       page: 'today',
     },
     {

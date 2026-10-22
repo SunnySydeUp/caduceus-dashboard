@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReadyItem, ReadyOpened, ReadyState } from '@caduceus/contracts/today';
 import { toast } from '../../shell/toasts.ts';
 import { useInbox } from '../inbox/inbox-feed.ts';
+import { refreshReady } from '../today/ready-feed.ts';
 import type { AllBoards } from './work-desk-data.ts';
 
 export interface ReviewState {
@@ -69,7 +70,7 @@ export function useReadyForReview(boards: AllBoards['boards']): ReviewState {
         toast('Could not note that you opened this, so it stays in Ready for review', { tone: 'danger' });
         return;
       }
-      await reload();
+      await Promise.all([reload(), refreshReady()]);
     },
     [reload],
   );

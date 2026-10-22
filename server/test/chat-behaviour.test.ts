@@ -40,7 +40,7 @@ async function start() {
 }
 
 const DEFAULTS = {
-  device: { sendKey: 'auto', completionSound: false, timestamps: false, transcriptDensity: 'comfortable', autoFollow: true },
+  device: { sendKey: 'auto', completionSound: false, timestamps: false, transcriptDensity: 'comfortable', autoFollow: true, finishedMarks: true },
   account: { pinLimit: 10, activityMode: 'worklog' },
 };
 
@@ -51,9 +51,9 @@ describe('the chat behaviour preferences', () => {
     const { phone, laptop } = await start();
     expect(await phone('GET')).toEqual({ status: 200, body: DEFAULTS });
 
-    expect((await phone('PUT', { device: { sendKey: 'enter', timestamps: true }, account: { pinLimit: 3 } })).status).toBe(200);
+    expect((await phone('PUT', { device: { sendKey: 'enter', timestamps: true, finishedMarks: false }, account: { pinLimit: 3 } })).status).toBe(200);
 
-    expect((await phone('GET')).body).toEqual({ device: { ...DEFAULTS.device, sendKey: 'enter', timestamps: true }, account: { ...DEFAULTS.account, pinLimit: 3 } });
+    expect((await phone('GET')).body).toEqual({ device: { ...DEFAULTS.device, sendKey: 'enter', timestamps: true, finishedMarks: false }, account: { ...DEFAULTS.account, pinLimit: 3 } });
     expect((await laptop('GET')).body).toEqual({ device: DEFAULTS.device, account: { ...DEFAULTS.account, pinLimit: 3 } });
     expect(fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : undefined).toBe(configBefore);
   });

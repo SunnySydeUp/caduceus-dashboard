@@ -125,10 +125,11 @@ describe('the last-activity label of a row', () => {
 });
 
 describe('the list’s filters in the address', () => {
-  test('the default view (every profile) is no query at all, and what is in the query reads back as the same view', () => {
+  test('the default view (every kind, every profile) is no query at all, and what is in the query reads back as the same view', () => {
     expect(sessionsSearch(readSessionsView({}))).toEqual({});
-    expect(readSessionsView({})).toMatchObject({ all: true });
+    expect(readSessionsView({})).toMatchObject({ tab: 'all', all: true });
     const views: SessionsView[] = [
+      { tab: 'all', failed: false, quiet: true, all: true },
       { tab: 'chats', failed: false, quiet: false, all: true },
       { tab: 'automation', failed: false, quiet: false, all: true },
       { tab: 'chats', source: 'telegram', failed: true, quiet: false, all: true },
@@ -139,12 +140,12 @@ describe('the list’s filters in the address', () => {
       expect(readSessionsView(Object.fromEntries(new URLSearchParams(new URLSearchParams(sessionsSearch(view)).toString())))).toEqual(view);
     }
     // Narrowing the list to this tab's profile is what the address says: `all=0`.
-    expect(sessionsSearch(views[3]!)).toEqual({ tab: 'automation', source: 'cron', quiet: '1', all: '0' });
+    expect(sessionsSearch(views[4]!)).toEqual({ tab: 'automation', source: 'cron', quiet: '1', all: '0' });
   });
 
   test('a damaged query is as if it were not there', () => {
-    expect(readSessionsView({ tab: 'everything', source: '  ', failed: 'yes', quiet: '0', all: ['0', '0'] })).toEqual({ tab: 'chats', failed: false, quiet: false, all: true });
-    expect(readSessionsView({ source: 3 })).toEqual({ tab: 'chats', failed: false, quiet: false, all: true });
+    expect(readSessionsView({ tab: 'everything', source: '  ', failed: 'yes', quiet: '0', all: ['0', '0'] })).toEqual({ tab: 'all', failed: false, quiet: false, all: true });
+    expect(readSessionsView({ source: 3 })).toEqual({ tab: 'all', failed: false, quiet: false, all: true });
   });
 
   test('changing the tab drops a source that belongs to the other one', () => {
@@ -170,7 +171,7 @@ describe('the archive and the project grouping in the address', () => {
       expect(readSessionsView(Object.fromEntries(new URLSearchParams(new URLSearchParams(sessionsSearch(view)).toString())))).toEqual(view);
     }
     expect(sessionsSearch(views[2]!)).toEqual({ tab: 'automation', source: 'cron', failed: '1', all: '0', archived: '1', group: 'project' });
-    expect(readSessionsView({ archived: '0', group: 'date' })).toEqual({ tab: 'chats', failed: false, quiet: false, all: true });
+    expect(readSessionsView({ archived: '0', group: 'date' })).toEqual({ tab: 'all', failed: false, quiet: false, all: true });
     expect(withTab({ tab: 'chats', failed: false, quiet: false, all: true, archived: true, group: 'project' }, 'automation')).toEqual({ tab: 'automation', failed: false, quiet: false, all: true, archived: true, group: 'project' });
   });
 
@@ -190,6 +191,15 @@ describe('what a view asks of Hermes, and what it keeps of the answer', () => {
     expect(listPath(view(), { profile: 'work', offset: 0, limit: 100 }).startsWith('/api/sessions?')).toBe(true);
     expect(query(view())).toEqual({ order: 'recent', min_messages: '1', limit: '100', offset: '0', profile: 'work', exclude_sources: 'cron,kanban,webhook,api_server' });
     expect(query(view({ tab: 'automation' }), 200)).toEqual({ order: 'recent', min_messages: '1', limit: '100', offset: '200', profile: 'work', sources: 'cron,kanban,webhook,api_server' });
+  });
+
+  test('the default kind lists chats and automation together: Hermes is asked for every source, and every source passes', () => {
+    expect(query(view({ tab: 'all' }))).toEqual({ order: 'recent', min_messages: '1', limit: '100', offset: '0', profile: 'work' });
+    const chat = { id: 'a', title: 'Plan', preview: '', source: 'tui', startedAt: 1, lastActive: 2, messageCount: 4, pinned: false, unread: false, failed: false, profile: undefined, archived: false, cwd: '', tokens: 0 };
+    const cron = { ...chat, id: 'cron_j1_20261020_090000', source: 'cron' };
+    expect(selectSessions([chat, cron], view({ tab: 'all' })).map((item) => item.id)).toEqual(['a', 'cron_j1_20261020_090000']);
+    expect(selectSessions([chat, cron], view({ tab: 'chats' })).map((item) => item.id)).toEqual(['a']);
+    expect(selectSessions([chat, cron], view({ tab: 'automation' })).map((item) => item.id)).toEqual(['cron_j1_20261020_090000']);
   });
 
   test('a source filter narrows the tab, and the cross-profile list uses the aggregate endpoint for every profile', () => {

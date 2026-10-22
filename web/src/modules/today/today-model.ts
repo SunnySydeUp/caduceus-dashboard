@@ -169,7 +169,7 @@ export type EmptyBlock = 'needs' | 'ready' | 'schedule' | 'away-first' | 'away-q
 /** What an empty block says and the one action that fills it. `module` is the id of the module the action opens (the screen reads its address from the registry). */
 export const EMPTY: Record<EmptyBlock, { text: string; action: { label: string; module: 'chat' | 'work' | 'schedules' | 'profiles' } }> = {
   needs: { text: 'Nothing needs you right now. When an agent needs a decision, it shows here.', action: { label: 'Talk to an agent', module: 'chat' } },
-  ready: { text: 'Nothing is waiting for your review. Finished tasks and runs show here until you open them.', action: { label: 'Give the crew work', module: 'work' } },
+  ready: { text: 'Nothing is waiting for your review. Finished tasks, runs and routines show here until you open them.', action: { label: 'Give the crew work', module: 'work' } },
   schedule: { text: 'No routines run today. A routine you schedule shows here, with when it runs next.', action: { label: 'Schedule a routine', module: 'schedules' } },
   'away-first': { text: 'This is your first visit to Today. Runs and routines that finish while you are away show here.', action: { label: 'See the schedule', module: 'schedules' } },
   'away-quiet': { text: 'Nothing happened while you were away.', action: { label: 'Schedule a routine', module: 'schedules' } },

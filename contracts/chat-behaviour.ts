@@ -1,5 +1,5 @@
-// How the chat behaves for its owner (M1 #20): send key, completion sound, timestamps, transcript density, auto-follow, the pin limit and the default
-// activity mode. These are Caduceus preferences (R1): Hermes knows nothing of them and its config is never written for them. Each is either the
+// How the chat behaves for its owner (M1 #20): send key, completion sound, timestamps, transcript density, auto-follow, the finished marks on agents, the pin
+// limit and the default activity mode. These are Caduceus preferences (R1): Hermes knows nothing of them and its config is never written for them. Each is either the
 // device's (a phone may send with Enter while the laptop sends with ⌘ Enter) or the owner's (every device they sign in on). Shared by the server, which
 // validates and stores them, and the web app, which applies them.
 
@@ -18,6 +18,8 @@ export interface DeviceBehaviour {
   transcriptDensity: (typeof DENSITIES)[number];
   /** A reply that is arriving keeps the transcript scrolled to its end, until the reader scrolls up. */
   autoFollow: boolean;
+  /** The ring and tick on an agent's sigil that has finished work ready for review. Off hides them; the agent's state is still said in words. */
+  finishedMarks: boolean;
 }
 
 export interface AccountBehaviour {
@@ -35,7 +37,7 @@ export interface ChatBehaviour {
 export const MIN_PIN_LIMIT = 1;
 export const MAX_PIN_LIMIT = 50;
 
-export const DEFAULT_DEVICE_BEHAVIOUR: DeviceBehaviour = { sendKey: 'auto', completionSound: false, timestamps: false, transcriptDensity: 'comfortable', autoFollow: true };
+export const DEFAULT_DEVICE_BEHAVIOUR: DeviceBehaviour = { sendKey: 'auto', completionSound: false, timestamps: false, transcriptDensity: 'comfortable', autoFollow: true, finishedMarks: true };
 
 /** The key that sends on this device: a key the owner chose, or for Automatic Enter where the pointer is fine (a mouse or trackpad) and ⌘/Ctrl+Enter on touch. */
 export function resolveSendKey(setting: DeviceBehaviour['sendKey'], finePointer: boolean): 'mod-enter' | 'enter' {
@@ -48,7 +50,7 @@ export const DEFAULT_ACCOUNT_BEHAVIOUR: AccountBehaviour = { pinLimit: 10, activ
 const oneOf = <T extends string>(options: readonly T[], value: unknown): value is T => options.includes(value as T);
 
 /** Which scope each setting belongs to, for the label the settings screen shows. */
-export const BEHAVIOUR_SCOPE = { sendKey: 'device', completionSound: 'device', timestamps: 'device', transcriptDensity: 'device', autoFollow: 'device', pinLimit: 'account', activityMode: 'account' } as const;
+export const BEHAVIOUR_SCOPE = { sendKey: 'device', completionSound: 'device', timestamps: 'device', transcriptDensity: 'device', autoFollow: 'device', finishedMarks: 'device', pinLimit: 'account', activityMode: 'account' } as const;
 
 /** A change to the device's behaviour: only the settings it names, each valid; otherwise `undefined`. */
 export function parseDeviceChange(value: unknown): Partial<DeviceBehaviour> | undefined {
@@ -57,7 +59,7 @@ export function parseDeviceChange(value: unknown): Partial<DeviceBehaviour> | un
   for (const [key, setting] of Object.entries(value)) {
     if (key === 'sendKey' && oneOf(SEND_KEYS, setting)) change.sendKey = setting;
     else if (key === 'transcriptDensity' && oneOf(DENSITIES, setting)) change.transcriptDensity = setting;
-    else if ((key === 'completionSound' || key === 'timestamps' || key === 'autoFollow') && typeof setting === 'boolean') change[key] = setting;
+    else if ((key === 'completionSound' || key === 'timestamps' || key === 'autoFollow' || key === 'finishedMarks') && typeof setting === 'boolean') change[key] = setting;
     else return undefined;
   }
   return change;

@@ -3,8 +3,9 @@
 import type { IconName } from '../../icons.tsx';
 import { sourceLabel, type ListScope, type SessionItem, type SessionsTab, type SessionsView, type SessionStats } from './sessions-model.ts';
 
-/** The two kinds of session the list tells apart; a segment at the top of the Filters menu. */
+/** The kinds of session the list can show; a segment at the top of the Filters menu. All, the default, lists chats and automation together. */
 export const KIND_OPTIONS: readonly { value: SessionsTab; label: string }[] = [
+  { value: 'all', label: 'All' },
   { value: 'chats', label: 'Chats' },
   { value: 'automation', label: 'Automation' },
 ];
@@ -52,9 +53,9 @@ export function filterItems(view: SessionsView, scope: ListScope): FilterItem[] 
   ];
 }
 
-/** How many filters are on, for the badge on the Filters button. Automation counts: the list is not the chats then. */
+/** How many filters are on, for the badge on the Filters button. A kind other than All counts: the list is narrowed then. */
 export function filterCount(view: SessionsView, scope: ListScope): number {
-  return (view.tab === 'chats' ? 0 : 1) + filterItems(view, scope).filter((entry) => entry.on).length;
+  return (view.tab === 'all' ? 0 : 1) + filterItems(view, scope).filter((entry) => entry.on).length;
 }
 
 /** The view with one switch turned over; everything else in it stays. */

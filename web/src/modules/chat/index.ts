@@ -53,7 +53,7 @@ export const chatModule: AppModule = {
     {
       id: 'chat',
       title: 'Chat',
-      summary: 'Send key, sound, timestamps, density, pin limit, auto-follow and the default activity mode',
+      summary: 'Send key, sound, timestamps, density, pin limit, auto-follow, finished marks and the default activity mode',
       icon: 'chat',
       screen: lazy(() => import('./ChatSettings.tsx').then((m) => ({ default: m.ChatSettings }))),
       fields: [
@@ -63,6 +63,7 @@ export const chatModule: AppModule = {
         { id: 'transcript-density', label: 'Transcript density', description: 'How much room the messages of a conversation take', keywords: ['compact', 'comfortable', 'spacing', 'gap', 'messages'] },
         { id: 'list-density', label: 'Session list density', description: 'How tightly the rows of the sessions list are packed', keywords: ['compact', 'comfortable', 'sessions', 'rows', 'list'] },
         { id: 'auto-follow', label: 'Auto-follow', description: 'Keep the conversation scrolled to the end while a reply arrives', keywords: ['scroll', 'follow', 'stick', 'bottom', 'stream'] },
+        { id: 'finished-marks', label: 'Finished marks on agents', description: 'The green ring and tick on an agent with finished work you have not opened', keywords: ['ring', 'outline', 'green', 'tick', 'check', 'finished', 'done', 'sigil', 'agent', 'crew', 'hide'] },
         { id: 'pin-limit', label: 'Pin limit', description: 'How many sessions can be pinned at once', keywords: ['pin', 'pinned', 'sessions', 'limit', 'maximum'] },
         { id: 'activity-mode', label: 'Default activity mode', description: 'How agent activity shows on a device that has not chosen a mode', keywords: ['worklog', 'stream', 'final', 'tools', 'activity', 'reasoning'] },
         { id: 'chip-order', label: 'Composer chips', description: 'Which chips sit under the message box and in what order', keywords: ['chips', 'composer', 'model', 'reasoning', 'workspace', 'toolsets', 'reorder', 'hide'] },

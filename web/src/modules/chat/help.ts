@@ -14,9 +14,9 @@ export const chatHelp: ModuleHelp = {
         { h: 'The sessions list' },
         {
           ul: [
-            'It shows the [[session|sessions]] of the profile this tab is working on: a title and a time for each, nothing more. Pinned sessions are on top; the rest are grouped Yesterday, This week and Older by the day of their last message, in your time zone. A session you have not read has its title in bold.',
+            'It shows the [[session|sessions]] of the profile this tab is working on, your chats and its [[automation-sessions|automation sessions]] together in one list: a title and a time for each, nothing more. An automation session (a scheduled job, a Kanban worker, a webhook, the API server) has the icon of where it came from before its title. Pinned sessions are on top; the rest are grouped Yesterday, This week and Older by the day of their last message, in your time zone. A session you have not read has its title in bold.',
             'A row says one word more only when the session needs you: Needs you means Hermes stopped to ask you something, Failed means the session ended with an error, and Draft means you started a [[draft]] and did not send it. All of this is read from Hermes every time, so it is always as Hermes has it.',
-            'Two buttons sit under the search box. Filters holds the Chats and Automation tabs ([[automation-sessions]] are what runs without you), Failed only, Hide API noise (leaves out the short throwaway sessions of the API server), All profiles, Archived, Source and By project; a number on the button says how many are on. More holds Refresh, Compact view, Select sessions, Import, Claude Code and Codex, and Clean up. While one of these menus is open the rest of the page waits: Escape or a press outside closes it. The filters are kept in the address, so a bookmark or a link opens the list the way you left it.',
+            'Two buttons sit under the search box. Filters holds the kind of session (All, the default, or only Chats or only Automation), Failed only, Hide API noise (leaves out the short throwaway sessions of the API server), All profiles, Archived, Source and By project; a number on the button says how many are on. More holds Refresh, Compact view, Select sessions, Import, Claude Code and Codex, and Clean up. While one of these menus is open the rest of the page waits: Escape or a press outside closes it. The filters are kept in the address, so a bookmark or a link opens the list the way you left it.',
             'In Talk the list shows this agent’s sessions. Switch on All profiles to list every profile’s sessions together, each marked with its profile; opening one switches this tab to that profile. Switch it off again to list only this agent’s sessions; that is also how you group by project.',
             'The line under the list counts the sessions (and the profiles, with All profiles). Compact view packs more rows into the screen.',
             'The list updates by itself when Hermes says its sessions changed, and stays where you were reading. Refresh (in More) reads it again; on a phone you can also pull the list down from its top.',
@@ -380,9 +380,9 @@ export const chatHelp: ModuleHelp = {
     {
       id: 'chat-settings',
       title: 'Chat settings',
-      summary: 'Send key, completion sound, timestamps, density, auto-follow, pin limit, the default activity mode and the composer chips.',
+      summary: 'Send key, completion sound, timestamps, density, auto-follow, finished marks, pin limit, the default activity mode and the composer chips.',
       route: '/settings/chat',
-      keywords: 'send key enter command enter newline sound chime timestamps time density compact comfortable auto-follow scroll pin limit pinned activity mode default chips reset preferences',
+      keywords: 'send key enter command enter newline sound chime timestamps time density compact comfortable auto-follow scroll finished marks ring outline green tick agent sigil hide pin limit pinned activity mode default chips reset preferences',
       body: [
         { p: 'These are [[chat-preference|Caduceus preferences]]: Caduceus keeps them and applies them to the chat at once. Hermes’s own config is never changed for them.' },
         {
@@ -391,6 +391,7 @@ export const chatHelp: ModuleHelp = {
             'Send key chooses what sends a message. Automatic, the default, sends with Enter where the device has a mouse or trackpad and with ⌘/Ctrl+Enter on a touch screen, where Enter must start a new line. With ⌘/Ctrl+Enter, Enter starts a new line everywhere. With Enter, ⌘/Ctrl+Enter still sends. Shift+Enter always starts a new line. The same key applies in a fast chat. An Enter that confirms a word of an input method never sends.',
             'Completion sound plays a short chime when a reply finishes. Timestamps show when each message was written, under it.',
             'Transcript density and Session list density pack the conversation and the list closer. Auto-follow keeps a conversation scrolled to the end while a reply arrives; scrolling up always stops it. Opening a conversation still starts at its end.',
+            'Finished marks on agents is the green ring and tick on an agent that has finished work you have not opened yet (what is in Ready for review on Today). Opening that work clears them; switching this off hides them on this device. The work stays in Ready for review, and the agent’s state is still written beside it where there is room.',
             'Pin limit is how many sessions can be pinned at once; a pin past it is refused and says so. Default activity mode is how agent activity shows on a device that has not chosen a mode itself.',
             'Composer chips is the order and visibility of the settings listed in This chat, the same editor as in the composer.',
             'Reset to defaults asks you to confirm (Tier 1) and puts every setting on the page back, the device’s and the ones that follow you.',
@@ -404,7 +405,7 @@ export const chatHelp: ModuleHelp = {
     {
       id: 'automation-sessions',
       term: 'Automation sessions',
-      definition: 'Sessions that were not started by a person typing to Hermes: scheduled jobs, Kanban workers, webhooks and the API server. They are listed under the Automation tab, apart from your chats.',
+      definition: 'Sessions that were not started by a person typing to Hermes: scheduled jobs, Kanban workers, webhooks and the API server. They are listed with your chats, marked by the icon of their source; the Automation kind in Filters lists only them.',
       page: 'chat',
     },
     {

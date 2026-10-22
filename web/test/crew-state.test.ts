@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import type { ActivityEvent, LiveRun, InboxApproval, InboxClarify, InboxNotice } from '@caduceus/contracts/inbox';
+import type { LiveRun, InboxApproval, InboxClarify, InboxNotice } from '@caduceus/contracts/inbox';
+import type { ReadyItem } from '@caduceus/contracts/today';
 import { crewStateLabel, deriveCrew, type CrewInput, type CrewMember } from '../src/modules/crew/crew-state.ts';
 
 // What each agent of the crew is doing, from what Hermes and Caduceus already say. Pure: nothing is read or stored here.
@@ -50,9 +51,9 @@ const failure = (profile: string | undefined, title: string, at: number): InboxN
   link: undefined,
 });
 const run = (profile: string | undefined, title: string, since: number, status: LiveRun['status'] = 'running'): LiveRun => ({ sessionId: `rt-${title}`, storedSessionId: title, title, profile, status, since });
-const finished = (profile: string | undefined, title: string, at: number, seq = at): ActivityEvent => ({ seq, at, profile, storedSessionId: title, title });
+const finished = (profile: string | undefined, title: string, at: number): ReadyItem => ({ id: `run:${title}`, stamp: String(at), kind: 'run', title, summary: undefined, profile, at, to: `/chat/${title}` });
 
-const NOTHING: CrewInput = { profiles: [], items: [], running: [], activity: [], unseen: 0 };
+const NOTHING: CrewInput = { profiles: [], items: [], running: [], ready: [] };
 const crew = (change: Partial<CrewInput>): CrewMember[] => deriveCrew({ ...NOTHING, profiles: ['coder', 'general'], ...change });
 const of = (members: CrewMember[], profile: string): CrewMember => members.find((member) => member.profile === profile)!;
 
@@ -156,21 +157,21 @@ describe('blocked', () => {
 });
 
 describe('done', () => {
-  test('is a profile that finished a run this device has not opened: the newest one, and when', () => {
-    const members = crew({ activity: [finished('general', 'Lease letter', 9000), finished('coder', 'Old news', 5000)], unseen: 1 });
+  test('is a profile with finished work ready for review: the newest, and when', () => {
+    const members = crew({ ready: [finished('general', 'Lease letter', 9000)] });
 
     expect(of(members, 'general')).toEqual({ profile: 'general', state: 'done', line: 'Finished “Lease letter”', since: 9000 });
     expect(of(members, 'coder').state).toBe('idle');
   });
 
-  test('says how many it has finished since', () => {
-    const members = crew({ activity: [finished('coder', 'C', 30), finished('general', 'G', 20), finished('coder', 'B', 10)], unseen: 3 });
+  test('says how many more are ready', () => {
+    const members = crew({ ready: [finished('coder', 'C', 30), finished('general', 'G', 20), finished('coder', 'B', 10)] });
 
     expect(of(members, 'coder')).toEqual({ profile: 'coder', state: 'done', line: 'Finished “C” · 1 more finished', since: 30 });
   });
 
-  test('is not shown once the owner has opened the feed up to it', () => {
-    expect(crew({ activity: [finished('coder', 'Seen', 10)], unseen: 0 }).map((member) => member.state)).toEqual(['idle', 'idle']);
+  test('work that names no profile is nobody’s', () => {
+    expect(crew({ ready: [finished(undefined, 'Orphan', 10)] }).map((member) => member.state)).toEqual(['idle', 'idle']);
   });
 });
 
@@ -178,8 +179,7 @@ describe('precedence', () => {
   const everything = {
     items: [failure('coder', 'Gave up', 10), approval('coder', 'make deploy', 20)],
     running: [run('coder', 'Release', 30)],
-    activity: [finished('coder', 'Docs', 40)],
-    unseen: 1,
+    ready: [finished('coder', 'Docs', 40)],
   };
 
   test('waiting beats working, blocked and done', () => {

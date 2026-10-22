@@ -1,6 +1,6 @@
 // Today's review state (M8 #03): what is ready for review and the owner's visits. Hermes says what finished (Kanban tasks that reached Done, from every board;
-// the runs the activity feed saw end); this file keeps only the owner's place in the store (`today_state`) and the markers of what they opened (`today_opened`).
-// The list is derived on every ask and nothing of a task or a run is copied. The rules are pure, in `today-review.ts`.
+// the runs the activity feed saw end; the scheduled jobs' runs it closed); this file keeps only the owner's place in the store (`today_state`) and the markers
+// of what they opened (`today_opened`). The list is derived on every ask and nothing of a task or a run is copied. The rules are pure, in `today-review.ts`.
 import type { Hono } from 'hono';
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { ReadyState, TodayVisit } from '@caduceus/contracts/today';
@@ -10,9 +10,11 @@ import type { HermesBackend } from './hermes-backend.ts';
 import { readBody } from './hermes-proxy.ts';
 import type { ActivityFeed } from './inbox-activity.ts';
 import { boardTasks } from './inbox-work.ts';
-import { MARKER_KEPT_MS, readyItems, recordVisit, runCandidates, taskCandidates, type BoardTasks, type OpenedMarker, type VisitState } from './today-review.ts';
+import { automationCandidates, MARKER_KEPT_MS, readyItems, recordVisit, runCandidates, taskCandidates, type BoardTasks, type OpenedMarker, type VisitState } from './today-review.ts';
 
 const MAX_BODY = 4 * 1024;
+/** How many of the newest scheduled-job sessions, across every profile, are read for finished runs: one page of Hermes's list. Each job is offered once, by its newest run. */
+const CRON_RUNS_READ = 100;
 /** An id or a stamp is a short reference (a board, a task id, a time); anything longer is not one. */
 const MAX_REFERENCE = 256;
 
@@ -39,6 +41,15 @@ async function readBoards(backend: HermesBackend): Promise<BoardTasks[]> {
   );
 }
 
+/** The newest scheduled-job sessions of every profile, as Hermes's cross-profile list answers. Throws when Hermes does not answer. */
+async function readCronRuns(backend: HermesBackend): Promise<unknown[]> {
+  const query = new URLSearchParams({ profile: 'all', sources: 'cron', order: 'recent', min_messages: '1', limit: String(CRON_RUNS_READ) });
+  const res = await backend.fetch(`/api/profiles/sessions?${query}`);
+  if (!res.ok) throw new Error(`Hermes answered HTTP ${res.status}`);
+  const body: unknown = await res.json();
+  return isRecord(body) && Array.isArray(body.sessions) ? body.sessions : [];
+}
+
 async function jsonBody(request: Request): Promise<unknown> {
   const raw = await readBody(request, MAX_BODY);
   if (raw === 'too-large') return undefined;
@@ -59,7 +70,8 @@ export function mountToday(app: Hono<AuthEnv>, { store, backend, activity, now }
   app.get('/_caduceus/api/today/ready', async (c) => {
     let candidates;
     try {
-      candidates = [...taskCandidates(await readBoards(backend)), ...runCandidates(activity.events())];
+      const [boards, cron] = await Promise.all([readBoards(backend), readCronRuns(backend)]);
+      candidates = [...taskCandidates(boards), ...automationCandidates(cron), ...runCandidates(activity.events())];
     } catch (error) {
       return c.json({ error: 'hermes-unavailable', message: error instanceof Error ? error.message : 'Hermes did not answer.' }, 502);
     }
