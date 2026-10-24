@@ -1,15 +1,10 @@
 // What Today makes of what Hermes and Caduceus already say (M8 #03): the day's schedule from Hermes's cron jobs, the away list from the activity feed and the
-// jobs' last runs, the ready list, the decisions and the empty states. Pure: no DOM, no React and nothing kept (D1).
+// jobs' last runs, the ready list, the decisions and the empty states. Today is always every profile's, so nothing here filters by profile. Pure: no DOM, no React
+// and nothing kept (D1).
 import type { ActivityEvent, InboxItem } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
-import { inScope } from '../inbox/inbox-model.ts';
 import { sigilFor } from '../../shell/sigil-model.ts';
 import { relativeTime, type Job } from '../work/schedules-model.ts';
-
-/** The jobs of the profile in scope: every job for All profiles and while the scope is not known yet. */
-function jobsIn(jobs: readonly Job[], scope: string | undefined): Job[] {
-  return scope === undefined || scope === 'all' ? [...jobs] : jobs.filter((job) => job.profile === scope);
-}
 
 /** How a run stands on the schedule: still to come, run, or run and failed. The bar draws each with a shape of its own, and the list says it in words. */
 export type RunKind = 'next' | 'ran' | 'failed';
@@ -58,13 +53,13 @@ const short = (text: string): string => {
  * The day around `now` as a 24-hour bar and a list: each job's last run and its next run, where they fall today. Hermes keeps one of each on the job, so a
  * routine that fires many times a day shows its latest and its coming one. Runs still to come are listed first (soonest first), then those that ran (latest first).
  */
-export function scheduleDay(jobs: readonly Job[], now: number, scope: string | undefined): ScheduleView {
+export function scheduleDay(jobs: readonly Job[], now: number): ScheduleView {
   const { start, end } = dayAround(now);
   const place = (time: number) => (time - start) / (end - start);
   const today = (time: number | undefined): time is number => time !== undefined && time >= start && time < end;
   const markers: BarMarker[] = [];
   const rows: DayRow[] = [];
-  for (const job of jobsIn(jobs, scope)) {
+  for (const job of jobs) {
     const hue = sigilFor(job.profile).hue;
     const key = `${job.profile}:${job.id}`;
     if (today(job.lastRunAt)) {
@@ -110,17 +105,15 @@ export interface AwayInput {
   activity: readonly ActivityEvent[];
   /** Hermes's cron jobs. Each says when it last ran and how it went. */
   jobs: readonly Job[];
-  scope: string | undefined;
 }
 
 /** What happened since the owner last opened Today, newest first: the runs that finished (the activity feed) and the routines that ran (Hermes's cron). Nothing else. */
-export function awayView({ since, now, activity, jobs, scope }: AwayInput): AwayView {
+export function awayView({ since, now, activity, jobs }: AwayInput): AwayView {
   if (since === null) return { kind: 'first-visit' };
-  const everyone = scope === undefined || scope === 'all';
   const runs = activity
-    .filter((event) => event.at > since && event.at <= now && (everyone || event.profile === scope))
+    .filter((event) => event.at > since && event.at <= now)
     .map((event): AwayRow => ({ id: `run:${event.seq}`, at: event.at, kind: 'run', profile: event.profile, title: event.title, line: 'Finished', failed: false, to: event.storedSessionId === undefined ? undefined : `/chat/${encodeURIComponent(event.storedSessionId)}` }));
-  const routines = jobsIn(jobs, scope).flatMap((job): AwayRow[] => {
+  const routines = jobs.flatMap((job): AwayRow[] => {
     if (job.lastRunAt === undefined || job.lastRunAt <= since || job.lastRunAt > now) return [];
     const failed = job.lastStatus === 'error';
     return [{ id: `routine:${job.profile}:${job.id}`, at: job.lastRunAt, kind: 'routine', profile: job.profile, title: job.name, line: failed ? `Failed: ${short(job.lastError ?? 'it did not finish')}` : 'Ran', failed, to: undefined }];
@@ -141,19 +134,14 @@ export interface ReadyRow {
   to: string;
 }
 
-/** The ready items of the profile in scope (one with no profile is in every scope), as rows. The server has put them newest first. */
-export function readyRows(items: readonly ReadyItem[], scope: string | undefined): ReadyRow[] {
-  const everyone = scope === undefined || scope === 'all';
-  return items
-    .filter((item) => everyone || item.profile === undefined || item.profile === scope)
-    .map(({ id, stamp, kind, title, summary, profile, at, to }) => ({ id, stamp, kind, title, line: summary ?? (kind === 'task' ? 'Task finished' : 'Run finished'), profile, at, to }));
+/** The ready items of every profile, as rows. The server has put them newest first. */
+export function readyRows(items: readonly ReadyItem[]): ReadyRow[] {
+  return items.map(({ id, stamp, kind, title, summary, profile, at, to }) => ({ id, stamp, kind, title, line: summary ?? (kind === 'task' ? 'Task finished' : 'Run finished'), profile, at, to }));
 }
 
-/** Every item that needs a decision within the profile scope, the longest wait first: an item that names no profile is shown in every scope. */
-export function decisionsFor(items: readonly InboxItem[], scope: string | undefined): InboxItem[] {
-  return inScope(items, scope)
-    .filter((item) => item.group === 'decision')
-    .sort((a, b) => a.at - b.at);
+/** Every item that needs a decision, in every profile, the longest wait first. */
+export function decisionsFor(items: readonly InboxItem[]): InboxItem[] {
+  return items.filter((item) => item.group === 'decision').sort((a, b) => a.at - b.at);
 }
 
 /** Who asks and what for, as the head of a card says it: "coder wants to run a command". */

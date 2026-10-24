@@ -31,7 +31,7 @@ const CLOCK_MS = 30_000;
 
 export function Today() {
   const feed = useInbox();
-  const { scope, hermes, unavailable, reload: reloadProfiles } = useProfileScope();
+  const { hermes, unavailable, reload: reloadProfiles } = useProfileScope();
   const registry = useRegistry();
   const crew = useCrew();
   const now = useNow(true, CLOCK_MS);
@@ -62,15 +62,15 @@ export function Today() {
     return () => document.removeEventListener('visibilitychange', back);
   }, [ready.reload]);
 
-  const decisions = useMemo(() => decisionsFor(feed.items, scope), [feed.items, scope]);
+  const decisions = useMemo(() => decisionsFor(feed.items), [feed.items]);
   const needs = feedBlock(feed, decisions, () => inboxFeed().retry());
-  const readyBlock = mapBlock(ready, (items) => readyRows(items, scope));
+  const readyBlock = mapBlock(ready, readyRows);
 
   const jobsBlock: Block<Job[]> = {
     reload: () => void jobs.reload(),
     state: jobs.jobs ? { status: 'ready', data: jobs.jobs } : jobs.failed ? { status: 'error', message: 'Hermes did not answer for its schedules.' } : { status: 'loading' },
   };
-  const schedule = mapBlock(jobsBlock, (list) => scheduleDay(list, now, scope));
+  const schedule = mapBlock(jobsBlock, (list) => scheduleDay(list, now));
   // Away needs the visit (when the owner was last here), the jobs (what ran) and the Inbox's stream (what finished): it waits for all three and fails if one does.
   const away: Block<ReturnType<typeof awayView>> = {
     reload: () => {
@@ -83,7 +83,7 @@ export function Today() {
         : jobsBlock.state.status === 'error'
           ? jobsBlock.state
           : visit.state.status === 'ready' && jobsBlock.state.status === 'ready' && feed.status !== 'connecting'
-            ? { status: 'ready', data: awayView({ since: visit.state.data.since, now, activity: feed.activity, jobs: jobsBlock.state.data, scope }) }
+            ? { status: 'ready', data: awayView({ since: visit.state.data.since, now, activity: feed.activity, jobs: jobsBlock.state.data }) }
             : { status: 'loading' },
   };
   const rows = useMemo(() => deskNavigation(registry, crew).crew, [registry, crew]);

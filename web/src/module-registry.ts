@@ -143,6 +143,8 @@ export interface ModuleDefinition<Screen> {
   routes: ModuleRoute<Screen>[];
   /** Shows the "All profiles" scope and a profile filter by default (information architecture §6). */
   crossProfile?: boolean;
+  /** Always shows every profile: the tab's profile never filters it, and the app bar's profile chip says All profiles and cannot be changed (information architecture §6). */
+  allProfiles?: boolean;
   /** The page header shows which profile the screen is scoped to. */
   profileScoped?: boolean;
   paletteCommands?: () => PaletteCommand[];

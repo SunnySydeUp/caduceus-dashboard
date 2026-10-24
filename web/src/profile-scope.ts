@@ -24,12 +24,23 @@ export function effectiveProfile({ urlProfile, deviceChoice, hermesDefault, prof
   return { name: hermesDefault, source: 'hermes' };
 }
 
+/** How a screen takes the tab's profile: one profile, cross-profile (All profiles until the URL names one), or locked to All profiles. */
+export type ScopeMode = 'one' | 'cross' | 'all';
+
+/** A module's scope mode from its registry flags: `allProfiles` wins over `crossProfile`; a route outside every module uses one profile. */
+export function scopeMode(module: { allProfiles?: boolean; crossProfile?: boolean } | undefined): ScopeMode {
+  if (module?.allProfiles) return 'all';
+  return module?.crossProfile ? 'cross' : 'one';
+}
+
 /**
- * The scope a screen shows: `all` on a cross-profile screen (Today, Notices, Board, Schedules, history, Insights) until
- * the URL names a profile, otherwise the effective profile.
+ * The scope a screen shows: always `all` on a screen locked to All profiles (Today), whatever the tab's profile; `all` on a cross-profile screen (Notices, Board,
+ * Schedules, Insights) until the URL names a profile; otherwise the effective profile, `undefined` while it is not known yet.
  */
-export function profileScope(effective: { name: string; source: ProfileSource }, crossProfile: boolean): string {
-  return crossProfile && effective.source !== 'url' ? 'all' : effective.name;
+export function profileScope(effective: { name: string; source: ProfileSource } | undefined, mode: ScopeMode): string | undefined {
+  if (mode === 'all') return 'all';
+  if (effective === undefined) return undefined;
+  return mode === 'cross' && effective.source !== 'url' ? 'all' : effective.name;
 }
 
 /** The browser's `localStorage`, as far as profile scope needs it. */

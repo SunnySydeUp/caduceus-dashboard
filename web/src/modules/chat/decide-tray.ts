@@ -27,10 +27,10 @@ export interface TrayView {
 /**
  * The decisions that wait elsewhere, the faces for the pill and its words. Only a decision of the session that is open is not listed: it is answered inline. Another session of the
  * same agent has no transcript on the screen, so its decision is listed (its card names the session). A Talk screen is scoped to its own agent, so the owner's profile scope is not
- * applied: what waits elsewhere is every other decision, as Today counts them with All profiles.
+ * applied: what waits elsewhere is every other decision, as Today counts them.
  */
 export function trayView({ items, storedId }: TrayInput): TrayView {
-  const others = decisionsFor(items, undefined).filter((item) => !(item.kind !== 'notice' && storedId !== undefined && item.storedSessionId === storedId));
+  const others = decisionsFor(items).filter((item) => !(item.kind !== 'notice' && storedId !== undefined && item.storedSessionId === storedId));
   const faces = [...new Set(others.map((item) => item.profile))].slice(0, TRAY_FACES);
   const label = others.length === 1 ? '1 more needs you elsewhere' : `${others.length} more need you elsewhere`;
   return { items: others, faces, label, hidden: others.length === 0 };

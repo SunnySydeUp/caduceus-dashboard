@@ -9,9 +9,11 @@ import {
   effectiveProfile,
   loadProfiles,
   profileScope,
+  scopeMode,
   rememberDeviceChoice,
   type HermesProfiles,
   type ProfileSource,
+  type ScopeMode,
 } from '../profile-scope.ts';
 import { useRegistry } from './registry-context.tsx';
 import { useRouteInfo, useUrlProfile } from './navigation.tsx';
@@ -26,8 +28,8 @@ export interface ProfileScopeState {
   effective: { name: string; source: ProfileSource } | undefined;
   /** What the current screen shows: `all`, or one profile's name. */
   scope: string | undefined;
-  /** The current screen is cross-profile, so "All profiles" is offered. */
-  crossProfile: boolean;
+  /** How the current screen takes the profile: one profile, cross-profile ("All profiles" is offered), or locked to All profiles. */
+  mode: ScopeMode;
   /** Scopes this tab to a profile (or `all`) through its URL and remembers it on this device. Never writes Hermes. */
   choose(name: string): Promise<void>;
   /** Asks Hermes for its profiles and default again: after Profiles has created, renamed or deleted one, or changed the default. */
@@ -47,7 +49,7 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
   const [loadCount, setLoadCount] = useState(0);
   // This device's last choice as it was when the tab loaded: a choice made in another tab later does not move this one.
   const [lastChoice] = useState(() => deviceChoice(localStorage));
-  const crossProfile = (moduleId !== undefined && registry.module(moduleId)?.crossProfile) || false;
+  const mode = scopeMode(moduleId === undefined ? undefined : registry.module(moduleId));
 
   useEffect(() => {
     if (!backendReady) return;
@@ -82,8 +84,8 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
       hermes,
       unavailable,
       effective,
-      scope: effective && profileScope(effective, crossProfile),
-      crossProfile,
+      scope: profileScope(effective, mode),
+      mode,
       async choose(name) {
         const search = chooseProfile({ name, search: location.search, store: localStorage });
         await closeAllLayers();
@@ -92,7 +94,7 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
       },
       reload: () => setLoadCount((count) => count + 1),
     }),
-    [hermes, unavailable, effective, crossProfile, router],
+    [hermes, unavailable, effective, mode, router],
   );
   return <ProfileScopeContext value={state}>{children}</ProfileScopeContext>;
 }

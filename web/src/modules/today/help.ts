@@ -10,8 +10,9 @@ export const todayHelp: ModuleHelp = {
       keywords: 'home start overview inbox needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty reminders apple calendar due date remindctl week month agenda tomorrow overdue',
       body: [
         { p: 'Today is where Caduceus opens. It answers four questions, in this order on a phone: what needs me, what is ready, what are my routines doing, and what happened while I was away. On a wide screen the first two sit in a column on the left and the schedule and the away list in a column on the right. Every block loads by itself. If one cannot be read, it says so inside the block with a Retry button, and the others carry on.' },
+        { p: 'Today always shows every [[profile-scope|profile]]. The profile chip in the app bar says All profiles, and on this screen it cannot be changed: the profile you chose for the tab is kept for the other screens.' },
         { h: 'Needs you' },
-        { p: 'One card for each thing that [[needs-decision|needs a decision]], in every [[profile-scope|profile]] you are looking at: an approval for a command, a question, a choice, or a decision about work such as a task to review. The card says who is asking, what for, and how long ago. The one that has waited longest is first. You answer on the card. Answer one here or anywhere else, and the card goes by itself.' },
+        { p: 'One card for each thing that [[needs-decision|needs a decision]], in every profile: an approval for a command, a question, a choice, or a decision about work such as a task to review. The card says who is asking, what for, and how long ago. The one that has waited longest is first. You answer on the card. Answer one here or anywhere else, and the card goes by itself.' },
         { p: 'An agent that wants to run a risky command stops and asks. So does an agent that has a question. Caduceus collects those requests from every chat that is running, in every profile, so you do not have to find the right chat. It asks Hermes through its own [[observer-connection|observer connection]] and keeps nothing: when you answer in a chat, in Telegram or in the terminal instead, the card disappears by itself. An item that nobody answered disappears when Hermes gives up on it. Answering one that is already gone says so, instead of failing.' },
         {
           ul: [
@@ -56,14 +57,14 @@ export const todayHelp: ModuleHelp = {
         { h: 'Choosing a profile' },
         {
           ul: [
-            'The profile chip in the app bar shows the scope. Open it to choose another profile: it opens as a sheet on a phone.',
+            'The profile chip in the app bar shows the scope. Open it to choose another profile: it opens as a sheet on a phone. On Today it only says All profiles and does not open.',
             'A choice applies to this tab only. Other tabs and other devices keep their own.',
             'A new tab starts on the profile in its address (?profile=), else the one you last chose on this device, else Hermes’s own default.',
             'Links inside Caduceus keep the profile you chose.',
           ],
         },
         { h: 'All profiles' },
-        { p: 'A screen that looks across your whole setup, such as Today, also offers All profiles. A screen that works on one profile always uses the one you chose.' },
+        { p: 'Today always shows All profiles: its chip says so and opens no switcher. A screen that looks across your whole setup, such as Notices or Insights, also offers All profiles. A screen that works on one profile always uses the one you chose.' },
         { h: 'What it never changes' },
         { p: 'Choosing a profile here never changes Hermes’s own default profile, the one the command line and anything without a profile uses. The switcher shows that default so you can see the difference.' },
       ],

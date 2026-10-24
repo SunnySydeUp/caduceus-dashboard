@@ -35,7 +35,8 @@ function ProfileRow({ profile, checked, isDefault, onChoose }: { profile: Profil
 
 /** The profile switcher (information architecture §6): choosing scopes this tab only; Hermes's default is never touched. */
 function ProfileSwitcher({ onClose }: { onClose(): void }) {
-  const { hermes, unavailable, scope, crossProfile, choose } = useProfileScope();
+  const { hermes, unavailable, scope, mode, choose } = useProfileScope();
+  const crossProfile = mode === 'cross';
   return (
     <Sheet title="Switch profile" detents={['auto', 'full']} initialFocus='[aria-checked="true"]' onClose={onClose}>
       <p className="plist__note">
@@ -55,7 +56,7 @@ function ProfileSwitcher({ onClose }: { onClose(): void }) {
                 <Sigil name="all" size="sm" />
                 <span className="plist__main">
                   <span className="plist__name">All profiles</span>
-                  <span className="plist__sub">Today, Notices, Board, Schedules, history and Insights</span>
+                  <span className="plist__sub">Notices, Board, Schedules, history and Insights</span>
                 </span>
                 <span />
                 <span className="plist__check">{scope === 'all' && <Icon name="check" />}</span>
@@ -77,22 +78,35 @@ function ProfileSwitcher({ onClose }: { onClose(): void }) {
   );
 }
 
-/** The app bar's profile chip: the scope of this tab, opening the switcher. */
+/** The app bar's profile chip: the scope of this tab, opening the switcher. On a screen locked to All profiles it only says so: there is nothing to switch. */
 export function ProfileChip() {
-  const { scope, crossProfile } = useProfileScope();
+  const { scope, mode } = useProfileScope();
+  if (mode === 'all') {
+    return (
+      <span className="chip chip--profile chip--static appbar__profile" title="This screen always shows every profile">
+        <Sigil name="all" size="xs" />
+        <span className="truncate">All profiles</span>
+        <span className="sr-only">: this screen always shows every profile</span>
+      </span>
+    );
+  }
+  return <SwitchChip label={scope === 'all' ? 'All profiles' : (scope ?? 'Profile')} sigil={scope ?? '?'} cross={mode === 'cross'} />;
+}
+
+/** The chip that opens the switcher. Its open state lives here, so a screen locked to All profiles never holds a sheet that is not shown. */
+function SwitchChip({ label, sigil, cross }: { label: string; sigil: string; cross: boolean }) {
   const [open, setOpen] = useState(false);
-  const label = scope === 'all' ? 'All profiles' : (scope ?? 'Profile');
   return (
     <>
       <button
         type="button"
         className="chip chip--profile appbar__profile"
-        data-cross={crossProfile ? '' : undefined}
+        data-cross={cross ? '' : undefined}
         aria-haspopup="dialog"
         aria-label={`Profile scope: ${label}. Switch profile`}
         onClick={() => setOpen(true)}
       >
-        <Sigil name={scope ?? '?'} size="xs" />
+        <Sigil name={sigil} size="xs" />
         <span className="truncate">{label}</span>
         <Icon name="chev-d" small />
       </button>

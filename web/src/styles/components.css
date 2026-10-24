@@ -103,6 +103,9 @@ kbd, .kbd { display: inline-grid; place-items: center; min-inline-size: 1.25rem;
 .chip svg.i { inline-size: 14px; block-size: 14px; }
 .chip__x { display: inline-grid; place-items: center; inline-size: 18px; block-size: 18px; margin-inline-end: calc(var(--cd-space-1) * -1); border-radius: 50%; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; }
 .chip--profile { padding-inline-start: var(--cd-space-1); color: var(--cd-fg-default); }
+/* A chip that only says something (Today's All profiles): it does not look pressable. */
+.chip--static { cursor: default; }
+@media (hover: hover) { .chip--static:hover { background: var(--cd-bg-surface); } }
 
 /* ---- Segmented ---- */
 .seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-subtle); }

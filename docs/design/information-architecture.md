@@ -95,8 +95,9 @@ All editors write Hermes files directly through the Hermes API (decision 1). The
   3. Hermes's active / default profile.
 - Every profile-scoped request carries it. This matches how the Hermes REST API is already scoped.
 - Switching the profile in one tab never affects other tabs or devices. **Make default** in Profiles is the only action that writes Hermes's sticky `active_profile`.
-- **Cross-profile by default:** Today, Work (its state view), Notices, Board (kanban.db is shared across profiles), Schedules, the session history search, and Insights.
-- These views show a profile column or badge and a filter. Profile-only screens (Memory, Skills, Model, Config, Keys) show the scoped profile in the page header.
+- **Always All profiles:** Today. The tab's profile never filters it, also when the address names one, and its profile chip says All profiles and opens no switcher. The tab keeps its profile for the other screens.
+- **Cross-profile by default:** Work (its state view), Notices, Board (kanban.db is shared across profiles), Schedules, the session history search, and Insights.
+- These views show a profile column or badge and a filter (Today shows each item's profile, with no filter). Profile-only screens (Memory, Skills, Model, Config, Keys) show the scoped profile in the page header.
 
 ## 7. URL scheme (deep-linkable, shareable to notifications)
 ```

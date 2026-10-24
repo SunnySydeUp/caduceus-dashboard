@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { chooseProfile, effectiveProfile, profileScope, withProfile, type DeviceStore } from '../src/profile-scope.ts';
+import { chooseProfile, effectiveProfile, profileScope, scopeMode, withProfile, type DeviceStore } from '../src/profile-scope.ts';
+import { todayModule } from '../src/modules/today/index.ts';
 
 const profiles = ['default', 'coder', 'writer'];
 
@@ -21,12 +22,26 @@ describe('profile scope of a screen', () => {
   const effective = (urlProfile: string | undefined) => effectiveProfile({ urlProfile, deviceChoice: 'coder', hermesDefault: 'default', profiles });
 
   test('a cross-profile screen shows All profiles until the URL names a profile; other screens use the effective profile', () => {
-    expect(profileScope(effective(undefined), true)).toBe('all');
-    expect(profileScope(effective('deleted'), true)).toBe('all');
-    expect(profileScope(effective('writer'), true)).toBe('writer');
+    expect(profileScope(effective(undefined), 'cross')).toBe('all');
+    expect(profileScope(effective('deleted'), 'cross')).toBe('all');
+    expect(profileScope(effective('writer'), 'cross')).toBe('writer');
 
-    expect(profileScope(effective(undefined), false)).toBe('coder');
-    expect(profileScope(effective('writer'), false)).toBe('writer');
+    expect(profileScope(effective(undefined), 'one')).toBe('coder');
+    expect(profileScope(effective('writer'), 'one')).toBe('writer');
+    expect(profileScope(undefined, 'one')).toBeUndefined();
+  });
+
+  test('a screen locked to All profiles shows All profiles whatever the URL names, also before the profile is known', () => {
+    expect(profileScope(effective('writer'), 'all')).toBe('all');
+    expect(profileScope(undefined, 'all')).toBe('all');
+  });
+
+  test('a module locked to All profiles wins over cross-profile; Today is locked, and a route outside every module uses one profile', () => {
+    expect(scopeMode({ allProfiles: true, crossProfile: true })).toBe('all');
+    expect(scopeMode({ crossProfile: true })).toBe('cross');
+    expect(scopeMode({})).toBe('one');
+    expect(scopeMode(undefined)).toBe('one');
+    expect(scopeMode(todayModule)).toBe('all');
   });
 });
 
