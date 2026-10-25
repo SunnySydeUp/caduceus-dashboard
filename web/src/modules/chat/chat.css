@@ -90,6 +90,9 @@ h4.rich__heading, h5.rich__heading, h6.rich__heading { font-size: var(--cd-text-
 .rich__diagram-image, .rich__image { display: block; max-inline-size: 100%; block-size: auto; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
 .rich__image--inline { display: inline-block; max-block-size: 8rem; vertical-align: middle; }
 .rich__inline-media { display: inline-block; max-inline-size: 100%; }
+.rich__image-loading { display: inline-block; vertical-align: middle; inline-size: 12rem; max-inline-size: 100%; block-size: 8rem; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); }
+.rich__image-missing { max-inline-size: 100%; vertical-align: middle; }
+.rich__file { max-inline-size: 100%; }
 .rich__image-button { padding: 0; border: 0; background: none; cursor: zoom-in; display: block; max-inline-size: 100%; border-radius: var(--cd-radius-md); }
 .rich__image-button:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: 2px; }
 .rich__media { display: grid; gap: var(--cd-space-1); justify-items: start; max-inline-size: 100%; min-inline-size: 0; }

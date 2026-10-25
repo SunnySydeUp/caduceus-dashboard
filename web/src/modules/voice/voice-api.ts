@@ -38,9 +38,13 @@ export async function transcribe(recording: Blob, { profile, request = browserRe
   return typeof body === 'object' && body !== null && 'transcript' in body && typeof body.transcript === 'string' ? body.transcript : '';
 }
 
-/** Audio Hermes made, as a blob of its own type. */
-export async function fromDataUrl(dataUrl: string): Promise<Blob> {
-  return (await fetch(dataUrl)).blob();
+/** A `data:…;base64,` address Hermes answered with, as a blob of its own type. Decoded here: the page's CSP (`connect-src 'self'`) refuses a `fetch` of a data address. */
+export function fromDataUrl(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  const binary = atob(dataUrl.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let at = 0; at < binary.length; at++) bytes[at] = binary.charCodeAt(at);
+  return new Blob([bytes], { type: /^data:([^;,]*)/.exec(dataUrl)?.[1] ?? '' });
 }
 
 /** A reply as speech, by the text to speech engine Hermes is set to (`tts.provider`). */

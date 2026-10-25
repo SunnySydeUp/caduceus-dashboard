@@ -1,6 +1,7 @@
-// The picture of an attached image in the transcript (M1 #10): Hermes keeps the file on its disk and the message names its path, so the page asks
-// Hermes for it (`GET /api/fs/read-data-url`, through the proxy's file guard) and shows it from a blob address. The last few are kept, so scrolling
-// back to a message does not read the file again.
+// The picture of an image on Hermes's disk in the transcript: one the owner attached (M1 #10), or one a reply names by its path (`localImagePath` in
+// `markdown.ts`). The page asks Hermes for it (`GET /api/fs/read-data-url`, through the proxy's file guard) and shows it from a blob address. The last
+// few are kept, so scrolling back to a message does not read the file again.
+import { fromDataUrl } from '../voice/voice-api.ts';
 
 const KEPT = 48;
 const cache = new Map<string, Promise<string | undefined>>();
@@ -11,7 +12,7 @@ async function read(path: string): Promise<string | undefined> {
     if (!res.ok) return undefined;
     const { dataUrl } = (await res.json()) as { dataUrl?: unknown };
     if (typeof dataUrl !== 'string' || !/^data:image\/(?:png|jpe?g|gif|webp|bmp);base64,/i.test(dataUrl)) return undefined;
-    return URL.createObjectURL(await (await fetch(dataUrl)).blob());
+    return URL.createObjectURL(fromDataUrl(dataUrl));
   } catch {
     return undefined;
   }

@@ -31,7 +31,9 @@ export type Block =
   | { t: 'quote'; children: Block[] }
   | { t: 'table'; align: Align[]; head: Inline[][]; rows: Inline[][][]; open: boolean }
   | { t: 'rule' }
-  | { t: 'media'; kind: MediaKind; src: string; alt: string };
+  | { t: 'media'; kind: MediaKind; src: string; alt: string }
+  /** A file on Hermes's disk a reply delivers with a `MEDIA:<path>` line, other than an image (those are `media`). */
+  | { t: 'file'; path: string; name: string };
 
 export interface Markdown {
   blocks: Block[];
@@ -91,6 +93,33 @@ export function safeUrl(url: string, purpose: 'link' | 'media'): string | undefi
   if (purpose === 'link' && (scheme === 'mailto' || scheme === 'tel')) return target;
   if (purpose === 'media' && scheme === 'data' && SAFE_DATA_IMAGE.test(target)) return target;
   return undefined;
+}
+
+const RASTER_IMAGE = /\.(?:png|jpe?g|gif|webp|bmp)$/i;
+
+/** The file on Hermes's disk a source names (`/abs/path`, `~/path`, `file:///abs/path`), or undefined when it is a web address, relative, or a folder. */
+function localPath(src: string): string | undefined {
+  let path = src.trim();
+  if (/^file:/i.test(path)) {
+    const local = /^file:\/\/(\/[^?#]*)$/i.exec(path)?.[1];
+    if (local === undefined) return undefined;
+    try {
+      path = decodeURIComponent(local);
+    } catch {
+      return undefined;
+    }
+  }
+  return (/^\/(?!\/)/.test(path) || path.startsWith('~/')) && !path.endsWith('/') ? path : undefined;
+}
+
+/**
+ * The file on Hermes's disk an image source names (`/abs/path.png`, `~/path.png`, `file:///abs/path.png`), or undefined when the
+ * source is a web address or not a raster image. The page reads such a file through Hermes (`media-url.ts`); the page's own
+ * server has nothing at that address.
+ */
+export function localImagePath(src: string): string | undefined {
+  const path = localPath(src);
+  return path !== undefined && RASTER_IMAGE.test(path) ? path : undefined;
 }
 
 /** The words of inline content, markup dropped. */
@@ -264,7 +293,7 @@ export function parseInline(src: string): Inline[] {
         if (destination) {
           const label = src.slice(open + 1, close);
           if (char === '!') {
-            const kind = safeUrl(destination.url, 'media');
+            const kind = localImagePath(destination.url) ?? safeUrl(destination.url, 'media');
             const alt = inlineText(parseInline(label));
             if (kind === undefined) push({ t: 'text', text: alt });
             else if (mediaKindOf(kind) === 'image') push({ t: 'image', src: kind, alt });
@@ -366,11 +395,19 @@ const startsTable = (lines: readonly string[], at: number) => {
 };
 
 const MATH_OPEN = /^\s*(\$\$|\\\[)(.*)$/;
+// Hermes's `MEDIA:<path>` delivery line: the path bare or in backticks or quotes, emphasis around the tag allowed.
+const MEDIA_LINE = /^\s*[*_"']{0,3}MEDIA:\s*(?:`([^`\n]+)`|"([^"\n]+)"|'([^'\n]+)'|(\S+?))[*_"']{0,3}\s*$/;
+
+/** The file on Hermes a whole line delivers as `MEDIA:<path>`, or undefined when the line is not one. */
+function mediaLinePath(line: string): string | undefined {
+  const tag = MEDIA_LINE.exec(line);
+  return tag ? localPath(tag[1] ?? tag[2] ?? tag[3] ?? tag[4]!) : undefined;
+}
 
 /** Whether `line` begins something that ends a paragraph. */
 function interrupts(lines: readonly string[], at: number): boolean {
   const line = lines[at]!;
-  return FENCE.test(line) || HEADING.test(line) || RULE.test(line) || /^ {0,3}>/.test(line) || MARKER.test(line) || MATH_OPEN.test(line) || startsTable(lines, at);
+  return FENCE.test(line) || HEADING.test(line) || RULE.test(line) || /^ {0,3}>/.test(line) || MARKER.test(line) || MATH_OPEN.test(line) || startsTable(lines, at) || mediaLinePath(line) !== undefined;
 }
 
 function slugOf(text: string, context: Context): string {
@@ -528,6 +565,14 @@ function parseBlocks(lines: readonly string[], context: Context, record?: (start
       continue;
     }
 
+    const delivered = mediaLinePath(line);
+    if (delivered !== undefined) {
+      const name = delivered.slice(delivered.lastIndexOf('/') + 1);
+      add(localImagePath(delivered) === undefined ? { t: 'file', path: delivered, name } : { t: 'media', kind: 'image', src: delivered, alt: name }, start, i + 1);
+      i++;
+      continue;
+    }
+
     // A paragraph runs to a blank line or to the line that starts another block.
     let j = i + 1;
     while (j < lines.length && !blank(lines[j]!) && !interrupts(lines, j)) j++;
@@ -537,7 +582,7 @@ function parseBlocks(lines: readonly string[], context: Context, record?: (start
     if (only?.t === 'image' && j === i + 1) add({ t: 'media', kind: 'image', src: only.src, alt: only.alt }, start, j);
     else {
       const media = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(text);
-      const src = media ? safeUrl(media[2]!, 'media') : undefined;
+      const src = media ? (localImagePath(media[2]!) ?? safeUrl(media[2]!, 'media')) : undefined;
       if (media && src !== undefined && j === i + 1) add({ t: 'media', kind: mediaKindOf(src), src, alt: media[1]! }, start, j);
       else add({ t: 'paragraph', children }, start, j);
     }

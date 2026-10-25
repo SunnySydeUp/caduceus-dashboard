@@ -1,6 +1,7 @@
 // A raw audio message (M7 #07), free of the DOM and of React: a recording is attached to a message as a file (`file.attach`, as a data URL), so what
 // the message says of it is the line the page writes for any file (`[User attached file: <path>]`). The transcript recognises a recording by its
 // extension and plays it by reading the file back from Hermes. This module names recordings, tells audio from other files, and reads one back.
+import { fromDataUrl } from './voice-api.ts';
 
 /** The types a recording or an audio file is played as, by extension. Hermes types a `.webm` as video, so the page types them itself. */
 const AUDIO_TYPES: Readonly<Record<string, string>> = {
@@ -48,6 +49,5 @@ export async function audioBlobAt(path: string, read: ReadDataUrl): Promise<Blob
   if (dataUrl === undefined) return undefined;
   const type = audioTypeOf(path);
   if (type === undefined || !/^data:[^,]*;base64,/.test(dataUrl)) return undefined;
-  const bytes = await (await fetch(dataUrl)).blob();
-  return new Blob([bytes], { type });
+  return new Blob([fromDataUrl(dataUrl)], { type });
 }

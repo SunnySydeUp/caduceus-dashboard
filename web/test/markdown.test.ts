@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { classifyFence, mediaKindOf, parseMarkdown, safeUrl, type Block, type Inline } from '../src/modules/chat/markdown.ts';
+import { classifyFence, localImagePath, mediaKindOf, parseMarkdown, safeUrl, type Block, type Inline } from '../src/modules/chat/markdown.ts';
 
 /** The text of inline content, markup dropped: what the reader would read. */
 function plain(inlines: readonly Inline[]): string {
@@ -175,6 +175,57 @@ describe('Markdown: links and media', () => {
 
   test('an image inside a sentence stays inline', () => {
     expect(paragraph('look ![x](https://x/c.png) there')[1]).toEqual({ t: 'image', src: 'https://x/c.png', alt: 'x' });
+  });
+
+  test.each([
+    ['/tmp/chart.png', '/tmp/chart.png'],
+    ['~/Pictures/cat.JPEG', '~/Pictures/cat.JPEG'],
+    ['file:///Users/me/My%20Pic.webp', '/Users/me/My Pic.webp'],
+    ['/out/a.gif?v=2', undefined],
+    ['/tmp/notes.pdf', undefined],
+    ['/tmp/clip.mp3', undefined],
+    ['file:///etc/passwd', undefined],
+    ['file://host/share/a.png', undefined],
+    ['https://x/a.png', undefined],
+    ['images/a.png', undefined],
+    ['//evil.example/a.png', undefined],
+    ['/tmp/vector.svg', undefined],
+  ])('the Hermes file behind image source %j is %j', (src, path) => {
+    expect(localImagePath(src)).toBe(path);
+  });
+
+  test('an image whose source is a file on Hermes keeps the file path as its source, a file: address too', () => {
+    expect(parseMarkdown('![chart](/tmp/c.png)\n\n![cat](file:///Users/me/cat%201.jpg)\n\n![passwd](file:///etc/passwd)').blocks).toEqual([
+      { t: 'media', kind: 'image', src: '/tmp/c.png', alt: 'chart' },
+      { t: 'media', kind: 'image', src: '/Users/me/cat 1.jpg', alt: 'cat' },
+      { t: 'paragraph', children: [{ t: 'text', text: 'passwd' }] },
+    ]);
+    expect(paragraph('see ![c](file:///tmp/c.png) here')[1]).toEqual({ t: 'image', src: '/tmp/c.png', alt: 'c' });
+  });
+
+  test('a MEDIA: line naming an image on Hermes is that image; it ends the paragraph before it', () => {
+    expect(parseMarkdown('Here is the chart:\nMEDIA:/tmp/out/chart.png\n**MEDIA: `~/My Pictures/a b.webp`**\n\nMEDIA:/tmp/report.pdf\n\nsee MEDIA:/tmp/c.png inline').blocks).toEqual([
+      { t: 'paragraph', children: [{ t: 'text', text: 'Here is the chart:' }] },
+      { t: 'media', kind: 'image', src: '/tmp/out/chart.png', alt: 'chart.png' },
+      { t: 'media', kind: 'image', src: '~/My Pictures/a b.webp', alt: 'a b.webp' },
+      { t: 'file', path: '/tmp/report.pdf', name: 'report.pdf' },
+      { t: 'paragraph', children: [{ t: 'text', text: 'see MEDIA:/tmp/c.png inline' }] },
+    ]);
+  });
+
+  test('a MEDIA: line naming any other file on Hermes is that file; a path that is not on Hermes stays text', () => {
+    expect(parseMarkdown('Your reply:\nMEDIA:/tmp/tts/reply.ogg\n_MEDIA:"~/out/data set.csv"_\n\nMEDIA:/srv/Caddyfile\n\nMEDIA:relative/x.zip\n\nMEDIA:https://x/a.zip').blocks).toEqual([
+      { t: 'paragraph', children: [{ t: 'text', text: 'Your reply:' }] },
+      { t: 'file', path: '/tmp/tts/reply.ogg', name: 'reply.ogg' },
+      { t: 'file', path: '~/out/data set.csv', name: 'data set.csv' },
+      { t: 'file', path: '/srv/Caddyfile', name: 'Caddyfile' },
+      { t: 'paragraph', children: [{ t: 'text', text: 'MEDIA:relative/x.zip' }] },
+      { t: 'paragraph', children: [{ t: 'text', text: 'MEDIA:' }, { t: 'link', href: 'https://x/a.zip', children: [{ t: 'text', text: 'https://x/a.zip' }] }] },
+    ]);
+  });
+
+  test('a MEDIA: line inside code is only code', () => {
+    expect(parseMarkdown('```\nMEDIA:/tmp/c.png\n```').blocks).toEqual([{ t: 'code', lang: '', text: 'MEDIA:/tmp/c.png', open: false }]);
   });
 });
 

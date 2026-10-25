@@ -2,9 +2,12 @@
 // cells, which hold inline content too, do not import the block renderer that imports them.
 import { useEffect, useState, type ReactNode } from 'react';
 import { Icon } from '../../icons.tsx';
-import type { Inline, MediaKind } from './markdown.ts';
+import { localImagePath, type Inline, type MediaKind } from './markdown.ts';
 import { Lightbox } from './Lightbox.tsx';
+import { mediaUrl } from './media-url.ts';
 import { renderMath } from './renderers.ts';
+import { AudioClip } from '../voice/AudioClip.tsx';
+import { isAudioName } from '../voice/audio-attachment.ts';
 
 /** The result of an async render for the inputs given, `undefined` until it settles (and when it fails). */
 export function useRendered<T>(render: () => Promise<T>, inputs: readonly unknown[], enabled = true): T | undefined {
@@ -31,30 +34,81 @@ export function MathView({ tex, display, open }: { tex: string; display: boolean
   return <span className={display ? 'rich__math rich__math--display' : 'rich__math'} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-export function MediaBlock({ kind, src, alt, inline = false }: { kind: MediaKind; src: string; alt: string; inline?: boolean }) {
+function ImageView({ src, alt, inline }: { src: string; alt: string; inline: boolean }) {
   const [zoomed, setZoomed] = useState(false);
+  const label = alt ? `Open image larger: ${alt}` : 'Open image larger';
+  if (inline) {
+    return (
+      <span className="rich__inline-media">
+        <button type="button" className="rich__image-button" onClick={() => setZoomed(true)} aria-label={label}>
+          <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="rich__image rich__image--inline" />
+        </button>
+        {zoomed && <Lightbox src={src} alt={alt} onClose={() => setZoomed(false)} />}
+      </span>
+    );
+  }
+  return (
+    <figure className="rich__media">
+      <button type="button" className="rich__image-button" onClick={() => setZoomed(true)} aria-label={label}>
+        <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="rich__image" />
+      </button>
+      {alt && <figcaption className="subtle rich__caption">{alt}</figcaption>}
+      {zoomed && <Lightbox src={src} alt={alt} onClose={() => setZoomed(false)} />}
+    </figure>
+  );
+}
+
+/** An image a reply names by its path on Hermes's disk (an image the agent made, say): read through Hermes and the file guard (`media-url.ts`), never asked of this page's own server. */
+function HermesImage({ path, alt, inline }: { path: string; alt: string; inline: boolean }) {
+  const [read, setRead] = useState<{ path: string; url: string | undefined }>();
+  useEffect(() => {
+    let current = true;
+    void mediaUrl(path).then((url) => current && setRead({ path, url }));
+    return () => {
+      current = false;
+    };
+  }, [path]);
+  const name = path.slice(path.lastIndexOf('/') + 1);
+  if (read?.path !== path) return <span className="rich__image-loading" role="img" aria-label={`Loading image ${name}`} />;
+  if (read.url === undefined) {
+    return (
+      <span className="msg-att--file rich__image-missing" title={path}>
+        <Icon name="file" small />
+        <span className="msg-att__name">{name}</span>
+        <span className="subtle msg-att__note">Hermes could not show this image</span>
+      </span>
+    );
+  }
+  return <ImageView src={read.url} alt={alt || name} inline={inline} />;
+}
+
+/** A file a reply delivers from Hermes's disk (`MEDIA:<path>`): audio gets a player, anything else a chip that downloads it through the file guard. */
+export function FileBlock({ path, name }: { path: string; name: string }) {
+  if (isAudioName(name)) {
+    return (
+      <div className="rich__media" title={path}>
+        <AudioClip path={path} name={name} />
+      </div>
+    );
+  }
+  return (
+    <div className="msg-att--file rich__file" title={path}>
+      <Icon name="file" small />
+      <span className="msg-att__name">{name}</span>
+      <a className="btn btn--ghost btn--sm" href={`/api/fs/download?path=${encodeURIComponent(path)}`} download={name} aria-label={`Download ${name}`}>
+        Download
+      </a>
+    </div>
+  );
+}
+
+export function MediaBlock({ kind, src, alt, inline = false }: { kind: MediaKind; src: string; alt: string; inline?: boolean }) {
   const [showPdf, setShowPdf] = useState(false);
   switch (kind) {
-    case 'image':
-      if (inline) {
-        return (
-          <span className="rich__inline-media">
-            <button type="button" className="rich__image-button" onClick={() => setZoomed(true)} aria-label={alt ? `Open image larger: ${alt}` : 'Open image larger'}>
-              <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="rich__image rich__image--inline" />
-            </button>
-            {zoomed && <Lightbox src={src} alt={alt} onClose={() => setZoomed(false)} />}
-          </span>
-        );
-      }
-      return (
-        <figure className="rich__media">
-          <button type="button" className="rich__image-button" onClick={() => setZoomed(true)} aria-label={alt ? `Open image larger: ${alt}` : 'Open image larger'}>
-            <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="rich__image" />
-          </button>
-          {alt && <figcaption className="subtle rich__caption">{alt}</figcaption>}
-          {zoomed && <Lightbox src={src} alt={alt} onClose={() => setZoomed(false)} />}
-        </figure>
-      );
+    case 'image': {
+      const path = localImagePath(src);
+      return path === undefined ? <ImageView src={src} alt={alt} inline={inline} /> : <HermesImage path={path} alt={alt} inline={inline} />;
+    }
     case 'audio':
       return (
         <figure className="rich__media">

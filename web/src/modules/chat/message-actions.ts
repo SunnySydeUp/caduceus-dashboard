@@ -80,6 +80,8 @@ function plainBlock(block: Block): string {
       return '';
     case 'media':
       return block.alt;
+    case 'file':
+      return block.name;
     case 'list':
       return block.items.map((item, index) => `${block.ordered ? `${block.start + index}.` : '-'} ${item.checked === undefined ? '' : item.checked ? '[x] ' : '[ ] '}${item.blocks.map(plainBlock).join('\n')}`).join('\n');
     case 'table':

@@ -9,7 +9,7 @@ import { HTML_SANDBOX, htmlPreviewDocument } from './embeds.ts';
 import { classifyFence, parseMarkdown, type Block } from './markdown.ts';
 import { DataTable } from './DataTable.tsx';
 import { Lightbox } from './Lightbox.tsx';
-import { Inlines, MathView, MediaBlock, useRendered } from './RichInline.tsx';
+import { FileBlock, Inlines, MathView, MediaBlock, useRendered } from './RichInline.tsx';
 import { highlightCode, renderMermaid } from './renderers.ts';
 import { StructuredBlock } from './StructuredBlock.tsx';
 
@@ -149,6 +149,8 @@ function BlockView({ block, anchor }: { block: Block; anchor: string; source?: s
       return <hr />;
     case 'media':
       return <MediaBlock kind={block.kind} src={block.src} alt={block.alt} />;
+    case 'file':
+      return <FileBlock path={block.path} name={block.name} />;
   }
 }
 
