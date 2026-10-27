@@ -80,7 +80,10 @@ export function taskCandidates(boards: readonly BoardTasks[]): ReadyItem[] {
   );
 }
 
-/** The chat runs that finished (the activity feed, newest first), one item for each chat: its latest finish. A run with no stored chat has nothing to open. */
+/**
+ * The chat runs that finished (the activity feed, newest first), one item for each chat: its latest finish. A run with no stored chat has nothing to open.
+ * Today shows every profile, so a run's address names the profile that ran it: without it Talk would open the session in the tab's profile, the wrong agent.
+ */
 export function runCandidates(events: readonly ActivityEvent[]): ReadyItem[] {
   const items = new Map<string, ReadyItem>();
   for (const event of events) {
@@ -88,7 +91,8 @@ export function runCandidates(events: readonly ActivityEvent[]): ReadyItem[] {
     const id = `run:${event.storedSessionId}`;
     const known = items.get(id);
     if (known && known.at >= event.at) continue;
-    items.set(id, { id, stamp: String(event.seq), kind: 'run', title: event.title, summary: undefined, profile: event.profile, at: event.at, to: `/chat/${encodeURIComponent(event.storedSessionId)}` });
+    const where = event.profile === undefined ? '' : `?${new URLSearchParams({ profile: event.profile })}`;
+    items.set(id, { id, stamp: String(event.seq), kind: 'run', title: event.title, summary: undefined, profile: event.profile, at: event.at, to: `/chat/${encodeURIComponent(event.storedSessionId)}${where}` });
   }
   return [...items.values()];
 }
@@ -113,7 +117,8 @@ export function automationCandidates(rows: readonly unknown[]): ReadyItem[] {
     const key = `${profile ?? ''}:${job}`;
     const known = latest.get(key);
     if (known && Number(known.stamp) >= ended) continue;
-    latest.set(key, { id: `run:${session}`, stamp: String(ended), kind: 'run', title: text(row.title) ?? 'A scheduled job', summary: 'Scheduled job ran', profile, at: Math.round(ended * 1000), to: `/chat/${encodeURIComponent(session)}` });
+    const where = profile === undefined ? '' : `?${new URLSearchParams({ profile })}`;
+    latest.set(key, { id: `run:${session}`, stamp: String(ended), kind: 'run', title: text(row.title) ?? 'A scheduled job', summary: 'Scheduled job ran', profile, at: Math.round(ended * 1000), to: `/chat/${encodeURIComponent(session)}${where}` });
   }
   return [...latest.values()];
 }

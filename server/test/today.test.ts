@@ -110,7 +110,7 @@ describe('ready for review', () => {
     ]);
     const { items } = await page.ready();
     // Only the job's newest finished run is offered: a failed run is a notice, a run still going is not done, and a chat is not a scheduled job.
-    expect(items).toEqual([expect.objectContaining({ id: 'run:cron_aa11bb22_20261022_090000', kind: 'run', title: 'Morning brief #2', profile: 'default', to: '/chat/cron_aa11bb22_20261022_090000' })]);
+    expect(items).toEqual([expect.objectContaining({ id: 'run:cron_aa11bb22_20261022_090000', kind: 'run', title: 'Morning brief #2', profile: 'default', to: '/chat/cron_aa11bb22_20261022_090000?profile=default' })]);
 
     expect((await page.open(items[0]!.id, items[0]!.stamp)).status).toBe(200);
     expect((await page.ready()).items).toEqual([]);

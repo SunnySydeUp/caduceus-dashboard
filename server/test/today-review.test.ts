@@ -68,8 +68,8 @@ describe('how Hermes\'s finished work becomes items', () => {
 
   const run = (seq: number, storedSessionId: string | undefined, title = 'A chat'): ActivityEvent => ({ seq, at: seq * 10, profile: 'coder', storedSessionId, title });
 
-  test('a chat that finished is an item for its latest finish; a run with no stored chat has nothing to open and is left out', () => {
+  test('a chat that finished is an item for its latest finish, opening in its own profile; a run with no stored chat has nothing to open and is left out', () => {
     const items = runCandidates([run(30, 'abc'), run(20, undefined), run(10, 'abc', 'Older')]);
-    expect(items).toEqual([{ id: 'run:abc', stamp: '30', kind: 'run', title: 'A chat', summary: undefined, profile: 'coder', at: 300, to: '/chat/abc' }]);
+    expect(items).toEqual([{ id: 'run:abc', stamp: '30', kind: 'run', title: 'A chat', summary: undefined, profile: 'coder', at: 300, to: '/chat/abc?profile=coder' }]);
   });
 });

@@ -32,7 +32,7 @@ export function DecisionCard({ item, now }: { item: InboxItem; now: number }) {
       {item.kind === 'notice' && <h3 className="today-card__q">{item.title}</h3>}
       {item.kind !== 'notice' && item.storedSessionId && (
         <p className="subtle today-card__where">
-          In <AppLink to={`/chat/${encodeURIComponent(item.storedSessionId)}`}>{item.sessionTitle}</AppLink>
+          In <AppLink to={`/chat/${encodeURIComponent(item.storedSessionId)}${item.profile === undefined ? '' : `?${new URLSearchParams({ profile: item.profile })}`}`}>{item.sessionTitle}</AppLink>
         </p>
       )}
       <Suspense fallback={<div className="today-card__pending" aria-hidden="true" />}>

@@ -79,7 +79,7 @@ describe('while you were away', () => {
     expect(view).toMatchObject({ kind: 'rows', more: 0 });
     if (view.kind !== 'rows') return;
     expect(view.rows.map((row) => [row.kind, row.title, row.line, row.profile, row.failed, row.to])).toEqual([
-      ['run', 'Chat 2', 'Finished', 'librarian', false, '/chat/s2'],
+      ['run', 'Chat 2', 'Finished', 'librarian', false, '/chat/s2?profile=librarian'],
       ['routine', 'Nightly tests', 'Ran', 'coder', false, undefined],
     ]);
   });

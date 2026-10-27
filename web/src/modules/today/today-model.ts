@@ -112,7 +112,7 @@ export function awayView({ since, now, activity, jobs }: AwayInput): AwayView {
   if (since === null) return { kind: 'first-visit' };
   const runs = activity
     .filter((event) => event.at > since && event.at <= now)
-    .map((event): AwayRow => ({ id: `run:${event.seq}`, at: event.at, kind: 'run', profile: event.profile, title: event.title, line: 'Finished', failed: false, to: event.storedSessionId === undefined ? undefined : `/chat/${encodeURIComponent(event.storedSessionId)}` }));
+    .map((event): AwayRow => ({ id: `run:${event.seq}`, at: event.at, kind: 'run', profile: event.profile, title: event.title, line: 'Finished', failed: false, to: event.storedSessionId === undefined ? undefined : `/chat/${encodeURIComponent(event.storedSessionId)}${event.profile === undefined ? '' : `?${new URLSearchParams({ profile: event.profile })}`}` }));
   const routines = jobs.flatMap((job): AwayRow[] => {
     if (job.lastRunAt === undefined || job.lastRunAt <= since || job.lastRunAt > now) return [];
     const failed = job.lastStatus === 'error';
