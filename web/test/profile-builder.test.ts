@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { asks, buildPlan, catalogueEligible, copyable, emptyDraft, firstProblemStep, freeName, remaining, startDraft, stepProblems, STEPS, summary, type Baseline, type Draft, type StepResult } from '../src/modules/profiles/builder-model.ts';
+import { asks, buildPlan, catalogueEligible, copyable, emptyDraft, firstProblemStep, freeName, remaining, startDraft, stepProblems, STEPS, summary, unchosenModelNote, type Baseline, type Draft, type StepResult } from '../src/modules/profiles/builder-model.ts';
 import { clearSaved, loadSaved, parseSaved, save } from '../src/modules/profiles/builder-draft.ts';
 import { PERSONAS, personaById, personaState } from '../src/modules/profiles/personas.ts';
 import type { CatalogEntry, McpServer } from '../src/modules/tools/mcp-model.ts';
@@ -84,7 +84,7 @@ describe('the persona catalogue', () => {
     }
   });
 
-  test('a persona is missing when no profile has its name, which is when it can be restored', () => {
+  test('a persona is marked as existing only when a profile already has its name', () => {
     const pirate = personaById('pirate')!;
 
     expect(personaState(pirate, ['default', 'work'])).toBe('missing');
@@ -202,5 +202,16 @@ describe('the builder kept in the tab', () => {
 
   test('a result it does not know is dropped, so that step simply runs again', () => {
     expect(parseSaved(JSON.stringify({ ...kept, results: { create: { state: 'done' }, soul: { state: 'weird' } } }))?.results).toEqual({ create: { state: 'done' } });
+  });
+});
+
+describe('what the builder says about a model that is not chosen', () => {
+  test('says the profile starts with the default profile’s model, which is what it shows afterwards', () => {
+    expect(unchosenModelNote('claude-sonnet-5')).toEqual({ tone: 'info', text: 'No model is chosen here, so the profile starts with the default profile’s model, claude-sonnet-5. Change it on its Model tab.' });
+  });
+
+  test('warns that it cannot chat only when the default profile has no model either', () => {
+    expect(unchosenModelNote(null).tone).toBe('warning');
+    expect(unchosenModelNote(undefined).text).toMatch(/cannot chat/);
   });
 });

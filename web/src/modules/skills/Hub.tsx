@@ -28,7 +28,8 @@ function HubRow({ skill, sourceLabel, installed, onOpen }: { skill: HubSkill; so
           <span className="sk-row__name mono">{skill.name}</span>
           <span className="sk-row__desc">{skill.description || <span className="subtle">No description.</span>}</span>
           <span className="list-row__meta">
-            <span className="tag">{sourceLabel}</span>
+            {/* The official source and the official trust level are one fact: say it once. */}
+            {!(skill.source === 'official' && skill.trust === 'builtin') && <span className="tag">{sourceLabel}</span>}
             <span className="tag" data-tone={skill.trust === 'community' ? 'neutral' : 'accent'}>
               {TRUST_WORDS[skill.trust]}
             </span>
@@ -258,15 +259,17 @@ function HubScreen({ profile }: { profile: string }) {
         </section>
       )}
 
+      {installedNames.size > 0 && (
       <div className="sk-update">
         <WriteButton type="button" className="btn btn--secondary" onClick={() => void updateAll()}>
           <Icon name="refresh" />
           Update all
         </WriteButton>
         <span className="subtle sk-note">
-          Installs newer versions of the skills you installed from the hub. Installing and updating are Tier 3: a passkey, then typing a name.
+          Installs newer versions of the skills you installed from the hub. It needs your passkey, and you type a name to confirm.
         </span>
       </div>
+      )}
 
       {opened && (
         <HubDetail

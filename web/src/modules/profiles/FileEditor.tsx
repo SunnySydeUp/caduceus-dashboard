@@ -12,7 +12,7 @@ import { WriteButton } from '../../shell/WriteButton.tsx';
 import { Rich } from '../chat/Rich.tsx';
 import { saveFile } from './behaviour-actions.ts';
 import { fetchSnapshots, fetchSnapshotText, useFileRead, useMemoryUse } from './behaviour-data.ts';
-import { BEHAVIOUR_FILES, fileRef, lineDiff, memoryMeter, yamlProblem, type BehaviourFileId, type YamlProblem } from './behaviour-files.ts';
+import { BEHAVIOUR_FILES, fileRef, leavesWithEdits, lineDiff, memoryMeter, yamlProblem, type BehaviourFileId, type YamlProblem } from './behaviour-files.ts';
 import type { ProfileCard } from './profiles-model.ts';
 
 type Pane = 'edit' | 'preview' | 'split';
@@ -28,6 +28,8 @@ function useEditor(card: ProfileCard, id: BehaviourFileId) {
   const [base, setBase] = useState<string>();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  /** A save is out, from the first click until it settles (the confirmation and the write); `busy` is only the part after the owner confirmed. */
+  const [asking, setAsking] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [conflict, setConflict] = useState<string>();
   const [problem, setProblem] = useState<YamlProblem>();
@@ -52,14 +54,15 @@ function useEditor(card: ProfileCard, id: BehaviourFileId) {
   }, [id, text]);
 
   const memory = useMemoryUse(card.name);
-  const blocker = useBlocker({ shouldBlockFn: () => dirty, enableBeforeUnload: () => dirty, withResolver: true });
+  const blocker = useBlocker({ shouldBlockFn: ({ current, next }) => leavesWithEdits(dirty, current, next), enableBeforeUnload: () => dirty, withResolver: true });
 
   const save = async (against = base) => {
-    if (base === undefined || against === undefined) return;
-    setBusy(true);
+    if (asking || base === undefined || against === undefined) return;
+    setAsking(true);
     setFailure(undefined);
     try {
-      const outcome = await saveFile(card.name, file, ref, text, against);
+      // The button says Saving only once the owner has confirmed: until then the confirmation is what is on screen.
+      const outcome = await saveFile(card.name, file, ref, text, against, () => setBusy(true));
       if (outcome.kind === 'saved') {
         setConflict(undefined);
         setBase(text);
@@ -69,6 +72,7 @@ function useEditor(card: ProfileCard, id: BehaviourFileId) {
       else if (outcome.kind === 'failed') setFailure(outcome.message);
     } finally {
       setBusy(false);
+      setAsking(false);
     }
   };
   /** The file changed in Hermes and the owner chose its text over their own. */
@@ -90,7 +94,7 @@ function useEditor(card: ProfileCard, id: BehaviourFileId) {
     void memory.reload();
   };
 
-  return { file, ref, result, base, text, setText, dirty, busy, failure, conflict, problem, save, useHermes, reloadFromHermes, blocker, memory };
+  return { file, ref, result, base, text, setText, dirty, busy, asking, failure, conflict, problem, save, useHermes, reloadFromHermes, blocker, memory };
 }
 
 type Editor = ReturnType<typeof useEditor>;
@@ -210,7 +214,7 @@ function Conflict({ editor }: { editor: Editor }) {
           <button type="button" className="btn btn--secondary btn--sm" onClick={editor.useHermes}>
             Use Hermes’s text
           </button>
-          <WriteButton type="button" className="btn btn--primary btn--sm" disabled={editor.busy} onClick={() => void editor.save(editor.conflict)}>
+          <WriteButton type="button" className="btn btn--primary btn--sm" disabled={editor.asking} onClick={() => void editor.save(editor.conflict)}>
             Save my text over it…
           </WriteButton>
         </div>
@@ -294,7 +298,7 @@ function EditorBody({ card, editor, onDone }: { card: ProfileCard; editor: Edito
       </label>
       <textarea
         id={textId}
-        className="input input--mono fe-area"
+        className={file.markdown ? 'input input--mono fe-area' : 'input input--mono fe-area fe-area--yaml'}
         value={editor.text}
         spellCheck={false}
         autoCapitalize="none"
@@ -336,9 +340,9 @@ function EditorBody({ card, editor, onDone }: { card: ProfileCard; editor: Edito
             Close
           </button>
         )}
-        <WriteButton type="button" className="btn btn--primary" disabled={!editor.dirty || editor.busy || blocked !== undefined} title={blocked} aria-busy={editor.busy} onClick={() => void editor.save()}>
+        <WriteButton type="button" className="btn btn--primary" disabled={!editor.dirty || editor.asking || blocked !== undefined} title={blocked} aria-busy={editor.busy} onClick={() => void editor.save()}>
           <Icon name="lock" small />
-          {editor.busy ? 'Saving…' : 'Save…'}
+          {editor.busy ? 'Saving…' : 'Review and save…'}
         </WriteButton>
       </div>
       {editor.problem && (
@@ -375,7 +379,7 @@ function EditorSheet({ card, id, onClose }: { card: ProfileCard; id: BehaviourFi
   const [leaving, setLeaving] = useState(false);
   const tryClose = () => (editor.dirty ? setLeaving(true) : onClose());
   return (
-    <Sheet title={editor.file.label} detents={['full']} dismissOnScrim={false} onClose={tryClose}>
+    <Sheet title={editor.file.label} className="fe-sheet" detents={['full']} dismissOnScrim={false} onClose={tryClose}>
       {leaving && (
         <div className="banner fe-leave" data-tone="warning" role="alertdialog" aria-labelledby="fe-sheet-leave-title">
           <Icon name="alert" />

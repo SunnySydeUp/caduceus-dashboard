@@ -37,10 +37,17 @@ export function execQuickCommandNames(config: unknown): Set<string> {
 
 const SKILLS = 'Skills';
 
+/**
+ * The commands people reach for most, in this order, listed first under their own heading. Hermes's own order starts with `/new`, `/clear` and `/redraw`, which are rarely
+ * what someone typing a slash wants. Only commands the catalogue has are shown, under the group they were found in otherwise.
+ */
+const COMMON_GROUP = 'Common';
+const COMMON = ['status', 'compress', 'undo', 'retry', 'stop', 'title', 'help', 'usage'];
+
 /** `(usage: /title [name])` or a `[level]` after the command in the description: Hermes's own way of saying it takes an argument. */
 const USAGE_ARGUMENT = /\(usage: \/\S+\s+[[<]/;
 
-/** The entries of a catalogue, in Hermes's order: its groups in the order it lists them, then the skills, the most used first. */
+/** The entries of a catalogue: the common commands, then Hermes's groups in the order it lists them, then the skills, the most used first. */
 export function slashEntries(catalog: CommandsCatalogResult, exec: ReadonlySet<string>): SlashEntry[] {
   const groups = new Map<string, string>();
   for (const category of catalog.categories ?? []) for (const [command] of category.pairs ?? []) if (command !== undefined) groups.set(command, category.name);
@@ -65,7 +72,7 @@ export function slashEntries(catalog: CommandsCatalogResult, exec: ReadonlySet<s
       command,
       name,
       description,
-      group: skill ? SKILLS : (groups.get(command) ?? 'Commands'),
+      group: skill ? SKILLS : COMMON.includes(name) && disabled === undefined ? COMMON_GROUP : (groups.get(command) ?? 'Commands'),
       kind: skill ? 'skill' : 'command',
       aliases: aliases.get(command) ?? [],
       takesArgument: (meta?.argument_mode ?? null) !== null || USAGE_ARGUMENT.test(description) || skill !== undefined,
@@ -75,9 +82,10 @@ export function slashEntries(catalog: CommandsCatalogResult, exec: ReadonlySet<s
     });
   }
   const order = [...new Set(groups.values())];
-  const rank = (entry: SlashEntry) => (entry.kind === 'skill' ? order.length + 1 : order.indexOf(entry.group) < 0 ? order.length : order.indexOf(entry.group));
+  const rank = (entry: SlashEntry) => (entry.group === COMMON_GROUP ? -1 : entry.kind === 'skill' ? order.length + 1 : order.indexOf(entry.group) < 0 ? order.length : order.indexOf(entry.group));
   const position = new Map(entries.map((entry, index) => [entry, index]));
-  return entries.sort((a, b) => rank(a) - rank(b) || (a.kind === 'skill' ? b.usage - a.usage || a.name.localeCompare(b.name) : position.get(a)! - position.get(b)!));
+  const within = (a: SlashEntry, b: SlashEntry) => (a.kind === 'skill' ? b.usage - a.usage || a.name.localeCompare(b.name) : a.group === COMMON_GROUP ? COMMON.indexOf(a.name) - COMMON.indexOf(b.name) : position.get(a)! - position.get(b)!);
+  return entries.sort((a, b) => rank(a) - rank(b) || within(a, b));
 }
 
 /** How well an entry answers a query (lower is better), or undefined when it does not: its name, an alias, a name that contains it, then its description. */

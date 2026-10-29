@@ -10,14 +10,15 @@ import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { PopoverMenu } from '../../shell/PopoverMenu.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
-import { crewStateLabel, type CrewMember } from '../crew/crew-state.ts';
+import { crewStateLabel, type CrewStateName } from '../crew/crew-state.ts';
 import { ChangeButton } from './SessionOrganiser.tsx';
 import { headerControls, type ThreadActionId, type ThreadMenuEntry } from './talk-header.ts';
 import './talk.css';
 
 export interface TalkHeaderProps {
   profile: string;
-  member: CrewMember | undefined;
+  /** How this chat stands (`chatState`): not the crew's state for the agent, which a failed background task or another chat's question can set. */
+  state: CrewStateName;
   /** Under the name: the session's title, and where it was forked from. */
   subtitle: ReactNode;
   compact: boolean;
@@ -38,7 +39,7 @@ export interface TalkHeaderProps {
 /** After this line the menu moves from what an owner does to a chat to everything else it can do. */
 const FIRST_GROUP_END: ThreadActionId = 'archive';
 
-export function TalkHeader({ profile, member, subtitle, compact, detailsOpen, detailsControls, detailsButton, waiting, onDetails, onSessions, view, menu }: TalkHeaderProps) {
+export function TalkHeader({ profile, state, subtitle, compact, detailsOpen, detailsControls, detailsButton, waiting, onDetails, onSessions, view, menu }: TalkHeaderProps) {
   const controls = headerControls({ compact, titled: menu !== undefined, viewable: view !== undefined });
   const root = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -62,8 +63,8 @@ export function TalkHeader({ profile, member, subtitle, compact, detailsOpen, de
       <PageHeader
         lead={
           <>
-            <Sigil name={profile} size="md" state={member?.state} />
-            {member && <span className="sr-only">{crewStateLabel[member.state]}.</span>}
+            <Sigil name={profile} size="md" state={state} />
+            <span className="sr-only">{crewStateLabel[state]}.</span>
           </>
         }
         title={profile}

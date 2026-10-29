@@ -78,23 +78,27 @@ function ProfileSwitcher({ onClose }: { onClose(): void }) {
   );
 }
 
-/** The app bar's profile chip: the scope of this tab, opening the switcher. On a screen locked to All profiles it only says so: there is nothing to switch. */
+/** What the chip says on a screen locked to All profiles (Today): there is nothing to switch, and the sheet says why. */
+function AllProfilesNote({ onClose }: { onClose(): void }) {
+  return (
+    <Sheet title="This screen shows every profile" detents={['auto']} onClose={onClose}>
+      <p className="plist__note">
+        Everything here comes from all your profiles together, so nothing is hidden. The profile you pick on other screens does not filter it. To work on one profile, open Talk or Work and pick it from the profile chip there.{' '}
+        <Term id="profile-scope">What is profile scope?</Term>
+      </p>
+    </Sheet>
+  );
+}
+
+/** The app bar's profile chip: the scope of this tab, opening the switcher. On a screen locked to All profiles it opens a note that says so: there is nothing to switch. */
 export function ProfileChip() {
   const { scope, mode } = useProfileScope();
-  if (mode === 'all') {
-    return (
-      <span className="chip chip--profile chip--static appbar__profile" title="This screen always shows every profile">
-        <Sigil name="all" size="xs" />
-        <span className="truncate">All profiles</span>
-        <span className="sr-only">: this screen always shows every profile</span>
-      </span>
-    );
-  }
+  if (mode === 'all') return <SwitchChip label="All profiles" sigil="all" note />;
   return <SwitchChip label={scope === 'all' ? 'All profiles' : (scope ?? 'Profile')} sigil={scope ?? '?'} cross={mode === 'cross'} />;
 }
 
-/** The chip that opens the switcher. Its open state lives here, so a screen locked to All profiles never holds a sheet that is not shown. */
-function SwitchChip({ label, sigil, cross }: { label: string; sigil: string; cross: boolean }) {
+/** The chip that opens the switcher (or, on a screen locked to All profiles, the note). Its open state lives here, so a screen with nothing to switch never holds the switcher. */
+function SwitchChip({ label, sigil, cross = false, note = false }: { label: string; sigil: string; cross?: boolean; note?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -103,14 +107,14 @@ function SwitchChip({ label, sigil, cross }: { label: string; sigil: string; cro
         className="chip chip--profile appbar__profile"
         data-cross={cross ? '' : undefined}
         aria-haspopup="dialog"
-        aria-label={`Profile scope: ${label}. Switch profile`}
+        aria-label={note ? 'Profile scope: All profiles. This screen always shows every profile' : `Profile scope: ${label}. Switch profile`}
         onClick={() => setOpen(true)}
       >
         <Sigil name={sigil} size="xs" />
         <span className="truncate">{label}</span>
-        <Icon name="chev-d" small />
+        <Icon name={note ? 'info' : 'chev-d'} small />
       </button>
-      {open && <ProfileSwitcher onClose={() => setOpen(false)} />}
+      {open && (note ? <AllProfilesNote onClose={() => setOpen(false)} /> : <ProfileSwitcher onClose={() => setOpen(false)} />)}
     </>
   );
 }

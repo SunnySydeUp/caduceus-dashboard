@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { StatusBadge, type StatusState } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -42,14 +43,14 @@ function GatewayCard({ profile, portal, failed, reload }: { profile: string; por
   return (
     <section className="tl-box" aria-labelledby="tl-gateway-title">
       <div className="tl-box__head">
-        <h3 id="tl-gateway-title">Tool gateway</h3>
+        <h3 id="tl-gateway-title">Tool routing</h3>
         {portal && (portal.loggedIn ? <StatusBadge state="succeeded" label={portal.freeTier ? 'Portal signed in · free tier' : 'Portal signed in'} variant="plain" /> : <StatusBadge state="offline" label="Portal not signed in" variant="plain" />)}
       </div>
       <p className="tl-note">
-        The <Term id="tool-gateway">Tool gateway</Term> is where Hermes gets each kind of tool for <strong>{profile}</strong>: through the Nous Portal’s backends, or from a provider you set up yourself. Hermes reports this; to change a route, choose a provider in the toolset.
+        <Term id="tool-gateway">Tool routing</Term> is where Hermes gets each kind of tool for <strong>{profile}</strong>: through the Nous Portal’s backends, or from a provider you set up yourself. Hermes reports this; to change a route, choose a provider in the toolset.
       </p>
       {failed && <ErrorBanner what="the routing" stale={portal !== undefined} retry={reload} />}
-      {!portal && !failed && <p role="status">Loading the routing…</p>}
+      {!portal && !failed && <Loading label="Loading the routing…" lines={4} onRetry={reload} />}
       {portal && portal.features.length === 0 && <p className="tl-note">Hermes reports no routed features for this profile.</p>}
       {portal && portal.features.length > 0 && (
         <ul className="tl-features" aria-label="How tools are routed">
@@ -118,7 +119,7 @@ function ComputerUseCard({ profile, status, failed, reload }: { profile: string;
       </div>
       <p className="tl-note">Lets an agent see and drive this computer’s screen. It needs a driver, and on a Mac two permissions that only macOS can grant. Switch it on or off in Toolsets (Computer Use).</p>
       {failed && <ErrorBanner what="Computer use" stale={status !== undefined} retry={reload} />}
-      {!status && !failed && <p role="status">Loading Computer use…</p>}
+      {!status && !failed && <Loading label="Loading Computer use…" lines={4} onRetry={reload} />}
       {status && (
         <>
           <ul className="tl-perms" aria-label="Computer use permissions">
@@ -172,7 +173,7 @@ function ComputerUseCard({ profile, status, failed, reload }: { profile: string;
   );
 }
 
-/** How Hermes routes the profile's tools (the Tool gateway), and Computer use's permissions. */
+/** How Hermes routes the profile's tools (Tool routing), and Computer use's permissions. */
 export function RoutingPanel({ profile }: { profile: string }) {
   const portal = usePortal(profile);
   const computer = useComputerUse(profile);

@@ -52,7 +52,7 @@ function LearnForm({ profile }: { profile: string }) {
         </WriteButton>
       </div>
       <p className="subtle sk-note">
-        This opens a new chat in {profile} and runs Hermes’s /learn command there, so you watch the agent read, write and save the skill. /learn is a Tier 2 action: it asks for a passkey, because the agent then reads files and links on its own.
+        This opens a new chat in {profile} and runs Hermes’s /learn command there, so you watch the agent read, write and save the skill. /learn needs your passkey, because the agent then reads files and links on its own.
       </p>
     </form>
   );

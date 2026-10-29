@@ -180,7 +180,7 @@ function Settings({ profile, saved, reload }: { profile: string; saved: Fallback
           <Icon name="lock" />
           Save settings…
         </WriteButton>
-        <span className="subtle md-note">Writes config.yaml · Tier 3</span>
+        <span className="subtle md-note">Writes config.yaml · needs your passkey and the profile name</span>
       </div>
     </div>
   );
@@ -360,7 +360,7 @@ export function FallbackChain({ profile }: { profile: string }) {
           <button type="button" className="btn btn--ghost" disabled={!dirty || busy} onClick={() => setDraft(undefined)}>
             Discard changes
           </button>
-          <span className="subtle md-note">{dirty ? 'You have changes that are not saved.' : 'Writes config.yaml · Tier 3'}</span>
+          <span className="subtle md-note">{dirty ? 'You have changes that are not saved.' : 'Writes config.yaml · needs your passkey and the profile name'}</span>
         </div>
       </section>
 

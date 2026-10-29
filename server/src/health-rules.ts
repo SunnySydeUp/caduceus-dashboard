@@ -418,15 +418,15 @@ function dispatcherFinding(backend: BackendStatus, stats: unknown, diagnostics: 
     return {
       state: 'degraded',
       reason: `${listed} listed in Hermes’s Kanban diagnostics (stalled workers, repeated failures).`,
-      suggestion: 'Open the stalled tasks on the Kanban board and retry or block them.',
+      suggestion: 'Open the failed tasks and retry or block them.',
       repairs: [
         {
           id: 'kanban-task-problems',
           severity: 'warning',
           subsystem: 'dispatcher',
           title: 'Kanban tasks have problems',
-          cause: `${listed} listed in Hermes’s Kanban diagnostics (stalled workers, repeated failures). Open the stalled tasks on the Kanban board and retry or block them.`,
-          link: board,
+          cause: `${listed} listed in Hermes’s Kanban diagnostics (stalled workers, repeated failures). Open the failed tasks and retry or block them.`,
+          link: { label: 'Open the failed tasks', to: '/work/tasks?filter=failed' },
         },
       ],
     };

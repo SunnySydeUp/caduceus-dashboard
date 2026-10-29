@@ -15,6 +15,7 @@
 .mt-note { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
 .mt-code { font-family: var(--cd-font-mono); font-size: var(--cd-text-xs); overflow-wrap: anywhere; }
 .mt-error { color: var(--cd-tone-danger-fg); }
+.mt-warn { color: var(--cd-tone-warning-fg); }
 .mt-changes summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; gap: var(--cd-space-2); }
 .mt-changes ul, .mt-list { margin: 0; padding-inline-start: var(--cd-space-5); display: grid; gap: var(--cd-space-1); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); overflow-wrap: anywhere; }
 .mt-news { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }

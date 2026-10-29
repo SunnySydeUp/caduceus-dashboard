@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -78,8 +79,7 @@ export function McpPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!data && !view.failed && <p role="status">Loading MCP servers…</p>}
-      {data && <CaduceusMcpCard profile={profile} servers={data.servers} definitions={data.definitions} reload={view.reload} />}
+      {!data && !view.failed && <Loading label="Loading MCP servers…" lines={3} onRetry={() => void view.reload()} />}
       {data && (
         <div className="tl-bar">
           <WriteButton type="button" className="btn btn--primary" onClick={() => setEditing({ mode: 'add' })}>
@@ -103,7 +103,7 @@ export function McpPanel({ profile }: { profile: string }) {
                     <span className="tl-card__key mono" data-clamp>{server.command ? commandLine(server.command, server.args) : (server.url ?? '')}</span>
                   </div>
                   <div className="tl-card__switch">
-                    <WriteButton type="button" role="switch" className="switch" aria-checked={server.enabled} aria-label={`${server.name} on`} disabled={busy === server.name} onClick={() => void toggle(server)} />
+                    <WriteButton type="button" role="switch" className="switch" aria-checked={server.enabled} aria-label={server.name} disabled={busy === server.name} onClick={() => void toggle(server)} />
                   </div>
                 </div>
                 <div className="tl-card__tags">
@@ -130,6 +130,7 @@ export function McpPanel({ profile }: { profile: string }) {
           <p>This profile has no MCP servers. Add one, or install one from the Catalogue.</p>
         </div>
       )}
+      {data && <CaduceusMcpCard profile={profile} servers={data.servers} definitions={data.definitions} reload={view.reload} />}
       {opened && data && <McpDetail key={`${profile}:${opened.name}`} server={opened} runtime={data.runtime?.get(opened.name)} profile={profile} reload={view.reload} onEdit={() => setEditing({ mode: 'edit', name: opened.name })} onClose={() => setOpen(undefined)} />}
       {editing?.mode === 'add' && data && <McpServerSheet mode="add" initial={emptyForm('http')} profile={profile} names={data.servers.map((server) => server.name)} onSubmit={submitAdd} onClose={() => setEditing(undefined)} />}
       {edited && data && (

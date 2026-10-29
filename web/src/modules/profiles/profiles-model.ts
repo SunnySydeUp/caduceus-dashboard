@@ -178,3 +178,8 @@ export function renameProblem(from: string, to: string, taken: readonly string[]
   if (!NAME_RULE.test(id)) return 'Use lowercase letters, numbers, - or _.';
   return undefined;
 }
+
+/** "1 skill", "58 skills": the count with its noun. */
+export function skillCountWords(count: number): string {
+  return `${count} ${count === 1 ? 'skill' : 'skills'}`;
+}

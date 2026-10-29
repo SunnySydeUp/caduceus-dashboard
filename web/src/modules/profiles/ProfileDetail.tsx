@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from 're
 import { useParams } from '@tanstack/react-router';
 import { Icon } from '../../icons.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
@@ -54,7 +55,7 @@ function Detail({ view }: { view: ProfilesView }) {
             </button>
           </div>
         ) : (
-          <p role="status">Loading…</p>
+          <Loading label="Loading the profile…" lines={4} onRetry={() => void view.reload()} />
         )}
       </div>
     );
@@ -134,7 +135,7 @@ function Detail({ view }: { view: ProfilesView }) {
           <h2 id="pf-tab-title" className="pf-panel__title">
             {current.label}
           </h2>
-          <Suspense fallback={<p role="status">Loading…</p>}>
+          <Suspense fallback={<Loading label={`Loading ${current.label}…`} lines={4} />}>
             <Screen card={card} view={view} />
           </Suspense>
         </section>

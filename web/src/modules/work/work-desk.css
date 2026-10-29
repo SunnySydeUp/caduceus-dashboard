@@ -10,10 +10,14 @@
 .wd-row + .wd-row { border-block-start: 1px solid var(--cd-border-subtle); }
 .wd-main { display: grid; min-inline-size: 0; }
 /* The title is a link as well as the action: it is a target of its own (the least a pointer's targets allow), whatever the width of the words. */
-.wd-title { display: block; box-sizing: border-box; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-title { display: -webkit-box; box-sizing: border-box; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); text-decoration: none; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
 .wd-title:hover { text-decoration: underline; }
-.wd-line { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-line { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
+/* On a phone the time is a line of its own under the words, so that it is never cut off, even at 320 px. */
+.wd-when-inline { display: block; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); white-space: nowrap; }
 .wd-when { display: none; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); white-space: nowrap; }
+.wd-row .btn { min-block-size: var(--cd-target-min); }
+.wd-row .btn--icon { min-inline-size: var(--cd-target-min); }
 @media (min-width: 48rem) {
   .wd-row { grid-template-columns: auto minmax(0, 1fr) 11rem auto; }
   .wd-when { display: block; }

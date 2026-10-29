@@ -108,6 +108,31 @@ export interface ProviderForm {
   setup: ProviderSetup | undefined;
 }
 
+const ACRONYMS: Record<string, string> = { api: 'API', url: 'URL', id: 'ID', llm: 'LLM', uri: 'URI', ttl: 'TTL', mcp: 'MCP' };
+
+/**
+ * A label in sentence case. Hermes labels some settings in Title Case from the key (`Api Key`, `Auto Extract`): the words after the first lose their capital, and known acronyms
+ * keep theirs. A label that already has its own mix of capitals (`OpenAI key`) is left as it is.
+ */
+export function plainLabel(label: string): string {
+  const words = label.trim().split(/\s+/);
+  if (words.length === 0 || words[0] === '') return label;
+  const titled = words.every((word) => /^[A-Z][a-z]*$/.test(word));
+  if (!titled) return label;
+  return words.map((word, index) => ACRONYMS[word.toLowerCase()] ?? (index === 0 ? word : word.toLowerCase())).join(' ');
+}
+
+/** The words for a choice whose value is a bare `true` or `false`: Yes and No. Other choices keep Hermes's words. */
+export function choiceWords(value: string, label: string): string {
+  if (label !== value) return label;
+  return value === 'true' ? 'Yes' : value === 'false' ? 'No' : label;
+}
+
+/** Whether the provider's dependencies are in place, so Hermes can use it. A provider that lists no setup needs nothing installed. */
+export function providerInstalled(provider: Pick<MemoryProvider, 'setup'>): boolean {
+  return provider.setup === undefined || provider.setup.installed;
+}
+
 const KINDS: Record<string, FieldKind> = { text: 'text', secret: 'secret', select: 'select', bool: 'bool', boolean: 'bool', number: 'number', integer: 'number', json: 'json' };
 
 function parseField(raw: unknown): FormField[] {
@@ -118,13 +143,13 @@ function parseField(raw: unknown): FormField[] {
   return [
     {
       key: raw.key,
-      label: text(raw.label) || raw.key,
+      label: plainLabel(text(raw.label) || raw.key),
       kind,
       description: text(raw.description),
       info: text(raw.info),
       placeholder: text(raw.placeholder),
       group: text(raw.group),
-      options: (Array.isArray(raw.options) ? raw.options : []).flatMap((option) => (isRecord(option) ? [{ value: text(option.value), label: text(option.label) || text(option.value), description: text(option.description) }] : [])),
+      options: (Array.isArray(raw.options) ? raw.options : []).flatMap((option) => (isRecord(option) ? [{ value: text(option.value), label: choiceWords(text(option.value), text(option.label) || text(option.value)), description: text(option.description) }] : [])),
       value: kind === 'secret' ? '' : typeof value === 'boolean' ? String(value) : value === null || value === undefined ? '' : String(value),
       isSet: raw.is_set === true,
       required: raw.required === true,

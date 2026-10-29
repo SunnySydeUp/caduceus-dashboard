@@ -70,6 +70,35 @@ const CANCEL_DRAIN: GatewayAction = { id: 'cancel-drain', label: 'Cancel drain',
 
 export { plainDuration };
 
+/** The two ways a host runs its gateways, named the same on every page. */
+export const SHARED_GATEWAY = 'One shared gateway';
+export const GATEWAY_PER_PROFILE = 'One gateway per profile';
+
+/** The name of the way the host runs its gateways now, from Hermes's `gateway_mode`; `undefined` when no gateway is set up. */
+export function gatewayModeLabel(mode: string | undefined): string | undefined {
+  if (mode === 'multiplex') return SHARED_GATEWAY;
+  return mode === 'multiple' || mode === 'single' ? GATEWAY_PER_PROFILE : undefined;
+}
+
+/** The other profiles a shared gateway serves, and the agents working now: what a stop or a restart touches. */
+export interface GatewayImpact {
+  alsoServes?: readonly string[];
+  activeAgents?: number;
+}
+
+/** What a stop or a restart does to work in progress, in one statement: a restart waits for working agents, a stop ends their turns. */
+export function gatewayImpactText(verb: 'stop' | 'restart', { alsoServes = [], activeAgents = 0 }: GatewayImpact): string {
+  const names = alsoServes.length < 2 ? alsoServes.join('') : `${alsoServes.slice(0, -1).join(', ')} and ${alsoServes[alsoServes.length - 1]}`;
+  const shared = alsoServes.length > 0 ? ` It also serves ${names}, which ${verb === 'stop' ? 'go down' : 'restart'} with it.` : '';
+  const one = activeAgents === 1;
+  if (verb === 'restart') {
+    const busy = activeAgents > 0 ? ` ${one ? '1 agent is' : `${activeAgents} agents are`} working now: Hermes waits for ${one ? 'it' : 'them'} to finish first.` : ' Hermes waits for work in progress to finish first.';
+    return `${shared}${busy}`;
+  }
+  const busy = activeAgents > 0 ? ` ${one ? '1 agent is' : `${activeAgents} agents are`} working now, and ${one ? 'its' : 'their'} turn ends.` : '';
+  return `${shared}${busy}`;
+}
+
 /** "a", "a and b", "a, b and c". */
 const joinNames = (names: readonly string[]): string => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
 

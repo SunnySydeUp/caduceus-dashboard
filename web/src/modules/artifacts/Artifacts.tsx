@@ -192,6 +192,16 @@ export function Artifacts() {
                 <Icon name="link" small />
                 From {SOURCE_LABELS[open.source.type].toLowerCase()}: {open.source.label}
               </AppLink>
+              <p className="help-text">
+                A file has no share link of its own: sharing is per chat. Download the file to send it as it is
+                {open.source.type === 'session' && (
+                  <>
+                    , or{' '}
+                    <AppLink to={sourceHref(open)}>open the chat</AppLink> and use Share there
+                  </>
+                )}
+                .
+              </p>
               <ArtifactViewer artifact={open} />
             </section>
           )}

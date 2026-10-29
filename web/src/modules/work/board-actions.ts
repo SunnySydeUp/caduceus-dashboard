@@ -43,6 +43,11 @@ export function describeChange(title: string, change: CardChange): string {
  * can take it back (a done task that was archived cannot come back as done). The board changes when Hermes says so, through the events.
  */
 export async function changeCard(task: BoardTask, change: CardChange, slug?: string): Promise<void> {
+  // Archiving takes the task off the board, so it is confirmed first (the other moves are shown on the board and undone at once).
+  if (change.kind === 'move' && change.to === 'archived') {
+    const ok = await confirmTier({ tier: 'T1', moduleId: 'hermes', action: 'kanban.task-archive', label: `Archive “${task.title}”?`, text: undoOf(task, change) === undefined ? 'It leaves the board. Hermes cannot put it back.' : 'It leaves the board. You can undo it for a few seconds.', object: task.id, profile: task.assignee ?? undefined, confirmLabel: 'Archive' });
+    if (!ok) return;
+  }
   const outcome = await send(cardChangeRequest(task.id, change, slug));
   if (outcome.kind === 'cancelled') return;
   if (outcome.kind === 'failed') {

@@ -13,7 +13,7 @@ export const workDeskHelp: ModuleHelp = {
         { h: 'The four groups' },
         {
           ul: [
-            '[[work-waiting|Waiting on you]]: work that cannot go on until you answer. A task in review, a task that asked a question or that no worker can take, and a run stopped on an approval or a question. The button is Decide.',
+            '[[work-waiting|Waiting on you]]: work that cannot go on until you answer or retry. A task in review, a task that asked a question or that no worker can take, a task whose worker failed, and a run stopped on an approval or a question. The button is Decide, or Retry for a failed worker. Decide opens the task, which shows the same card as Today, so you can answer there. A task blocked on purpose, with a reason you typed, is under Scheduled and shows your reason.',
             'Running: a worker has a task, or an agent is answering now. The button is Open.',
             '[[work-ready|Ready for review]]: work that finished and that you have not opened yet: a task that reached Done, or a chat that answered. The button is Review. Opening it, by the title or the button, takes it off this list. Work that finished before Caduceus began keeping this, or more than two weeks ago, is not offered.',
             '[[work-scheduled|Scheduled]]: work that has not started and begins by itself. A schedule waiting for its time, a task waiting for a free worker, a task waiting on another task, and a task Hermes will retry. The button on a schedule is Pause, or Resume while it is paused.',

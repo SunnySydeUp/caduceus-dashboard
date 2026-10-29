@@ -10,6 +10,8 @@
 :root[data-shell-size="compact"] { --shell-bottom: calc(var(--cd-tabbar-h) + var(--cd-safe-bottom)); }
 :root[data-shell-nav="rail"] { --shell-start: calc(var(--cd-rail-w) + var(--cd-safe-left)); }
 :root[data-shell-nav="sidebar"] { --shell-start: calc(var(--cd-sidebar-w) + var(--cd-safe-left)); }
+/* A phone-width window is a touch screen whatever its pointer says (a desktop window dragged narrow, a browser that reports a fine pointer for touch): its targets are 44 px too. */
+@media (max-width: 37.4375rem) { :root, [data-density] { --cd-target-min: 44px; } }
 html {
   scroll-padding-block-start: calc(var(--shell-top) + var(--cd-space-2));
   scroll-padding-block-end: calc(var(--shell-bottom) + var(--cd-space-4));
@@ -27,7 +29,7 @@ a.btn { text-decoration: none; }
 @media (hover: hover) { .nav-item:hover { background: var(--cd-overlay-hover); color: var(--cd-fg-default); } }
 .nav-item:active { background: var(--cd-overlay-pressed); }
 .kbds { display: inline-flex; gap: 2px; flex: none; }
-@media (pointer: coarse), (hover: none) { .palette__item .kbds, .appbar__search .kbds, .palette__foot > span:not(.palette__scope) { display: none; } }
+@media (pointer: coarse), (hover: none), (max-width: 37.4375rem) { .palette__item .kbds, .appbar__search .kbds, .palette__foot > span:not(.palette__scope) { display: none; } }
 .status__detail { font-size: var(--cd-text-xs); }
 
 /* ---- Skip link ---- */
@@ -264,7 +266,6 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .palette__match { background: transparent; color: var(--cd-accent-fg); font-weight: var(--cd-weight-semibold); }
 .palette__item .tag { flex: none; }
 .palette__foot kbd { margin-inline-end: var(--cd-space-0-5); }
-@media (pointer: coarse), (hover: none) { .palette__foot { display: none; } }
 
 /* ---- Keyboard: the `g` hint, the shortcut sheet and Settings › Keyboard ---- */
 .ghint { position: fixed; z-index: var(--cd-z-tooltip); inset-block-end: calc(var(--shell-bottom) + var(--cd-space-16)); inset-inline-start: 50%; translate: -50% 0; display: inline-flex; align-items: center; gap: var(--cd-space-2); padding: var(--cd-space-1-5) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-fg-default); color: var(--cd-bg-surface); font-size: var(--cd-text-sm); box-shadow: var(--cd-shadow-popover); }
@@ -287,6 +288,9 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .stepup[data-state="waiting"] { border-color: var(--cd-accent-border); background: var(--cd-accent-soft); }
 .stepup[data-state="ok"] { border-color: var(--cd-tone-success-border); background: var(--cd-tone-success-soft); }
 .stepup[data-state="ok"] > svg.i { color: var(--cd-tone-success-solid); }
+.stepup[data-state="missing"] { border-color: var(--cd-tone-warning-border); background: var(--cd-tone-warning-soft); }
+.stepup[data-state="missing"] > svg.i { color: var(--cd-tone-warning-solid); }
+.stepup__action { justify-self: start; margin-block-start: var(--cd-space-1); }
 
 /* ---- Profile switcher list (also reused for pickers) ---- */
 .plist { display: grid; gap: 2px; }
@@ -345,11 +349,18 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .term-pop { position: fixed; inset: auto; margin: 0; box-sizing: border-box; display: grid; gap: var(--cd-space-1-5); inline-size: max-content; max-inline-size: min(20rem, calc(100% - var(--cd-space-4))); padding: var(--cd-space-3); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); background: var(--cd-bg-overlay); color: var(--cd-fg-default); box-shadow: var(--cd-shadow-overlay); font: var(--cd-weight-regular) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); letter-spacing: normal; text-align: start; text-decoration: none; overflow: visible; cursor: auto; }
 .term-pop__term { font-weight: var(--cd-weight-semibold); }
 .term-pop__more { justify-self: start; }
+/* A long help page folds into sections: the first is open, the rest are a heading each. The passage a glossary term's "More" leads to is marked. */
+.help-section { border-block-start: 1px solid var(--cd-border-subtle); }
+.help-section > summary { display: flex; align-items: center; min-block-size: var(--cd-target-min); font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); cursor: pointer; }
+.help-section__body { display: grid; gap: var(--cd-space-3); padding-block-end: var(--cd-space-3); }
+.help-hit { padding: var(--cd-space-2) var(--cd-space-3); border-inline-start: 3px solid var(--cd-accent); border-radius: var(--cd-radius-md); background: var(--cd-accent-soft); }
+.help-hit > * { margin: 0; }
 
 /* ---- Toast region ---- */
 .toasts { position: fixed; z-index: var(--cd-z-toast); inset-inline: 0; inset-block-end: max(calc(var(--shell-bottom) + var(--kb-inset) + var(--cd-space-3)), var(--toast-floor, 0px)); display: grid; justify-items: center; gap: var(--cd-space-2); padding-inline: calc(var(--cd-space-3) + var(--cd-safe-left)) calc(var(--cd-space-3) + var(--cd-safe-right)); pointer-events: none; }
-/* while a sheet/dialog is open its footer owns the bottom edge: toasts move to the top */
-html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--cd-safe-top) + var(--cd-space-3)); }
+/* While a sheet or dialog is open its footer owns the bottom edge: toasts move to the top, under the app bar's place so they never sit on it. A palette owns the top (its search field), so there they stay at the bottom, above the keyboard. */
+html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); }
+html.has-overlay:has(.layer--palette) .toasts { inset-block-start: auto; inset-block-end: calc(var(--kb-inset) + var(--cd-space-3) + var(--cd-safe-bottom)); }
 .toasts .toast { pointer-events: auto; inline-size: min(100%, 26rem); animation: hc-pop-in var(--cd-dur-moderate) var(--cd-ease-enter); }
 .toast.is-closing { opacity: 0; transition: opacity var(--cd-dur-exit) var(--cd-ease-exit); }
 .toast__text small { overflow-wrap: anywhere; }
@@ -361,6 +372,14 @@ html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--
 .control { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); max-inline-size: 48rem; }
 .control__search { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-sticky); }
 .control__results { display: grid; gap: var(--cd-space-6); }
+/* From 1200 px the groups sit in two columns, so the list is not a narrow strip with two thirds of the screen empty. */
+@media (min-width: 75rem) { .control { max-inline-size: none; } .control__results { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } .control__results > .empty { grid-column: 1 / -1; } }
+/* A module's one-line summary keeps two lines, so the helpful part is not cut at the edge. */
+.control .list-row__sub { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+/* A list row that is a button (Help, Sign out) looks like the link rows. */
+button.list-row { inline-size: 100%; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; }
+button.list-row:active { background: var(--cd-overlay-pressed); }
+@media (hover: hover) { button.list-row:hover { background: var(--cd-overlay-hover); } }
 .control__group { display: grid; gap: var(--cd-space-2); }
 /* Settings: the search field stays at the top of the list, and the setting a search opened is highlighted for a few seconds. */
 .settings-search { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-sticky); }
@@ -369,3 +388,6 @@ html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--
 .module-page { display: grid; gap: var(--page-gap); max-inline-size: 48rem; }
 /* A screen's own app bar buttons (a portal: the chat's Todo and run on a phone). */
 .appbar__slot { display: contents; }
+
+/* What a lazily loaded page (the sign-in screen, a share link) shows before its code is in. */
+.boot-note { display: grid; place-items: center; min-block-size: 100dvh; margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }

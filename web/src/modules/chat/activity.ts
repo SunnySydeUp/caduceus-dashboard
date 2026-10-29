@@ -338,7 +338,7 @@ export function withLiveSubagents(items: readonly ActivityItem[], children: read
 
 /** A transcript entry read from history: a bubble of what was said, or a run of activity. */
 export type HistoryEntry =
-  | { kind: 'bubble'; id: number; role: 'user' | 'assistant'; text: string; /** When Hermes wrote the row (seconds since the epoch). */ at?: number; /** Hermes's note in place of a reply for a turn that failed. */ failed?: true; /** Hermes's note that it picked an interrupted turn up again (a user-role row the owner did not write). */ continued?: true }
+  | { kind: 'bubble'; id: number; role: 'user' | 'assistant'; text: string; /** When Hermes wrote the row (seconds since the epoch). */ at?: number; /** Hermes's note in place of a reply for a turn that failed. */ failed?: true; /** Hermes's note that it picked an interrupted turn up again (a user-role row the owner did not write). */ continued?: true; /** A mid-turn steer (also what a denial with a reason is sent as): `text` is the owner's words without Hermes's wrapper, and the row is a note, not a message. */ steered?: true; /** The first message of a scheduled run: `text` is the job's own prompt, and this is the instructions Hermes put in front of it. */ scheduled?: string }
   | { kind: 'activity'; items: ActivityItem[] };
 
 const parseJson = (content: unknown): unknown => {
@@ -349,6 +349,35 @@ const parseJson = (content: unknown): unknown => {
     return content;
   }
 };
+
+const STEER_OPEN = '[OUT-OF-BAND USER MESSAGE';
+const STEER_CLOSE = '[/OUT-OF-BAND USER MESSAGE]';
+
+/**
+ * The owner's words in a steer row. Hermes delivers a mid-turn steer (and the reason of a denied approval) as a user row that wraps the words in a marker
+ * (`[OUT-OF-BAND USER MESSAGE — …]`, the words, `[/OUT-OF-BAND USER MESSAGE]`); the marker is Hermes's, and is never drawn. A row with no marker is the words as they are.
+ */
+export function steerWords(text: string): string {
+  const open = text.indexOf(STEER_OPEN);
+  if (open === -1) return text.trim();
+  const afterOpen = text.indexOf('\n', open);
+  const start = afterOpen === -1 ? text.length : afterOpen + 1;
+  const close = text.indexOf(STEER_CLOSE, start);
+  return text.slice(start, close === -1 ? undefined : close).trim();
+}
+
+const CRON_HINT_START = '[IMPORTANT: You are running as a scheduled cron job';
+
+/**
+ * The first message of a scheduled (cron) run is the job's prompt behind a block of instructions Hermes wrote for the agent (`[IMPORTANT: You are running as a scheduled
+ * cron job. DELIVERY: …]`). Split in two so that the run opens on what the job asked and the instructions are a small note; undefined for any other message.
+ */
+export function splitCronPrompt(text: string): { instructions: string; prompt: string } | undefined {
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith(CRON_HINT_START)) return undefined;
+  const end = trimmed.indexOf(']\n\n');
+  return end === -1 ? { instructions: trimmed.trim(), prompt: '' } : { instructions: trimmed.slice(0, end + 1), prompt: trimmed.slice(end + 3).trim() };
+}
 
 const textOf = (content: unknown): string => {
   if (typeof content === 'string') return content;
@@ -383,7 +412,9 @@ export function entriesOf(rows: readonly HistoryRow[]): HistoryEntry[] {
     if (row.display_kind === 'hidden') continue;
     if (row.role === 'user') {
       const words = textOf(row.content);
-      if (words !== '') entries.push({ kind: 'bubble', id: row.id, role: 'user', text: words, ...(typeof row.timestamp === 'number' ? { at: row.timestamp } : {}), ...(isAutoContinueNote(row, words) ? { continued: true as const } : {}) });
+      const steer = row.display_kind === 'steer' || words.trimStart().startsWith(STEER_OPEN) ? steerWords(words) : undefined;
+      const cron = steer === undefined ? splitCronPrompt(words) : undefined;
+      if (words !== '' && steer !== '') entries.push({ kind: 'bubble', id: row.id, role: 'user', text: steer ?? cron?.prompt ?? words, ...(typeof row.timestamp === 'number' ? { at: row.timestamp } : {}), ...(isAutoContinueNote(row, words) ? { continued: true as const } : {}), ...(steer === undefined ? {} : { steered: true as const }), ...(cron === undefined ? {} : { scheduled: cron.instructions }) });
     } else if (row.role === 'assistant') {
       const thought = text(row.reasoning) ?? text(row.reasoning_content);
       if (thought) run().items.push({ kind: 'reasoning', key: `reasoning-r${row.id}`, text: thought, streaming: false });

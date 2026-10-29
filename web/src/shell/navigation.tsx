@@ -8,7 +8,7 @@ export interface RouteInfo {
   /** The URL path the shown route matched. */
   pathname: string;
   moduleId: string | undefined;
-  /** The app bar title when it differs from the module's. */
+  /** The app bar title when it differs from the module's. A `:name` in it stands for that route parameter (`:name` on `/agents/profiles/:name` is the profile's name). */
   title: string | undefined;
   parent: string | undefined;
 }
@@ -24,7 +24,8 @@ declare module '@tanstack/react-router' {
 export function useRouteInfo(): RouteInfo {
   const match = useMatches().at(-1);
   const { moduleId, title, parent } = match?.staticData ?? {};
-  return { pathname: match?.pathname ?? '/', moduleId, title, parent };
+  const params: Record<string, string> = match?.params ?? {};
+  return { pathname: match?.pathname ?? '/', moduleId, title: title?.replace(/:(\w+)/g, (token, name: string) => params[name] ?? token), parent };
 }
 
 /** The `?profile=` parameter of this tab's URL. */

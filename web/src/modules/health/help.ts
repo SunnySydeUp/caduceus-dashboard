@@ -33,7 +33,7 @@ export const healthHelp: ModuleHelp = {
         { h: 'Resource pressure' },
         { p: 'When Hermes reports that memory or disk is running out ([[resource-pressure|resource pressure]]), a banner appears at the top of every screen and leads here. Close it with its Dismiss button: it stays closed for as long as that stretch of pressure lasts, and comes back when the pressure returns after it eased, when it gets worse, or when Hermes’s gateway restarts under pressure. It also goes by itself when Hermes says the pressure is over. The banner follows what Hermes says; Caduceus adds no thresholds of its own for it. Where Hermes gives no reading (memory on a Mac, say), Host resources falls back on how full memory and disk are.' },
         { h: 'Staying up to date' },
-        { p: 'Health refreshes itself when Hermes reconnects, when platforms or jobs change, when the backend restarts and when you come back to the tab. Check now asks again at once.' },
+        { p: 'Health refreshes itself when Hermes reconnects, when platforms or jobs change, when the backend restarts and when you come back to the tab. Check now asks again at once. When you open Health again it shows the last report at once while the new check runs. If there is no report yet, each subsystem shows a placeholder; after a few seconds the page says the check is taking longer than usual and offers Retry.' },
         { h: 'When Caduceus cannot be reached' },
         { p: 'A banner says so, and Health keeps showing its last report with the time it was made. It updates by itself when the connection is back. Until then the Caduceus server row reads Down, because this page cannot reach it.' },
       ],

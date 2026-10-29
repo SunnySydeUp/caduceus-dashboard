@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { ChatMessage } from '../src/modules/chat/chat-session.ts';
-import { BUSY_REASON, editableText, editedText, forkPlan, messageEntries, plainText, removedByEdit } from '../src/modules/chat/message-actions.ts';
+import { BUSY_REASON, editableText, editedText, forkFailureWords, forkPlan, forkWasCut, messageEntries, plainText, removedByEdit } from '../src/modules/chat/message-actions.ts';
 
 // What the owner can do to a message (M1 #12): the words an edit sends, how much of the history it removes, how a fork is cut back, and what Copy puts on the clipboard.
 describe('edit and resend', () => {
@@ -57,6 +57,41 @@ describe('the plan of a fork from an earlier message', () => {
     expect(forkPlan(branch, { role: 'user', at: 990 })).toBeUndefined();
     expect(forkPlan(branch, { role: 'assistant', at: 10 })).toBeUndefined();
     expect(forkPlan(branch, { role: 'user', at: undefined })).toBeUndefined();
+  });
+});
+
+// Talk audit #1: a chat with a denied command (a steer row) failed to fork, because the page did not count that row as a turn although `session.undo` does.
+describe('a fork of a chat that has a steer in it', () => {
+  const chat = [
+    { role: 'user', text: 'Q1', timestamp: 10 },
+    { role: 'assistant', text: 'A1', timestamp: 20 },
+    { role: 'user', text: 'Q2', timestamp: 30 },
+    { role: 'user', text: 'I denied that action. My reason: no', timestamp: 35, display_kind: 'steer' },
+    { role: 'assistant', text: 'A2', timestamp: 40 },
+  ];
+
+  test('counts the steer as one of the turns `session.undo` takes off, so the page undoes as often as Hermes needs', () => {
+    expect(forkPlan(chat, { role: 'assistant', at: 20 })).toEqual({ undo: 2, users: 1, last: 'A1', prefill: undefined });
+    expect(forkPlan(chat, { role: 'user', at: 30 })).toEqual({ undo: 2, users: 1, last: 'A1', prefill: 'Q2' });
+  });
+
+  test('a note Hermes wrote of its own is still not a turn', () => {
+    const noted = [...chat, { role: 'user', text: '[System note: interrupted]', timestamp: 50, display_kind: 'auto_continue' }, { role: 'assistant', text: 'A3', timestamp: 60 }];
+    expect(forkPlan(noted, { role: 'assistant', at: 20 })?.undo).toBe(2);
+  });
+
+  test('a branch that was cut where the plan said is cut; one that holds more or ends elsewhere is not', () => {
+    const plan = forkPlan(chat, { role: 'assistant', at: 20 })!;
+    expect(forkWasCut(plan, chat.slice(0, 2))).toBe(true);
+    expect(forkWasCut(plan, chat.slice(0, 4))).toBe(false);
+    expect(forkWasCut(plan, chat)).toBe(false);
+    expect(forkWasCut({ undo: 0, users: 0, last: undefined, prefill: 'Q1' }, [])).toBe(true);
+  });
+
+  test('Hermes’s “no longer in session history” and “busy” are said in plain words, anything else as Hermes said it', () => {
+    expect(forkFailureWords('undo: target user message is no longer in session history')).toMatch(/no longer holds that message/);
+    expect(forkFailureWords('session busy')).toMatch(/still working/);
+    expect(forkFailureWords('undo: disk is full')).toBe('disk is full');
   });
 });
 

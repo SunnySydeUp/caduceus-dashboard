@@ -38,8 +38,20 @@ export interface ForkSource {
   at?: number | undefined;
 }
 
-/** A user message of the owner's, not a note Hermes wrote into the history (a model switch, a crash recovery): what `session.undo` counts as a turn. */
-const isOwnTurn = (message: BranchedMessage) => message.role === 'user' && (message.display_kind == null || message.display_kind === 'skill_invocation');
+/**
+ * A user message `session.undo` counts as a turn (Hermes's `user_originated_turn_view`): one the owner typed (no `display_kind`, or the skill invocation the history
+ * shows for a skill command) and a mid-turn steer (`steer`, which is also what a denial with a reason is sent as). Notes Hermes wrote (a model switch, a crash
+ * recovery) are not.
+ */
+const isOwnTurn = (message: BranchedMessage) => message.role === 'user' && (message.display_kind == null || message.display_kind === 'skill_invocation' || message.display_kind === 'steer');
+
+/** How far a branch is cut back, and what it must hold afterwards. */
+export interface ForkPlan {
+  undo: number;
+  users: number;
+  last: string | undefined;
+  prefill: string | undefined;
+}
 
 /**
  * How a branch of the whole chat is cut back to message `from` (a message of the chat the branch was made from). The branch's messages are new rows with
@@ -48,7 +60,7 @@ const isOwnTurn = (message: BranchedMessage) => message.role === 'user' && (mess
  * the words the branch must end with. A message of the owner's is cut too, and its words go back to the composer (`prefill`): the fork then starts at that
  * message, the way an edit does. Undefined when the message is not in the branch.
  */
-export function forkPlan(messages: readonly BranchedMessage[], from: ForkSource): { undo: number; users: number; last: string | undefined; prefill: string | undefined } | undefined {
+export function forkPlan(messages: readonly BranchedMessage[], from: ForkSource): ForkPlan | undefined {
   const at = from.at === undefined ? -1 : messages.findIndex((message) => message.role === from.role && message.timestamp === from.at);
   const target = messages[at];
   if (!target || target.role === 'tool') return undefined;
@@ -57,6 +69,19 @@ export function forkPlan(messages: readonly BranchedMessage[], from: ForkSource)
   const undo = messages.slice(cutFrom).filter(isOwnTurn).length;
   const kept = messages.slice(0, cutFrom).filter((message) => message.role === 'user' || message.role === 'assistant').at(-1);
   return { undo, users: turns.length - undo, last: kept?.text?.trim() || undefined, prefill: target.role === 'user' ? (target.text ?? undefined) : undefined };
+}
+
+/** Whether a branch that was cut back holds what its plan said: the owner's turns, and the words it ends with. */
+export function forkWasCut(plan: ForkPlan, held: readonly BranchedMessage[]): boolean {
+  const last = held.filter((message) => message.role === 'user' || message.role === 'assistant').at(-1);
+  return held.filter(isOwnTurn).length === plan.users && (last?.text?.trim() || undefined) === plan.last;
+}
+
+/** What Hermes's refusal to cut a branch says, in words the owner can act on. Hermes's own text is kept for any other reason. */
+export function forkFailureWords(reason: string): string {
+  if (/no longer in session history|was summarized|compacted/i.test(reason)) return 'Hermes no longer holds that message word for word: a long chat is summarised to save room.';
+  if (/busy|still running|wait for/i.test(reason)) return 'Hermes was still working in this chat.';
+  return reason.replace(/^undo:\s*/i, '');
 }
 
 /** Inline content as plain words: markup dropped, a link followed by its address (so that copying a message keeps where it pointed). */

@@ -20,6 +20,7 @@
 .fl-row__name > svg.i { flex: none; color: var(--cd-fg-subtle); }
 .fl-row__text { overflow-wrap: anywhere; min-inline-size: 0; }
 .fl-row__size, .fl-row__time { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.fl-row > .btn { min-inline-size: var(--cd-target-min); min-block-size: var(--cd-target-min); }
 @media (hover: hover) { .fl-row:hover { background: var(--cd-overlay-hover); } }
 .app[data-size="medium"] .fl-head, .app[data-size="medium"] .fl-row, .app[data-size="large"] .fl[data-preview="open"] .fl-head, .app[data-size="large"] .fl[data-preview="open"] .fl-row { grid-template-columns: minmax(0, 1fr) 5rem auto; }
 .app[data-size="medium"] .fl-row__time, .app[data-size="medium"] .fl-head > :nth-child(3), .app[data-size="large"] .fl[data-preview="open"] .fl-row__time, .app[data-size="large"] .fl[data-preview="open"] .fl-head > :nth-child(3) { display: none; }

@@ -68,3 +68,11 @@ export function parseUsage(payload: unknown): Usage {
   });
   return { days: count(body.period_days), cards };
 }
+
+/**
+ * What a refused read of Hermes's analytics means. A Hermes that has no such route (or has it switched off) answers 404, 405 or 501: the numbers are
+ * not available in it, and asking again changes nothing. Anything else is a failure that a retry may mend.
+ */
+export function analyticsFailure(status: number): 'unavailable' | 'failed' {
+  return status === 404 || status === 405 || status === 501 ? 'unavailable' : 'failed';
+}

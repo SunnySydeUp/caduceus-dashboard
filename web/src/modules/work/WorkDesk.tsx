@@ -22,7 +22,7 @@ import './work-desk.css';
 /** Which sigil mark a group's rows carry: finished work shows it, a schedule that has not started rests, and the others show their state in words. */
 const SIGIL_STATE: Record<WorkGroupId, 'done' | 'idle' | undefined> = { waiting: undefined, running: undefined, review: 'done', scheduled: 'idle' };
 
-const ACTION_LABEL: Record<Exclude<WorkAction, 'pause' | 'resume'>, string> = { decide: 'Decide', open: 'Open', review: 'Review' };
+const ACTION_LABEL: Record<Exclude<WorkAction, 'pause' | 'resume'>, string> = { decide: 'Decide', retry: 'Retry', open: 'Open', review: 'Review' };
 
 function RowAction({ row, busy, onToggle, onOpen }: { row: WorkRow; busy: boolean; onToggle(job: Job): void; onOpen(): void }) {
   if (row.action === 'pause' || row.action === 'resume') {
@@ -34,7 +34,7 @@ function RowAction({ row, busy, onToggle, onOpen }: { row: WorkRow; busy: boolea
     );
   }
   return (
-    <AppLink className={`btn btn--sm ${row.action === 'decide' ? 'btn--primary' : 'btn--secondary'}`} to={row.to} aria-label={`${ACTION_LABEL[row.action]} ${row.title}`} onClick={onOpen}>
+    <AppLink className={`btn btn--sm ${row.action === 'decide' || row.action === 'retry' ? 'btn--primary' : 'btn--secondary'}`} to={row.to} aria-label={`${ACTION_LABEL[row.action]} ${row.title}`} onClick={onOpen}>
       {ACTION_LABEL[row.action]}
     </AppLink>
   );
@@ -49,10 +49,8 @@ function Row({ row, now, busy, onToggle, onOpen }: { row: WorkRow; now: number; 
         <AppLink className="wd-title" to={row.to} onClick={onOpen}>
           {row.title}
         </AppLink>
-        <small className="wd-line">
-          {row.line}
-          {when && <span className="wd-when-inline"> · {when}</span>}
-        </small>
+        <small className="wd-line">{row.line}</small>
+        {when && <small className="wd-when-inline">{when}</small>}
       </span>
       <span className="wd-when">{when}</span>
       <RowAction row={row} busy={busy} onToggle={onToggle} onOpen={onOpen} />

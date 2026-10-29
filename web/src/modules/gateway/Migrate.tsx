@@ -6,24 +6,29 @@ import { PageHeader } from '../../shell/PageHeader.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
-import { migrationView, type MigrationState } from './gateway-model.ts';
-import { useMigrationPlan } from './gateway-data.ts';
+import { StatusBadge } from '../../shell/StatusBadge.tsx';
+import { Loading } from '../../shell/Loading.tsx';
+import { GATEWAY_PER_PROFILE, SHARED_GATEWAY, gatewayRows, migrationView, type MigrationState } from './gateway-model.ts';
+import { useGateways, useMigrationPlan } from './gateway-data.ts';
 import './gateway.css';
 
 const HEADLINES: Record<MigrationState, string> = {
-  ready: 'Nothing blocks the migration.',
-  blocked: 'The migration is blocked.',
-  done: 'One gateway already serves every profile. There is nothing to migrate.',
-  resume: 'An earlier migration stopped half way. Running it again finishes it.',
-  nothing: 'There is only one profile, so there is nothing to merge.',
+  ready: 'Nothing blocks the move.',
+  blocked: 'The move is blocked.',
+  done: 'One shared gateway already serves every profile. There is nothing to move.',
+  resume: 'An earlier move stopped half way. Running it again finishes it.',
+  nothing: 'There is only one profile, so there is nothing to share.',
   unknown: 'Hermes did not give a plan that Caduceus can read.',
 };
 
 /** Connect › Gateway › Migrate: Hermes's plan for moving to one multiplexed gateway, with its blockers, and the run (Tier 2) only when nothing blocks it. */
 export function Migrate() {
   const { plan, failed, reload } = useMigrationPlan();
+  const gateways = useGateways();
   const [busy, setBusy] = useState(false);
   const view = plan === undefined ? undefined : migrationView(plan);
+  // The same rows, with the same status, as Connect › Gateway.
+  const rows = gatewayRows({ cards: gateways.cards ?? [], statuses: gateways.statuses, topology: gateways.topology, startedAt: gateways.facts?.startedAt ?? {} });
 
   const run = async () => {
     setBusy(true);
@@ -31,7 +36,7 @@ export function Migrate() {
       const outcome = await runGatewayMigration();
       if (outcome.kind === 'failed') toast(outcome.message, { tone: 'danger' });
       else if (outcome.kind === 'done') {
-        toast('Migrating to one gateway', { detail: 'Hermes is stopping each gateway and starting the one. This page follows what it reports.' });
+        toast('Moving to one shared gateway', { detail: 'Hermes is stopping each gateway and starting the one. This page follows what it reports.' });
         await reload();
       }
     } finally {
@@ -41,9 +46,9 @@ export function Migrate() {
 
   return (
     <div className="gw">
-      <PageHeader overline="Connect · Gateway" title="Migrate to one gateway" subtitle="Move from one gateway for every profile to a single multiplexed gateway." />
+      <PageHeader overline="Connect · Gateway" title="Move to one shared gateway" subtitle={`Move from ${GATEWAY_PER_PROFILE.toLowerCase()} to ${SHARED_GATEWAY.toLowerCase()}.`} />
       <p className="help-text">
-        A <Term id="multiplexed-gateway">multiplexed gateway</Term> serves every profile from one process. Hermes checks the host first and lists anything that blocks the move.
+        <Term id="multiplexed-gateway">One shared gateway</Term> serves every profile from one process; the alternative is one gateway per profile. Hermes checks the host first and lists anything that blocks the move.
       </p>
       {failed && (
         <div className="banner gw-error" data-tone="danger" role="alert">
@@ -55,7 +60,7 @@ export function Migrate() {
           </button>
         </div>
       )}
-      {!view && !failed && <p role="status">Reading the plan…</p>}
+      {!view && !failed && <Loading label="Reading the plan…" lines={3} onRetry={() => void reload()} />}
       {view && (
         <div className="stack">
           <section className="panel panel--pad gw-plan" aria-labelledby="gw-plan-title">
@@ -83,27 +88,38 @@ export function Migrate() {
               </ul>
             )}
           </section>
-          {view.gateways.length > 0 && (
+          {rows.length > 0 && (
             <section className="panel panel--pad" aria-labelledby="gw-today-title">
               <h2 id="gw-today-title" className="gw-section">
                 Gateways today
               </h2>
               <ul className="gw-today">
-                {view.gateways.map((gateway) => (
-                  <li key={gateway.profile}>
-                    <span>{gateway.profile}</span>
-                    <span className="mono subtle">{gateway.pid !== undefined ? `pid ${gateway.pid}` : 'no process'}{gateway.service ? ` · ${gateway.service}` : ''}</span>
-                  </li>
-                ))}
+                {rows.map((row) => {
+                  const planned = view.gateways.find((gateway) => gateway.profile === row.profile);
+                  const pid = row.pid ?? planned?.pid;
+                  return (
+                    <li key={row.profile}>
+                      <span>
+                        {row.profile} <StatusBadge state={row.badge} label={`Gateway ${row.statusLabel.toLowerCase()}`} variant="plain" />
+                      </span>
+                      <span className="mono subtle">
+                        {row.servedBy ? `served by ${row.servedBy}` : pid !== undefined ? `pid ${pid}` : 'no process'}
+                        {planned?.service ? ` · ${planned.service}` : ''}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           )}
           <div className="row">
-            <WriteButton type="button" className="btn btn--primary" disabled={!view.canRun || busy} aria-busy={busy} aria-describedby={view.blockers.length > 0 ? 'gw-blockers' : undefined} onClick={() => void run()}>
-              <Icon name="stack" />
-              {view.state === 'resume' ? 'Finish the migration' : 'Migrate to one gateway'}
-            </WriteButton>
-            <AppLink className="btn btn--secondary" to="/connect/gateway">
+            {view.state !== 'done' && view.state !== 'nothing' && (
+              <WriteButton type="button" className="btn btn--primary" disabled={!view.canRun || busy} aria-busy={busy} aria-describedby={view.blockers.length > 0 ? 'gw-blockers' : undefined} onClick={() => void run()}>
+                <Icon name="stack" />
+                {view.state === 'resume' ? 'Finish the move' : 'Move to one shared gateway'}
+              </WriteButton>
+            )}
+            <AppLink className={view.state === 'done' || view.state === 'nothing' ? 'btn btn--primary' : 'btn btn--secondary'} to="/connect/gateway">
               Back to Gateway
             </AppLink>
           </div>

@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../icons.tsx';
 import { Sheet } from '../overlays/Sheet.tsx';
 import type { ConfirmRequest } from '../palette.ts';
-import { PasskeyError, stepUp, stepUpLive } from '../passkeys.ts';
+import { PasskeyError, passkeyCount, stepUp, stepUpLive } from '../passkeys.ts';
 import { useReadOnly } from '../policy-state.ts';
-import { confirmBlocker, recoverabilityText, TIER_LABELS } from '../tier-flow.ts';
+import { confirmBlocker, isDestructive, recoverabilityText, TIER_LABELS } from '../tier-flow.ts';
 import { Sigil } from './Sigil.tsx';
 import { useOnline } from './connection.ts';
+import { AppLink } from './navigation.tsx';
 import { setTierConfirmer, type ConfirmAnswer } from './tier-confirmation.ts';
 import { Term } from './Term.tsx';
 
@@ -60,13 +61,17 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string>();
+  const [passkeys, setPasskeys] = useState<number>();
   const online = useOnline();
   const readOnly = useReadOnly();
-  const blocker = confirmBlocker({ tier, object, typed, online, readOnly });
   const needsPasskey = tier !== 'T1';
   // A passkey the owner gave in the last few minutes still covers this: asking again would be a step-up for nothing.
   const covered = needsPasskey && stepUpLive();
-
+  // Whether there is a passkey to confirm with is asked as the sheet opens, so the owner learns it now and not after pressing Confirm.
+  useEffect(() => {
+    if (needsPasskey && !covered) void passkeyCount().then(setPasskeys);
+  }, [needsPasskey, covered]);
+  const blocker = confirmBlocker({ tier, object, typed, online, readOnly, hasPasskey: passkeys === undefined ? undefined : passkeys > 0, covered });
   const confirm = async () => {
     if (blocker || busy) return;
     setBusy(true);
@@ -84,8 +89,8 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
     }
   };
 
-  const danger = tier === 'T3';
-  const stepUpState = waiting ? 'waiting' : covered ? 'ok' : undefined;
+  const danger = isDestructive(request);
+  const stepUpState = waiting ? 'waiting' : blocker === 'no-passkey' ? 'missing' : covered ? 'ok' : undefined;
   return (
     <Sheet
       title={label}
@@ -116,7 +121,7 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
         <Term id="risk-tiers">{TIER_LABELS[tier]}</Term>
       </p>
       {text && <p className="confirm__text">{text}</p>}
-      {object && tier !== 'T3' && (
+      {object && tier !== 'T3' && object !== profile && (
         <div className="confirm__scope">
           <span className="subtle">Changes</span>
           <span className="mono">{object}</span>
@@ -133,8 +138,9 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
       )}
       {tier === 'T3' && (
         <>
-          <div className="banner" data-tone="danger">
-            <Icon name="alert" />
+          {/* A note that the action can be undone is calm; one that it cannot is a warning. */}
+          <div className="banner" data-tone={request.recoverability?.undoable ? 'neutral' : 'danger'} role={request.recoverability?.undoable ? undefined : 'alert'}>
+            <Icon name={request.recoverability?.undoable ? 'info' : 'alert'} />
             <div className="banner__content">
               <div className="banner__title">{recoverabilityText(request.recoverability)}</div>
             </div>
@@ -160,16 +166,23 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
       )}
       {needsPasskey && (
         <div className="stepup" data-state={stepUpState}>
-          <Icon name={covered && !waiting ? 'succeeded' : 'fingerprint'} />
+          <Icon name={blocker === 'no-passkey' ? 'lock' : covered && !waiting ? 'succeeded' : 'fingerprint'} />
           <div className="stepup__text">
-            <strong>{waiting ? 'Waiting for passkey…' : covered ? 'Passkey confirmed' : 'Passkey required'}</strong>
+            <strong>{blocker === 'no-passkey' ? 'You have no passkey yet' : waiting ? 'Waiting for passkey…' : covered ? 'Passkey confirmed' : 'Passkey required'}</strong>
             <small>
-              {waiting
-                ? 'Touch your security key or use Face ID / Touch ID.'
-                : covered
-                  ? 'You confirmed with a passkey a moment ago; it still covers this device for a few minutes.'
-                  : 'This asks for one of your passkeys. It covers the next 5 minutes on this device.'}
+              {blocker === 'no-passkey'
+                ? 'This change needs a passkey to confirm it, and none is set up. Add one in Settings › Security, then come back.'
+                : waiting
+                  ? 'Touch your security key or use Face ID / Touch ID.'
+                  : covered
+                    ? 'You confirmed with a passkey a moment ago; it still covers this device for a few minutes.'
+                    : 'This asks for one of your passkeys. It covers the next 5 minutes on this device.'}
             </small>
+            {blocker === 'no-passkey' && (
+              <AppLink className="btn btn--secondary btn--sm stepup__action" to="/system/security">
+                Add a passkey
+              </AppLink>
+            )}
           </div>
         </div>
       )}

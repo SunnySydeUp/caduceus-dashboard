@@ -20,7 +20,11 @@
 .sk-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cd-space-1-5); }
 .sk-usage { font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
 .sk-front { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); padding-inline: var(--cd-space-3); min-inline-size: 0; }
-.sk-front > summary { display: flex; align-items: center; min-block-size: var(--cd-target-min); cursor: pointer; font-weight: var(--cd-weight-medium); }
+.sk-front > summary { list-style: none; display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: var(--cd-target-min); cursor: pointer; font-weight: var(--cd-weight-medium); }
+.sk-front > summary::-webkit-details-marker { display: none; }
+.sk-front > summary .chev { flex: none; color: var(--cd-fg-subtle); transition: rotate var(--cd-dur-fast) var(--cd-ease-standard); }
+.sk-front[open] > summary .chev { rotate: 90deg; }
+[dir="rtl"] .sk-front > summary .chev { scale: -1 1; }
 .sk-pre { margin: 0 0 var(--cd-space-3); padding: var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); font: var(--cd-text-xs)/var(--cd-leading-xs) var(--cd-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-block-size: 24rem; overflow: auto; }
 .sk-files { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
 .sk-files h3 { font-size: var(--cd-text-md); line-height: var(--cd-leading-md); }
@@ -39,7 +43,9 @@
 .sk-editor__bar { display: flex; }
 .sk-editor__problem:empty { display: none; }
 .sk-editor__fields { display: grid; gap: var(--cd-space-4); max-inline-size: 56rem; min-inline-size: 0; }
-.sk-area { min-block-size: 12rem; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); white-space: pre; overflow-wrap: normal; overflow: auto; }
+/* Named with its element so 12rem beats `textarea.input`. Instructions are prose and wrap; the frontmatter is YAML and keeps its columns. */
+textarea.sk-area { min-block-size: 12rem; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto; }
+textarea.sk-area--yaml { white-space: pre; overflow-wrap: normal; }
 .sk-preview { max-inline-size: 56rem; display: grid; gap: var(--cd-space-3); }
 
 /* the section links of Skills */

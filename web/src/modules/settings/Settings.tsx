@@ -4,6 +4,7 @@ import { Icon } from '../../icons.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useRegistry } from '../../shell/registry-context.tsx';
+import { signOut } from '../../shell/sign-out.ts';
 import { indexSettings, searchSettings } from './settings-search.ts';
 
 /** Settings: a search over every setting, and the list of the panels every registered module declares. */
@@ -64,6 +65,15 @@ export function Settings() {
             </li>
           ))}
         </ul>
+      )}
+      {!searching && (
+        <div className="settings-actions">
+          <button type="button" className="btn btn--secondary" onClick={() => void signOut()}>
+            <Icon name="lock" />
+            Sign out
+          </button>
+          <span className="help-text">Ends the session on this device. Your other devices stay signed in.</span>
+        </div>
       )}
     </div>
   );

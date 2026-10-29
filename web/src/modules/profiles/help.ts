@@ -93,7 +93,7 @@ export const profilesHelp: ModuleHelp = {
         {
           ul: [
             'Blank starts with what Hermes gives every new profile: its own SOUL, no model and its bundled skills.',
-            'A [[persona|persona]] fills in a name, an assistant name, a description and a SOUL. Personas are part of Caduceus and match the personalities Hermes has built in; Caduceus keeps no record of which one you used. A persona marked Restore has no profile of its name, so Finish makes it in Hermes again.',
+            'A [[persona|persona]] fills in a name, an assistant name, a description and a SOUL. Personas are part of Caduceus and match the personalities Hermes has built in; Caduceus keeps no record of which one you used. A persona marked Profile exists already has a profile of that name, so give the new one another name.',
             'A [[profile-clone|clone]] copies a profile Hermes has. Hermes copies its settings, SOUL and skills; the builder shows them so you can change them. The profile you clone is not changed.',
           ],
         },
@@ -101,7 +101,7 @@ export const profilesHelp: ModuleHelp = {
         {
           ul: [
             'Identity: the name (also its name on the command line; the pattern and colour of its sigil come from it), an optional assistant display name that Caduceus keeps, an optional description and the [[soul|SOUL]].',
-            'Model: the main model, from Hermes’s live catalogue. A new profile cannot chat until it has one; a clone starts with the model it copies.',
+            'Model: the main model, from Hermes’s live catalogue. A clone starts with the model it copies. A new profile that is not given a model starts with the default profile’s model, and the step says which; it cannot chat only when the default profile has none either.',
             'Skills: switch off skills the profile starts with, and choose skills from the hub to install. Hermes scans each hub skill; one with findings is left for Skills › Hub, where you read them and confirm.',
             'MCP servers: copy servers of the default profile that have no keys or variables, and pick entries of Hermes’s catalogue that need no value. A server that runs a program asks you to type its name.',
             'Review: lists what Finish does, in order, and which steps ask you to confirm.',

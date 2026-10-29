@@ -1,10 +1,10 @@
 // The changes Connect › Channels makes in Hermes, each through `fetchTiered` with the tier the policy map gives the route (save and
-// enable or disable T2, test T1, a config write T3). The caller shows toasts and reloads; this says what happened. Caduceus keeps
+// enable or disable T2, a config write T3; a test only reads, so it is a read). The caller shows toasts and reloads; this says what happened. Caduceus keeps
 // nothing of what it sends, and a value is never put in a message or a toast: names only.
 import { raiseRestartNeeded } from '../../restart-to-apply.ts';
 import { fetchTiered } from '../../tiered.ts';
 import { runTiered, type ActionOutcome } from '../profiles/profile-actions.ts';
-import { behaviourUpdate, channelTestPath, channelUpdate, readSaveAnswer, readTestAnswer, type BehaviourField, type BehaviourValue, type Channel } from './channels-model.ts';
+import { behaviourUpdate, channelTestPath, channelUpdate, readSaveAnswer, readTestAnswer, testResultFor, type BehaviourField, type BehaviourValue, type Channel } from './channels-model.ts';
 
 /** What came of a save: Hermes took it, and whether a gateway restart is now waiting on it. */
 export interface Saved {
@@ -59,22 +59,13 @@ export async function setChannelEnabled(channel: Channel, profile: string, enabl
   return { kind: 'done', body: saved };
 }
 
-/** Asks Hermes to test a platform (T1) and gives its own answer. The test reads the platform’s state; it sends nothing to the chat platform. */
+/**
+ * Asks Hermes to test a platform and gives its answer. The test only reads the platform's state (it sends nothing to the chat platform and
+ * writes nothing), so the policy map makes it a read: it runs at once, with no confirmation, and also in read-only mode.
+ */
 export async function testChannel(channel: Channel, profile: string): Promise<ActionOutcome<{ ok: boolean; message: string }>> {
-  const outcome = await runTiered(
-    fetchTiered({
-      method: 'POST',
-      path: channelTestPath(channel.id, profile),
-      confirm: {
-        title: `Test ${channel.name} for ${profile}?`,
-        text: 'Hermes checks that the platform is enabled, has what it needs and is connected, and tells you what it found.',
-        object: channel.name,
-        profile,
-        confirmLabel: 'Run test',
-      },
-    }),
-  );
-  return outcome.kind === 'done' ? { kind: 'done', body: readTestAnswer(outcome.body) } : outcome;
+  const outcome = await runTiered(fetchTiered({ method: 'POST', path: channelTestPath(channel.id, profile) }));
+  return outcome.kind === 'done' ? { kind: 'done', body: testResultFor(channel, readTestAnswer(outcome.body)) } : outcome;
 }
 
 /** Writes the changed behaviour keys to the profile's config (T3: the profile's name is typed to confirm), then raises the restart notice. */

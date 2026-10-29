@@ -56,7 +56,10 @@ interface FrameProps {
   problem: string | undefined;
   /** What Hermes or the check before saving said when the last save did not go through. */
   failure: string | undefined;
+  /** The owner confirmed and the write is going out. */
   busy: boolean;
+  /** A save is out, from the first click until it settles (the check, the confirmation and the write). */
+  asking: boolean;
   canSave: boolean;
   onSave(): void;
   preview: { text: string; name: string } | undefined;
@@ -64,7 +67,7 @@ interface FrameProps {
 }
 
 /** The editor's page: title, Preview/Edit, the save bar and the reason a save is blocked. */
-function EditorFrame({ profile, name, pane, onPane, problem, failure, busy, canSave, onSave, preview, children }: FrameProps) {
+function EditorFrame({ profile, name, pane, onPane, problem, failure, busy, asking, canSave, onSave, preview, children }: FrameProps) {
   const paneLabel = useId();
   const back = name ? `/agents/skills?skill=${encodeURIComponent(name)}&profile=${encodeURIComponent(profile)}` : `/agents/skills?profile=${encodeURIComponent(profile)}`;
   return (
@@ -82,7 +85,7 @@ function EditorFrame({ profile, name, pane, onPane, problem, failure, busy, canS
             <AppLink className="btn btn--secondary" to={back}>
               Cancel
             </AppLink>
-            <WriteButton type="button" className="btn btn--primary" disabled={!canSave || busy} aria-busy={busy} onClick={onSave}>
+            <WriteButton type="button" className="btn btn--primary" disabled={!canSave || asking} aria-busy={busy} onClick={onSave}>
               <Icon name="check" />
               {name ? 'Save SKILL.md' : 'Create skill'}
             </WriteButton>
@@ -111,13 +114,14 @@ function EditorFrame({ profile, name, pane, onPane, problem, failure, busy, canS
   );
 }
 
-function Area({ label, help, value, onChange, rows, id }: { label: string; help?: string; value: string; onChange(value: string): void; rows: number; id: string }) {
+/** `yaml` keeps its columns (no wrapping); the rest is Markdown prose and wraps. */
+function Area({ label, help, value, onChange, rows, id, yaml = false }: { label: string; help?: string; value: string; onChange(value: string): void; rows: number; id: string; yaml?: boolean }) {
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>
         {label}
       </label>
-      <textarea id={id} className="input input--mono sk-area" rows={rows} value={value} spellCheck={false} autoCapitalize="none" autoComplete="off" aria-describedby={help ? `${id}-help` : undefined} onChange={(event) => onChange(event.target.value)} />
+      <textarea id={id} className={yaml ? 'input input--mono sk-area sk-area--yaml' : 'input input--mono sk-area'} rows={rows} value={value} spellCheck={false} autoCapitalize="none" autoComplete="off" aria-describedby={help ? `${id}-help` : undefined} onChange={(event) => onChange(event.target.value)} />
       {help && (
         <p className="field__help" id={`${id}-help`}>
           {help}
@@ -137,6 +141,7 @@ function EditExisting({ profile, name }: { profile: string; name: string }) {
   const [whole, setWhole] = useState<string>();
   const [pane, setPane] = useState<Pane>('edit');
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [attempt, setAttempt] = useState(0);
   const id = useId();
@@ -191,33 +196,36 @@ function EditExisting({ profile, name }: { profile: string; name: string }) {
   }
 
   const save = async () => {
-    if (text === undefined) return;
-    setBusy(true);
+    if (text === undefined || asking) return;
+    setAsking(true);
     setFailure(undefined);
-    // Hermes holds one copy, and the agent writes skills too: what was opened must still be what is there.
-    const now = await fetchSkillContent(profile, name).catch(() => undefined);
-    if (now && now.content !== original) {
-      setFailure('SKILL.md changed in Hermes after you opened it, so nothing was saved. Your text is still here: copy what you need, then reload to start from the new version.');
+    try {
+      // Hermes holds one copy, and the agent writes skills too: what was opened must still be what is there.
+      const now = await fetchSkillContent(profile, name).catch(() => undefined);
+      if (now && now.content !== original) {
+        setFailure('SKILL.md changed in Hermes after you opened it, so nothing was saved. Your text is still here: copy what you need, then reload to start from the new version.');
+        return;
+      }
+      const outcome = await saveSkill(profile, name, text, () => setBusy(true));
       setBusy(false);
-      return;
+      if (outcome.kind === 'failed') {
+        setFailure(outcome.message);
+        return;
+      }
+      if (outcome.kind !== 'done') return;
+      setOriginal(text);
+      toast(`Saved the SKILL.md of ${name}`, { tone: 'info', detail: `In ${profile}. New sessions use it.` });
+      await navigate(`/agents/skills?skill=${encodeURIComponent(name)}&profile=${encodeURIComponent(profile)}`, { replace: true });
+    } finally {
+      setAsking(false);
     }
-    const outcome = await saveSkill(profile, name, text);
-    setBusy(false);
-    if (outcome.kind === 'failed') {
-      setFailure(outcome.message);
-      return;
-    }
-    if (outcome.kind !== 'done') return;
-    setOriginal(text);
-    toast(`Saved the SKILL.md of ${name}`, { tone: 'info', detail: `In ${profile}. New sessions use it.` });
-    await navigate(`/agents/skills?skill=${encodeURIComponent(name)}&profile=${encodeURIComponent(profile)}`, { replace: true });
   };
 
   return (
-    <EditorFrame profile={profile} name={name} pane={pane} onPane={setPane} problem={problem} failure={failure} busy={busy} canSave={dirty && problem === undefined} onSave={() => void save()} preview={text === undefined ? undefined : { text, name }}>
+    <EditorFrame profile={profile} name={name} pane={pane} onPane={setPane} problem={problem} failure={failure} busy={busy} asking={asking} canSave={dirty && problem === undefined} onSave={() => void save()} preview={text === undefined ? undefined : { text, name }}>
       {parts ? (
         <>
-          <Area id={`${id}-front`} label="Frontmatter (YAML)" rows={9} value={parts.frontmatter} onChange={(frontmatter) => setParts({ ...parts, frontmatter })} help="Edit what you mean to change. Comments, key order and keys Caduceus does not know stay exactly as they are." />
+          <Area id={`${id}-front`} yaml label="Frontmatter (YAML)" rows={9} value={parts.frontmatter} onChange={(frontmatter) => setParts({ ...parts, frontmatter })} help="Edit what you mean to change. Comments, key order and keys Caduceus does not know stay exactly as they are." />
           <Area id={`${id}-body`} label="Instructions (Markdown)" rows={18} value={parts.body} onChange={(body) => setParts({ ...parts, body })} />
         </>
       ) : (
@@ -238,6 +246,7 @@ function CreateNew({ profile }: { profile: string }) {
   const [text, setText] = useState<string>();
   const [pane, setPane] = useState<Pane>('edit');
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [failure, setFailure] = useState<string>();
   const id = useId();
 
@@ -255,22 +264,26 @@ function CreateNew({ profile }: { profile: string }) {
   useLeaveGuard(started);
 
   const create = async () => {
-    if (text === undefined) return;
-    setBusy(true);
+    if (text === undefined || asking) return;
+    setAsking(true);
     setFailure(undefined);
-    const outcome = await createSkill(profile, { name: name.trim(), category, content: text });
-    setBusy(false);
-    if (outcome.kind === 'failed') {
-      setFailure(outcome.message);
-      return;
+    try {
+      const outcome = await createSkill(profile, { name: name.trim(), category, content: text }, () => setBusy(true));
+      setBusy(false);
+      if (outcome.kind === 'failed') {
+        setFailure(outcome.message);
+        return;
+      }
+      if (outcome.kind !== 'done') return;
+      toast(`Created the skill ${name.trim()}`, { tone: 'info', detail: `In ${profile}.` });
+      await navigate(`/agents/skills?skill=${encodeURIComponent(name.trim())}&profile=${encodeURIComponent(profile)}`, { replace: true });
+    } finally {
+      setAsking(false);
     }
-    if (outcome.kind !== 'done') return;
-    toast(`Created the skill ${name.trim()}`, { tone: 'info', detail: `In ${profile}.` });
-    await navigate(`/agents/skills?skill=${encodeURIComponent(name.trim())}&profile=${encodeURIComponent(profile)}`, { replace: true });
   };
 
   return (
-    <EditorFrame profile={profile} name={undefined} pane={pane} onPane={setPane} problem={started ? problem : undefined} failure={failure} busy={busy} canSave={problem === undefined && text !== undefined} onSave={() => void create()} preview={text === undefined ? undefined : { text, name: name.trim() || 'new-skill' }}>
+    <EditorFrame profile={profile} name={undefined} pane={pane} onPane={setPane} problem={started ? problem : undefined} failure={failure} busy={busy} asking={asking} canSave={problem === undefined && text !== undefined} onSave={() => void create()} preview={text === undefined ? undefined : { text, name: name.trim() || 'new-skill' }}>
       <div className="field">
         <label className="field__label" htmlFor={`${id}-name`}>
           Name
@@ -298,7 +311,7 @@ function CreateNew({ profile }: { profile: string }) {
           {description.trim().length} of {NEW_DESCRIPTION_LIMIT} characters. One sentence, with when to use the skill first: Hermes’s skill index cuts a new skill’s description longer than that.
         </p>
       </div>
-      <Area id={`${id}-extra`} label="More frontmatter (optional)" rows={4} value={extra} onChange={setExtra} help="Other YAML keys, such as version or metadata, one per line. They are written after name and description exactly as typed." />
+      <Area id={`${id}-extra`} yaml label="More frontmatter (optional)" rows={4} value={extra} onChange={setExtra} help="Other YAML keys, such as version or metadata, one per line. They are written after name and description exactly as typed." />
       <Area id={`${id}-body`} label="Instructions (Markdown)" rows={18} value={body} onChange={setBody} />
     </EditorFrame>
   );

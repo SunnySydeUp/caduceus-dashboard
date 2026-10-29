@@ -183,7 +183,8 @@ export function OfficeEditor({ entry, kind, bytes, inWorkspace, profile, compact
   const [failure, setFailure] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
-  const blocker = useBlocker({ shouldBlockFn: () => dirty, enableBeforeUnload: () => dirty, withResolver: true });
+  // It asks only when the path changes: the Save… confirmation is a layer on the history, and closing it is not leaving the page.
+  const blocker = useBlocker({ shouldBlockFn: ({ current, next }) => dirty && current.pathname !== next.pathname, enableBeforeUnload: () => dirty, withResolver: true });
 
   useEffect(() => {
     let current = true;

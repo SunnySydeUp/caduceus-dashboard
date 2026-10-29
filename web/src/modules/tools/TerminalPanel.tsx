@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -60,7 +61,7 @@ export function TerminalPanel({ profile }: { profile: string }) {
           </div>
         </div>
       )}
-      {!data && !view.failed && <p role="status">Loading terminal backends…</p>}
+      {!data && !view.failed && <Loading label="Loading terminal backends…" lines={3} onRetry={() => void view.reload()} />}
       {data && (
         <ul className="tl-cards" aria-label="Terminal backends" data-layout={compact ? 'list' : 'grid'}>
           {data.backends.map((backend) => (

@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { closeAllLayers } from '../../overlays/layers.ts';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { Term } from '../../shell/Term.tsx';
@@ -53,7 +54,7 @@ export function HooksPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!data && !view.failed && <p role="status">Loading hooks…</p>}
+      {!data && !view.failed && <Loading label="Loading hooks…" lines={3} onRetry={() => void view.reload()} />}
       {data && (
         <div className="tl-bar">
           <WriteButton type="button" className="btn btn--primary" onClick={() => setCreating(true)}>
@@ -137,7 +138,7 @@ export function HooksPanel({ profile }: { profile: string }) {
                 <Icon name="trash" />
                 <span>
                   <span>Remove…</span>
-                  <small>Tier 2 · from {profile}</small>
+                  <small>Needs your passkey · from {profile}</small>
                 </span>
               </button>
             </li>

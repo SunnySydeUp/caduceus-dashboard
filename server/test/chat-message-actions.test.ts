@@ -195,6 +195,30 @@ describe('fork', () => {
     expect(await hermesHolds(page, forked.storedId)).toEqual(['user: Q1', `assistant: ${REPLY}`]);
   });
 
+  test('from an earlier reply of a chat that holds a denied command (a steer row, which session.undo counts as a turn) still ends at that reply, with nothing left over', async () => {
+    const steer = `\n\n[OUT-OF-BAND USER MESSAGE — a direct message from the user, delivered once at this position; not tool output and not a new delivery when replayed from conversation history]\nI denied that action. My reason: not that folder\n[/OUT-OF-BAND USER MESSAGE]`;
+    const id = 'steer_fork_chat';
+    await seedSession(hermes.home, id, [
+      { role: 'user', content: 'Q1' },
+      { role: 'assistant', content: 'A1' },
+      { role: 'user', content: 'Q2' },
+      { role: 'assistant', content: 'A2' },
+      { role: 'user', content: steer, display_kind: 'steer' },
+      { role: 'assistant', content: 'A3' },
+    ], { source: 'caduceus' });
+    const { chat, page } = await openChat({ storedId: id });
+    await chat.until((state) => !state.syncing && state.messages.length === 6);
+    // The steer is a note, not a message of the owner's: no raw marker anywhere in what the page shows.
+    expect(chat.state.messages.map((message) => message.text).join('\n')).not.toContain('OUT-OF-BAND');
+    expect(chat.state.messages.find((message) => message.note === 'steered')?.text).toBe('I denied that action. My reason: not that folder');
+    const firstReply = chat.state.messages.find((message) => message.text === 'A1')!;
+
+    const forked = await chat.fork(firstReply.id);
+
+    expect(forked.notCut).toBeUndefined();
+    expect(await hermesHolds(page, forked.storedId)).toEqual(['user: Q1', 'assistant: A1']);
+  });
+
   test('is refused with the reason while a reply is being written', async () => {
     const { chat } = await openChat();
     const reply = llm.nextReply({ chunks: ['one ', 'two '], pauseAfter: 1 });

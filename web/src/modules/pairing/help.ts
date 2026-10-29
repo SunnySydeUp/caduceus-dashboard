@@ -13,7 +13,7 @@ export const pairingHelp: ModuleHelp = {
         { h: 'Waiting for you' },
         {
           ul: [
-            'Each card is one person on one platform, with how long ago they asked. Hermes keeps a request for an hour and lets one person ask once every ten minutes.',
+            'Each card is one person on one platform, with how long ago they asked. Hermes keeps a request for an hour and lets one person ask once every ten minutes. Hermes has no way to refuse a single request: if you do nothing, the request goes away by itself when the hour is up, and each card says when.',
             'Approve adds them to that platform’s allowed users for this [[profile]], and the bot answers them from then on. It is a Tier 2 action ([[risk-tiers|risk tiers]]): the dialog names the person, the platform and the profile, then asks for a [[passkey|passkey]].',
             'Clear pending drops every waiting request of this profile. The people are not told. It is a Tier 1 action: you confirm.',
             'On a phone every card has a ⋮ button that opens the same actions in a sheet. Nothing needs a swipe.',

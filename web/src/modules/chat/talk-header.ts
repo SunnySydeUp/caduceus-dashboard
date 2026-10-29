@@ -2,6 +2,17 @@
 // show (Make this a task, the Chat actions, the terminal toggle) is a line of the More menu, and the transcript's tools and the activity mode are the View menu's.
 // Pure: the screen gives each line its `run`.
 import type { IconName } from '../../icons.tsx';
+import type { CrewStateName } from '../crew/crew-state.ts';
+
+/**
+ * How this chat stands, for the sigil in its header: a question or approval waits for the owner, a turn is running, or the last turn failed. It reads this chat only. The crew
+ * state of the agent (`deriveCrew`) also counts its background tasks and its other chats, so a failed Kanban task would paint an agent that is answering normally as blocked.
+ */
+export function chatState({ requests, running, failed }: { requests: number; running: boolean; failed: boolean }): CrewStateName {
+  if (requests > 0) return 'waiting';
+  if (running) return 'working';
+  return failed ? 'blocked' : 'idle';
+}
 
 export type HeaderControl = 'new' | 'sessions' | 'details' | 'view' | 'more';
 

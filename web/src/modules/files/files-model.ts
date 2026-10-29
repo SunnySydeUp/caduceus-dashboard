@@ -197,3 +197,26 @@ export const readUrl = (path: string) => `/api/files/read?path=${encodeURICompon
 export const downloadUrl = (path: string) => `/api/files/download?path=${encodeURIComponent(path)}`;
 export const streamUrl = (path: string) => `/api/files/stream?path=${encodeURIComponent(path)}`;
 export const listUrl = (path: string | undefined) => (path ? `/api/files?path=${encodeURIComponent(path)}` : '/api/files');
+
+/** The entries to draw: a name that starts with a dot is left out unless `showHidden`, and `hidden` counts how many a folder keeps out of sight. */
+export function splitHidden(entries: readonly FileEntry[], showHidden: boolean): { shown: FileEntry[]; hidden: number } {
+  const hidden = entries.filter((entry) => entry.name.startsWith('.')).length;
+  return { shown: showHidden ? [...entries] : entries.filter((entry) => !entry.name.startsWith('.')), hidden };
+}
+
+/** What a read of a folder came to: its listing, or the words it failed with (`reason` is the proxy's code when the file guard refused it). */
+export type ListFailure = { ok: false; message: string; status: number; reason?: string };
+export type ListAnswer = { ok: true; listing: Listing } | ListFailure;
+
+/**
+ * Why an address did not open, in words, and the folder to go back to (`undefined`: the top). The proxy's own message is used where it
+ * has one, since it says what is true: a file kept protected on purpose is not "missing". The one refusal that is reworded is a path
+ * outside the roots, whose message is about writing, and browsing is a read.
+ */
+export function openFailure(path: string, parent: ListAnswer, own: ListFailure): { message: string; back: string | undefined } {
+  const back = parent.ok ? parentOf(path) : undefined;
+  if (own.reason === 'outside-roots') return { message: 'This path is outside the folders Caduceus can open.', back };
+  if (own.reason !== undefined) return { message: own.message, back };
+  if (own.status > 0 && own.status < 500 && parent.ok && !parent.listing.entries.some((entry) => entry.path === path)) return { message: 'There is nothing at this address. It may have been moved or deleted.', back };
+  return { message: own.message, back };
+}

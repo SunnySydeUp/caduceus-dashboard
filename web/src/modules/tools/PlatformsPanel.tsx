@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { useSizeClass } from '../../shell/use-size-class.ts';
@@ -212,7 +213,7 @@ export function PlatformsPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!value && !view.failed && <p role="status">Loading toolsets…</p>}
+      {!value && !view.failed && <Loading label="Loading toolsets…" lines={5} onRetry={() => void view.reload()} />}
       {value && (
         <Editor
           key={`${profile}:${version}`}

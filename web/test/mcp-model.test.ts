@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { filterWords, statusOf, type McpServer } from '../src/modules/tools/mcp-model.ts';
+import { filterWords, needsHermesComputer, statusOf, type McpServer } from '../src/modules/tools/mcp-model.ts';
 
 const server = (over: Partial<McpServer> = {}): McpServer => ({ name: 's', transport: 'http', url: 'http://x', command: undefined, args: [], envNames: [], auth: undefined, enabled: true, filter: undefined, ...over });
 
@@ -20,5 +20,14 @@ describe('how a server shows in the list', () => {
     expect(filterWords({})).toBeUndefined();
     expect(filterWords({ include: ['echo', 'add'] })).toBe('Only echo, add');
     expect(filterWords({ exclude: ['rm'] })).toBe('All except rm');
+  });
+});
+
+describe('a catalogue note that only works on the computer that runs Hermes', () => {
+  test('is flagged when it points at localhost, which a phone or another computer cannot reach', () => {
+    expect(needsHermesComputer('Sign in: the OAuth callback is http://localhost:27890/callback on the machine running Hermes.')).toBe(true);
+    expect(needsHermesComputer('Open http://127.0.0.1:8080 to finish.')).toBe(true);
+    expect(needsHermesComputer('Create a token at https://example.com/settings and paste it above.')).toBe(false);
+    expect(needsHermesComputer(undefined)).toBe(false);
   });
 });

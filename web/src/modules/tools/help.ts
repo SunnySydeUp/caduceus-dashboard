@@ -117,12 +117,12 @@ export const toolsHelp: ModuleHelp = {
     },
     {
       id: 'tools-routing',
-      title: 'Tools & MCP: Tool gateway and Computer use',
+      title: 'Tools & MCP: Tool routing and Computer use',
       summary: 'How tools are routed through the Nous Portal, and the permissions Computer use needs.',
       route: '/agents/tools/routing',
-      keywords: 'tool gateway nous portal routing subscription computer use permissions accessibility screen recording macos driver grant',
+      keywords: 'tool routing tool gateway nous portal routing subscription computer use permissions accessibility screen recording macos driver grant',
       body: [
-        { p: 'The [[tool-gateway|Tool gateway]] card shows where Hermes gets each kind of tool for the profile: through the Nous Portal’s backends (“via Nous Portal”), or from a provider set up in the toolset. Hermes reports it and Caduceus only reads it. To change a route, choose a provider in the toolset.' },
+        { p: 'The [[tool-gateway|Tool routing]] card shows where Hermes gets each kind of tool for the profile: through the Nous Portal’s backends (“via Nous Portal”), or from a provider set up in the toolset. Hermes reports it and Caduceus only reads it. To change a route, choose a provider in the toolset.' },
         { h: 'Computer use' },
         { p: 'Computer use lets an agent see and drive this computer’s screen. The card shows whether the driver is installed, and on a Mac whether Accessibility and Screen recording are granted, as Hermes reports them.' },
         {
@@ -217,7 +217,7 @@ export const toolsHelp: ModuleHelp = {
     },
     {
       id: 'tool-gateway',
-      term: 'Tool gateway',
+      term: 'Tool routing',
       definition: 'The Nous Portal’s hosted backends for tools such as web search, image generation and the browser. When a tool is routed through it, Hermes uses your Portal subscription instead of a key of your own.',
       page: 'tools-routing',
     },

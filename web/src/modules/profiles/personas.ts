@@ -47,8 +47,8 @@ export const PERSONAS: readonly Persona[] = [
 export const personaById = (id: string): Persona | undefined => PERSONAS.find((candidate) => candidate.id === id);
 
 /**
- * Whether a persona's own profile exists. A persona that has no profile of its name is offered as "Restore": choosing it fills in the
- * builder with its name, SOUL and description again, and Finish makes the profile in Hermes once more.
+ * Whether a persona's own profile exists. The picker marks a persona whose profile exists ("Profile exists"), because that name is taken; a
+ * persona with no profile of its name carries no mark: choosing it fills in the builder with its name, SOUL and description.
  */
 export function personaState(persona: Persona, profiles: readonly string[]): 'missing' | 'exists' {
   return profiles.includes(persona.id) ? 'exists' : 'missing';

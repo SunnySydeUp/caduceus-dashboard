@@ -14,7 +14,7 @@ import { DiffView, useSplitDiff } from './DiffView.tsx';
 import { useFolderChoices } from './folder-choices.ts';
 import { addWorktree, commit, discard, draftMessage, push, removeWorktree, stage, switchBranch, unstage, type GitOutcome } from './git-actions.ts';
 import { useDiff, useRepo } from './git-data.ts';
-import type { Branch, GitFile, RepoStatus, Worktree } from './git-model.ts';
+import { remoteWords, type Branch, type GitFile, type RepoStatus, type Worktree } from './git-model.ts';
 import '../profiles/profiles.css';
 import './git.css';
 
@@ -346,6 +346,8 @@ export function Git() {
   const pickerId = useId();
 
   const ready = repo.state === 'ready' ? repo : undefined;
+  const remote = ready ? remoteWords(ready.status, ready.branches) : undefined;
+  const remoteNoteId = useId();
   const act = async (action: () => Promise<GitOutcome>, success?: (outcome: Extract<GitOutcome, { kind: 'done' }>) => string) => {
     setBusy(true);
     setFailure(undefined);
@@ -416,13 +418,13 @@ export function Git() {
               ))}
             </select>
           </div>
-          {ready && (
+          {ready && remote && (
             <div className="gt-actions">
               <span className="chip gt-branchchip">
                 <Icon name="git" />
                 {ready.status.detached ? 'detached HEAD' : (ready.status.branch ?? 'no branch')}
               </span>
-              <span className="subtle">{ready.status.ahead === 0 && ready.status.behind === 0 ? 'In step with its remote' : `${ready.status.ahead} ahead, ${ready.status.behind} behind`}</span>
+              <span className="subtle">{remote.line}</span>
               <button type="button" className="btn btn--secondary btn--sm" onClick={() => setSheet('branches')}>
                 <Icon name="git" />
                 Branches
@@ -431,10 +433,15 @@ export function Git() {
                 <Icon name="folder" />
                 Worktrees
               </button>
-              <WriteButton type="button" className="btn btn--secondary btn--sm" disabled={busy} onClick={() => void act(() => push(folder, profile, ready.status.branch), () => 'Pushed')}>
+              <WriteButton type="button" className="btn btn--secondary btn--sm" disabled={busy || !remote.canPush} aria-describedby={remote.why ? remoteNoteId : undefined} onClick={() => void act(() => push(folder, profile, ready.status.branch), () => 'Pushed')}>
                 <Icon name="arrow-up" />
                 Push…
               </WriteButton>
+              {remote.why && (
+                <p id={remoteNoteId} className="subtle" role="note">
+                  {remote.why}
+                </p>
+              )}
             </div>
           )}
         </div>

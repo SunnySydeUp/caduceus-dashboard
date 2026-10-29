@@ -3,7 +3,10 @@
 // Caduceus's own, kept as a marker (the id and the stamp of the finish that was opened), never as a copy of the task or the run.
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { ActivityEvent } from '@caduceus/contracts/inbox';
-import type { ReadyItem, TodayVisit } from '@caduceus/contracts/today';
+import { OWNER_APPROVED, OWNER_CLOSED_BY_HAND, type ReadyItem, type TodayVisit } from '@caduceus/contracts/today';
+
+/** The words a task is done with when the owner decided it themselves from Caduceus; a hand-close with a note starts with them and goes on with the note. */
+const OWNER_DECISIONS: readonly string[] = [OWNER_APPROVED, OWNER_CLOSED_BY_HAND];
 
 /** How far back finished work is offered: older work that was never opened is no longer news. */
 export const READY_WINDOW_MS = 14 * 24 * 3_600_000;
@@ -64,6 +67,9 @@ export function taskCandidates(boards: readonly BoardTasks[]): ReadyItem[] {
       const completed = typeof task.completed_at === 'number' && Number.isFinite(task.completed_at) ? task.completed_at : undefined;
       if (id === undefined || title === undefined || completed === undefined) return [];
       const summary = text(task.latest_summary) ?? text(task.result);
+      // The owner approved it, or moved it to Done, from Caduceus: it is decided, and listing it again would look as if the decision was not kept.
+      const decided = [text(task.result), summary].some((words) => words !== undefined && OWNER_DECISIONS.some((phrase) => words.startsWith(phrase)));
+      if (decided) return [];
       return [
         {
           id: `task:${slug}:${id}`,

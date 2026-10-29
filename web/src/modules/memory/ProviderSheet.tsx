@@ -1,12 +1,13 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
 import { runProviderSetup, saveProviderForm, startProviderSignIn, type SetupResult } from './memory-actions.ts';
 import { useProviderDetail, useSignInWatch } from './memory-data.ts';
-import { formProblems, visibleFields, type Edits, type FormField, type MemoryProvider, type OauthStatus, type ProviderForm } from './memory-model.ts';
+import { formProblems, providerInstalled, visibleFields, type Edits, type FormField, type MemoryProvider, type OauthStatus, type ProviderForm } from './memory-model.ts';
 
 function FieldError({ id, message }: { id: string; message: string | undefined }) {
   return message ? (
@@ -169,7 +170,7 @@ function Setup({ provider, profile, onDone }: { provider: MemoryProvider; profil
               </li>
             ))}
           </ul>
-          <p className="mm-note">Set up runs them on this computer, with the access of your account, so it is a Tier 3 action: you type the provider’s name.</p>
+          <p className="mm-note">Set up runs them on this computer, with the access of your account, so it needs your passkey and you type the provider’s name.</p>
           <div className="mm-actions">
             <WriteButton type="button" className="btn btn--secondary" disabled={busy} aria-busy={busy} onClick={() => void run()}>
               <Icon name="package" />
@@ -220,6 +221,7 @@ export function ProviderSheet({ provider, profile, reload, onClose }: { provider
     setAttempted(false);
   };
 
+  const installed = providerInstalled(provider);
   const groups = form ? [...new Set(visibleFields(form, edits).map((field) => field.group))] : [];
   return (
     <Sheet
@@ -230,9 +232,9 @@ export function ProviderSheet({ provider, profile, reload, onClose }: { provider
       footer={
         form && form.fields.length > 0 ? (
           <div className="mm-actions mm-foot">
-            <WriteButton type="submit" form={id} className="btn btn--primary" disabled={busy} aria-busy={busy}>
+            <WriteButton type="submit" form={id} className="btn btn--primary" disabled={busy || !installed} aria-busy={busy} aria-describedby={installed ? undefined : `${id}-needs-setup`}>
               <Icon name="check" />
-              Save settings…
+              Save and use this provider…
             </WriteButton>
             <button type="button" className="btn btn--ghost" onClick={onClose}>
               Close
@@ -253,7 +255,7 @@ export function ProviderSheet({ provider, profile, reload, onClose }: { provider
             </button>
           </div>
         )}
-        {!loaded && !detail.failed && <p role="status">Loading the settings…</p>}
+        {!loaded && !detail.failed && <Loading label="Loading the settings…" lines={4} onRetry={() => void detail.reload()} />}
         {loaded && <Setup provider={provider} profile={profile} onDone={() => void Promise.all([reload(), detail.reload()])} />}
         {loaded?.oauth && <SignIn name={provider.name} profile={profile} status={loaded.oauth} onStatus={(status) => (detail.setOauth(status), status.state === 'connected' && void Promise.all([reload(), detail.reload()]))} />}
         {form && form.fields.length === 0 && <p className="mm-note">{provider.name} has no settings Hermes can show. It reads its own configuration files or environment.</p>}
@@ -268,7 +270,7 @@ export function ProviderSheet({ provider, profile, reload, onClose }: { provider
             }}
           >
             <p className="mm-note">
-              Saving also makes {provider.name} the <Term id="memory-provider">memory provider</Term> of {profile}. Saved keys are never shown: leave a key empty to keep it.
+              Saving also makes {provider.name} the <Term id="memory-provider">memory provider</Term> of {profile}. {installed ? '' : <span id={`${id}-needs-setup`}>Run setup first: {provider.name} is not installed yet, so it cannot be used. </span>}Saved keys are never shown: leave a key empty to keep it.
               {form.docsUrl && (
                 <>
                   {' '}

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { ActivityEvent } from '@caduceus/contracts/inbox';
-import type { ReadyItem } from '@caduceus/contracts/today';
+import { OWNER_APPROVED, OWNER_CLOSED_BY_HAND, type ReadyItem } from '@caduceus/contracts/today';
 import { AWAY_GAP_MS, READY_WINDOW_MS, readyItems, recordVisit, runCandidates, taskCandidates } from '../src/today-review.ts';
 
 // The rules behind Today's review state (M8 #03), at their exported functions: what is ready for review, what a visit is, and how Hermes's finished work becomes items.
@@ -64,6 +64,19 @@ describe('how Hermes\'s finished work becomes items', () => {
 
   test('a summary that repeats the title says nothing more and is left out', () => {
     expect(taskCandidates([{ slug: 'default', tasks: [task({ latest_summary: 'Write it' })] }])[0]?.summary).toBeUndefined();
+  });
+
+  test('a task the owner approved or closed from Caduceus is not offered for review: they made that decision themselves', () => {
+    const owned = [
+      task({ id: 'a', latest_summary: OWNER_APPROVED, result: OWNER_APPROVED }),
+      task({ id: 'b', latest_summary: OWNER_CLOSED_BY_HAND, result: OWNER_CLOSED_BY_HAND }),
+      task({ id: 'c', latest_summary: undefined, result: OWNER_APPROVED }),
+      // Closed by hand with the owner's own note, as the board writes it: the owner's words, then the note.
+      task({ id: 'e', latest_summary: `${OWNER_CLOSED_BY_HAND} Shipped it myself.`, result: `${OWNER_CLOSED_BY_HAND} Shipped it myself.` }),
+    ];
+    // A worker's summary that merely mentions the words later on is still offered.
+    const worker = task({ id: 'd', latest_summary: `Done. Not ${OWNER_APPROVED}` });
+    expect(taskCandidates([{ slug: 'ops', tasks: [...owned, worker] }]).map(({ id }) => id)).toEqual(['task:ops:d']);
   });
 
   const run = (seq: number, storedSessionId: string | undefined, title = 'A chat'): ActivityEvent => ({ seq, at: seq * 10, profile: 'coder', storedSessionId, title });

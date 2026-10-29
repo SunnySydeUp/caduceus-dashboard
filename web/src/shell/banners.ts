@@ -30,6 +30,8 @@ export interface Banner {
    * painted and the owner may be reading or reaching for a button. It waits and shows with the next page the owner opens.
    */
   quiet?: boolean;
+  /** Page paths (and everything under them) where the banner does not show: it would only point at the page the owner is on, or crowd a screen that needs the room (a chat thread). */
+  hideOn?: string[];
 }
 
 let banners: Banner[] = [];
@@ -62,9 +64,12 @@ const subscribe = (notify: () => void) => {
   return () => void listeners.delete(notify);
 };
 
-/** The banners to show, in priority order: all but the quiet ones, which show once a page change has let them in (`letIn` is their ids). */
-export function shownBanners(all: readonly Banner[], letIn: readonly string[]): Banner[] {
-  return all.filter((banner) => !banner.quiet || letIn.includes(banner.id));
+/**
+ * The banners to show on the page at `pathname`, in priority order: all but the quiet ones, which show once a page change has let them in (`letIn` is their
+ * ids), and all but the ones that stay away from this page (`Banner.hideOn`).
+ */
+export function shownBanners(all: readonly Banner[], letIn: readonly string[], pathname = ''): Banner[] {
+  return all.filter((banner) => (!banner.quiet || letIn.includes(banner.id)) && !banner.hideOn?.some((path) => pathname === path || pathname.startsWith(`${path}/`)));
 }
 
 /** The ids of the quiet banners waiting now: a page change lets all of them in. */

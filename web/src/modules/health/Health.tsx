@@ -6,6 +6,7 @@ import { Icon, type IconName } from '../../icons.tsx';
 import { errorCode, fetchWithStepUp, postJson } from '../../passkeys.ts';
 import { noteMeaningfulAction } from '../../shell/install.ts';
 import { AppLink } from '../../shell/navigation.tsx';
+import { useTakingLonger } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
@@ -50,6 +51,8 @@ async function refusal(res: Response): Promise<string> {
 /** Health (M0 #11): every subsystem with its state, why and when it was last checked, and the Repairs they add up to. */
 export function Health() {
   const { report, unreachable, checking, check } = useHealth();
+  // With no report yet, the wait is what the page shows; past a few seconds it says so and offers a new ask.
+  const slow = useTakingLonger(checking && !report);
   const summary = report ? healthSummary(report) : undefined;
   // This page is served by Caduceus: if it cannot be reached, that is what is wrong, whatever its last report said.
   const subsystems: Subsystem[] | undefined = report?.subsystems.map((subsystem) =>
@@ -75,7 +78,36 @@ export function Health() {
           <span>Caduceus is not reachable, so {report ? `this is the report of ${at(report.checkedAt)}` : 'nothing could be checked'}. It updates by itself when the connection is back.</span>
         </p>
       )}
-      {!report && !unreachable && <p role="status">Checking…</p>}
+      {!report && !unreachable && (
+        <section className="section hl-subs" aria-labelledby="hl-subs-wait" aria-busy="true">
+          <div className="section__head">
+            <h2 className="section__title" id="hl-subs-wait">
+              <Icon name="heartbeat" />
+              Subsystems
+            </h2>
+          </div>
+          <p role="status" className="subtle">
+            {slow ? 'Checking is taking longer than usual. Hermes may be busy.' : 'Reading the state of each subsystem…'}
+          </p>
+          {slow && (
+            <div>
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => void check()}>
+                <Icon name="refresh" />
+                Retry
+              </button>
+            </div>
+          )}
+          <ul className="hl-sublist panel" aria-hidden="true">
+            {Object.keys(ICONS).map((id) => (
+              <li key={id} className="skel-row panel--pad">
+                <span className="skel" style={{ blockSize: 'var(--cd-space-6)' }} />
+                <span className="skel loading__line" />
+                <span className="skel loading__line" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {report && subsystems && (
         <>
           <section className="section hl-repairs" aria-labelledby="hl-repairs-title">

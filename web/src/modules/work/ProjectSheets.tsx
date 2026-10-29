@@ -270,9 +270,9 @@ export function DiscoverSheet({ profile, actions, owned, startFolder, onDone, on
 }
 
 /** Adds a folder to the workspace registry. */
-export function AddWorkspaceSheet({ client, onDone, onClose }: { client: WorkspaceRegistryClient; onDone(): void; onClose(): void }) {
-  const [path, setPath] = useState('');
-  const [name, setName] = useState('');
+export function AddWorkspaceSheet({ client, initial, onDone, onClose }: { client: WorkspaceRegistryClient; /** A folder to start from, such as a project's. */ initial?: { path: string; name: string }; onDone(): void; onClose(): void }) {
+  const [path, setPath] = useState(initial?.path ?? '');
+  const [name, setName] = useState(initial?.name ?? '');
   const [problem, setProblem] = useState<string>();
   const [busy, setBusy] = useState(false);
   const submit = async (event: FormEvent) => {

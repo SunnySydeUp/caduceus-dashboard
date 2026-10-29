@@ -43,10 +43,12 @@ export const shellHelp: ModuleHelp = {
       summary: 'Every part of Caduceus that is not Today, Talk or Work.',
       route: '/control',
       body: [
-        { p: 'Today, Talk and Work are the three places you use most. Control lists the rest, in groups: Agents, Connect, Workspace, Observe, System and Settings. On a phone the More tab opens it. On a wider screen it is the Control entry at the foot of the sidebar.' },
+        { p: 'Today, Talk and Work are the three places you use most. Control lists the rest, in groups: Agents, Connect, Workspace, Observe, System and Settings. On a phone the More tab opens it. On a wider screen it is the Control entry at the foot of the sidebar. A number on More (or on Control) is what needs a look in there, such as a failed run in Notices.' },
         { h: 'Searching' },
-        { p: 'Type in the search box to filter by name or description. A search looks through every part of Caduceus, Today, Talk and Work included. What you typed stays in the address, so a bookmark or a back step brings it back.' },
+        { p: 'Type in the search box to filter by name, description or a word the module is known by (for example “telegram” finds Channels). A search looks through every part of Caduceus, Today, Talk and Work included. What you typed stays in the address, so a bookmark or a back step brings it back.' },
         { p: 'To search for actions and help as well, use the search button in the app bar.' },
+        { h: 'This device' },
+        { p: 'At the foot of Control, Help opens the help for the app, and Sign out ends the session on this device only. It asks you to confirm first. Your other devices stay signed in.' },
       ],
       related: ['getting-around', 'search-and-shortcuts'],
     },
@@ -60,7 +62,7 @@ export const shellHelp: ModuleHelp = {
         { h: 'Moving between screens' },
         {
           ul: [
-            'On a phone the tab bar at the bottom has Today, Talk and Work, and More opens Control, which lists everything else. The arrow at the left of the app bar goes up one level. The Today tab shows how many things need you.',
+            'On a phone the tab bar at the bottom has Today, Talk and Work, and More opens Control, which lists everything else. The arrow at the left of the app bar goes back to where you came from; if you opened the page from a link, it goes up one level instead. The Today tab shows how many things need you.',
             'On a tablet a rail down the side has the same three places, a sigil for each agent, Search and Control. Its menu button opens the full sidebar.',
             'On a wide screen the sidebar has Today, Talk and Work, then the crew, then Search and Control. It can be collapsed to the rail, and Caduceus remembers that on this device.',
           ],
@@ -77,15 +79,15 @@ export const shellHelp: ModuleHelp = {
         { h: 'The app bar' },
         {
           ul: [
-            'The profile chip shows the [[profile-scope|profile]] this tab is working on. Open it to switch.',
+            'The profile chip shows the [[profile-scope|profile]] this tab is working on. Open it to switch. On Today, which always shows every profile, it opens a note that says so.',
             'The dot shows the live connection to Hermes: Connected, Reconnecting or Offline, with the reason when there is one.',
             'The search button opens search and commands. ⌘K on a Mac, or Ctrl+K elsewhere, does the same.',
             'The help button, or the ? key, opens this panel for the screen you are on.',
           ],
         },
         { h: 'Banners and messages' },
-        { p: 'Banners under the app bar are about the whole app: that you are offline, that Caduceus cannot reach Hermes, that [[read-only-mode|read-only mode]] is on, or that an update is ready. The most important one shows, with a +N button for the rest.' },
-        { p: 'Short messages appear above the tab bar and go away by themselves. Errors stay until you dismiss them.' },
+        { p: 'Banners under the app bar are about the whole app: that you are offline, that Caduceus cannot reach Hermes, that [[read-only-mode|read-only mode]] is on, or that an update is ready. The most important one shows, with a +N button for the rest. A notice that is only news, such as an update, waits and shows with the next page you open, so it never pushes down what you are reading. It stays away from the page it links to and from a conversation.' },
+        { p: 'Short messages appear above the tab bar and go away by themselves. While a sheet is open they appear below the app bar, and while search is open they stay at the bottom, so they never cover what you are typing. Errors stay until you dismiss them.' },
       ],
       related: ['search-and-shortcuts', 'profile-scope', 'control'],
     },
@@ -100,16 +102,17 @@ export const shellHelp: ModuleHelp = {
         {
           ul: [
             'This screen: actions of the screen you are on.',
-            'Actions: actions of other screens, plus Help and Keyboard shortcuts.',
-            'Sessions: once you start typing, the chats whose messages have those words (Hermes searches them). Choose one to open it at the first message that matches.',
-            'Navigate: every screen, and every panel of Settings.',
+            'Go to: Today, Talk, Work and Control come first, so the places you use most are one tap away.',
+            'Actions: actions of other screens, plus Help, Keyboard shortcuts and Sign out.',
+            'Sessions and Tasks: once you start typing, the chats whose messages have those words, and the tasks whose titles do. On Today, which shows every profile, they come from every profile; the line at the foot of the search says where it looked. Choose one to open it.',
+            'Navigate: every other screen, and every panel of Settings.',
             'Help: help pages and glossary words. Help appears once you start typing.',
           ],
         },
         { h: 'Using it' },
         {
           ul: [
-            'Type a few letters. They only have to appear in order, so “hlth” finds Health.',
+            'Type a few letters. Each word has to start where a word of the name starts, so “hlth” finds Health and “tel” finds Telegram, but “hello” does not find Shell hooks.',
             '↑ and ↓ move through the results, ↵ opens or runs the one marked, and Esc closes.',
             'An action with a [[risk-tiers|tier]] asks you to confirm first, the same as when you press its button.',
           ],

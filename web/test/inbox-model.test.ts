@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import type { InboxApproval, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
-import { ageWords, badgeLabel, clarifyAnswer, inScope, newActivity, previewOf } from '../src/modules/inbox/inbox-model.ts';
+import type { InboxAction, InboxApproval, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
+import { ageWords, badgeLabel, clarifyAnswer, confirmWithWords, doneWords, inScope, newActivity, previewOf } from '../src/modules/inbox/inbox-model.ts';
 
 // The Inbox's pure part (M2 #01): which items a profile chip shows, what a card says, and how a question's answer is put to Hermes. What the server derives and Hermes does with a decision is `server/test/inbox.test.ts`.
 const approval = (id: string, profile: string | undefined, command = 'rm -rf /tmp/x'): InboxApproval => ({
@@ -108,5 +108,45 @@ describe('the activity feed', () => {
     const events = [{ seq: 30, at: 1, profile: undefined, storedSessionId: undefined, title: 'c' }, { seq: 20, at: 1, profile: undefined, storedSessionId: undefined, title: 'b' }];
     expect(newActivity(events, 20).map((event) => event.title)).toEqual(['c']);
     expect(newActivity(events, 30)).toEqual([]);
+  });
+});
+
+describe('what the owner confirms after writing words first', () => {
+  const answer: InboxAction = { id: 'answer', label: 'Answer', request: { method: 'POST', path: '/x' }, input: { field: 'answer', label: 'Your answer', required: true }, confirm: { title: 'Answer “Pick a database”?', text: 'Your answer is posted as a comment and the task goes back to work.', confirmLabel: 'Send answer' } };
+
+  test('says the words back, so the second step shows what is about to be sent', () => {
+    const confirm = confirmWithWords(answer, 'Use Postgres, it is already on the server');
+    expect(confirm).toMatchObject({ title: 'Answer “Pick a database”?', confirmLabel: 'Send answer' });
+    expect(confirm.text).toBe('Your answer: “Use Postgres, it is already on the server”. Your answer is posted as a comment and the task goes back to work.');
+  });
+
+  test('names a note and a profile in their own words, and cuts a long answer at a whole word', () => {
+    expect(confirmWithWords({ ...answer, input: { field: 'note', label: 'What needs to change?', required: true } }, 'Shorter').text).toMatch(/^Your note: “Shorter”\./);
+    expect(confirmWithWords({ ...answer, input: { field: 'profile', label: 'Profile to give it to', required: true } }, 'writer').text).toMatch(/^Give it to: “writer”\./);
+    const long = confirmWithWords(answer, 'word '.repeat(100)).text ?? '';
+    expect(long).toMatch(/^Your answer: “(word )+word…”\./);
+    expect(long.length).toBeLessThan(400);
+  });
+
+  test('an action with no words to say, or no confirmation of its own, still gets a question', () => {
+    expect(confirmWithWords({ ...answer, input: undefined }, undefined)).toEqual(answer.confirm);
+    expect(confirmWithWords({ id: 'retry', label: 'Retry', request: { method: 'POST', path: '/y' } }, undefined)).toEqual({ title: 'Retry?' });
+  });
+});
+
+describe('what the owner is told once an action on a notice has gone', () => {
+  const action = (id: string, label: string): InboxAction => ({ id, label, request: { method: 'POST', path: '/x' } });
+
+  test('says what happens next to the task, and to whom it went', () => {
+    expect(doneWords(action('answer', 'Answer'), 'default')).toEqual({ message: 'Answer sent to default', detail: 'The task is back in work.' });
+    expect(doneWords(action('answer', 'Answer'), undefined)).toEqual({ message: 'Answer sent', detail: 'The task is back in work.' });
+    expect(doneWords(action('approve', 'Approve'), 'coder').message).toBe('Approved');
+    expect(doneWords(action('reject', 'Reject + note'), 'coder')).toEqual({ message: 'Sent back to coder', detail: 'It is back in work, with your note.' });
+    expect(doneWords(action('retry', 'Retry'), 'coder').detail).toBe('A worker picks it up again.');
+    expect(doneWords(action('decline', 'Decline'), undefined).message).toBe('Declined');
+  });
+
+  test('an action it has nothing more to say about is simply sent', () => {
+    expect(doneWords(action('run-now', 'Run now'), 'work')).toEqual({ message: 'Run now: sent' });
   });
 });

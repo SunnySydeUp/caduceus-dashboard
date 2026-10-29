@@ -45,9 +45,8 @@ export function TemplatePicker({ preselect, onStart }: TemplatePickerProps) {
   const total = templates.length;
 
   return (
-    <section className="sb__section tp" aria-labelledby="tp-title">
+    <section className="tp" aria-label="Start from a template">
       <div className="tp__head">
-        <h2 id="tp-title">Start from a template</h2>
         <AppLink className="btn btn--ghost btn--sm" to="/work/playbooks">
           Manage templates
         </AppLink>

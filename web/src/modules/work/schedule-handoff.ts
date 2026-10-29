@@ -9,18 +9,26 @@ export interface ScheduleOffer {
   profile: string;
 }
 
-let pending: ScheduleOffer | undefined;
+/** How long an offer nobody took stays good: an older one is a stale Repeat, and must not fill a later form. */
+export const OFFER_TTL_MS = 60_000;
+
+let pending: { offer: ScheduleOffer; at: number } | undefined;
 
 /** Leaves a message for the next new-schedule builder to start from. A later offer replaces an earlier one that no builder took. */
-export function offerSchedule(offer: ScheduleOffer): void {
-  pending = offer;
+export function offerSchedule(offer: ScheduleOffer, now = Date.now()): void {
+  pending = { offer, at: now };
 }
 
-/** Takes the offer waiting for the builder, once; `undefined` when there is none. */
-export function takeSchedule(): ScheduleOffer | undefined {
+/** Drops an offer nobody took (the builder could not be opened). */
+export function clearSchedule(): void {
+  pending = undefined;
+}
+
+/** Takes the offer waiting for the builder, once; `undefined` when there is none or it is older than `OFFER_TTL_MS`. */
+export function takeSchedule(now = Date.now()): ScheduleOffer | undefined {
   const taken = pending;
   pending = undefined;
-  return taken;
+  return taken !== undefined && now - taken.at <= OFFER_TTL_MS ? taken.offer : undefined;
 }
 
 const NAME_MAX = 60;

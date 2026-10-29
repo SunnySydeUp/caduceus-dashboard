@@ -330,6 +330,30 @@ export const BLOCK_META: Record<BlockKind, { label: string; hint: string }> = {
   transient: { label: 'Will retry', hint: 'It failed in a way that may pass, so Hermes will try again.' },
 };
 
+/** What a failed worker's last error says, in words the owner can use: protocol text is replaced, anything else is kept. */
+export function failureLine(error: string | null): string {
+  if (error === null || /without\s+kanban_complete|rc\s*=\s*0/i.test(error)) return 'The worker stopped before it finished. Retry it.';
+  return `Failed: ${error}`;
+}
+
+/** The line a blocked task's card and row show: Hermes's kind in words, else the failure, else the reason whoever blocked it typed. `undefined` unless blocked. */
+export function blockReason(task: Pick<BoardTask, 'status' | 'blockKind' | 'summary' | 'lastFailureError' | 'failures'>): { label: string; tone: 'warning' | 'blocked'; icon: 'question' | 'blocked' } | undefined {
+  if (task.status !== 'blocked') return undefined;
+  if (task.blockKind !== null) return { label: BLOCK_META[task.blockKind].label, tone: task.blockKind === 'needs_input' ? 'warning' : 'blocked', icon: task.blockKind === 'needs_input' ? 'question' : 'blocked' };
+  if (task.lastFailureError !== null || task.failures > 0) return { label: failureLine(task.lastFailureError), tone: 'warning', icon: 'blocked' };
+  return { label: task.summary ?? 'Blocked', tone: 'blocked', icon: 'blocked' };
+}
+
+/** The palette's hits for `query`: tasks whose title has every word of it (any case), at most `max`, each with its state and agent. */
+export function taskHits(board: BoardData, query: string, max = 8): { id: string; label: string; sub: string; path: string }[] {
+  const words = query.toLowerCase().split(/\s+/).filter((word) => word !== '');
+  if (words.length === 0) return [];
+  return board.tasks
+    .filter((task) => words.every((word) => task.title.toLowerCase().includes(word)))
+    .slice(0, max)
+    .map((task) => ({ id: `task:${task.id}`, label: task.title, sub: `${STATUS_META[task.status].label} · ${task.assignee ?? 'Unassigned'}`, path: `/work/tasks/${encodeURIComponent(task.id)}` }));
+}
+
 /** The priority as a card says it; the normal priority, 0, is not worth a tag. */
 export function priorityLabel(priority: number): string | undefined {
   return priority === 0 ? undefined : priority > 0 ? `Priority ${priority}` : `Low priority ${-priority}`;

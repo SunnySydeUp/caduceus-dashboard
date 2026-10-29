@@ -1,6 +1,9 @@
 // What the composer says about its draft (M1 #11): that another device wrote it, that the server did not keep it and why, and which attachments it did not keep.
 // None of it blocks typing or sending: they are notes above the message box.
+import { NEW_CHAT } from '@caduceus/contracts/chat-drafts';
 import { Icon } from '../../icons.tsx';
+import { AppLink } from '../../shell/navigation.tsx';
+import { useDraftIndexLoaded, useOtherDrafts, type WaitingDraft } from './draft-index.ts';
 import type { DraftNotice, DraftSync, DraftView } from './draft-sync.ts';
 
 const ELSEWHERE: Record<Extract<DraftNotice, { kind: 'elsewhere' }>['how'], { title: string; body: string }> = {
@@ -59,5 +62,24 @@ export function DraftNotes({ view, sync }: { view: DraftView; sync: DraftSync })
         </div>
       )}
     </>
+  );
+}
+
+/** An empty message box says when a draft is waiting in another chat, so that words typed elsewhere do not look lost (talk audit #8). */
+export function WaitingDraftHint({ here, empty }: { here: WaitingDraft; empty: boolean }) {
+  useDraftIndexLoaded();
+  const waiting = useOtherDrafts(here);
+  const first = waiting[0];
+  if (!empty || first === undefined) return null;
+  const where = first.profile === here.profile ? `another chat with ${first.profile}` : `${first.profile}’s ${first.session === NEW_CHAT ? 'new chat' : 'chat'}`;
+  return (
+    <p className="draft-hint subtle" role="status" data-draft-note="waiting">
+      <Icon name="draft" small />
+      <span>
+        A draft is waiting in {where}
+        {waiting.length > 1 ? ` and ${waiting.length - 1} more` : ''}.{' '}
+        <AppLink to={first.session === NEW_CHAT ? `/chat/new?profile=${encodeURIComponent(first.profile)}` : `/chat/${encodeURIComponent(first.session)}?profile=${encodeURIComponent(first.profile)}`}>Open it</AppLink>
+      </span>
+    </p>
   );
 }

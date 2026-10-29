@@ -305,7 +305,7 @@ function BuilderForm({ data, initial, job, script, texts }: FormProps) {
         {(!compact || lastStep) && (
           <WriteButton type="submit" className="btn btn--primary" disabled={busy} aria-busy={busy}>
             <Icon name="check" />
-            {editing ? 'Save changes' : 'Create schedule'}
+            {editing ? 'Save changes…' : 'Create schedule…'}
           </WriteButton>
         )}
         {compact && !lastStep && (

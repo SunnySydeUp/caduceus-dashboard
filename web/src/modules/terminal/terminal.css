@@ -13,4 +13,5 @@
 .tm-keys { display: none; flex-wrap: wrap; gap: var(--cd-space-2); }
 @media (pointer: coarse) { .tm-keys { display: flex; } }
 .tm-hint { margin: 0; }
+.tm-note { margin: 0; font-size: var(--cd-text-sm); }
 .tm-hint:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }

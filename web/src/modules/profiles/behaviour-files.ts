@@ -245,3 +245,11 @@ export function isListed(ref: Extract<FileRef, { kind: 'file' }>, answer: unknow
   const name = ref.path.slice(ref.path.lastIndexOf('/') + 1);
   return entries.some((entry) => record(entry).name === name && record(entry).isDirectory !== true);
 }
+
+/**
+ * Whether a navigation must wait for the owner while a file has unsaved edits. Only a move to another page does: a sheet or a confirm
+ * that closes pops its own history entry and leaves the URL alone, and that must never read as leaving the editor.
+ */
+export function leavesWithEdits(dirty: boolean, current: { pathname: string }, next: { pathname: string }): boolean {
+  return dirty && current.pathname !== next.pathname;
+}

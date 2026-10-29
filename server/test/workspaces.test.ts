@@ -41,6 +41,9 @@ interface Reply {
   workspaces: Entry[];
   error: string;
   message: string;
+  // The check route's answer.
+  ok: boolean;
+  reason: string;
   // An entry's own fields, when the route answers one.
   id: string;
   name: string;
@@ -162,7 +165,27 @@ describe('adding a workspace', () => {
     ]);
     expect((await owner.list()).map((entry) => entry.path)).toEqual([documents]);
   });
+  test('says before an add whether the guard would take a folder, with the same reason, and adds nothing', async () => {
+    area = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'caduceus-workspaces-')));
+    const home = folder('me');
+    const documents = folder('me', 'Documents');
+    const ssh = folder('me', '.ssh');
+    const owner = await start({ home });
+    const check = (target: string) => owner.call('GET', `${WORKSPACES}/check?path=${encodeURIComponent(target)}`);
 
+    const answers = [await check(documents), await check(home), await check(ssh), await check('relative/dir')];
+    const refused = await owner.call('POST', WORKSPACES, { path: home });
+
+    expect(answers.map((answer) => [answer.status, answer.body.ok, answer.body.reason])).toEqual([
+      [200, true, undefined],
+      [200, false, 'protected-path'],
+      [200, false, 'persistence-path'],
+      [200, false, 'bad-path'],
+    ]);
+    expect(answers[1].body.message).toBe(refused.body.message);
+    expect((await check('')).status).toBe(400);
+    expect(await owner.list()).toEqual([]);
+  });
 });
 
 describe('the entries of the registry', () => {

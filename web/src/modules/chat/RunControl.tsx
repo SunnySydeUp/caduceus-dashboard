@@ -4,6 +4,7 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
+import { AppLink } from '../../shell/navigation.tsx';
 import { Term } from '../../shell/Term.tsx';
 import type { Chat, ChatState, SideTask } from './chat-session.ts';
 import type { QueuedMessage } from './queue.ts';
@@ -70,7 +71,7 @@ function SideTaskRow({ task, chat }: { task: SideTask; chat: Chat | undefined })
   return (
     <li className="run__item run__item--task" data-status={task.status}>
       <Icon name={task.status === 'running' ? 'running' : task.status === 'failed' ? 'failed' : 'succeeded'} small className={task.status === 'running' ? 'spin' : undefined} />
-      <span className="run__text">
+      <span className="run__text run__text--task" title={task.prompt}>
         <span className="run__label">{label}</span> <span className="subtle">{task.prompt}</span>
       </span>
       <span className="run__state" role="status">
@@ -90,6 +91,11 @@ function SideTaskRow({ task, chat }: { task: SideTask; chat: Chat | undefined })
           >
             {task.kind === 'btw' ? 'Show answer' : 'Open result'}
           </button>
+          {task.kind === 'background' && (
+            <AppLink className="btn btn--ghost btn--sm" to="/work">
+              See in Work
+            </AppLink>
+          )}
           <button type="button" className="btn btn--ghost btn--sm" aria-label={`Dismiss: ${gist(task.prompt)}`} onClick={() => chat?.dismissSideTask(task.id)}>
             Dismiss
           </button>

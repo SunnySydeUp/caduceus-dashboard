@@ -22,7 +22,7 @@ import { AssignSheet, BulkReportSheet, CardMenuSheet, MoveSheet, PrioritySheet }
 import { DispatcherBar } from './Dispatcher.tsx';
 import { NewTaskLink } from './NewTaskLink.tsx';
 import {
-  BLOCK_META,
+  blockReason,
   STATUS_META,
   UNASSIGNED,
   currentLane,
@@ -74,7 +74,7 @@ interface CardControls {
 
 function TaskCard({ task, showStatus, onOpen, controls }: { task: BoardTask; showStatus: boolean; onOpen(): void; controls: CardControls }) {
   const priority = priorityLabel(task.priority);
-  const reason = task.blockKind && task.status === 'blocked' ? BLOCK_META[task.blockKind] : undefined;
+  const reason = blockReason(task);
   const playbookTag = playbookTagText(task);
   const { selecting, selected, lifted, bind } = controls;
   return (
@@ -115,8 +115,8 @@ function TaskCard({ task, showStatus, onOpen, controls }: { task: BoardTask; sho
           </div>
         )}
         {reason && (
-          <p className="kcard__reason" data-tone={task.blockKind === 'needs_input' ? 'warning' : 'blocked'}>
-            <Icon name={task.blockKind === 'needs_input' ? 'question' : 'blocked'} small />
+          <p className="kcard__reason" data-tone={reason.tone}>
+            <Icon name={reason.icon} small />
             <span>{reason.label}</span>
           </p>
         )}
@@ -340,7 +340,8 @@ function BoardBody({ board, view, setView, onOpen, controlsFor, overLane }: { bo
     );
   }
   return (
-    <div className={`bboard${compact ? ' bboard--snap' : ''}`} tabIndex={0} role="region" aria-label="Board lanes, scroll sideways">
+    // An empty lane stays (it is where a card is dropped) but takes little room, so that Review and Done are in view at 1440 px.
+    <div className={`bboard${compact ? ' bboard--snap' : ''}`} style={compact ? undefined : { gridTemplateColumns: lanes.map((lane) => (lane.tasks.length === 0 ? 'minmax(8rem, 10rem)' : 'minmax(15.5rem, 1fr)')).join(' ') }} tabIndex={0} role="region" aria-label="Board lanes, scroll sideways">
       {lanes.map((lane) => (
         <LaneColumn key={lane.key} lane={lane} grouping={view.lanes} filtered={filtered} onOpen={onOpen} controlsFor={controlsFor} over={overLane === lane.key} />
       ))}

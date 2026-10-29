@@ -550,7 +550,10 @@ describe('classifying a REST request', () => {
       read('PATCH', '/api/sessions/s1'),
       read('POST', '/api/audio/transcribe'),
       read('GET', '/api/dashboard/plugins/rescan'),
-    ]).toEqual([true, true, false, false, true, false]);
+      // Testing a channel only reads its state, so it needs no confirmation and works in read-only mode.
+      read('POST', '/api/messaging/platforms/telegram/test'),
+      read('PUT', '/api/messaging/platforms/telegram'),
+    ]).toEqual([true, true, false, false, true, false, true, false]);
   });
 
   test('matches path parameters and names the profile a request works on', () => {

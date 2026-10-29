@@ -153,6 +153,37 @@ export function filterChannels(channels: readonly Channel[], { query, show }: { 
   });
 }
 
+/** The chat apps most owners look for, in the order they are listed. The rest of Hermes's platforms follow in a group of their own. */
+export const COMMON_CHANNELS = ['telegram', 'discord', 'slack', 'whatsapp', 'email'] as const;
+
+export interface ChannelGroup {
+  id: 'common' | 'other';
+  title: string;
+  channels: Channel[];
+}
+
+/** The channels in two groups: the common chat apps first, in `COMMON_CHANNELS` order, then every other platform. A group with no channel is left out. Order inside the second group is kept. */
+export function groupChannels(channels: readonly Channel[]): ChannelGroup[] {
+  const rank = (channel: Channel) => (COMMON_CHANNELS as readonly string[]).indexOf(channel.id);
+  const common = channels.filter((channel) => rank(channel) >= 0).sort((a, b) => rank(a) - rank(b));
+  const other = channels.filter((channel) => rank(channel) < 0);
+  const groups: ChannelGroup[] = [
+    { id: 'common', title: 'Chat apps', channels: common },
+    { id: 'other', title: 'Other platforms and developer tools', channels: other },
+  ];
+  return groups.filter((group) => group.channels.length > 0);
+}
+
+/**
+ * Why the Enabled switch of a channel cannot be used yet, in words for beside the switch; `undefined` when it can. A platform that has
+ * not been set up cannot be switched on: the words name the first required value that is missing, so the next step is plain.
+ */
+export function enableBlocker(channel: Channel): string | undefined {
+  if (channel.enabled || channel.configured) return undefined;
+  const missing = channel.fields.find((field) => field.required && !field.isSet);
+  return missing ? `Add the ${missing.label.replace(/^(the|a|an)\s+/i, '').toLowerCase()} first` : `Set up ${channel.name} first`;
+}
+
 const TELEGRAM_TOKEN = /^\d+:[A-Za-z0-9_-]{30,}$/;
 const NUMERIC_ID = /^\d+$/;
 const SLACK_MEMBER = /^[UW][A-Z0-9]{2,}$/;
@@ -227,12 +258,21 @@ export function channelUpdate(id: string, profile: string, { values = {}, clear 
   };
 }
 
-/** `POST /api/messaging/platforms/{id}/test` (Tier 1). */
+/** `POST /api/messaging/platforms/{id}/test`: a read, so it needs no confirmation. */
 export const channelTestPath = (id: string, profile: string) => platformPath(id, profile, '/test');
 
 /** After a save: a gateway has to restart for it to apply, unless Hermes says a live multiplexer already built the adapter from it (`hot_served`). */
 export function readSaveAnswer(body: unknown): { needsRestart: boolean } {
   return { needsRestart: record(body).hot_served !== true };
+}
+
+/**
+ * What a test says on the page. Hermes answers a platform that is off before it asks whether it is set up, so a platform with nothing
+ * set up is told to enable it: advice the page cannot let anyone follow. For that case the page says what to do in the order it can be done.
+ */
+export function testResultFor(channel: Channel, answer: { ok: boolean; message: string }): { ok: boolean; message: string } {
+  if (answer.ok || channel.configured) return answer;
+  return { ok: false, message: `${channel.name} is not set up yet. Set it up first, then enable it and restart the gateway.` };
 }
 
 /** Hermes's answer to a test: whether it passed, and its own message about it. */
@@ -248,6 +288,8 @@ export interface BehaviourField {
   /** The dotted path of the key in the profile's `config.yaml` (`discord.auto_thread`). */
   key: string;
   label: string;
+  /** One line about what the key does, when Caduceus knows it; `undefined` otherwise. */
+  help: string | undefined;
   /** From the config schema: the schema decides what kind of control a key gets, never this module. */
   kind: BehaviourKind;
   options: string[] | undefined;
@@ -266,7 +308,37 @@ const KINDS = new Set<string>(['boolean', 'number', 'string', 'select', 'list'])
 /** Keys that change how every channel talks, not one platform's: streaming a reply as it is written, and the pause that imitates typing. */
 const SHARED_PREFIXES = ['streaming.', 'human_delay.'];
 
-const segmentWords = (segment: string) => sentence(segment).replace(/^(.)/, (first) => first.toUpperCase());
+/** One line for each key owners ask about, from the comments of Hermes's own default config. Keys not listed show no help. */
+const BEHAVIOUR_HELP: Record<string, string> = {
+  require_mention: 'Answer in channels only when someone @mentions the bot.',
+  free_response_channels: 'Channel IDs where the bot answers without a mention, separated by commas.',
+  free_response_rooms: 'Room IDs where the bot answers without a mention, separated by commas.',
+  require_mention_channels: 'Channel IDs where an @mention is always needed, separated by commas.',
+  thread_require_mention: 'Ask for an @mention inside threads too.',
+  auto_thread: 'Start a thread when someone mentions the bot in a channel.',
+  free_response_auto_thread: 'Also start a thread where the bot answers without a mention.',
+  history_backfill_limit: 'How many earlier messages the bot reads for context when it is mentioned.',
+  allow_cjk_rich_messages: 'Send rich tables for Chinese, Japanese and Korean text. Leave it off if Telegram Desktop or the Mac app shows garbled text.',
+  rich_drafts: 'Show experimental rich draft previews while a reply streams in direct messages.',
+  'streaming.enabled': 'Show a reply as it is written. When off, each reply arrives as one finished message.',
+  'streaming.transport': 'How a streaming reply is shown: auto picks the best way the platform supports.',
+  'streaming.edit_interval': 'The fewest seconds between edits of a reply that is being written.',
+  'streaming.buffer_threshold': 'Edit the message as soon as this many characters have built up, so short replies feel instant.',
+  'streaming.cursor': 'The mark shown at the end of a reply that is still being written.',
+  'streaming.fresh_final_after_seconds': 'Telegram only: when the preview was visible this long, send the final text as a new message so its time is the finish time. 0 turns it off.',
+  'human_delay.mode': 'Pause before a reply, to imitate typing. Off sends it at once.',
+  'human_delay.min_ms': 'The shortest pause, in milliseconds.',
+  'human_delay.max_ms': 'The longest pause, in milliseconds.',
+};
+
+/** The one line of help for a config key (`discord.auto_thread`): the key's own entry first, then its last word. */
+export function behaviourHelp(key: string): string | undefined {
+  const tail = key.split('.').pop() ?? key;
+  return BEHAVIOUR_HELP[key] ?? BEHAVIOUR_HELP[tail];
+}
+
+const ACRONYMS = /\b(cjk|api|url|id|ids|tts|stt|llm)\b/gi;
+const segmentWords = (segment: string) => sentence(segment).replace(/^(.)/, (first) => first.toUpperCase()).replace(ACRONYMS, (word) => word.toUpperCase());
 
 const labelOf = (path: string) => path.split('.').map(segmentWords).join(' › ');
 
@@ -309,6 +381,7 @@ export function behaviourSections(schema: unknown, config: unknown, channelId: s
     section.fields.push({
       key,
       label: labelOf(key.slice(section.id === 'channel' ? ownPrefix.length : section.id === 'display' ? displayPrefix.length : 0)),
+      help: behaviourHelp(key),
       kind,
       options: kind === 'select' && Array.isArray(options) ? options.map(String) : undefined,
       value: asValue(kind, valueAt(config, key)),

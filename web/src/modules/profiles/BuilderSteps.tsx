@@ -10,7 +10,7 @@ import { ModelPickerSheet } from '../models/ModelPicker.tsx';
 import { fetchHubOfficial } from '../skills/hub-data.ts';
 import type { OfficialSkill } from '../skills/hub-model.ts';
 import { useMcpCatalog } from '../tools/mcp-data.ts';
-import { asks, catalogueEligible, copyable, type Asks, type Baseline, type Draft, type PlanStep, type Start, type StepProblems, type StepResult } from './builder-model.ts';
+import { asks, catalogueEligible, copyable, unchosenModelNote, type Asks, type Baseline, type Draft, type PlanStep, type Start, type StepProblems, type StepResult } from './builder-model.ts';
 import { PERSONAS, personaState } from './personas.ts';
 import type { ProfileCard } from './profiles-model.ts';
 
@@ -21,6 +21,14 @@ function FieldError({ id, message }: { id: string; message: string | undefined }
       {message}
     </p>
   ) : null;
+}
+
+/** After a persona is chosen its name and SOUL are filled in below the list: bring them into view, without animation when the owner asked for less motion. */
+function showNameField(id: string) {
+  requestAnimationFrame(() => {
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById(id)?.closest('.field')?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  });
 }
 
 export interface StepProps {
@@ -75,18 +83,19 @@ export function IdentityStep({
               const state = personaState(persona, names);
               return (
                 <li key={persona.id}>
-                  <button type="button" className="bd-persona" aria-pressed={chosen} onClick={() => chooseStart({ kind: 'persona', persona: persona.id })}>
+                  <button type="button" className="bd-persona" aria-pressed={chosen} onClick={() => {
+                      chooseStart({ kind: 'persona', persona: persona.id });
+                      showNameField(`${id}-name`);
+                    }}>
                     <span className="bd-persona__name">{persona.title}</span>
                     <span className="bd-persona__summary">{persona.summary}</span>
-                    <span className="tag" data-tone={state === 'exists' ? 'neutral' : 'accent'}>
-                      {state === 'exists' ? 'Profile exists' : 'Restore'}
-                    </span>
+                    {state === 'exists' && <span className="tag">Profile exists</span>}
                   </button>
                 </li>
               );
             })}
           </ul>
-          <p className="field__help">A persona is only a starting point: nothing of it is kept by Caduceus. Restore means no profile has the persona’s name, so Finish makes it in Hermes again.</p>
+          <p className="field__help">A persona is only a starting point: nothing of it is kept by Caduceus. Choosing one fills in the name, SOUL and description below, and you can change them. A persona marked Profile exists already has a profile of that name, so give the new one another name.</p>
         </fieldset>
       )}
       {draft.start.kind === 'clone' && (
@@ -113,6 +122,7 @@ export function IdentityStep({
           <Sigil name={draft.name.trim().toLowerCase() || 'new'} size="md" />
           <input
             id={`${id}-name`}
+            data-first
             className="input input--mono"
             value={draft.name}
             autoComplete="off"
@@ -157,20 +167,20 @@ export function IdentityStep({
   );
 }
 
-export function ModelStep({ draft, set, baseline }: StepProps) {
+export function ModelStep({ draft, set, baseline, defaultModel }: StepProps & { defaultModel: string | null | undefined }) {
   const [picking, setPicking] = useState(false);
   const clone = draft.start.kind === 'clone';
   const inherited = baseline?.model;
   return (
     <div className="bd-step">
       <p className="bd-note">
-        The <Term id="main-model">main model</Term> answers the profile’s chats. {clone ? 'A clone starts with the model of the profile it copies; choose another to change it.' : 'A new profile has no model until you choose one: it cannot chat before that.'}
+        The <Term id="main-model">main model</Term> answers the profile’s chats. {clone ? 'A clone starts with the model of the profile it copies; choose another to change it.' : (defaultModel ? `A new profile that is not given a model starts with the default profile’s model, ${defaultModel}.` : 'The default profile has no model either, so a new profile cannot chat until you choose one.')}
       </p>
       <div className="panel panel--pad bd-model">
         <div>
           <div className="field__label">Main model</div>
           <div className="mono" data-testid="builder-model">
-            {draft.model ? `${draft.model.model} (${draft.model.provider})` : clone && inherited ? `${inherited.model} (${inherited.provider}) · from the copy` : 'None chosen'}
+            {draft.model ? `${draft.model.model} (${draft.model.provider})` : clone && inherited ? `${inherited.model} (${inherited.provider}) · from the copy` : defaultModel ? `${defaultModel} · from the default profile` : 'None chosen'}
           </div>
         </div>
         <div className="row">
@@ -354,6 +364,7 @@ export function ReviewStep({
   results,
   running,
   heldAt,
+  defaultModel,
 }: {
   draft: Draft;
   plan: readonly PlanStep[];
@@ -363,9 +374,12 @@ export function ReviewStep({
   running: string | undefined;
   /** The step with a problem that holds Finish back, if any. */
   heldAt: string | undefined;
+  /** The model of the default profile, which a new profile that is not given one starts with. */
+  defaultModel: string | null | undefined;
 }) {
   const start = draft.start.kind === 'blank' ? 'Blank' : draft.start.kind === 'persona' ? `Persona ${draft.start.persona}` : `Clone of ${draft.start.source}`;
   const noModel = draft.start.kind !== 'clone' && draft.model === undefined;
+  const unchosen = unchosenModelNote(defaultModel);
   return (
     <div className="bd-step">
       <p className="bd-note">Finish makes the profile in Hermes and then does each step below, in this order. You confirm the profile by pressing Finish; some steps ask you again, as they say.</p>
@@ -380,9 +394,9 @@ export function ReviewStep({
         </div>
       </dl>
       {noModel && (
-        <div className="banner" data-tone="warning">
-          <Icon name="alert" />
-          <span className="banner__content">No model is chosen, so the profile cannot chat until you set one on its Model tab.</span>
+        <div className="banner" data-tone={unchosen.tone}>
+          <Icon name={unchosen.tone === 'warning' ? 'alert' : 'info'} />
+          <span className="banner__content">{unchosen.text}</span>
         </div>
       )}
       {heldAt && (

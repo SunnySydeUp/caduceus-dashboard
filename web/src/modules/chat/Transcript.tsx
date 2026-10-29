@@ -16,6 +16,7 @@ import { MessageAttachments } from './MessageAttachments.tsx';
 import { splitAttachments } from './message-attachments.ts';
 import { FOLLOW_THRESHOLD, captureAnchor, distanceFromEnd, jumpToLatest, layoutOf, restoreAnchor, scrolled, visibleWindow, type Anchor, type FollowState } from './virtual-list.ts';
 import { followsGrowth, timeLabel, useChatBehaviour } from './chat-behaviour.ts';
+import { steerNote } from './requests.ts';
 
 export interface TranscriptItem {
   key: string;
@@ -96,14 +97,33 @@ function BubbleView({ item, focused, onAct }: { item: TranscriptItem; focused: b
       </p>
     );
   }
+  if (message.note === 'steered') {
+    return (
+      <p className="chat__recovered subtle" role="note">
+        <Icon name="steer" small />
+        {steerNote(message.text)}
+      </p>
+    );
+  }
   if (message.role === 'user') {
     const { body, attachments } = splitAttachments(message.text);
     return (
       <div className="chat__user" data-focused={focused ? '' : undefined} {...press}>
-        <div className="msg-user">
-          {body.trim() !== '' && <Rich text={body} anchor={key} />}
-          <MessageAttachments attachments={attachments} />
-        </div>
+        {message.scheduled !== undefined && (
+          <details className="chat__scheduled subtle">
+            <summary>
+              <Icon name="clock" small /> Scheduled run
+            </summary>
+            <p>This chat is a run of a scheduled job. Before the job’s own prompt, Hermes gave the agent these instructions:</p>
+            <p className="chat__scheduled-text">{message.scheduled}</p>
+          </details>
+        )}
+        {(body.trim() !== '' || attachments.length > 0) && (
+          <div className="msg-user">
+            {body.trim() !== '' && <Rich text={body} anchor={key} />}
+            <MessageAttachments attachments={attachments} />
+          </div>
+        )}
         {written}
         {bar}
       </div>

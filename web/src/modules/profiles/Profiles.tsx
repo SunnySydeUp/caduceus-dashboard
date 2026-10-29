@@ -1,6 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react';
 import { Icon } from '../../icons.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
@@ -11,12 +12,13 @@ import { GatewayBadge } from './GatewayBadge.tsx';
 import { ProfileCommandsProvider, useProfileCommands } from './ProfileCommands.tsx';
 import { useProfiles, type ProfilesView } from './profiles-data.ts';
 import type { GatewayStatus, ProfileCard } from './profiles-model.ts';
+import { skillCountWords } from './profiles-model.ts';
 import './profiles.css';
 
 /** How long a finger rests on a card before its menu opens: the long-press alternative to the ⋮ button. */
 const LONG_PRESS_MS = 500;
 
-function ProfileCardView({ card, status, inTab }: { card: ProfileCard; status: GatewayStatus | undefined; inTab: boolean }) {
+function ProfileCardView({ card, status, skills, inTab }: { card: ProfileCard; status: GatewayStatus | undefined; skills: number | undefined; inTab: boolean }) {
   const commands = useProfileCommands();
   const press = useRef<number>(undefined);
   const stopPress = () => window.clearTimeout(press.current);
@@ -73,14 +75,14 @@ function ProfileCardView({ card, status, inTab }: { card: ProfileCard; status: G
         </li>
         <li>
           <Icon name="stack" small />
-          {card.skillCount} skills
+          {skillCountWords(skills ?? card.skillCount)}
         </li>
       </ul>
     </li>
   );
 }
 
-function ProfilesList({ view: { cards, statuses, failed, reload } }: { view: ProfilesView }) {
+function ProfilesList({ view: { cards, statuses, skillCounts, failed, reload } }: { view: ProfilesView }) {
   const { effective } = useProfileScope();
   const commands = useProfileCommands();
   const [filter, setFilter] = useState('');
@@ -118,7 +120,7 @@ function ProfilesList({ view: { cards, statuses, failed, reload } }: { view: Pro
           </button>
         </div>
       )}
-      {!cards && !failed && <p role="status">Loading profiles…</p>}
+      {!cards && !failed && <Loading label="Loading profiles…" lines={4} onRetry={() => void reload()} />}
       {cards && cards.length > 3 && (
         <div className="pf-tools">
           <div className="input-wrap pf-search">
@@ -130,7 +132,7 @@ function ProfilesList({ view: { cards, statuses, failed, reload } }: { view: Pro
       {shown && shown.length > 0 && (
         <ul className="pf-cards" aria-label="Profiles">
           {shown.map((card) => (
-            <ProfileCardView key={card.name} card={card} status={statuses[card.name]} inTab={effective?.name === card.name} />
+            <ProfileCardView key={card.name} card={card} status={statuses[card.name]} skills={skillCounts[card.name]} inTab={effective?.name === card.name} />
           ))}
         </ul>
       )}
@@ -163,7 +165,7 @@ function ProfilesList({ view: { cards, statuses, failed, reload } }: { view: Pro
 
 /** Agents › Profiles: one card per Hermes profile, with its live gateway status. */
 export function Profiles() {
-  const view = useProfiles();
+  const view = useProfiles({ withSkillCounts: true });
   return (
     <ProfileCommandsProvider cards={view.cards ?? []} reload={view.reload}>
       <ProfilesList view={view} />

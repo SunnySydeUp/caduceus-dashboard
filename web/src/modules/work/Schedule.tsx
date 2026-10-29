@@ -243,7 +243,7 @@ export function Schedule() {
           <div className="jd__acts" role="group" aria-label="Actions">
             <WriteButton type="button" className="btn btn--primary" disabled={busy !== undefined} aria-busy={busy === 'run'} onClick={() => void run(job)}>
               <Icon name="play" />
-              Run now
+              {busy === 'run' ? 'Running…' : 'Run now'}
             </WriteButton>
             {job.type !== 'script' && (
               <AppLink className="btn btn--secondary" to={`/work/schedules/${encodeURIComponent(job.id)}/edit`}>
@@ -253,7 +253,7 @@ export function Schedule() {
             )}
             <WriteButton type="button" className="btn btn--secondary" disabled={busy !== undefined} onClick={() => void toggle(job)}>
               <Icon name={job.enabled ? 'paused' : 'play'} />
-              {job.enabled ? 'Pause' : 'Resume'}
+              {busy === 'pause' ? 'Pausing…' : busy === 'resume' ? 'Resuming…' : job.enabled ? 'Pause' : 'Resume'}
             </WriteButton>
             <WriteButton type="button" className="btn btn--secondary" disabled={busy !== undefined} onClick={() => void duplicate(job)}>
               <Icon name="copy" />

@@ -16,7 +16,7 @@ export const memoryHelp: ModuleHelp = {
           ul: [
             'Use makes a ready provider the profile’s. It is a Tier 1 action ([[risk-tiers|risk tiers]]): you confirm. Use built-in memory goes back to MEMORY.md and USER.md alone. New sessions use the choice; a chat that is already open keeps the provider it started with.',
             'Settings opens a full-screen sheet on a phone and a dialog elsewhere. Its fields are the ones Hermes gives for that provider: Caduceus has no list of its own, so a provider Hermes learns tomorrow has a form tomorrow. Fields are grouped as Hermes groups them, and a field that depends on another appears when that one has its value.',
-            'A key or token is masked. Hermes never sends a saved key back: it says only whether one is set, and an empty field keeps it. Saving is a Tier 2 action: you confirm, then use a [[passkey|passkey]]. Saving also makes the provider the profile’s.',
+            'A key or token is masked. Hermes never sends a saved key back: it says only whether one is set, and an empty field keeps it. The button is Save and use this provider, because saving also makes the provider the profile’s. It is a Tier 2 action: you confirm, then use a [[passkey|passkey]]. It stays switched off until the provider is installed; run its setup first. Choices that are plainly true or false read Yes and No.',
             'Set up shows what a provider needs installed (Python packages and commands) and runs it through Hermes. It is a Tier 3 action: the confirmation lists what will run on this computer, and you type the provider’s name.',
           ],
         },

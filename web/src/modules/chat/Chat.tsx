@@ -18,7 +18,7 @@ import { askStepUp } from '../../passkeys.ts';
 import { chooseActivityMode, useActivityMode } from './activity-mode.ts';
 import { ComposerBanner, useComposerSettings, type ComposerSettings } from './ComposerChips.tsx';
 import { ComposerBar } from './ComposerBar.tsx';
-import { DraftNotes } from './DraftNotes.tsx';
+import { DraftNotes, WaitingDraftHint } from './DraftNotes.tsx';
 import { useDraft } from './use-draft.ts';
 import { insertAtCaret } from './saved-prompts.ts';
 import type { PromptsAccess } from './Prompts.tsx';
@@ -27,7 +27,7 @@ import { AgentContext } from './ActivityCards.tsx';
 import { TalkDetails } from './TalkDetails.tsx';
 import { TalkHeader } from './TalkHeader.tsx';
 import { DETAILS_ID, DETAILS_SHEET_ID, DetailsPanel } from './DetailsPanel.tsx';
-import { threadMenu, type ThreadActionId } from './talk-header.ts';
+import { chatState, threadMenu, type ThreadActionId } from './talk-header.ts';
 import { setPinnedWithinLimit, useSessionFlags } from './use-session-flags.ts';
 import { LatestSession } from './LatestSession.tsx';
 import { setDetailsOpen, useDetailsLayout, useDetailsOpen } from './talk-prefs.ts';
@@ -67,7 +67,8 @@ import { SelectionActions } from './SelectionActions.tsx';
 import { refinePrompt, replyWithSelection, type Refinement } from './selection-actions.ts';
 import { takeLearn } from './learn-handoff.ts';
 import { offerBrief } from '../work/brief-handoff.ts';
-import { offerSchedule } from '../work/schedule-handoff.ts';
+import { clearSchedule, offerSchedule } from '../work/schedule-handoff.ts';
+import { forgetRepeat, repeatLeftover, rememberRepeat } from './repeat-handoff.ts';
 import { IntentChip } from './ComposerIntent.tsx';
 import { intentAfter, planDraft, type Intent } from './composer-intent.ts';
 import { prefillFromMessage, prefillFromSession } from '../work/brief-prefill.ts';
@@ -78,7 +79,9 @@ import { FindBar, TranscriptView } from './TranscriptView.tsx';
 import { useTranscriptTools } from './use-transcript-tools.ts';
 import { locateHit, type HitSpot } from './session-search.ts';
 import { HandoffNote, ReadOnlyBar, SegmentsBar, SourceTag } from './SessionNotices.tsx';
-import { useLineage, useSessionAccess } from './use-session-access.ts';
+import { useLineage, useSessionAccess, type SessionAccessState } from './use-session-access.ts';
+import { SessionGone } from './SessionGone.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { generateSummary, summaryRequest } from './handoff-summary.ts';
 import { readHermes } from './read-hermes.ts';
 import { filterItems, ROLES, transcriptText, type CopyFormat } from './transcript-tools.ts';
@@ -148,6 +151,11 @@ function Composer({ chat, state, formRef, settings, reply, prefill, session }: {
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
   const empty = text.trim() === '' && attached.attachments.length === 0;
+  /** The box holds just the words Repeat took to the schedule builder: they stay by design, so that the box says so and offers to clear them. */
+  const leftover = repeatLeftover(session, text);
+  useEffect(() => {
+    if (text.trim() !== '' && !repeatLeftover(session, text)) forgetRepeat();
+  }, [session, text]);
   /** Where the caret goes once a menu choice has put its text in the box (the box shows the new text first). */
   const nextCaret = useRef<number>(undefined);
   useLayoutEffect(() => {
@@ -229,16 +237,18 @@ function Composer({ chat, state, formRef, settings, reply, prefill, session }: {
     if (plan.kind === 'delegate') {
       // Hermes's own background run (what /background starts): it tells the owner when it needs them or finishes, and shows under Work.
       void chat.background(plan.text);
-      toast(`${settings.profile} is on it in the background`, { tone: 'info', detail: 'You are told when it needs you or finishes.' });
+      toast(`${settings.profile} is on it in the background`, { tone: 'info', detail: 'You are told when it needs you or finishes. It shows under Work.', action: { label: 'See in Work', onClick: () => void navigate('/work') } });
       setText('');
       setIntent(intentAfter(intent, plan));
       return;
     }
     if (plan.kind === 'repeat') {
-      // The schedule builder opens with the message and the agent in it; nothing is created until the owner confirms the schedule there. The words stay in the box.
+      // The schedule builder opens with the message and the agent in it; nothing is created until the owner confirms the schedule there. The words stay in the box, and the box says so when they are still there on the way back.
       offerSchedule({ text: plan.text, profile: settings.profile });
+      rememberRepeat(session, plan.text);
       setIntent(intentAfter(intent, plan));
-      void navigate('/work/schedules/new');
+      // An offer no builder takes would fill the next new-schedule form with these words (it also goes stale on its own): it goes when the page cannot open the builder.
+      void navigate('/work/schedules/new').catch(clearSchedule);
       return;
     }
     // Attachments go with a message that starts a turn: Hermes queues them for the next prompt it runs, which a steer or a queued message is not.
@@ -373,12 +383,26 @@ function Composer({ chat, state, formRef, settings, reply, prefill, session }: {
         {hands.active && <HandsFreePanel />}
         <VoiceStrip input={voice} press={press} />
         <DraftNotes view={draft.view} sync={draft.sync} />
+        <WaitingDraftHint here={{ profile: settings.profile, session }} empty={empty} />
         <AttachmentNotes lines={attached.left} onDismiss={attached.dismissLeft} />
         <AttachmentChips attachments={attached.attachments} steps={attached.steps} locked={sending} onRemove={attached.remove} onKeepInline={(id) => void putBack(id)} />
         {dragging && (
           <p className="composer__drop" aria-hidden="true">
             Drop to attach (up to {MAX_ATTACHMENTS})
           </p>
+        )}
+        {leftover && (
+          <div className="draft-note banner" data-tone="info" role="status" data-draft-note="repeat">
+            <Icon name="info" />
+            <div className="banner__content">
+              <p>These words are still here from Repeat. Send them, change them or clear them. Typing more joins them.</p>
+              <div className="draft-note__actions">
+                <button type="button" className="btn btn--secondary btn--sm" onClick={() => { setText(''); forgetRepeat(); box.current?.focus({ preventScroll: true }); }}>
+                  Clear the box
+                </button>
+              </div>
+            </div>
+          </div>
         )}
         <IntentChip intent={intent} onClear={() => setIntent('ask')} />
         <label className="sr-only" htmlFor="chat-message">
@@ -457,14 +481,13 @@ const visibleMessages = (state: ChatState, mode: ActivityMode): ChatMessage[] =>
 const TerminalMode = lazy(() => import('../terminal/TerminalMode.tsx').then((m) => ({ default: m.TerminalMode })));
 
 /** One conversation: a stored session (`/chat/:id`), or a new chat that has no session until its first message. */
-function Conversation({ profile, storedId }: { profile: string; storedId: string | undefined }) {
+function Conversation({ profile, storedId, session }: { profile: string; storedId: string | undefined; session: SessionAccessState }) {
   const navigate = useAppNavigate();
   const around = useMessageParam();
   const find = useFindParam();
   // A link to a search hit has the words, not the message: where they are comes from Hermes, and the chat opens there.
   const hit = useHitSpot(profile, storedId, around === undefined ? find : undefined);
-  // A session another process owns (or a Kanban worker) is read, never resumed: Hermes says which before the chat opens.
-  const session = useSessionAccess(profile, storedId);
+  // A session another process owns (or a Kanban worker) is read, never resumed: Hermes's answer for it (`session`) is read before the chat opens.
   const sessionReadOnly = session.access.mode === 'read-only';
   // Opening a finished run's chat is the review Today's Ready list waits for.
   useReviewOpened(storedId);
@@ -685,12 +708,13 @@ function Conversation({ profile, storedId }: { profile: string; storedId: string
     const { chat: engine, navigate: go } = latest.current;
     if (!engine) return;
     try {
-      const { storedId: id, prefill: words } = await engine.fork(from);
+      const { storedId: id, prefill: words, notCut } = await engine.fork(from);
       if (words !== undefined) offerPrefill(id, splitAttachments(words).body);
-      toast('Forked into a new chat', { tone: 'success', detail: from === undefined ? 'It has every message of this chat.' : 'It starts at that message; this chat is as it was.' });
+      if (notCut === undefined) toast('Forked into a new chat', { tone: 'success', detail: from === undefined ? 'It has every message of this chat.' : 'It starts at that message; this chat is as it was.' });
+      else toast('Forked, but not at that message', { tone: 'warning', detail: notCut, timeout: 12_000 });
       void go(`/chat/${id}`);
     } catch (error) {
-      refused('Hermes did not fork this chat')(error);
+      refused('Could not fork this chat')(error);
     }
   }, []);
   const undo = useCallback(async () => {
@@ -854,7 +878,7 @@ function Conversation({ profile, storedId }: { profile: string; storedId: string
     <section ref={section} className="chat__conversation" aria-label="Conversation">
       <TalkHeader
         profile={profile}
-        member={member}
+        state={chatState({ requests: state.requests.length, running: state.running || (state.turn !== undefined && state.turn.status !== 'failed'), failed: state.turn?.status === 'failed' })}
         subtitle={
           <>
             {state.title ?? (storedId === undefined ? 'New chat' : 'Chat')}
@@ -1032,6 +1056,20 @@ function Conversation({ profile, storedId }: { profile: string; storedId: string
   );
 }
 
+/** Reads Hermes's answer for the session first: one it has in no profile is a not-found note, and one in another profile opens under that profile, before any chat is started. */
+function ConversationGate({ profile, storedId }: { profile: string; storedId: string | undefined }) {
+  const session = useSessionAccess(profile, storedId);
+  if (storedId !== undefined && session.missing) return <SessionGone profile={profile} storedId={storedId} />;
+  if (storedId !== undefined && session.pending) {
+    return (
+      <section className="chat__conversation chat__none" aria-label="Conversation">
+        <Loading label="Opening this conversation…" lines={4} onRetry={session.recheck} />
+      </section>
+    );
+  }
+  return <Conversation profile={profile} storedId={storedId} session={session} />;
+}
+
 /** Talk: an agent's newest conversation, with its sessions listed beside it (a column; on a phone a sheet) and its Details. Without a session in the address it opens the latest one. */
 export function Chat() {
   const { id } = useParams({ strict: false }) as { id?: string };
@@ -1067,7 +1105,7 @@ export function Chat() {
           <TerminalMode key={`${profile}/${storedId}`} profile={profile} storedId={storedId} />
         </Suspense>
       ) : conversation ? (
-        <Conversation key={`${profile}/${storedId ?? 'new'}`} profile={profile} storedId={storedId} />
+        <ConversationGate key={`${profile}/${storedId ?? 'new'}`} profile={profile} storedId={storedId} />
       ) : (
         <LatestSession profile={profile} />
       )}

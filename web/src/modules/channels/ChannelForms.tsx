@@ -124,7 +124,18 @@ export function ConnectionForm({ channel, draft, problems, onChange, formId, onS
 function BehaviourControl({ field, value, onChange }: { field: BehaviourField; value: BehaviourValue | undefined; onChange(next: BehaviourValue): void }) {
   const id = useId();
   const inherited = field.value === undefined;
-  const note = inherited ? <p className="field__help">Not set: Hermes uses its own default until you save a value.</p> : null;
+  const helpId = `${id}-help`;
+  const note = (
+    <>
+      {field.help && (
+        <p className="field__help" id={helpId}>
+          {field.help}
+        </p>
+      )}
+      {inherited && <p className="field__help">Not set: Hermes uses its own default until you save a value.</p>}
+    </>
+  );
+  const describedBy = field.help ? helpId : undefined;
   switch (field.kind) {
     case 'boolean':
       return (
@@ -133,7 +144,7 @@ function BehaviourControl({ field, value, onChange }: { field: BehaviourField; v
             <span id={id} className="field__label">
               {field.label}
             </span>
-            <button type="button" role="switch" className="switch" aria-checked={value === true} aria-labelledby={id} onClick={() => onChange(value !== true)} />
+            <button type="button" role="switch" className="switch" aria-checked={value === true} aria-labelledby={id} aria-describedby={describedBy} onClick={() => onChange(value !== true)} />
           </div>
           {note}
         </div>
@@ -144,7 +155,7 @@ function BehaviourControl({ field, value, onChange }: { field: BehaviourField; v
           <label className="field__label" htmlFor={id}>
             {field.label}
           </label>
-          <select id={id} className="input" value={typeof value === 'string' ? value : ''} onChange={(event) => onChange(event.target.value)}>
+          <select id={id} className="input" aria-describedby={describedBy} value={typeof value === 'string' ? value : ''} onChange={(event) => onChange(event.target.value)}>
             {typeof value !== 'string' && <option value="">Hermes default</option>}
             {field.options?.map((option) => (
               <option key={option} value={option}>
@@ -161,7 +172,7 @@ function BehaviourControl({ field, value, onChange }: { field: BehaviourField; v
           <label className="field__label" htmlFor={id}>
             {field.label}
           </label>
-          <input id={id} className="input" type="number" inputMode="decimal" step="any" value={typeof value === 'number' && Number.isFinite(value) ? value : ''} onChange={(event) => onChange(event.target.value === '' ? Number.NaN : Number(event.target.value))} />
+          <input id={id} className="input" type="number" aria-describedby={describedBy} inputMode="decimal" step="any" value={typeof value === 'number' && Number.isFinite(value) ? value : ''} onChange={(event) => onChange(event.target.value === '' ? Number.NaN : Number(event.target.value))} />
           {note}
         </div>
       );
@@ -171,10 +182,8 @@ function BehaviourControl({ field, value, onChange }: { field: BehaviourField; v
           <label className="field__label" htmlFor={id}>
             {field.label}
           </label>
-          <textarea id={id} className="input ch-lines" rows={3} value={Array.isArray(value) ? value.join('\n') : ''} aria-describedby={`${id}-help`} onChange={(event) => onChange(event.target.value.split('\n'))} />
-          <p className="field__help" id={`${id}-help`}>
-            One entry on each line.
-          </p>
+          <textarea id={id} className="input ch-lines" rows={3} value={Array.isArray(value) ? value.join('\n') : ''} aria-describedby={describedBy} onChange={(event) => onChange(event.target.value.split('\n'))} />
+          <p className="field__help">One entry on each line.</p>
           {note}
         </div>
       );
@@ -184,7 +193,7 @@ function BehaviourControl({ field, value, onChange }: { field: BehaviourField; v
           <label className="field__label" htmlFor={id}>
             {field.label}
           </label>
-          <input id={id} className="input" type="text" autoComplete="off" value={typeof value === 'string' ? value : ''} onChange={(event) => onChange(event.target.value)} />
+          <input id={id} className="input" type="text" aria-describedby={describedBy} autoComplete="off" value={typeof value === 'string' ? value : ''} onChange={(event) => onChange(event.target.value)} />
           {note}
         </div>
       );

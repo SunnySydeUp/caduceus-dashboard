@@ -250,7 +250,7 @@ th[aria-sort="ascending"] .tt__sort svg, th[aria-sort="descending"] .tt__sort sv
 .sb__steps li { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: var(--cd-space-1-5); min-inline-size: max-content; padding: var(--cd-space-1-5) var(--cd-space-2); border-radius: var(--cd-radius-full); background: var(--cd-bg-surface-2); color: var(--cd-fg-muted); font-size: var(--cd-text-xs); }
 .sb__steps li[aria-current="step"] { background: var(--cd-accent-soft); color: var(--cd-accent-fg); font-weight: var(--cd-weight-semibold); }
 .sb__stepn { font-family: var(--cd-font-mono); }
-.sb__bar { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); justify-content: flex-end; position: sticky; inset-block-end: 0; z-index: var(--cd-z-sticky); padding-block: var(--cd-space-3); background: var(--cd-bg-canvas); border-block-start: 1px solid var(--cd-border-subtle); }
+.sb__bar { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); justify-content: flex-end; position: sticky; inset-block-end: var(--shell-bottom, 0px); z-index: var(--cd-z-sticky); padding-block: var(--cd-space-3); background: var(--cd-bg-canvas); border-block-start: 1px solid var(--cd-border-subtle); }
 .sb__bar .btn--primary { margin-inline-start: auto; }
 
 .bp__grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
@@ -267,6 +267,7 @@ th[aria-sort="ascending"] .tt__sort svg, th[aria-sort="descending"] .tt__sort sv
 .td > * { min-inline-size: 0; }
 .td-head { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); }
 .td-actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.td-decision { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
 .td-hint { margin: 0; font-size: var(--cd-text-sm); }
 .td-tabs ul { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--cd-space-1); overflow-x: auto; scrollbar-width: none; scroll-padding-inline: var(--cd-page-px); }
 .td-tabs a { display: flex; align-items: center; gap: var(--cd-space-1-5); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); padding-inline: var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-full); background: var(--cd-bg-surface); color: var(--cd-fg-muted); text-decoration: none; font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); white-space: nowrap; }

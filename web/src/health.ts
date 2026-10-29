@@ -1,5 +1,5 @@
-// The health report (`GET /_caduceus/api/health`) for the screens that show it: Health, Settings and Gateway. Nothing is kept
-// beyond what the page shows: every load is a fresh question to Caduceus, which asks Hermes again.
+// The health report (`GET /_caduceus/api/health`) for the screens that show it: Health, Settings and Gateway. Every load is a fresh question to Caduceus,
+// which asks Hermes again. Only the last report is kept, in memory, so a screen that opens again shows it (with when it was checked) until the new one comes.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HealthReport } from '@caduceus/contracts/caduceus-api';
 import { useBackend, useGatewayEvent, useGatewayStatus, useLiveLoad } from './gateway.ts';
@@ -16,6 +16,9 @@ export interface HealthView {
   check(): Promise<void>;
 }
 
+/** The last report this page loaded, so a screen that opens again shows it at once while the next is asked for. */
+let lastReport: HealthReport | undefined;
+
 /**
  * Loads the report, and loads it again whenever something it is made of may have changed, with no timer: at every
  * `gateway.ready` (the first connect, each reconnect, a Hermes restart), when Hermes says its gateway or its jobs moved
@@ -23,7 +26,7 @@ export interface HealthView {
  * connected (Caduceus reports the backend even while Hermes is down), and when the tab comes back into view.
  */
 export function useHealth(): HealthView {
-  const [report, setReport] = useState<HealthReport>();
+  const [report, setReport] = useState<HealthReport | undefined>(lastReport);
   const [unreachable, setUnreachable] = useState(false);
   const [checking, setChecking] = useState(false);
   /** Which load is the latest: an answer that arrives late must not replace a newer one. */
@@ -37,6 +40,7 @@ export function useHealth(): HealthView {
       if (!res.ok) throw new Error(`GET /_caduceus/api/health: HTTP ${res.status}`);
       const next: HealthReport = await res.json();
       if (request !== latest.current) return;
+      lastReport = next;
       setReport(next);
       setUnreachable(false);
       // A contract mismatch turns read-only mode on at the server: the banner follows now, not at its next ask.

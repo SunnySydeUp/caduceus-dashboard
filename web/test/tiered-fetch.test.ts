@@ -149,6 +149,30 @@ describe('fetchTiered', () => {
     expect(h.sent).toHaveLength(1);
   });
 
+  test('tells the screen the request is on its way only after the owner confirmed, so a Saving state does not start while the dialog is open', async () => {
+    const h = harness();
+    const order: string[] = [];
+    const request: TieredRequest = { method: 'POST', path: '/api/ops/doctor?profile=coder', confirm: { title: 'Run the doctor?' }, onConfirmed: () => order.push(`confirmed after ${h.dialogs.length} dialog`) };
+
+    h.state.dialog = 'decline';
+    await h.fetchTiered(request);
+    expect(order).toEqual([]);
+
+    h.state.dialog = 'confirm';
+    await h.fetchTiered(request);
+    expect(order).toEqual(['confirmed after 2 dialog']);
+
+    // A request that needs no confirmation is on its way at once.
+    await h.fetchTiered({ method: 'POST', path: '/api/plugins/kanban/dispatch', alreadyConfirmed: true, onConfirmed: () => order.push('at once') });
+    expect(order).toEqual(['confirmed after 2 dialog', 'at once']);
+  });
+
+  test('passes the destructive mark on to the dialog', async () => {
+    const h = harness();
+    await h.fetchTiered({ method: 'POST', path: '/api/ops/doctor?profile=coder', confirm: { title: 'Delete it?', destructive: true } });
+    expect(h.dialogs[0]).toMatchObject({ destructive: true });
+  });
+
   test('sends a T1 without asking again when the owner already confirmed the larger action it belongs to, and still asks a T2', async () => {
     const h = harness();
     const t1 = await h.fetchTiered({ method: 'POST', path: '/api/plugins/kanban/dispatch', alreadyConfirmed: true });

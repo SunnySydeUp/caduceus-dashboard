@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { ActivityEvent, InboxApproval, InboxClarify, InboxNotice } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
 import { finishSeqIn, readyToOpen } from '../src/modules/chat/talk-review.ts';
-import { TRAY_FACES, trayView } from '../src/modules/chat/decide-tray.ts';
+import { TRAY_FACES, trayStep, trayView } from '../src/modules/chat/decide-tray.ts';
 
 // The decide-anywhere tray's pure part (M8 #05): which of the waiting decisions it lists in a thread, the faces and the words on its pill, and when it is
 // hidden. Who may answer and how is the Inbox's (`inbox-model.test.ts`, `server/test/inbox.test.ts`); nothing here pins Hermes's own data.
@@ -90,6 +90,25 @@ describe('the pill', () => {
   test('gives a decision that names no agent the empty face', () => {
     const view = trayView({ items: [notice('p', 'decision', undefined)], storedId: undefined });
     expect(view.faces).toEqual([undefined]);
+  });
+});
+
+describe('one decision at a time', () => {
+  const items = [approval('a', 'coder'), approval('b', 'general'), clarify('c', 'work')];
+
+  test('shows the first decision, which of how many it is, and what "Next" leads to: the others, counted', () => {
+    expect(trayStep(items, undefined)).toMatchObject({ shown: items[0], position: 1, total: 3, nextId: 'b', nextLabel: 'Next (2)' });
+  });
+
+  test('stays on the decision the owner is looking at while the list changes around it, and wraps from the last to the first', () => {
+    expect(trayStep(items, 'b')).toMatchObject({ shown: items[1], position: 2, nextId: 'c', nextLabel: 'Next (2)' });
+    expect(trayStep(items, 'c')).toMatchObject({ shown: items[2], position: 3, nextId: 'a', nextLabel: 'Next (2)' });
+  });
+
+  test('moves to the first decision when the one that was open has been answered, and has no Next when only one waits', () => {
+    expect(trayStep(items, 'gone').shown).toBe(items[0]);
+    expect(trayStep([items[1]!], 'b')).toMatchObject({ shown: items[1], total: 1, nextId: undefined, nextLabel: undefined });
+    expect(trayStep([], undefined)).toMatchObject({ shown: undefined, total: 0, nextId: undefined });
   });
 });
 

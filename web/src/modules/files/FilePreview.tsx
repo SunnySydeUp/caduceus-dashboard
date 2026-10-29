@@ -58,9 +58,10 @@ function Editor({ entry, original, inWorkspace, profile, onDone, onSaved }: { en
   const dirty = text !== base;
   // What the blocker asks must be true at the moment of the question: a save reloads the file inside the same event, before the state it set has rendered, so
   // the `dirty` of that render would still say "unsaved" and the page would ask whether to leave right after a successful save.
+  // It asks only when the path changes: the Save… confirmation is a layer on the history, and closing it (confirmed or cancelled) is not leaving the page.
   const unsaved = useRef(false);
   unsaved.current = dirty;
-  const blocker = useBlocker({ shouldBlockFn: () => unsaved.current, enableBeforeUnload: () => unsaved.current, withResolver: true });
+  const blocker = useBlocker({ shouldBlockFn: ({ current, next }) => unsaved.current && current.pathname !== next.pathname, enableBeforeUnload: () => unsaved.current, withResolver: true });
 
   const save = async (against = base) => {
     setBusy(true);

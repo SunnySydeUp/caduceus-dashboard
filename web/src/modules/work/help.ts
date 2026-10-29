@@ -24,7 +24,7 @@ export const workHelp: ModuleHelp = {
         {
           ul: [
             'The ⋮ button on a card, and a long press on a touch screen, open its menu: Move to…, Assign…, Priority…, Select and Open task. Nothing a gesture does is only a gesture.',
-            'Move to… lists the columns Hermes lets the card go to from where it is. Done and Blocked ask for an optional note. Archive takes the card off the board.',
+            'Move to… lists the columns Hermes lets the card go to from where it is. Done and Blocked ask for an optional note. Archive takes the card off the board and asks you to confirm first.',
             'Assign… hands the card to a profile, or to nobody. Priority… sets how soon it runs: higher numbers run first.',
             'Each change to one card happens at once. A toast says what changed and holds Undo for six seconds, which puts the old value back in Hermes. A change Hermes cannot take back says so.',
             'A card a worker has cannot be moved or given away: its menu offers [[reclaim|Reclaim]], which stops the worker and returns the card to Ready.',

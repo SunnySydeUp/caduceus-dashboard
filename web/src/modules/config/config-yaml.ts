@@ -4,7 +4,7 @@
 import YAML from 'yaml';
 import { CONFIG_SECRET_MASK, flattenConfig, isSecretConfigKey, isSecretReference, restoreMaskedSecrets } from '@caduceus/contracts/config-keys';
 import { isRecord } from '@caduceus/contracts/policy/guards';
-import { describeValue, IMPLIED_BY_HERMES, needsRestart, type ConfigField, type ConfigForm, type ConfigValue } from './config-model.ts';
+import { describeValue, IMPLIED_BY_HERMES, needsRestart, WRITTEN_AS_SECTION, type ConfigField, type ConfigForm, type ConfigValue } from './config-model.ts';
 
 export interface YamlProblem {
   /** `syntax`: Hermes could not read the text; `schema`: a value is not what Hermes’s schema says; `secret`: a mask stands for a credential that is not there. */
@@ -39,7 +39,7 @@ function describeNode(node: unknown): string {
 function kindProblem(field: ConfigField, node: unknown): string | undefined {
   const key = field.key;
   const got = describeNode(node);
-  if (YAML.isMap(node)) return `${key} is a single setting, not a section.`;
+  if (YAML.isMap(node)) return key in WRITTEN_AS_SECTION ? undefined : `${key} is a single setting, not a section.`;
   if (field.kind === 'list') return YAML.isSeq(node) || (YAML.isScalar(node) && node.value === null) ? undefined : `${key} is a list, not ${got}.`;
   if (YAML.isSeq(node)) return `${key} is ${field.kind === 'boolean' ? 'on or off' : field.kind === 'number' ? 'a number' : 'a single value'}, not a list.`;
   if (!YAML.isScalar(node)) return undefined;

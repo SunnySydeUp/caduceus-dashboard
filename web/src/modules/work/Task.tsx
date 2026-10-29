@@ -14,6 +14,9 @@ import { decompose, estimate, reassign, reclaim, rejectSpecified, retry, runNow,
 import { loadAssignees, readTask, useLiveTask } from './task-data.ts';
 import { availableActions, TASK_TABS, tabOf, type TaskActionId, type TaskDetail, type TaskFull } from './task-model.ts';
 import { ActivityPanel, AttachmentsPanel, BriefPanel, LinksPanel, report, RunsPanel, SettingsPanel } from './TaskTabs.tsx';
+import { useInbox } from '../inbox/inbox-feed.ts';
+import { DecisionCard } from '../today/DecisionCard.tsx';
+import { useNow } from './JobParts.tsx';
 import './work.css';
 
 const isBoardStatus = (status: string): status is BoardStatus => BOARD_STATUSES.some((known) => known === status);
@@ -194,6 +197,10 @@ export function Task() {
 
   const boardPath = `/work/board${slug ? `/${encodeURIComponent(slug)}` : ''}`;
   const task = detail?.task;
+  // A review or a question on this task is a decision: the page shows the shared card, so that Decide from Work, Open task from Today and the board's peek can all answer it here.
+  const now = useNow();
+  const { items } = useInbox();
+  const decision = items.find((item) => item.group === 'decision' && item.id === `task:${slug ?? 'default'}:${taskId}`);
 
   const act = async (action: TaskActionId) => {
     if (!detail || !task) return;
@@ -348,6 +355,11 @@ export function Task() {
       )}
       {task && detail && (
         <>
+          {decision && (
+            <ul className="td-decision" aria-label="This task needs you">
+              <DecisionCard item={decision} now={now} />
+            </ul>
+          )}
           {actions.length > 0 && (
             <div className="td-actions" role="group" aria-label="Task actions">
               {actions.map((action) => (

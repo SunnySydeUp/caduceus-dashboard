@@ -13,8 +13,8 @@ import { WriteButton } from '../../shell/WriteButton.tsx';
 import { useWorkspaceRegistry } from '../work/projects-data.ts';
 import { FilePreview } from './FilePreview.tsx';
 import { deleteEntry, makeFolder, moveEntry, renameEntry, uploadFiles } from './files-actions.ts';
-import { useFolder } from './files-data.ts';
-import { crumbs, downloadUrl, filesUrl, formatSize, nameProblem, parentOf, pathFromSplat, previewKind, underWorkspace, type FileEntry } from './files-model.ts';
+import { useFolder, useWorkspaceCheck } from './files-data.ts';
+import { crumbs, downloadUrl, filesUrl, formatSize, nameProblem, parentOf, pathFromSplat, previewKind, splitHidden, underWorkspace, type FileEntry } from './files-model.ts';
 import { MovePicker } from './MovePicker.tsx';
 import '../profiles/profiles.css';
 import './files.css';
@@ -163,6 +163,7 @@ export function Files() {
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [shown, setShown] = useState(PAGE);
+  const [showHidden, setShowHidden] = useState(false);
   // The workspaces Caduceus knows decide the tier of a text save; the server decides in the end.
   const registry = useWorkspaceRegistry();
   const workspaces = useMemo(() => (registry.value ?? []).map((workspace) => workspace.path), [registry.value]);
@@ -184,8 +185,11 @@ export function Files() {
   if (rootPath) rememberedRoot.current = rootPath;
   const atRoot = here !== undefined && (path === undefined || here === rememberedRoot.current);
 
-  const sorted = ready?.listing.entries ?? [];
+  const { shown: unhidden, hidden: hiddenCount } = useMemo(() => splitHidden(ready?.listing.entries ?? [], showHidden), [ready, showHidden]);
+  const sorted = unhidden;
   const visible = useMemo(() => sorted.slice(0, shown), [sorted, shown]);
+  // Only a folder outside every workspace asks the guard; the answer is the guard's own.
+  const workspaceCheck = useWorkspaceCheck(here, here !== undefined && registry.value !== undefined && !underWorkspace(here, workspaces));
 
   const upload = async (files: File[]) => {
     if (!here || files.length === 0) return;
@@ -286,7 +290,7 @@ export function Files() {
         title="Files"
         subtitle={
           <>
-            The <Term id="managed-root">managed root</Term> and what is in it. Saving into a <Term id="protected-area">protected area</Term> needs your passkey; renaming, moving and saving Office documents are <Term id="guarded-file-operation">guarded file operations</Term>.
+            Your files. Some places are <Term id="protected-area">protected</Term>: changing them needs your passkey.
           </>
         }
       />
@@ -295,8 +299,8 @@ export function Files() {
         <div className="banner" data-tone="danger" role="alert">
           <Icon name="alert" />
           <span className="banner__content">{folder.message}</span>
-          <AppLink className="btn btn--secondary btn--sm" to={FILES_HOME}>
-            Back to the top
+          <AppLink className="btn btn--secondary btn--sm" to={folder.back === undefined ? FILES_HOME : filesUrl(folder.back)}>
+            {folder.back === undefined ? 'Back to the top' : 'Back to the folder'}
           </AppLink>
         </div>
       )}
@@ -317,6 +321,12 @@ export function Files() {
                   ))}
                 </nav>
                 <div className="fl-tools">
+                  {hiddenCount > 0 && (
+                    <button type="button" className="btn btn--ghost btn--sm" aria-pressed={showHidden} onClick={() => setShowHidden((now) => !now)}>
+                      <Icon name="eye" />
+                      Show hidden{showHidden ? '' : ` (${hiddenCount})`}
+                    </button>
+                  )}
                   {!atRoot && (
                     <AppLink className="btn btn--secondary btn--sm" to={filesUrl(parentOf(here!))}>
                       <Icon name="folder" />
@@ -338,12 +348,18 @@ export function Files() {
                 <div className="banner" data-tone="info" role="note">
                   <Icon name="folder" />
                   <div className="banner__content stack">
-                    <span>This folder is not in a workspace, so changing things here needs your passkey and a typed name each time. Add it as a workspace and changes here only ask you to confirm.</span>
-                    <span>
-                      <WriteButton type="button" className="btn btn--secondary btn--sm" onClick={() => void addWorkspace(here!)}>
-                        Add this folder as a workspace
-                      </WriteButton>
-                    </span>
+                    <span>This folder is not in a workspace, so changing things here needs your passkey and a typed name each time.</span>
+                    {workspaceCheck?.ok === true && (
+                      <>
+                        <span>Add it as a workspace and changes here only ask you to confirm.</span>
+                        <span>
+                          <WriteButton type="button" className="btn btn--secondary btn--sm" onClick={() => void addWorkspace(here!)}>
+                            Add this folder as a workspace
+                          </WriteButton>
+                        </span>
+                      </>
+                    )}
+                    {workspaceCheck?.ok === false && <span>{workspaceCheck.message}</span>}
                   </div>
                 </div>
               )}
@@ -352,7 +368,7 @@ export function Files() {
                   <span className="empty__icon">
                     <Icon name="folder" />
                   </span>
-                  <p>This folder is empty. Drop files here, or:</p>
+                  <p>{hiddenCount > 0 ? `Nothing to show here except ${hiddenCount} hidden ${hiddenCount === 1 ? 'item' : 'items'}. Use Show hidden to see ${hiddenCount === 1 ? 'it' : 'them'}.` : 'This folder is empty. Drop files here, or:'}</p>
                   <div className="row">
                     <WriteButton type="button" className="btn btn--primary" onClick={() => picker.current?.click()}>
                       <Icon name="arrow-up" />

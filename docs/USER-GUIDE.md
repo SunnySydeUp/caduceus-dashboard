@@ -107,6 +107,8 @@ Caduceus sorts every action by how much harm it can do. The tier decides how muc
 | Tier 2 | Changes how things run or what can sign in, such as restarting the gateway or writing a key | Confirm, then prove it is you with a **step-up**. |
 | Tier 3 | Can lose data or give access to secrets, such as deleting a profile, changing raw config, restoring a backup or writing a file outside a workspace | Step-up, then a **typed confirmation**. The dialog says whether the change can be undone. |
 
+The dialogs do not show the tier number. They show what you have to do: **Confirm** (Tier 1), **Needs your passkey** (Tier 2) or **Needs your passkey and the name** (Tier 3). If you have no passkey yet, the dialog says so before you start and links to **Add a passkey** in Settings › Security.
+
 **Step-up** means you use your passkey again, even though you are signed in. It lasts 5 minutes, for that device only. Then the next Tier 2 or 3 action asks again.
 
 **Typed confirmation** means you type the name of the thing you change, for example the profile name. This stops a slip of the finger. Your confirmation works for one action, and only for 60 seconds.

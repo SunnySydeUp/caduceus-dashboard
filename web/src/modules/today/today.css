@@ -14,8 +14,10 @@
 .today-empty { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-3); padding: var(--cd-card-p); }
 .today-empty p { margin: 0; max-inline-size: 60ch; }
 .today-empty--pending { position: relative; min-block-size: var(--room, 0); }
-.today-empty--pending > :not(.today-empty__shimmer, .sr-only) { visibility: hidden; }
+.today-empty--pending > :not(.today-empty__shimmer, .sr-only, .today-empty__late) { visibility: hidden; }
 .today-empty__shimmer { position: absolute; inset: 0; border-radius: inherit; }
+/* A wait that goes on says so, above the shimmer, with a Retry. */
+.today-empty__late { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin: 0; }
 /* A block that could not load holds the same room, with the error over it: a refresh that fails must not move what is below. */
 .today-room { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: var(--room, 0); }
 .today-room > * { grid-area: 1 / 1; min-inline-size: 0; }
@@ -31,8 +33,10 @@
 .today-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--cd-space-3); align-items: center; padding: var(--cd-space-3) var(--cd-card-p); min-inline-size: 0; }
 .today-row + .today-row { border-block-start: 1px solid var(--cd-border-subtle); }
 .today-row__text { min-inline-size: 0; display: grid; }
-.today-row__text b { font-weight: var(--cd-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.today-row__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Two lines before the cut: the useful part of a title or a result is often its end. */
+.today-row__text b { font-weight: var(--cd-weight-semibold); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.today-row__text small { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.today-row[data-failed] small { color: var(--cd-tone-danger-fg); }
 
 /* ---- Crew: a phone's swipeable row of tiles. A wider screen has the crew in its sidebar and rail. ---- */
 .today-crew { display: none; }
@@ -64,3 +68,10 @@
 .today-when__link .today-when__t { display: grid; align-content: center; min-block-size: var(--cd-target-min); }
 .today-when li[data-kind="failed"] small, .today-when li[data-failed] small { color: var(--cd-tone-danger-fg); }
 .today-more { margin: var(--cd-space-2) 0 0; font-size: var(--cd-text-sm); }
+
+/* ---- A block that is optional and cannot be read: one calm line, not a red banner holding a tall room ---- */
+.today-quiet { display: grid; gap: var(--cd-space-2); padding: var(--cd-card-p); }
+.today-quiet p { margin: 0; }
+.today-quiet__acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+.today-quiet__details summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.today-quiet__details p { overflow-wrap: anywhere; font-size: var(--cd-text-sm); }

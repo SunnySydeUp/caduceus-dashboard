@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { crumbs, filesUrl, formatSize, htmlFrame, nameProblem, OFFICE_LIMIT, parseCsv, parseListing, pathFromSplat, previewKind, sortRows, TEXT_PREVIEW_LIMIT, toBase64, underWorkspace } from '../src/modules/files/files-model.ts';
+import { crumbs, filesUrl, formatSize, htmlFrame, nameProblem, OFFICE_LIMIT, openFailure, parseCsv, parseListing, pathFromSplat, previewKind, sortRows, splitHidden, TEXT_PREVIEW_LIMIT, toBase64, underWorkspace, type ListAnswer, type ListFailure } from '../src/modules/files/files-model.ts';
 
 describe('addresses', () => {
   test('a path is the address after /workspace/files, one encoded segment each, and reads back as it was', () => {
@@ -137,5 +137,50 @@ describe('the bytes of an Office document', () => {
     expect(toBase64(bytes)).toBe(Buffer.from(bytes).toString('base64'));
     expect(toBase64(new Uint8Array())).toBe('');
     expect(OFFICE_LIMIT).toBe(25 * 1024 * 1024);
+  });
+});
+
+describe('hidden entries', () => {
+  const entries = [
+    { name: '.ssh', path: '/Users/me/.ssh', directory: true, size: undefined, modified: undefined },
+    { name: 'Documents', path: '/Users/me/Documents', directory: true, size: undefined, modified: undefined },
+    { name: '.zsh_history', path: '/Users/me/.zsh_history', directory: false, size: undefined, modified: undefined },
+    { name: 'notes.md', path: '/Users/me/notes.md', directory: false, size: undefined, modified: undefined },
+  ];
+
+  test('dotfiles are left out until asked for, and the count says how many are out', () => {
+    expect(splitHidden(entries, false)).toEqual({ shown: [entries[1], entries[3]], hidden: 2 });
+    expect(splitHidden(entries, true)).toEqual({ shown: entries, hidden: 2 });
+    expect(splitHidden([entries[1]], false)).toEqual({ shown: [entries[1]], hidden: 0 });
+  });
+});
+
+describe('why an address did not open', () => {
+  const refusal = (reason: string, message = 'The server says no.'): ListFailure => ({ ok: false, status: 403, reason, message });
+  const missing: ListFailure = { ok: false, status: 404, message: 'Hermes answered HTTP 404.' };
+  const listed: ListAnswer = { ok: true, listing: { path: '/Users/me', parent: undefined, entries: [] } };
+
+  test('a protected file says it is protected, not that nothing is there, even when its folder does not list it', () => {
+    const failure = openFailure('/Users/me/.env', listed, refusal('protected-path', 'This file is protected: keys are edited on their own screens.'));
+    expect(failure.message).toBe('This file is protected: keys are edited on their own screens.');
+    expect(failure.back).toBe('/Users/me');
+  });
+
+  test('a path that is not there says so, and goes back to the folder it should be in', () => {
+    const failure = openFailure('/Users/me/gone.txt', listed, missing);
+    expect(failure.message).toMatch(/nothing at this address/);
+    expect(failure.back).toBe('/Users/me');
+  });
+
+  test('a folder outside the roots says it is outside the folders Caduceus can open, not that it cannot write there', () => {
+    const failure = openFailure('/etc/ssh', refusal('outside-roots', 'This path is outside the folders Caduceus lets Hermes write to.'), refusal('outside-roots', 'This path is outside the folders Caduceus lets Hermes write to.'));
+    expect(failure.message).toBe('This path is outside the folders Caduceus can open.');
+    expect(failure.message).not.toMatch(/write/);
+    // Its own folder is refused too, so the way back is the top.
+    expect(failure.back).toBeUndefined();
+  });
+
+  test('any other failure keeps the words it came with', () => {
+    expect(openFailure('/Users/me/a', listed, { ok: false, status: 0, message: 'Caduceus did not answer, so the folder could not be read.' }).message).toBe('Caduceus did not answer, so the folder could not be read.');
   });
 });

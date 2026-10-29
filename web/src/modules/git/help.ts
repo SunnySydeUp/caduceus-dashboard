@@ -23,6 +23,7 @@ export const gitHelp: ModuleHelp = {
           ul: [
             'Write a message and press Commit. It commits the staged files, or everything when nothing is staged. A commit asks you to confirm ([[risk-tiers|Tier 1]]).',
             'Write a message with AI sends the diff and the latest commit subjects to Hermes’s model, after you confirm, and puts the answer in the message field. It never commits: you read it, change it and press Commit yourself.',
+            'A repository with no remote says No remote at the top and Push is off, with the reason beside it: add a remote in a terminal on the Mac (git remote add origin <url>, then git fetch).',
             'Push sends your commits to the remote. It needs your passkey and the repository’s name typed ([[risk-tiers|Tier 3]]), because other people can see what is pushed.',
             'Caduceus does not fetch or pull: Hermes has no route for them. When a push is rejected because the remote moved on, pull in a terminal on the Mac.',
           ],

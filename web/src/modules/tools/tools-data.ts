@@ -16,7 +16,7 @@ const scoped = (route: string, profile: string) => `${route}?profile=${encodeURI
 /** Every toolset Hermes reports for the profile. */
 export const useToolsets = (profile: string | undefined): LoadedView<Toolset[]> => useProfileLoad(profile, async (name) => parseToolsets(await read(scoped('/api/tools/toolsets', name))));
 
-/** How Hermes routes the profile's tools (the Nous Portal's Tool gateway). */
+/** How Hermes routes the profile's tools (Nous Portal's Tool Gateway, shown here as Tool routing). */
 export const usePortal = (profile: string | undefined): LoadedView<Portal> => useProfileLoad(profile, async (name) => parsePortal(await read(scoped('/api/portal', name))));
 
 /** Computer use's status for the profile. */

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -16,7 +16,6 @@ import type { McpServer } from './mcp-model.ts';
 export function CaduceusMcpCard({ profile, servers, definitions, reload }: { profile: string; servers: readonly McpServer[]; definitions: Readonly<Record<string, Record<string, unknown>>>; reload(): Promise<void> }) {
   const view = useMcpServerInfo(profile);
   const [busy, setBusy] = useState(false);
-  const heading = useId();
   const info = view.value;
   if (!info) return null;
   const command = registrationCommand(info, profile);
@@ -42,15 +41,14 @@ export function CaduceusMcpCard({ profile, servers, definitions, reload }: { pro
   };
 
   return (
-    <section className="tl-card tl-caduceus" aria-labelledby={heading} data-testid="caduceus-mcp-card">
-      <div className="tl-card__top">
-        <div className="tl-card__id">
-          <h3 className="tl-card__name" id={heading}>
-            Caduceus as an MCP server
-          </h3>
-          <span className="tl-card__key">Lets an agent manage projects and sessions through Caduceus</span>
-        </div>
-      </div>
+    <details className="tl-card tl-caduceus tl-disclosure" data-testid="caduceus-mcp-card">
+      <summary>
+        <Icon name="chev-r" className="chev" small />
+        <span className="tl-card__id">
+          <span className="tl-card__name">Caduceus as an MCP server</span>
+          <span className="tl-card__key">Lets an agent manage projects and sessions through Caduceus{registered ? ' · added' : ''}</span>
+        </span>
+      </summary>
       <p className="tl-card__desc">
         Add this <Term id="caduceus-mcp-server">MCP server</Term> to a profile and its agents can list, create, rename and delete Hermes projects, and list, rename and move sessions. Every call goes through Caduceus: <Term id="risk-tiers">risk tiers</Term>, <Term id="read-only-mode">read-only mode</Term> and the audit log apply as they do here. Deleting a project needs your passkey, which an agent cannot give, so it is refused. Caduceus keeps nothing new: the projects and sessions are Hermes’s.
       </p>
@@ -77,6 +75,6 @@ export function CaduceusMcpCard({ profile, servers, definitions, reload }: { pro
           ))}
         </ul>
       </details>
-    </section>
+    </details>
   );
 }

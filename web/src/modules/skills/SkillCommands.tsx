@@ -116,9 +116,9 @@ function SkillMenu({ skill, onClose }: { skill: SkillRow; onClose(): void }) {
   const actions: MenuAction[] = [
     { id: 'open', icon: 'chev-r', label: 'Open details', sub: 'Reads SKILL.md and its linked files', run: () => commands.open(skill) },
     { id: 'toggle', icon: 'sliders', label: skill.enabled ? 'Switch off' : 'Switch on', sub: `For ${commands.profile} only · you can undo it`, run: () => void commands.toggle(skill) },
-    { id: 'edit', icon: 'type', label: 'Edit SKILL.md…', sub: 'Tier 1 · the frontmatter is kept as it is', run: () => commands.edit(skill) },
-    ...(removal === 'uninstall' ? [{ id: 'remove', icon: 'trash', label: 'Uninstall…', sub: `Tier 1 · from ${commands.profile}`, danger: true, run: () => void commands.remove(skill) } satisfies MenuAction] : []),
-    ...(removal === 'delete' ? [{ id: 'remove', icon: 'trash', label: 'Delete…', sub: 'Tier 1 · Hermes archives it', danger: true, run: () => void commands.remove(skill) } satisfies MenuAction] : []),
+    { id: 'edit', icon: 'type', label: 'Edit SKILL.md…', sub: 'You confirm · the frontmatter is kept as it is', run: () => commands.edit(skill) },
+    ...(removal === 'uninstall' ? [{ id: 'remove', icon: 'trash', label: 'Uninstall…', sub: `You confirm · from ${commands.profile}`, danger: true, run: () => void commands.remove(skill) } satisfies MenuAction] : []),
+    ...(removal === 'delete' ? [{ id: 'remove', icon: 'trash', label: 'Delete…', sub: 'You confirm · Hermes archives it', danger: true, run: () => void commands.remove(skill) } satisfies MenuAction] : []),
   ];
   return (
     <Sheet title={skill.name} detents={['auto', 'full']} onClose={onClose}>

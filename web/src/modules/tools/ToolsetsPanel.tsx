@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
@@ -31,7 +32,7 @@ function ToolsetCard({ toolset, busy, onConfigure, onToggle }: { toolset: Toolse
         </div>
         <div className="tl-card__switch">
           <span id={switchLabel} className="sr-only">
-            {toolset.label} on
+            {toolset.label}
           </span>
           <WriteButton type="button" role="switch" className="switch" aria-checked={toolset.enabled} aria-labelledby={switchLabel} disabled={busy} onClick={onToggle} />
         </div>
@@ -103,7 +104,7 @@ export function ToolsetsPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!toolsets && !view.failed && <p role="status">Loading toolsets…</p>}
+      {!toolsets && !view.failed && <Loading label="Loading toolsets…" lines={5} onRetry={() => void view.reload()} />}
       {toolsets && toolsets.length > 0 && (
         <div className="tl-bar">
           <div className="input-wrap tl-search">

@@ -10,10 +10,11 @@ export type SaveOutcome = { kind: 'saved' } | { kind: 'cancelled' } | { kind: 'f
  * Saves `text` as the whole file. `base` is the text the editor was made from: when the file is no longer that text the server
  * refuses (`conflict`, with the text now there) and nothing is written. The owner confirms first (typing the profile's name for a Tier 3).
  */
-export async function saveFile(profile: string, file: BehaviourFile, ref: FileRef, text: string, base: string): Promise<SaveOutcome> {
+export async function saveFile(profile: string, file: BehaviourFile, ref: FileRef, text: string, base: string, onConfirmed?: () => void): Promise<SaveOutcome> {
   const request = saveRequest(ref, text, await fingerprint(base));
   const result = await fetchTiered({
     ...request,
+    onConfirmed,
     confirm: {
       title: `Save ${file.label} of ${profile}?`,
       text: `Hermes replaces the file with this text, exactly as you see it. Caduceus keeps the text it replaces as a snapshot, so you can restore it from History.`,

@@ -110,9 +110,10 @@ export function Terminal() {
               <button type="button" className="btn btn--secondary btn--sm" onClick={() => void copyLast()}><Icon name="copy" />Copy last output</button>
               <button type="button" className="btn btn--secondary btn--sm" onClick={() => void paste()}><Icon name="clip" />Paste</button>
               {status.state === 'closed' && <button type="button" className="btn btn--secondary btn--sm" onClick={() => controls.current?.reconnect()}><Icon name="refresh" />Reconnect</button>}
-              <WriteButton type="button" className="btn btn--danger btn--sm" disabled={busy || cwd === undefined} onClick={() => void restart()}><Icon name="refresh" />Restart…</WriteButton>
+              <WriteButton type="button" className="btn btn--danger btn--sm" disabled={busy || cwd === undefined || status.state !== 'live'} aria-describedby={status.state === 'live' ? undefined : 'terminal-restart-note'} onClick={() => void restart()}><Icon name="refresh" />Restart…</WriteButton>
             </div>
           </div>
+          {status.state !== 'live' && <p id="terminal-restart-note" className="subtle tm-note">Connect to the shell first. Restart works on a connected shell.</p>}
           {cwd !== undefined && <p className="tm-cwd mono" aria-label="Folder of this shell">{cwd}</p>}
           {status.state === 'closed' && <div className="banner" data-tone="warning" role="alert"><Icon name="alert" /><span className="banner__content">{status.reason}</span></div>}
           {ended !== undefined && <div className="banner" data-tone="neutral" role="status"><Icon name="info" /><span className="banner__content">{ended}</span></div>}

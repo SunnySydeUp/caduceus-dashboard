@@ -63,6 +63,12 @@ export function Notifications() {
     void readJobs().then(setJobs, () => undefined);
   }, [load]);
 
+  /** Reads the browser's permission again, for after the owner changed it in the browser's own settings. */
+  const recheck = async () => {
+    await load();
+    if ((await readOffer()) === 'denied') toast('Still blocked. Change it in the browser’s site settings, then check again.', { tone: 'warning' });
+  };
+
   const run = async (work: () => Promise<void>, done: string) => {
     setBusy(true);
     try {
@@ -115,7 +121,23 @@ export function Notifications() {
           </>
         )}
         {offer === 'unsupported' && <p role="status">This browser cannot receive push notifications. Chrome, Edge, Firefox and Safari 16.4 or later can.</p>}
-        {offer === 'denied' && <p role="status">Notifications are blocked for Caduceus in this browser. Allow them in the browser’s site settings, then come back here.</p>}
+        {offer === 'denied' && (
+          <>
+            <p role="status">Notifications are blocked for Caduceus in this browser, and only the browser can change that. Allow them, then check again:</p>
+            <ul className="help-text">
+              <li>Chrome, Edge, Brave: the lock icon beside the address, then Site settings, then Notifications, then Allow.</li>
+              <li>Safari on a Mac: Safari menu, Settings, Websites, Notifications, then Allow for this site.</li>
+              <li>Firefox: the lock icon beside the address, then Permissions, then clear Notifications and reload.</li>
+              <li>iPhone and iPad: Settings, Notifications, Caduceus, then Allow Notifications.</li>
+            </ul>
+            <div className="settings-actions">
+              <button type="button" className="btn btn--primary" disabled={busy} onClick={() => void recheck()}>
+                <Icon name="refresh" />
+                Check again
+              </button>
+            </div>
+          </>
+        )}
         {offer === 'ready' && (
           <>
             <p>Turn this on to be told when an agent needs a decision, even with Caduceus closed. Your browser will ask for permission.</p>
@@ -141,22 +163,15 @@ export function Notifications() {
             <p className="help-text">No notification is sent while any Caduceus window of yours is open and in view (<Term id="presence">presence</Term>).</p>
           </>
         )}
-      </section>
-      {offer !== 'subscribed' && offer !== undefined && (
-        // A settings search can land here before this device is subscribed: say where the settings are rather than leave the jump with nothing to show.
-        <>
-          <section className="settings-section" aria-labelledby={`${ids}-categories`} data-setting-field="notifications/categories" tabIndex={-1}>
-            <h2 id={`${ids}-categories`}>What to be told of</h2>
-            <p className="help-text">You choose what to be told of once notifications are on for this device. Turn them on above first.</p>
-          </section>
-          <section className="settings-section" aria-labelledby={`${ids}-quiet`} data-setting-field="notifications/quiet-hours" tabIndex={-1}>
-            <h2 id={`${ids}-quiet`}>Quiet hours</h2>
-            <p className="help-text">
-              <Term id="quiet-hours">Quiet hours</Term> hold notifications back for a stretch of the day. You set them once notifications are on for this device. Turn them on above first.
+        {offer !== undefined && offer !== 'subscribed' && (
+          // A settings search can land on these before this device is subscribed: they are said here, in the one card, rather than as cards of their own.
+          <div className="help-text">
+            <p data-setting-field="notifications/categories" tabIndex={-1}>
+              <strong>What to be told of</strong> and <strong data-setting-field="notifications/quiet-hours" tabIndex={-1}><Term id="quiet-hours">quiet hours</Term></strong> are yours to set once notifications are on for this device.
             </p>
-          </section>
-        </>
-      )}
+          </div>
+        )}
+      </section>
       {offer === 'subscribed' && settings && (
         <>
           <section className="settings-section" aria-labelledby={`${ids}-categories`} data-setting-field="notifications/categories" tabIndex={-1}>

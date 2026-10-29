@@ -412,3 +412,11 @@ export function filterWords(filter: unknown): string | undefined {
   if (exclude.length) return `All except ${exclude.join(', ')}`;
   return undefined;
 }
+
+/**
+ * Whether a catalogue entry's note asks for something that can only be done on the computer that runs Hermes: a sign-in whose callback is
+ * a `localhost` address (OAuth), or a step that reads a local port. From a phone, or another computer, those links do not reach it.
+ */
+export function needsHermesComputer(note: string | undefined): boolean {
+  return note !== undefined && /\b(localhost|127\.0\.0\.1|\[::1\])\b|(^|[^\w.])::1\b/i.test(note);
+}

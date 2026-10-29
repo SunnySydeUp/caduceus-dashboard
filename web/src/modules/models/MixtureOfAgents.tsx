@@ -211,7 +211,7 @@ function PresetSheet({ profile, moa, original, onSave, onClose }: { profile: str
           </select>
         </div>
         <div className="switch-row">
-          <span id={`${id}-on`}>Preset is on</span>
+          <span id={`${id}-on`}>Use this preset</span>
           <button type="button" role="switch" className="switch" aria-checked={draft.enabled} aria-labelledby={`${id}-on`} onClick={() => set({ enabled: !draft.enabled })} />
         </div>
         {original?.name === moa.defaultPreset ? (

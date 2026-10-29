@@ -35,7 +35,7 @@ export function saveProviderForm(form: ProviderForm, edits: Edits, profile: stri
         text: `Hermes saves these settings for ${profile} and makes ${form.name} its memory provider. A key you typed goes to Hermes and is never shown again; a key you left empty stays as it is.`,
         object: form.name,
         profile,
-        confirmLabel: 'Save settings',
+        confirmLabel: 'Save and use provider',
         recoverability: { undoable: true, note: 'Edit the settings again to change them back.' },
       },
     }),

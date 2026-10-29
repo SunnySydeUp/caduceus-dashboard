@@ -95,7 +95,14 @@
 .fe-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); }
 .fe-bar__state { margin-inline-end: auto; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
 .fe-text { min-inline-size: 0; }
-.fe-area { min-block-size: 16rem; inline-size: 100%; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); white-space: pre; overflow-wrap: normal; overflow: auto; resize: vertical; }
+/* `textarea.input` sets a 5rem minimum; naming the element here is what lets 16rem win. Markdown is prose, so it wraps; YAML keeps its columns. */
+textarea.fe-area { min-block-size: 16rem; inline-size: 100%; font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto; resize: vertical; }
+textarea.fe-area--yaml { white-space: pre; overflow-wrap: normal; }
+/* In the phone sheet the text takes the room the sheet has. */
+.fe-sheet .overlay__body { display: flex; flex-direction: column; }
+.fe-sheet .fe { display: flex; flex-direction: column; flex: 1 1 auto; }
+.fe-sheet .fe-text { display: flex; flex-direction: column; flex: 1 1 auto; }
+.fe-sheet textarea.fe-area { flex: 1 1 auto; resize: none; }
 .fe-split { display: grid; gap: var(--cd-space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 .fe-preview { min-inline-size: 0; overflow-wrap: anywhere; min-block-size: 8rem; }
 .fe-meter { display: grid; gap: var(--cd-space-1); }
@@ -151,3 +158,9 @@
 .bd-sheet .bd-foot, .app[data-size="compact"] .bd-foot { padding: var(--cd-space-3) var(--cd-space-4); padding-inline-end: calc(var(--cd-space-4) + var(--cd-safe-right)); }
 .bd-foot__count { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); text-align: center; }
 .bd-panel > .bd-foot { border-block-start: 1px solid var(--cd-border-subtle); }
+
+/* A file picker: the native input stays (it is the control), drawn as a button with the chosen file's name beside it. */
+.pf-picker { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); min-inline-size: 0; }
+.pf-picker__input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; overflow: hidden; }
+.pf-picker__input:focus-visible + .pf-picker__button { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }
+.pf-picker__name { min-inline-size: 0; overflow-wrap: anywhere; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }

@@ -2,6 +2,7 @@
 // profile (`GET /api/pairing?profile=`), read again when Hermes says pairing moved (`pairing.changed`). A request approved or cleared anywhere else is no
 // longer in the list, so its item goes by itself.
 import { isRecord } from '@caduceus/contracts/policy/guards';
+import type { InboxAction } from '@caduceus/contracts/inbox';
 import type { GatewayObserver } from './gateway-observer.ts';
 import type { HermesBackend } from './hermes-backend.ts';
 import { createPolledSource, type InboxSource, type NoticeDraft } from './inbox-source.ts';
@@ -17,6 +18,8 @@ const platformName = (id: string): string => {
 /** The pending requests of one profile's pairing answer, as notices. Pure. */
 export function pairingNotices(body: unknown, profile: string): NoticeDraft[] {
   const pending = isRecord(body) && Array.isArray(body.pending) ? body.pending : [];
+  // The people really waiting: an entry with no platform or user is not shown, so it does not count when telling whether one person is alone in the list.
+  const waiting = pending.filter((entry) => isRecord(entry) && text(entry.platform) !== '' && text(entry.user_id) !== '').length;
   return pending.flatMap((entry): NoticeDraft[] => {
     if (!isRecord(entry)) return [];
     const platform = text(entry.platform);
@@ -43,9 +46,25 @@ export function pairingNotices(body: unknown, profile: string): NoticeDraft[] {
                   id: 'approve',
                   label: 'Approve',
                   request: { method: 'POST', path: '/api/pairing/approve', body: { platform, request_id: requestId, profile } },
-                  confirm: { title: `Approve ${who} on ${platformName(platform)} for ${profile}?`, text: `The ${platformName(platform)} bot of ${profile} starts answering this person, with everything this profile’s agent can do.`, object: text(entry.user_name) || userId, confirmLabel: 'Approve person' },
+                  confirm: { title: `Approve ${who} on ${platformName(platform)} for ${profile}?`, text: `The ${platformName(platform)} bot of ${profile} starts answering this person, with everything this profile’s agent can do.`, confirmLabel: 'Approve person' },
                   primary: true,
                 },
+                // Hermes can refuse no single request: it can only clear the profile's whole waiting list. That is the same thing for the only person waiting, and for
+                // nobody else, so one card never clears another's request: with two waiting, Pairing has the list.
+                ...(waiting === 1
+                  ? [
+                      {
+                        id: 'decline',
+                        label: 'Decline',
+                        request: { method: 'POST', path: `/api/pairing/clear-pending?profile=${encodeURIComponent(profile)}` },
+                        confirm: {
+                          title: `Decline ${who}?`,
+                          text: `The ${platformName(platform)} bot of ${profile} will not answer ${text(entry.user_name) || 'this person'}. Their request is cleared, and they can ask again. Hermes clears the whole waiting list of ${profile}, so anyone who asked in the last moments is cleared too.`,
+                          confirmLabel: 'Decline',
+                        },
+                      } satisfies InboxAction,
+                    ]
+                  : []),
               ],
         link: { label: 'Open Pairing', to: `/connect/pairing?profile=${encodeURIComponent(profile)}` },
       },

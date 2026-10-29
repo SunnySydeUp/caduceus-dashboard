@@ -66,6 +66,21 @@ export function foldAction(state: ActionOutput, { event, data }: { event: string
   return state;
 }
 
+/**
+ * How a finished action ends, in words and tone. Hermes's doctor exits with 1 when it found problems, and says so in its output ("Found 6 issue(s) to address"):
+ * that is a result to read, a warning, not a failed run. Anything else that exits with an error is one. `undefined` while it runs or when the output was lost.
+ */
+export function endWords(output: ActionOutput): { tone: 'success' | 'warning' | 'danger'; text: string } | undefined {
+  if (output.status === 'ok') return { tone: 'success', text: 'Finished.' };
+  if (output.status !== 'failed') return undefined;
+  const found = output.lines.map((line) => /Found (\d+) issue\(s\) to address/i.exec(line)?.[1]).find((count) => count !== undefined);
+  if (found !== undefined) {
+    const count = Number(found);
+    return { tone: 'warning', text: `Doctor found ${count} ${count === 1 ? 'issue' : 'issues'} to look at (it exits with code ${output.exitCode ?? 1} when it does).` };
+  }
+  return { tone: 'danger', text: `Hermes ended with an error${output.exitCode === null ? '' : ` (exit code ${output.exitCode})`}.` };
+}
+
 /** What must not leave in a bug report: the owner's home folder (and so their name), an address, a key. */
 export function redact(text: string): string {
   return text

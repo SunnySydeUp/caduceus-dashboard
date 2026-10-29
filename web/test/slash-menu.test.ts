@@ -45,10 +45,13 @@ describe('what the menu lists', () => {
 });
 
 describe('filtering as you type', () => {
-  test('an empty query lists Hermes’s commands in its groups, then the skills', () => {
+  test('an empty query lists the commands people use most first under their own heading, then Hermes’s groups, then the skills under theirs', () => {
     const list = entries();
     const shown = filterEntries(list, '');
-    expect(shown.slice(0, 3).map((entry) => entry.command)).toEqual(['/new', '/clear', '/redraw']);
+    expect(shown.slice(0, 3).map((entry) => entry.command)).toEqual(['/status', '/compress', '/undo']);
+    expect(shown.slice(0, 3).every((entry) => entry.group === 'Common')).toBe(true);
+    expect(shown.find((entry) => entry.command === '/new')!.group).toBe('Session');
+    expect(shown.filter((entry) => entry.kind === 'skill').every((entry) => entry.group === 'Skills')).toBe(true);
     expect(shown.findIndex((entry) => entry.kind === 'skill')).toBeGreaterThan(shown.findLastIndex((entry) => entry.kind === 'command') - 1);
   });
 

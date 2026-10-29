@@ -48,8 +48,13 @@ export function useDecision(item: InboxItem, onDone?: () => void) {
     setBusy(false);
     // Once Hermes has the answer, or is no longer asking, there is nothing left to decide here.
     if (outcome.kind === 'resolved' || outcome.kind === 'already-answered') onDone?.();
-    if (outcome.kind === 'resolved') toast('choice' in decision ? (decision.choice === 'deny' ? 'Denied' : decision.choice === 'always' ? 'Allowed always' : 'Allowed') : 'Answered', { tone: 'success' });
-    else if (outcome.kind === 'already-answered') toast('Already answered elsewhere', { tone: 'info', detail: 'Hermes was no longer waiting for this one.' });
+    if (outcome.kind === 'resolved') {
+      if (!('choice' in decision)) {
+        const skipped = Object.values(decision.result.answers).every((given) => given === '');
+        toast(skipped ? 'Skipped' : 'Answer sent', { tone: 'success', detail: skipped ? 'The agent carries on without an answer.' : 'The agent carries on with your answer.' });
+      } else if (decision.choice === 'deny') toast('Denied', { tone: 'success', detail: 'The command does not run. The agent is told, and can try another way.' });
+      else toast(decision.choice === 'always' ? 'Allowed always' : 'Allowed', { tone: 'success', detail: 'The agent carries on.' });
+    } else if (outcome.kind === 'already-answered') toast('Already answered elsewhere', { tone: 'info', detail: 'Hermes was no longer waiting for this one.' });
     else if (outcome.kind === 'failed') setError(outcome.message);
   };
   return { busy, error, decide };
@@ -126,7 +131,10 @@ function ApprovalDecision({ item, onDone }: { item: InboxApproval; onDone?: () =
         {offered('always') && (
           <WriteButton type="button" className="btn btn--secondary" data-act="always" disabled={busy} onClick={() => void decide({ choice: 'always' })}>
             <Icon name="fingerprint" />
-            Allow always
+            <span className="ib-stacked">
+              Allow always
+              <small>Needs passkey</small>
+            </span>
           </WriteButton>
         )}
         <button type="button" className="btn btn--danger-quiet" data-act="deny" aria-expanded={denying} aria-controls={reasonId} disabled={busy} onClick={() => setDenying((open) => !open)}>
@@ -312,7 +320,7 @@ function NoticeDetail({ item, embedded }: { item: InboxNotice; embedded?: boolea
       )}
       <div className="ib-acts">
         {item.actions.map((action) => (
-          <WriteButton key={action.id} type="button" className={`btn ${action.primary ? 'btn--primary' : 'btn--secondary'}`} data-act={action.id} disabled={busy !== undefined} onClick={() => actions.run(action)}>
+          <WriteButton key={action.id} type="button" className={`btn ${action.primary ? 'btn--primary' : 'btn--secondary'}`} data-act={action.id} disabled={busy !== undefined} onClick={() => actions.run(action, { title: item.title, quote: item.detail, profile: item.profile })}>
             {action.label}…
           </WriteButton>
         ))}

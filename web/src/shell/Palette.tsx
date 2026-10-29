@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react';
 import { Icon } from '../icons.tsx';
 import { Layer } from '../overlays/Layer.tsx';
-import { highlightSegments, hitEntries, paletteEntries, paletteStep, rankEntries, resultsAnnouncement, withHits, type PaletteEntry, type PaletteState } from '../palette.ts';
+import { highlightSegments, hitEntries, mergeProfileHits, paletteEntries, paletteStep, rankEntries, resultsAnnouncement, searchProfiles, searchScopeText, withHits, type PaletteEntry, type PaletteState } from '../palette.ts';
+import { TIER_LABELS } from '../tier-flow.ts';
 import { Keycaps, useKeyboard } from './keyboard-context.tsx';
 import { useRouteInfo } from './navigation.tsx';
 import { useProfileScope } from './profile-context.tsx';
@@ -10,6 +11,9 @@ import { useSizeClass } from './use-size-class.ts';
 
 /** How long the typing pauses before a module is asked to search (each search is a request to Hermes). */
 const SEARCH_PAUSE_MS = 250;
+
+/** How many hits one module's search lists, however many profiles it was asked for. */
+const HITS_PER_MODULE = 8;
 
 /** An entry's label with the characters the query matched marked. */
 function Highlighted({ text, positions }: { text: string; positions: number[] }) {
@@ -47,7 +51,10 @@ export function Palette({ onClose, onRun }: { onClose(): void; onRun(entry: Pale
   useEffect(() => void registry.loadHelp(), [registry]);
   const entries = useMemo(() => paletteEntries(registry, moduleId, keymap), [registry, moduleId, keymap, helpLoaded]);
   // A module that searches (Chat: the words inside sessions) is asked for what was typed once the typing pauses; an answer for an earlier query is dropped.
-  const profile = useProfileScope().effective?.name;
+  // A screen that shows every profile (Today) searches every profile, and the footer says so.
+  const { effective, scope, hermes } = useProfileScope();
+  const profiles = searchProfiles({ scope, effective: effective?.name, profiles: hermes?.profiles.map((candidate) => candidate.name) });
+  const profilesKey = JSON.stringify(profiles);
   const [found, setFound] = useState<{ query: string; entries: PaletteEntry[] }>({ query: '', entries: [] });
   useEffect(() => {
     const query = state.query.trim();
@@ -58,7 +65,14 @@ export function Palette({ onClose, onRun }: { onClose(): void; onRun(entry: Pale
     }
     const abort = new AbortController();
     const timer = setTimeout(() => {
-      void Promise.all(searches.map(({ moduleId, search }) => search(query, { profile, signal: abort.signal }).then((hits) => hitEntries(hits, moduleId), () => [] as PaletteEntry[]))).then((groups) => {
+      void Promise.all(
+        searches.map(async ({ moduleId, search, eachProfile }) => {
+          // A search that answers for one profile is asked once for each; any other is asked once.
+          const asked = eachProfile ? profiles : [profiles[0]];
+          const perProfile = await Promise.all(asked.map((profile) => search(query, { profile, signal: abort.signal }).catch(() => [])));
+          return hitEntries(mergeProfileHits(perProfile, HITS_PER_MODULE), moduleId);
+        }),
+      ).then((groups) => {
         if (!abort.signal.aborted) setFound({ query, entries: groups.flat() });
       });
     }, SEARCH_PAUSE_MS);
@@ -66,7 +80,8 @@ export function Palette({ onClose, onRun }: { onClose(): void; onRun(entry: Pale
       clearTimeout(timer);
       abort.abort();
     };
-  }, [registry, state.query, profile]);
+    // `profiles` is read through its key: a new array of the same names is not a new search.
+  }, [registry, state.query, profilesKey]);
   const results = useMemo(() => withHits(rankEntries(entries, state.query), found.query === state.query.trim() ? found.entries : []), [entries, state.query, found]);
   const active = results[state.active];
   const optionId = (index: number) => `${listId}-option-${index}`;
@@ -148,8 +163,8 @@ export function Palette({ onClose, onRun }: { onClose(): void; onRun(entry: Pale
                   </span>
                 )}
               </span>
-              {entry.tier && entry.tier !== 'T0' && <span className="tag">Tier {entry.tier.slice(1)}</span>}
-              {entry.shortcut && <Keycaps binding={entry.shortcut} />}
+              {entry.tier && entry.tier !== 'T0' && <span className="tag">{TIER_LABELS[entry.tier]}</span>}
+              {entry.shortcut && !compact && <Keycaps binding={entry.shortcut} />}
             </div>
           </Fragment>
         ))}
@@ -173,6 +188,10 @@ export function Palette({ onClose, onRun }: { onClose(): void; onRun(entry: Pale
             <kbd>Esc</kbd>
           </span>{' '}
           close
+        </span>
+        <span className="palette__scope">
+          <Icon name="search" small />
+          {searchScopeText(scope)}
         </span>
       </div>
     </Layer>

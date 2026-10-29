@@ -17,8 +17,8 @@ import type { Job } from '../work/schedules-model.ts';
 import { InstallCard } from './InstallCard.tsx';
 import { readReady, recordVisit } from './today-data.ts';
 import { markOpened } from './ready-feed.ts';
-import { awayView, decisionsFor, EMPTY, readyRows, scheduleDay, type EmptyBlock } from './today-model.ts';
-import { AwayBlock, CrewBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
+import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type EmptyBlock } from './today-model.ts';
+import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
 import './today.css';
 
 /** The setup guide's offer is below the first screen and Today paints without it: its code is fetched once the page has settled. */
@@ -67,7 +67,7 @@ export function Today() {
   const readyBlock = mapBlock(ready, readyRows);
 
   const jobsBlock: Block<Job[]> = {
-    reload: () => void jobs.reload(),
+    reload: () => jobs.reload(),
     state: jobs.jobs ? { status: 'ready', data: jobs.jobs } : jobs.failed ? { status: 'error', message: 'Hermes did not answer for its schedules.' } : { status: 'loading' },
   };
   const schedule = mapBlock(jobsBlock, (list) => scheduleDay(list, now));
@@ -89,7 +89,7 @@ export function Today() {
   const rows = useMemo(() => deskNavigation(registry, crew).crew, [registry, crew]);
   const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: 'Hermes did not answer for its profiles.' } : { status: 'loading' } };
 
-  const to = (which: EmptyBlock) => registry.module(EMPTY[which].action.module)?.path ?? '/';
+  const to = (which: EmptyBlock) => emptyTarget(which, (module) => registry.module(module)?.path);
   const waiting = needs.state.status === 'ready' ? needs.state.data.length : 0;
 
   return (
@@ -109,6 +109,7 @@ export function Today() {
       <div className="today__grid">
         <div className="today__col">
           <NeedsYouBlock block={needs} now={now} to={to} />
+          {needs.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
           <ReadyBlock block={readyBlock} now={now} to={to} onOpen={(row) => void markOpened(row)} />
           <CrewBlock block={crewBlock} to={to} />
         </div>
@@ -122,13 +123,13 @@ export function Today() {
           )}
         </aside>
       </div>
-      {/* After the blocks, so that their arrival moves nothing on the first screen: the browser says it can install the app, and the setup offer is read from the server, both after Today has painted. */}
-      <InstallCard />
+      {/* After the blocks, so that their arrival moves nothing on the first screen: the setup offer is read from the server, and the browser says it can install the app, both after Today has painted. Setup comes first: an unfinished setup matters more than a shortcut to the Home Screen. */}
       {settled && (
         <Suspense fallback={null}>
           <OnboardingCard />
         </Suspense>
       )}
+      <InstallCard />
     </div>
   );
 }

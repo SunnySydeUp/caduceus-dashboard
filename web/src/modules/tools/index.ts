@@ -25,7 +25,7 @@ export const toolsModule: AppModule = {
     { path: '/agents/tools/mcp', screen: Mcp, title: 'MCP servers', parent: '/agents/tools' },
     { path: '/agents/tools/catalogue', screen: Catalogue, title: 'MCP catalogue', parent: '/agents/tools' },
     { path: '/agents/tools/platforms', screen: Platforms, title: 'Toolsets per platform', parent: '/agents/tools' },
-    { path: '/agents/tools/routing', screen: Routing, title: 'Tool gateway', parent: '/agents/tools' },
+    { path: '/agents/tools/routing', screen: Routing, title: 'Tool routing', parent: '/agents/tools' },
     { path: '/agents/tools/hooks', screen: Hooks, title: 'Shell hooks', parent: '/agents/tools' },
     { path: '/agents/tools/terminal', screen: Terminal, title: 'Terminal backend', parent: '/agents/tools' },
   ],

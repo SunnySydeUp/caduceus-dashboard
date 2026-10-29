@@ -8,20 +8,20 @@ export function NotFound() {
   const pathname = useLocation({ select: (location) => location.pathname });
   return (
     <div className="module-page">
-      <PageHeader title="Page not found" subtitle="No Caduceus route matches this address." />
+      <PageHeader title="Page not found" subtitle="This address does not lead anywhere in Caduceus. It may have moved, or the link may be mistyped." />
       <div className="panel panel--pad">
         <dl className="kv">
-          <dt>path</dt>
+          <dt>address</dt>
           <dd className="mono">{pathname}</dd>
         </dl>
       </div>
       <div className="toolbar">
-        <AppLink className="btn btn--primary" to="/">
+        <AppLink className="btn btn--primary" to="/today">
           <Icon name="home" />
-          Go home
+          Go to Today
         </AppLink>
         <AppLink className="btn btn--secondary" to="/control">
-          Control
+          Open Control
         </AppLink>
       </div>
     </div>

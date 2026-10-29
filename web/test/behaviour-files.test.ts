@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { isListed, listPath, lineDiff, readPath, readResult, yamlProblem } from '../src/modules/profiles/behaviour-files.ts';
+import { isListed, leavesWithEdits, listPath, lineDiff, readPath, readResult, yamlProblem } from '../src/modules/profiles/behaviour-files.ts';
 
 // The pure part of the profile file editors (M4 #02): how a file is read from what Hermes answers, the located YAML error that
 // blocks a save, and the diff a save conflict shows. What Hermes and the server do with the requests is in `server/test/behaviour-files-hermes.test.ts`.
@@ -75,5 +75,21 @@ describe('the diff a save conflict shows', () => {
 
     expect(rows).toHaveLength(6000);
     expect(rows.filter((row) => row.kind === 'removed')).toHaveLength(3000);
+  });
+});
+
+describe('when unsaved edits block a navigation', () => {
+  const here = { pathname: '/agents/profiles/coder/identity' };
+
+  test('a sheet or a confirm closing pops the history but leaves the page where it is, so it never asks to leave', () => {
+    // Save… → Cancel on the confirm: the confirm layer's history entry is undone, the URL does not change.
+    expect(leavesWithEdits(true, here, { ...here })).toBe(false);
+    expect(leavesWithEdits(true, here, { pathname: here.pathname })).toBe(false);
+  });
+
+  test('another page asks only while there are edits', () => {
+    expect(leavesWithEdits(true, here, { pathname: '/agents/profiles/coder/model' })).toBe(true);
+    expect(leavesWithEdits(true, here, { pathname: '/agents/models' })).toBe(true);
+    expect(leavesWithEdits(false, here, { pathname: '/agents/models' })).toBe(false);
   });
 });

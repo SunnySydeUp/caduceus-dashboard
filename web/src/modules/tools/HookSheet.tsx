@@ -1,9 +1,9 @@
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { WriteButton } from '../../shell/WriteButton.tsx';
-import { emptyHookForm, hookProblems, type HookForm } from './hooks-model.ts';
+import { emptyHookForm, groupHookEvents, hookProblems, type HookForm } from './hooks-model.ts';
 
 interface HookSheetProps {
   profile: string;
@@ -19,6 +19,7 @@ export function HookSheet({ profile, events, onSubmit, onClose }: HookSheetProps
   const [form, setForm] = useState<HookForm>(emptyHookForm);
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const groups = useMemo(() => groupHookEvents(events), [events]);
   const shown = attempted ? hookProblems(form, events) : {};
   const set = (change: Partial<HookForm>) => setForm((current) => ({ ...current, ...change }));
 
@@ -69,7 +70,7 @@ export function HookSheet({ profile, events, onSubmit, onClose }: HookSheetProps
         }}
       >
         <p className="tl-note">
-          A <Term id="shell-hook">shell hook</Term> is a command Hermes runs on this computer, with the access of your account, when an event happens in a session of this profile. Creating one is a Tier 3 action: the confirmation shows the whole command and you type it.
+          A <Term id="shell-hook">shell hook</Term> is a command Hermes runs on this computer, with the access of your account, when an event happens in a session of this profile. Creating one needs your passkey, and the confirmation shows the whole command, which you type to confirm.
         </p>
         <div className="field">
           <label className="field__label" htmlFor={`${id}-event`}>
@@ -77,10 +78,14 @@ export function HookSheet({ profile, events, onSubmit, onClose }: HookSheetProps
           </label>
           <select id={`${id}-event`} data-first className="input" value={form.event} {...invalid('event')} onChange={(event) => set({ event: event.target.value })}>
             <option value="">Choose an event…</option>
-            {events.map((event) => (
-              <option key={event} value={event}>
-                {event}
-              </option>
+            {groups.map((group) => (
+              <optgroup key={group.title} label={group.title}>
+                {group.events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           {error('event')}

@@ -363,7 +363,15 @@ export function Config() {
                 <button type="button" className="btn btn--ghost btn--sm" aria-haspopup="dialog" onClick={() => setReviewing(true)}>
                   Review
                 </button>
-                <button type="button" className="btn btn--secondary btn--sm" onClick={() => setPending(new Map())}>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  onClick={() => {
+                    const discarded = pending;
+                    setPending(new Map());
+                    toast(`Discarded ${discarded.size === 1 ? '1 unsaved change' : `${discarded.size} unsaved changes`}`, { undo: () => setPending(discarded) });
+                  }}
+                >
                   Discard
                 </button>
                 <WriteButton type="button" className="btn btn--primary btn--sm" disabled={saving || readOnly} title={saveReason} aria-busy={saving} onClick={() => void save()}>

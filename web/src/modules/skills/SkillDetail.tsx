@@ -6,6 +6,7 @@ import { WriteButton } from '../../shell/WriteButton.tsx';
 import { Rich } from '../chat/Rich.tsx';
 import { provenanceWords, useSkillCommands } from './SkillCommands.tsx';
 import { splitSkill } from './skill-document.ts';
+import { wrapProse } from './prose.ts';
 import { fetchFileText, fetchLinkedFiles, fetchSkillContent } from './skills-data.ts';
 import { useLoaded } from './use-loaded.ts';
 import { removalOf, type FileText, type LinkedFile, type SkillRow } from './skills-model.ts';
@@ -54,7 +55,10 @@ export function SkillDocument({ text, name }: { text: string; name: string }) {
     <>
       {parts && (
         <details className="sk-front">
-          <summary>Frontmatter</summary>
+          <summary>
+            <Icon name="chev-r" className="chev" small />
+            Frontmatter
+          </summary>
           <p className="subtle sk-note">
             The YAML at the top of SKILL.md. What is <Term id="frontmatter">frontmatter</Term>?
           </p>
@@ -63,7 +67,7 @@ export function SkillDocument({ text, name }: { text: string; name: string }) {
           </pre>
         </details>
       )}
-      <Rich text={parts ? parts.body : text} anchor={`skill-${name}`} />
+      <Rich text={wrapProse(parts ? parts.body : text)} anchor={`skill-${name}`} />
     </>
   );
 }

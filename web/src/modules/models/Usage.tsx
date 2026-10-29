@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
@@ -116,7 +117,7 @@ function Card({ card, onUse }: { card: UsageCard; onUse(): void }) {
 /** What each model of the profile did over the last 7, 30 or 90 days, as Hermes's model analytics count it, with "Use as…" on each card. */
 export function Usage({ profile }: { profile: string }) {
   const [days, setDays] = useState<UsageDays>(30);
-  const { value, failed, reload } = useUsage(profile, days);
+  const { value, failed, unavailable, reload } = useUsage(profile, days);
   const [using, setUsing] = useState<UsageCard>();
   const labelled = useId();
 
@@ -147,8 +148,14 @@ export function Usage({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!value && !failed && <p role="status">Loading…</p>}
-      {value && value.cards.length === 0 && (
+      {unavailable && (
+        <div className="banner" data-tone="info" role="status">
+          <Icon name="info" />
+          <span className="banner__content">This Hermes does not offer usage numbers, so there is nothing to show here. Updating Hermes may add them.</span>
+        </div>
+      )}
+      {!value && !failed && !unavailable && <Loading label="Loading usage…" lines={3} onRetry={() => void reload()} />}
+      {value && !unavailable && value.cards.length === 0 && (
         <div className="empty">
           <span className="empty__icon">
             <Icon name="chart" />

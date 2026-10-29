@@ -86,3 +86,13 @@ export function platformName(id: string): string {
   const words = id.replaceAll('_', ' ').trim();
   return words === '' ? 'Unknown' : words[0].toUpperCase() + words.slice(1);
 }
+
+/** How long Hermes keeps a request nobody answers (`CODE_TTL_SECONDS` in Hermes's pairing store: one hour). */
+const REQUEST_LIFETIME_MINUTES = 60;
+
+/** When a request nobody answers goes away on its own, in the words a person would use. Hermes has no way to refuse one request; ignoring it is how it ends. */
+export function expiryWords(ageMinutes: number): string {
+  const left = REQUEST_LIFETIME_MINUTES - Math.max(0, Math.floor(ageMinutes));
+  if (left <= 1) return 'Goes away by itself within a minute';
+  return `Goes away by itself in about ${left} minutes`;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { useSizeClass } from '../../shell/use-size-class.ts';
@@ -301,6 +302,24 @@ function Installed({ models, profile, serverRunning, onChange }: { models: Stage
   );
 }
 
+/** Puts this page's address on the clipboard, for a phone owner who carries on at a computer. */
+function CopyLinkForDesktop({ what }: { what: string }) {
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast('Link copied', { tone: 'success', detail: `Open it on a computer to ${what}.` });
+    } catch {
+      toast('Copying is not allowed here. Open this address on a computer.', { tone: 'warning' });
+    }
+  };
+  return (
+    <button type="button" className="btn btn--secondary btn--sm" onClick={() => void copy()}>
+      <Icon name="copy" small />
+      Copy link to open on desktop
+    </button>
+  );
+}
+
 /**
  * Agents › Models › Local models: the models Hermes can run on this Mac, with its own llama.cpp runtime. A phone shows the status, the active model
  * and the progress of jobs (and the actions that are small); downloads, searching, adding a file and installing the runtime are for a tablet or a desktop.
@@ -324,7 +343,7 @@ export function LocalModels({ profile }: { profile: string }) {
         </button>
       </div>
     ) : (
-      <p role="status">Loading…</p>
+      <Loading label="Loading local models…" lines={4} onRetry={() => void reload()} />
     );
   }
 
@@ -374,7 +393,12 @@ export function LocalModels({ profile }: { profile: string }) {
             </WriteButton>
           )}
         </div>
-        {compact && !status.runtime.installed && <p className="subtle md-note">Installing the runtime is offered on a tablet or a desktop.</p>}
+        {compact && !status.runtime.installed && (
+          <div className="md-phone">
+            <p className="subtle md-note">Installing the runtime is offered on a tablet or a desktop.</p>
+            <CopyLinkForDesktop what="install the runtime" />
+          </div>
+        )}
       </section>
 
       {(running.length > 0 || recent.length > 0) && (
@@ -394,7 +418,10 @@ export function LocalModels({ profile }: { profile: string }) {
       </section>
 
       {compact ? (
-        <p className="subtle md-note">Downloading, searching Hugging Face and adding a file are offered on a tablet or a desktop.</p>
+        <div className="md-phone">
+          <p className="subtle md-note">Downloading, searching Hugging Face and adding a file are offered on a tablet or a desktop.</p>
+          <CopyLinkForDesktop what="download or add a model" />
+        </div>
       ) : (
         <>
           <section className="md-box" aria-labelledby="md-local-catalog">

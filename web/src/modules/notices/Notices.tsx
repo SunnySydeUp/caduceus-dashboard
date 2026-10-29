@@ -82,8 +82,8 @@ function ItemMenu({ item, onAction, onClose }: { item: InboxNotice; onAction(act
         <li className="nt-menu__custom">
           <label htmlFor="nt-custom-snooze">Snooze until</label>
           <input id="nt-custom-snooze" className="input" type="datetime-local" value={custom} onChange={(event) => setCustom(event.target.value)} />
-          <button type="button" className="btn btn--secondary btn--sm" disabled={custom === '' || Number.isNaN(Date.parse(custom)) || Date.parse(custom) <= Date.now()} onClick={() => void put(Date.parse(custom), 'Snoozed')}>
-            Snooze
+          <button type="button" className="btn btn--secondary" disabled={custom === '' || Number.isNaN(Date.parse(custom)) || Date.parse(custom) <= Date.now()} onClick={() => void put(Date.parse(custom), 'Snoozed')}>
+            Snooze until this time
           </button>
         </li>
         <li>
@@ -133,7 +133,7 @@ function ItemCard({ item, selected, wide, now, onOpen }: { item: InboxNotice; se
       </button>
       <div className="nt-card__acts">
         {lead && (
-          <WriteButton type="button" className="btn btn--primary btn--sm" disabled={notices.busy !== undefined} aria-label={`${lead.label}: ${item.title}`} onClick={() => notices.run(lead)}>
+          <WriteButton type="button" className="btn btn--primary btn--sm" disabled={notices.busy !== undefined} aria-label={`${lead.label}: ${item.title}`} onClick={() => notices.run(lead, { title: item.title, quote: item.detail, profile: item.profile })}>
             {lead.label}…
           </WriteButton>
         )}
@@ -144,7 +144,7 @@ function ItemCard({ item, selected, wide, now, onOpen }: { item: InboxNotice; se
           <Icon name="dots-v" />
         </button>
       </div>
-      {menu && <ItemMenu item={item} onAction={notices.run} onClose={() => setMenu(false)} />}
+      {menu && <ItemMenu item={item} onAction={(action) => notices.run(action, { title: item.title, quote: item.detail, profile: item.profile })} onClose={() => setMenu(false)} />}
       {notices.sheet}
     </li>
   );
@@ -317,13 +317,12 @@ export function Notices() {
     <div className="nt">
       <PageHeader overline="Control" title="Notices" subtitle={settled ? (ids.length === 0 ? 'Nothing to look at' : `${ids.length} ${ids.length === 1 ? 'notice' : 'notices'}`) : undefined} />
       <p className="help-text">
-        What Hermes and Caduceus say that is not a question for you: a job that failed, a gateway that is down, an update that is waiting. A <Term id="notice">notice</Term> is worked out from what they report, so it goes by itself when that is over. Runs that finish are listed in the <Term id="activity-feed">Activity feed</Term>.{' '}
         {waiting > 0 ? (
           <>
-            <AppLink to="/today">{waiting === 1 ? '1 item needs a decision' : `${waiting} items need a decision`}</AppLink> on Today.
+            <AppLink to="/today">{waiting === 1 ? '1 item needs a decision' : `${waiting} items need a decision`}</AppLink> on Today. What these <Term id="notice">notices</Term> are is in Help.
           </>
         ) : (
-          <>What needs a decision is on <AppLink to="/today">Today</AppLink>.</>
+          <>What needs a decision is on <AppLink to="/today">Today</AppLink>. What these <Term id="notice">notices</Term> are is in Help.</>
         )}
       </p>
       <div className="nt-views" role="group" aria-label="View">

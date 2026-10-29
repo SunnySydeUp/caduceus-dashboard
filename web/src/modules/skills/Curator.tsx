@@ -134,7 +134,7 @@ function CuratorScreen({ profile }: { profile: string }) {
               Run now
             </WriteButton>
           </div>
-          <p className="subtle sk-note">Pause and Resume are Tier 1: you confirm. Run now is Tier 2: it asks for a passkey, because the review archives skills.</p>
+          <p className="subtle sk-note">Pause and Resume ask you to confirm. Run now needs your passkey, because the review archives skills.</p>
         </section>
       )}
       {run && <ActionLogSheet run={run} onClose={() => setRun(undefined)} onFinished={(verdict) => toast(verdict.ok ? run.doneTitle : `${run.title}: it did not finish`, { tone: verdict.ok ? 'success' : 'danger', detail: verdict.message })} />}

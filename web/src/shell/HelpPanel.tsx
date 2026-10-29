@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import { parseInline, resolveHelpTarget, type HelpBlock, type HelpTarget, type HelpView } from '../help.ts';
+import { helpSections, parseInline, resolveHelpTarget, termBlockIndex, type HelpBlock, type HelpTarget, type HelpView } from '../help.ts';
 import { Icon } from '../icons.tsx';
 import { Layer } from '../overlays/Layer.tsx';
 import { Sheet } from '../overlays/Sheet.tsx';
@@ -98,27 +98,35 @@ function Topics({ go, heading }: { go(target: HelpTarget): void; heading: RefObj
   );
 }
 
-/** One page: the glossary term that sent you here (if one did), its title and summary, its text, and where to read next. */
+/** One page: the glossary term that sent you here (if one did), its title and summary, its text, and where to read next. A long page folds into sections. */
 function PageView({ view, go, heading }: { view: HelpView; go(target: HelpTarget): void; heading: RefObject<HTMLHeadingElement | null> }) {
   const registry = useRegistry();
   const page = registry.helpPages().find((candidate) => candidate.id === view.page);
   const term = registry.glossary().find((candidate) => candidate.id === view.term);
   if (!page) return null;
   const related = (page.related ?? []).flatMap((id) => registry.helpPages().find((candidate) => candidate.id === id) ?? []);
+  // "More" from a term's pop-up lands on the passage that uses the term, marked, not on the definition again.
+  const hit = term ? page.body[termBlockIndex(page.body, term.id)] : undefined;
+  const shown = (block: HelpBlock, index: number) => (block === hit ? <div key={index} className="help-hit" data-help-hit><Block block={block} /></div> : <Block key={index} block={block} />);
+  const { intro, sections } = helpSections(page.body);
   return (
     <article className="help-page">
       {term && (
         <aside className="help-term" aria-label={`Meaning of ${term.term}`}>
           <strong>{term.term}</strong>
-          <span>{term.definition}</span>
+          <span>{hit ? 'Where this page uses it is marked below.' : term.definition}</span>
         </aside>
       )}
       <h3 ref={heading} tabIndex={-1} data-help-heading>
         {page.title}
       </h3>
       <p className="help-lead">{page.summary}</p>
-      {page.body.map((block, index) => (
-        <Block key={index} block={block} />
+      {sections.length === 0 ? page.body.map(shown) : intro.map(shown)}
+      {sections.map((section, index) => (
+        <details key={section.heading} className="help-section" open={index === 0 || section.blocks.includes(hit as HelpBlock)}>
+          <summary>{section.heading}</summary>
+          <div className="help-section__body">{section.blocks.map(shown)}</div>
+        </details>
       ))}
       {related.length > 0 && (
         <section className="help-group" aria-labelledby="help-related">
@@ -145,10 +153,13 @@ type Tab = (typeof TABS)[number];
  * the Shortcuts tab holds the keyboard shortcut list, when the caller has one (the sign-in screen does not). Its glossary
  * pop-ups turn the panel's page rather than opening another panel.
  */
-export function HelpPanel({ view, shortcuts, onClose }: { view: HelpView; shortcuts?: ReactNode; onClose(): void }) {
+export function HelpPanel({ view, shortcuts: offered, onClose }: { view: HelpView; shortcuts?: ReactNode; onClose(): void }) {
   const registry = useRegistry();
   const compact = useSizeClass() === 'compact';
   const id = useId();
+  // A touch screen has no keyboard to use the shortcuts with, so the tab is left out unless the panel was opened on it on purpose (the palette's Keyboard shortcuts).
+  const [touch] = useState(() => matchMedia('(pointer: coarse)').matches);
+  const shortcuts = offered !== undefined && (!touch || view.tab === 'shortcuts') ? offered : undefined;
   const startOnShortcuts = shortcuts !== undefined && view.tab === 'shortcuts';
   const [tab, setTab] = useState<Tab>(startOnShortcuts ? 'shortcuts' : 'help');
   // The pages shown on the Help tab, newest last, so Back goes where you came from.
@@ -157,12 +168,14 @@ export function HelpPanel({ view, shortcuts, onClose }: { view: HelpView; shortc
   const heading = useRef<HTMLHeadingElement>(null);
   const current = trail[trail.length - 1];
 
-  // After the page turns, focus goes to its heading and the text starts again from the top.
+  // After the page turns, focus goes to its heading and the text starts again from the top; a page opened from a glossary term then scrolls to the passage marked for it.
   useEffect(() => {
-    if (turned === 0) return;
-    heading.current?.focus({ preventScroll: true });
     const scroller = heading.current?.closest<HTMLElement>('[data-body]');
-    if (scroller) scroller.scrollTop = 0;
+    if (turned > 0) {
+      heading.current?.focus({ preventScroll: true });
+      if (scroller) scroller.scrollTop = 0;
+    }
+    scroller?.querySelector<HTMLElement>('[data-help-hit]')?.scrollIntoView({ block: 'start' });
   }, [turned]);
 
   const turn = (next: HelpView[]) => {

@@ -38,6 +38,7 @@ import type {
   ToolsShowResult,
   Usage,
   SessionUndoResult,
+  SessionHistoryResult,
   SessionBranchResult,
 } from '@caduceus/contracts/hermes/gateway';
 import type { GatewayEvent } from '@caduceus/contracts/hermes/shared/gateway';
@@ -50,7 +51,7 @@ import { uploadAttachments, type Upload, type UploadStep } from './attachment-up
 import { aroundUrl, fromAround, fromLatest, latestUrl, mergeLatest, newerUrl, olderUrl, withNewer, withOlder, type HistoryBody, type HistoryWindow } from './history-window.ts';
 import { afterCompression, mergeUsage } from './composer-model.ts';
 import { createStore, type Store } from './store.ts';
-import { editedText, forkPlan } from './message-actions.ts';
+import { editedText, forkFailureWords, forkPlan, forkWasCut } from './message-actions.ts';
 import { readStopped, writeStopped } from './turn-recovery.ts';
 import { branchStored } from './session-branch.ts';
 import { deviceStorage, readQueue, writeQueue, type QueuedMessage, type QueueStorage } from './queue.ts';
@@ -76,8 +77,10 @@ export interface ChatMessage {
   stats?: ReplyStats;
   /** The turn failed and this is where its reply would be: what went wrong, in Hermes's words (its own note for the turn when the page was not there to hear the error). */
   failed?: { error: string };
-  /** Hermes wrote this into the history, not the owner: it picked a turn that was interrupted up again. */
-  note?: 'continued';
+  /** Hermes wrote this into the history, not the owner: it picked a turn that was interrupted up again (`continued`), or this is a steer or the reason of a denied approval, whose words are in `text` and which is drawn as a note (`steered`). */
+  note?: 'continued' | 'steered';
+  /** The first message of a scheduled run: `text` is the job's own prompt, and this is the instructions Hermes wrote in front of it, shown as a small note. */
+  scheduled?: string;
 }
 
 /** The turn in progress, or the last one that did not complete: what is shown after the transcript Hermes holds. */
@@ -252,10 +255,10 @@ export interface Chat extends Store<ChatState> {
   continueTurn(): Promise<boolean>;
   /**
    * Fork: branches the chat into a new Hermes session (`session.branch`) and resolves with its stored id (the screen opens it). From a message other than the tip (`from`, its row id) the branch is then cut back to it with `session.undo`,
-   * and Hermes's own history of the branch is read to check that it ends where it should; the words of a user message that was cut come back as `prefill`, to edit. Rejects with the reason when Hermes refuses (a turn is running)
-   * or the branch does not end at that message (the branch is then in the list, not opened).
+   * and Hermes's own history of the branch is read to check that it ends where it should; the words of a user message that was cut come back as `prefill`, to edit. Rejects with the reason only when Hermes refuses before a branch exists (a turn is running).
+   * When the branch exists but could not be cut at that message, it still resolves with the branch (never a stray chat in the list), and `notCut` says in plain words why and what the new chat holds instead.
    */
-  fork(from?: number): Promise<{ storedId: string; prefill: string | undefined }>;
+  fork(from?: number): Promise<{ storedId: string; prefill: string | undefined; notCut?: string }>;
   /** Continues a session in a new one: Hermes branches it (`session.branch`) into a stored child with the whole history, and the child is the chat to open. For a read-only chat the original is resumed for just this and closed again. */
   branch(): Promise<{ storedId: string }>;
   /** Creates the session now, without a prompt (the first `send` does it otherwise). */
@@ -409,7 +412,8 @@ export function createChat(connection: ChatConnection, options: ChatOptions = {}
           ...(stoppedIds.has(entry.id) ? { stopped: true as const } : {}),
           ...(footer ? { stats: footer } : {}),
           ...(entry.failed && !stoppedIds.has(entry.id) ? { failed: { error: failureDetails.get(entry.id) ?? entry.text } } : {}),
-          ...(entry.continued ? { note: 'continued' as const } : {}),
+          ...(entry.continued ? { note: 'continued' as const } : entry.steered ? { note: 'steered' as const } : {}),
+          ...(entry.scheduled === undefined ? {} : { scheduled: entry.scheduled }),
         };
       }),
       hasOlder: window.hasOlder,
@@ -1083,18 +1087,20 @@ export function createChat(connection: ChatConnection, options: ChatOptions = {}
       if (store.state.running) throw new Error('Hermes is still writing a reply. Stop it, or wait for it to finish, before forking this chat.');
       const branch = await client.request<SessionBranchResult>('session.branch', { session_id: runtimeId, ...profile });
       if (from === undefined) return { storedId: branch.stored_session_id, prefill: undefined };
+      // From here on the branch exists: whatever goes wrong, the owner is handed the branch with the reason, never an error and a copy nobody opened.
       const source = store.state.messages.find((message) => message.id === from);
       const plan = source && forkPlan(branch.messages, source);
-      const stray = `The new chat “${branch.title}” is in your list; nothing was opened.`;
-      if (!plan) throw new Error(`Hermes’s history of this chat does not hold that message, so it cannot be forked from. ${stray}`);
-      // The branch has the whole chat: each undo takes off its last exchange, until it ends at the message.
-      for (let undone = 0; undone < plan.undo; undone++) await client.request<SessionUndoResult>('session.undo', { session_id: branch.session_id, ...profile });
-      // Hermes's own history of the branch says where it ended.
-      const body = (await readHistory(latestUrl(branch.stored_session_id, options.profile)).catch(() => ({ messages: [], pagination: {} }))) as HistoryBody;
-      const bubbles = entriesOf(body.messages).filter((entry) => entry.kind === 'bubble');
-      const users = bubbles.filter((entry) => entry.role === 'user').length;
-      const last = bubbles.at(-1);
-      if (users !== plan.users || (last?.text.trim() || undefined) !== plan.last) throw new Error(`Hermes cut the new chat somewhere other than at that message. ${stray}`);
+      const whole = (why: string) => ({ storedId: branch.stored_session_id, prefill: undefined, notCut: `${why} The new chat is open anyway, but it may hold more than you wanted: use Undo last exchange in it to take off the rest.` });
+      if (!plan) return whole('Hermes’s history of this chat does not hold that message, so it could not cut the new chat there.');
+      try {
+        // The branch has the whole chat: each undo takes off its last exchange, until it ends at the message.
+        for (let undone = 0; undone < plan.undo; undone++) await client.request<SessionUndoResult>('session.undo', { session_id: branch.session_id, ...profile });
+        // Hermes's own history of the branch says where it ended.
+        const held = await client.request<SessionHistoryResult>('session.history', { session_id: branch.session_id, ...profile });
+        if (!forkWasCut(plan, held.messages)) return whole('Hermes cut the new chat somewhere other than at that message.');
+      } catch (error) {
+        return whole(forkFailureWords(failureWords(error)));
+      }
       return { storedId: branch.stored_session_id, prefill: plan.prefill };
     },
     async branch() {

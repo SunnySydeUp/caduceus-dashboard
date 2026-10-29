@@ -3,6 +3,7 @@
 import type { InboxAction, InboxDecision, InboxDecisionResult, InboxItem } from '@caduceus/contracts/inbox';
 import { fetchTiered } from '../../tiered.ts';
 import { runTiered } from '../profiles/profile-actions.ts';
+import { confirmWithWords } from './inbox-model.ts';
 
 export type DecisionOutcome =
   | { kind: 'resolved' }
@@ -33,11 +34,11 @@ export async function decideItem(item: InboxItem, decision: InboxDecision): Prom
 /** What an action on a notice came to: it was sent (Hermes's answer is in the list that follows), the owner declined, or it failed, in words. */
 export type NoticeOutcome = { kind: 'done' } | { kind: 'cancelled' } | { kind: 'failed'; message: string };
 
-/** Runs the action a source put on its item, through the policy with the tier the route has; its confirmation names what it changes. */
+/** Runs the action a source put on its item, through the policy with the tier the route has; its confirmation names what it changes and says back the words the owner wrote. */
 export async function runNoticeAction(action: InboxAction, typed?: string): Promise<NoticeOutcome> {
   const body = action.input ? { ...action.request.body, [action.input.field]: typed ?? '' } : action.request.body;
   const outcome = await runTiered(
-    fetchTiered({ method: action.request.method, path: action.request.path, body, confirm: action.confirm ?? { title: `${action.label}?` } }),
+    fetchTiered({ method: action.request.method, path: action.request.path, body, confirm: confirmWithWords(action, typed) }),
   );
   return outcome.kind === 'done' ? { kind: 'done' } : outcome;
 }

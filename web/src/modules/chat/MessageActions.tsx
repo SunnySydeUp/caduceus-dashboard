@@ -53,7 +53,7 @@ export function MessageBar({ entries, open, onOpenChange, onRun }: MessageBarPro
           .map((entry) => {
             const Button = entry.writes ? ChangeButton : 'button';
             return (
-              <Button key={entry.id} type="button" className="btn btn--ghost btn--sm msgbar__tool" aria-label={entry.label.replace('…', '')} title={entry.disabled ?? entry.label.replace('…', '')} disabled={entry.disabled !== undefined} onClick={() => onRun(entry.id)}>
+              <Button key={entry.id} type="button" className="btn btn--ghost btn--sm msgbar__tool" data-action={entry.id} aria-label={entry.label.replace('…', '')} title={entry.disabled ?? entry.label.replace('…', '')} disabled={entry.disabled !== undefined} onClick={() => onRun(entry.id)}>
                 <Icon name={ICONS[entry.id]} small />
               </Button>
             );

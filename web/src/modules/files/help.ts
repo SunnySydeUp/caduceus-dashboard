@@ -13,6 +13,7 @@ export const filesHelp: ModuleHelp = {
         { h: 'Browsing and previews' },
         {
           ul: [
+            'Names that start with a dot (such as .ssh) are hidden until you press Show hidden; the button says how many are out of sight.',
             'Open a folder to list it with each name, size and time. On a phone the list is cards, and a file opens full screen. On a wide screen the folder and the preview sit side by side.',
             'Code is highlighted and Markdown is drawn. A CSV is a table: press a heading to sort by it. Images, audio, video and PDFs play in the page.',
             'An HTML file is shown in a sandboxed frame with no scripts and no access to Caduceus: it cannot read your cookies or call Caduceus. Show source reads the file as text.',
@@ -65,7 +66,7 @@ export const filesHelp: ModuleHelp = {
       keywords: 'files address url path link folder file open share bookmark preview',
       body: [
         { p: 'The address of a folder or a file in Files holds its path, so a link or a bookmark opens the same place again. A folder lists its files; a file is previewed beside its folder, or full screen on a phone. Close the preview to go back to the folder. Everything said on the Files page applies here.' },
-        { p: 'A path outside the [[managed-root|managed root]] is refused, and so is anything that no longer exists: the page says which, and leads back to the top.' },
+        { p: 'A path outside the [[managed-root|managed root]] is refused, and so is a protected file such as .env or anything that no longer exists. The page says which: "outside the folders Caduceus can open", "protected" or "nothing at this address". Back to the folder leads to the folder the path sits in.' },
       ],
       related: ['workspace-files'],
     },

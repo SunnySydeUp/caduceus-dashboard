@@ -59,7 +59,7 @@ export interface PaletteHit {
   snippet?: { text: string; match: boolean }[];
   icon?: IconName;
   /** The palette group the hit is listed in; Sessions unless it says otherwise. */
-  group?: 'Sessions' | 'Playbooks' | 'Settings';
+  group?: 'Sessions' | 'Tasks' | 'Playbooks' | 'Settings';
   /** The address to open. */
   path: string;
 }
@@ -138,6 +138,8 @@ export interface ModuleDefinition<Screen> {
   order?: number;
   /** One line for Control and the palette. */
   summary: string;
+  /** Extra words that find the module in Control's search and the palette when its title and summary do not hold them (`telegram` finds Channels). Lower case, plain words. */
+  keywords?: string[];
   /** A count shown on the module's entry, and on its destination when the module sits in one; nothing shows while it is zero. */
   badge?: NavBadge;
   routes: ModuleRoute<Screen>[];
@@ -155,6 +157,8 @@ export interface ModuleDefinition<Screen> {
   redirects?: { from: string; to: string }[];
   /** Finds things of the module's by what the owner typed in the palette (Hermes does the searching); the hits are listed under the module's own group. */
   paletteSearch?: PaletteSearch;
+  /** The module's palette search answers for one profile (`context.profile`): on a screen that shows every profile the palette asks it once for each profile and merges the hits. Leave it off when the hits do not depend on the profile. */
+  paletteSearchEachProfile?: boolean;
   settings?: SettingsPanel<Screen>[];
   policy?: ModulePolicy;
   /**
@@ -196,7 +200,7 @@ export interface ModuleRegistry<Screen> {
   /** Every route of every registered module (its settings panels' routes last), in registration order. */
   routes(): RegisteredRoute<Screen>[];
   paletteCommands(): (PaletteCommand & { moduleId: string })[];
-  paletteSearches(): { moduleId: string; search: PaletteSearch }[];
+  paletteSearches(): { moduleId: string; search: PaletteSearch; eachProfile: boolean }[];
   settingsPanels(): RegisteredSettingsPanel[];
   /** `/` leads to the first Today module; `/<placement>` and `/<group>` to the first module they hold, when no route owns that path; and each module's own moved addresses. */
   redirects(): { from: string; to: string }[];
@@ -303,7 +307,7 @@ export function createModuleRegistry<Screen>(): ModuleRegistry<Screen> {
       ];
     },
     paletteCommands: () => modules.flatMap((m) => (m.paletteCommands?.() ?? []).map((command) => ({ moduleId: m.id, ...command }))),
-    paletteSearches: () => modules.flatMap((m) => (m.paletteSearch ? [{ moduleId: m.id, search: m.paletteSearch }] : [])),
+    paletteSearches: () => modules.flatMap((m) => (m.paletteSearch ? [{ moduleId: m.id, search: m.paletteSearch, eachProfile: m.paletteSearchEachProfile === true }] : [])),
     settingsPanels: () =>
       modules.flatMap((m) =>
         (m.settings ?? []).map((panel) => ({ moduleId: m.id, id: panel.id, title: panel.title, summary: panel.summary, icon: panel.icon, path: settingsPath(panel), fields: panel.fields })),

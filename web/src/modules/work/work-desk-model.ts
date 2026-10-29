@@ -3,7 +3,7 @@
 // answers, the Inbox's feed and Today's review state (D1); nothing here is stored.
 import type { LiveRun } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
-import { BLOCK_META, type BoardTask } from './board-model.ts';
+import { BLOCK_META, failureLine, type BoardTask } from './board-model.ts';
 import { relativeTime, type Job } from './schedules-model.ts';
 
 /**
@@ -21,7 +21,7 @@ export const WORK_GROUP_META: Record<WorkGroupId, { label: string; hint: string 
 };
 
 /** The one thing a row offers. `pause` and `resume` act on a schedule's job; the others open where the row leads. */
-export type WorkAction = 'decide' | 'open' | 'review' | 'pause' | 'resume';
+export type WorkAction = 'decide' | 'retry' | 'open' | 'review' | 'pause' | 'resume';
 
 /** How a row's time reads: when the owner was asked, when it started, finished or was added, when it is next due, or that a schedule is off or over. */
 export type WhenKind = 'asked' | 'started' | 'finished' | 'added' | 'next' | 'paused' | 'ended';
@@ -86,6 +86,7 @@ function sinceStarted(task: BoardTask): NonNullable<WorkRow['when']> & { at: num
 /** How Today's review state names a task: the id its items carry (`ReadyItem.id`). */
 export const readyTaskId = (slug: string, taskId: string): string => `task:${slug}:${taskId}`;
 
+
 function taskCandidate(slug: string, task: BoardTask, unopened: Readonly<Record<string, string>>): Candidate | 'settled' {
   const base = { key: `task:${slug}/${task.id}`, source: 'task', profile: task.assignee ?? undefined, title: task.title, to: taskHref(slug, task) } as const;
   const waiting = (line: string): Candidate => {
@@ -96,14 +97,20 @@ function taskCandidate(slug: string, task: BoardTask, unopened: Readonly<Record<
   switch (task.status) {
     case 'review':
       return waiting(task.summary ?? 'Finished by its worker, waiting for your review');
-    case 'blocked':
-      // A question, a missing capability and a block nobody typed need the owner; a block on another task and one that will retry go on without.
+    case 'blocked': {
+      // A question and a missing capability need the owner; a block on another task and one that will retry go on without.
       if (task.blockKind === 'dependency' || task.blockKind === 'transient') return queued(BLOCK_META[task.blockKind].label);
       if (task.blockKind === 'needs_input') return waiting(task.summary ?? 'Asked you a question');
-      return waiting(task.lastFailureError ?? (task.blockKind === 'capability' ? BLOCK_META.capability.label : 'Blocked, and waiting for you'));
+      if (task.blockKind === 'capability') return waiting(BLOCK_META.capability.label);
+      // A block with no kind and no failed attempt is one somebody set on purpose, with their reason: it is not waiting on the owner.
+      if (task.lastFailureError === null && task.failures === 0) return queued(task.summary ?? 'Blocked');
+      const when = sinceStarted(task);
+      return { row: { ...base, group: 'waiting', line: failureLine(task.lastFailureError), when, action: 'retry' }, order: [when.at] };
+    }
     case 'running': {
       const when = sinceStarted(task);
-      return { row: { ...base, group: 'running', line: task.currentStepKey === null ? (task.summary ?? 'A worker is on it') : `Stage: ${task.currentStepKey}`, when, action: 'open' }, order: [when.at] };
+      // The latest summary belongs to an earlier attempt or a block that is over: a running task says what stage it is at, not that.
+      return { row: { ...base, group: 'running', line: task.currentStepKey === null ? 'A worker is on it' : `Stage: ${task.currentStepKey}`, when, action: 'open' }, order: [when.at] };
     }
     case 'done': {
       const id = readyTaskId(slug, task.id);

@@ -112,7 +112,11 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
   const blocker = useBlocker({ shouldBlockFn: ({ current, next }) => dirty && !saved.current && current.pathname !== next.pathname, enableBeforeUnload: () => dirty && !saved.current, withResolver: true });
 
   useEffect(() => {
-    if (focusRequest > 0) document.querySelector<HTMLElement>('.be [aria-invalid="true"]')?.focus();
+    if (focusRequest === 0) return;
+    // A problem can sit in a section that is folded: open the sections around it, then focus it.
+    const bad = document.querySelector<HTMLElement>('.be [aria-invalid="true"]');
+    for (let group = bad?.closest('details'); group; group = group.parentElement?.closest('details')) group.open = true;
+    bad?.focus();
   }, [focusRequest]);
 
   const set = (patch: Partial<BriefFields>) => setFields((previous) => ({ ...previous, ...patch }));
@@ -194,7 +198,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
   const spec = scheduling ? scheduleSpec(schedule, zone) : undefined;
   const fireZone = hermesZone ?? zone;
   const firstRun = spec !== undefined && problems.schedule === undefined ? nextFires(spec, now, fireZone, 1)[0] : undefined;
-  const saveLabel = editing ? 'Save changes' : mode === 'draft' ? 'Save draft' : mode === 'queue' ? 'Queue' : mode === 'run-now' ? 'Run now' : 'Create schedule';
+  const saveLabel = editing ? 'Save changes' : mode === 'draft' ? 'Save draft…' : mode === 'queue' ? 'Queue…' : mode === 'run-now' ? 'Run now…' : 'Create schedule…';
   const cancelTo = editing ? taskHref(edited.id) : '/work/tasks';
   const lock = editing;
 
@@ -251,9 +255,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         </div>
       )}
 
-      {!editing && !copyOf && <TemplatePicker preselect={template} onStart={startFromTemplate} />}
-
-      <Fragment key={applied}>
+      <Fragment key={`task-${applied}`}>
       <Group id="task" title="Task">
         <Field label="Title" help="One line, as it shows on the board." error={errors.title} name="title">
           {(aria) => <input {...aria} className="input" value={fields.title} onChange={(event) => set({ title: event.target.value })} onBlur={() => touch('title')} autoComplete="off" />}
@@ -275,6 +277,21 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
           {(aria) => <NumberInput {...aria} value={fields.priority} onChange={(priority) => set({ priority })} onBlur={() => touch('priority')} />}
         </Field>
       </Group>
+      </Fragment>
+
+      {!editing && !copyOf && (
+        <details className="sb__section be__group" open={template !== undefined} data-group="template">
+          <summary className="be__summary">
+            <h2>Start from a template</h2>
+            <Icon name="chev-r" small />
+          </summary>
+          <div className="be__body">
+            <TemplatePicker preselect={template} onStart={startFromTemplate} />
+          </div>
+        </details>
+      )}
+
+      <Fragment key={`rest-${applied}`}>
 
       <Group id="brief" title="Brief">
         <BriefTextFields brief={fields.brief} onChange={(brief) => set({ brief })} />
@@ -284,7 +301,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         </details>
       </Group>
 
-      <Group id="run" title="How the worker runs">
+      <Group id="run" title="How the worker runs" open={false}>
         <ModelField profile={workerProfile} model={fields.model} provider={fields.provider} onChange={(model, provider) => set({ model, provider })} error={errors.model} />
         <Field label="Reasoning effort" help="How hard the model thinks. The profile’s own level when empty." error={errors.reasoningEffort} name="reasoningEffort">
           {(aria) => (
@@ -312,11 +329,11 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         </div>
       </Group>
 
-      <Group id="workspace" title="Workspace">
+      <Group id="workspace" title="Workspace" open={false}>
         <WorkspaceField profile={workerProfile} workspace={fields.workspace} onChange={(workspace) => set({ workspace })} project={fields.project} onProjectChange={(project) => set({ project })} errors={errors} touch={touch} locked={lock} />
       </Group>
 
-      <Group id="done" title="Done when">
+      <Group id="done" title="Done when" open={false}>
         <div className="switch-row">
           <div>
             <strong id="be-goal-name">Keep going until a judge says it is done</strong>
@@ -346,7 +363,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         </p>
       </Group>
 
-      <Group id="files" title="Attachments and links">
+      <Group id="files" title="Attachments and links" open={false}>
         {editing ? (
           <p className="subtle">
             Files and links are kept on the task. Add or remove them on its <AppLink to={taskHref(edited.id).replace(/(\?|$)/, '/attachments$1')}>Attachments</AppLink> and <AppLink to={taskHref(edited.id).replace(/(\?|$)/, '/links$1')}>Links</AppLink> tabs.
@@ -363,7 +380,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         )}
       </Group>
 
-      <Group id="tools" title="Tools">
+      <Group id="tools" title="Tools" open={false}>
         <ToolsetsNote profile={workerProfile} />
       </Group>
 

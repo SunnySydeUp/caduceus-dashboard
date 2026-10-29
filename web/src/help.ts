@@ -106,6 +106,36 @@ export function blockTexts(block: HelpBlock): string[] {
   return 'h' in block ? [block.h] : 'p' in block ? [block.p] : 'ul' in block ? block.ul : block.ol;
 }
 
+/** A heading and what is under it, on a long help page. */
+export interface HelpSection {
+  heading: string;
+  /** The blocks under the heading, up to the next one. */
+  blocks: HelpBlock[];
+}
+
+/** A page with this many headings or more is long enough to fold: its sections open and close. */
+export const FOLD_AT_HEADINGS = 3;
+
+/**
+ * A long page cut at its headings, so the screen can fold it: the text before the first heading (shown always) and a section for each heading. A page with
+ * fewer than `FOLD_AT_HEADINGS` headings is short enough to read whole and is not cut (`sections` is empty).
+ */
+export function helpSections(body: readonly HelpBlock[]): { intro: HelpBlock[]; sections: HelpSection[] } {
+  if (body.filter((block) => 'h' in block).length < FOLD_AT_HEADINGS) return { intro: [...body], sections: [] };
+  const intro: HelpBlock[] = [];
+  const sections: HelpSection[] = [];
+  for (const block of body) {
+    if ('h' in block) sections.push({ heading: block.h, blocks: [] });
+    else (sections.at(-1)?.blocks ?? intro).push(block);
+  }
+  return { intro, sections };
+}
+
+/** The first block of a page that marks the glossary term `termId`, or -1: where "More" from the term's pop-up takes the reader. */
+export function termBlockIndex(body: readonly HelpBlock[], termId: string): number {
+  return body.findIndex((block) => blockTexts(block).some((text) => parseInline(text).some((segment) => 'term' in segment && segment.term === termId)));
+}
+
 /**
  * What is wrong with the help the registered modules declare: the contract a test holds every module to, so a screen cannot
  * ship without help and help cannot use a word nobody defined. Each message names the page or module at fault; an empty list

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { describeNode, graphList, layoutGraph } from '../src/modules/memory/graph-view.ts';
-import type { Graph, GraphNode } from '../src/modules/memory/memory-model.ts';
+import { parseForm, plainLabel, providerInstalled, type Graph, type GraphNode } from '../src/modules/memory/memory-model.ts';
 
 const node = (id: string, over: Partial<GraphNode> = {}): GraphNode => ({ id, label: id, kind: 'skill', category: 'ops', useCount: 0, state: 'active', createdBy: undefined, pinned: false, memorySource: undefined, timestamp: undefined, ...over });
 const graph = (nodes: GraphNode[], edges: [string, string][] = []): Graph => ({ nodes, edges: edges.map(([source, target]) => ({ source, target })), clusters: [], stats: { learnedSkills: 0, memoryNodes: 0, edges: edges.length, isolatedPercent: 0 } });
@@ -79,5 +79,40 @@ describe('the learning graph as a list', () => {
     expect(describeNode(sample.nodes[2])).toBe('Memory chunk of MEMORY.md');
     expect(describeNode(node('chunk', { kind: 'memory', memorySource: 'profile' }))).toBe('Memory chunk of USER.md');
     expect(describeNode(sample.nodes[3])).toBe('Skill, pinned, never used');
+  });
+});
+
+describe('a provider’s settings form in plain words', () => {
+  test('puts Hermes’s Title Case labels in sentence case and keeps acronyms, but leaves a label with its own capitals alone', () => {
+    expect(plainLabel('Api Key')).toBe('API key');
+    expect(plainLabel('Auto Extract')).toBe('Auto extract');
+    expect(plainLabel('Base Url')).toBe('Base URL');
+    expect(plainLabel('OpenAI key')).toBe('OpenAI key');
+    expect(plainLabel('Workspace')).toBe('Workspace');
+    expect(plainLabel('auto_extract')).toBe('auto_extract');
+  });
+
+  test('a choice that Hermes words as true and false reads Yes and No, and other choices keep their words', () => {
+    const form = parseForm(
+      {
+        name: 'x',
+        fields: [
+          { key: 'auto_extract', label: 'Auto Extract', kind: 'select', options: [{ value: 'true' }, { value: 'false' }] },
+          { key: 'mode', label: 'Mode', kind: 'select', options: [{ value: 'a', label: 'Fast' }, { value: 'true', label: 'Always' }] },
+        ],
+      },
+      'native',
+    );
+
+    expect(form.fields[0].label).toBe('Auto extract');
+    expect(form.fields[0].options.map((option) => option.label)).toEqual(['Yes', 'No']);
+    expect(form.fields[1].options.map((option) => option.label)).toEqual(['Fast', 'Always']);
+  });
+
+  test('a provider whose dependencies are missing is not installed; one that lists no setup needs nothing', () => {
+    const setup = (installed: boolean) => ({ pipDependencies: [], externalDependencies: [], requiredEnv: [], installed });
+    expect(providerInstalled({ setup: setup(false) })).toBe(false);
+    expect(providerInstalled({ setup: setup(true) })).toBe(true);
+    expect(providerInstalled({ setup: undefined })).toBe(true);
   });
 });

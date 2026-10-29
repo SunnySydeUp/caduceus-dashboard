@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createModuleRegistry, type ModuleDefinition, type ModuleRegistry } from '../src/module-registry.ts';
 import { buildKeymap, DEFAULT_KEYBOARD_SETTINGS, shortcutDefs, type KeyboardSettings } from '../src/shortcuts.ts';
-import { highlightSegments, hitEntries, paletteEntries, paletteStep, rankEntries, resultsAnnouncement, runEntry, withHits, type ConfirmRequest, type PaletteState } from '../src/palette.ts';
+import { highlightSegments, hitEntries, mergeProfileHits, paletteEntries, paletteStep, rankEntries, resultsAnnouncement, runEntry, searchProfiles, searchScopeText, withHits, type ConfirmRequest, type PaletteState } from '../src/palette.ts';
 import type { HelpTarget } from '../src/help.ts';
 
 // The registry is generic over what a route renders, so these tests use plain strings as screens.
@@ -77,12 +77,15 @@ describe('palette entries', () => {
 
     expect(entries.map((entry) => [entry.group, entry.label])).toEqual([
       ['This screen', 'Run a job now'],
+      // The places the owner goes most come next, under their product names: Today, Work (the module Work opens on), and Control.
+      ['Go to', 'Today'],
+      ['Go to', 'Work'],
+      ['Go to', 'Control'],
       ['Actions', 'Retry the task'],
       ['Actions', 'Archive finished tasks'],
       ['Actions', 'Help'],
       ['Actions', 'Keyboard shortcuts'],
-      ['Navigate', 'Home'],
-      ['Navigate', 'Tasks'],
+      ['Actions', 'Sign out'],
       ['Navigate', 'New task'],
       ['Navigate', 'Schedules'],
     ]);
@@ -106,10 +109,12 @@ describe('palette entries', () => {
     );
 
     expect(listed(registry, undefined).map((entry) => [entry.group, entry.label])).toEqual([
+      ['Go to', 'Work'],
+      ['Go to', 'Control'],
       ['Actions', 'New task'],
       ['Actions', 'Help'],
       ['Actions', 'Keyboard shortcuts'],
-      ['Navigate', 'Tasks'],
+      ['Actions', 'Sign out'],
       ['Navigate', 'Templates'],
     ]);
   });
@@ -130,18 +135,22 @@ describe('palette entries', () => {
       paletteEntries(registry, undefined, buildKeymap(shortcutDefs(registry), settings)).map((entry) => [entry.label, entry.shortcut]);
 
     expect(shown(DEFAULT_KEYBOARD_SETTINGS)).toEqual([
+      ['Today', 'g h'],
+      ['Control', undefined],
       ['Retry the task', 'mod+shift+r'],
       ['Help', '?'],
       ['Keyboard shortcuts', undefined],
-      ['Home', 'g h'],
+      ['Sign out', undefined],
       ['Tasks', undefined],
     ]);
     // A shortcut that is switched off is not shown as if it worked, and a remap shows its new keys.
     expect(shown({ singleKey: false, remaps: { 'cmd:tasks:retry': 'mod+j' } })).toEqual([
+      ['Today', undefined],
+      ['Control', undefined],
       ['Retry the task', 'mod+j'],
       ['Help', undefined],
       ['Keyboard shortcuts', undefined],
-      ['Home', undefined],
+      ['Sign out', undefined],
       ['Tasks', undefined],
     ]);
   });
@@ -153,19 +162,21 @@ describe('palette entries', () => {
     );
 
     expect(listed(registry, undefined).map((entry) => [entry.label, entry.action])).toEqual([
+      ['Today', 'go:home'],
+      ['Control', undefined],
       ['Retry', 'cmd:tasks:retry'],
       ['Help', 'help.open'],
       ['Keyboard shortcuts', undefined],
-      ['Home', 'go:home'],
+      ['Sign out', undefined],
       ['Tour', undefined],
       ['Tasks', 'go:tasks'],
     ]);
   });
 });
 
-/** Four destinations whose names overlap the way real ones do. */
+/** Four Control modules whose names overlap the way real ones do. */
 function destinations() {
-  const module = (id: string, title: string, summary: string) => testModule({ id, title, summary, desk: 'today', path: `/${id}`, routes: [{ path: `/${id}`, screen: id }] });
+  const module = (id: string, title: string, summary: string) => testModule({ id, title, summary, path: `/${id}`, routes: [{ path: `/${id}`, screen: id }] });
   return registryWith(module('health', 'Health', 'Is Hermes up'), module('home', 'Home', 'Hermes at a glance'), module('schedules', 'Schedules', 'Hermes cron'), module('security', 'Security', 'Passkeys and devices'));
 }
 
@@ -175,7 +186,7 @@ describe('palette ranking', () => {
 
     expect(rankEntries(entries, 'hlth').map(({ entry, positions }) => [entry.label, positions])).toEqual([['Health', [0, 3, 4, 5]]]);
     // `se` is a prefix of Security but only scattered through Schedules, which was registered first.
-    expect(rankEntries(entries, 'se').map(({ entry }) => entry.label)).toEqual(['Security', 'Schedules']);
+    expect(rankEntries(entries, 'se').filter(({ entry }) => entry.group === 'Navigate').map(({ entry }) => entry.label)).toEqual(['Security', 'Schedules']);
     expect(rankEntries(entries, 'zzz')).toEqual([]);
   });
 
@@ -208,6 +219,8 @@ describe('palette ranking', () => {
     // The group's name finds the whole group; a query with a word that is nowhere finds nothing.
     expect(rankEntries(entries, 'connect').map(({ entry }) => entry.label)).toEqual(['Gateway', 'Restarts']);
     expect(rankEntries(entries, 'restart nowhere')).toEqual([]);
+    // An address typed as one is read as its words: "/connect/gateway" finds the screen at that address.
+    expect(rankEntries(entries, '/connect/gateway').map(({ entry }) => entry.label)).toEqual(['Gateway']);
   });
 });
 
@@ -367,9 +380,9 @@ describe('help in the palette', () => {
   test('with no query the palette lists no help, so the commands and routes are what it opens on', () => {
     const groups = (query: string) => rankEntries(listed(tasksWithHelp(), 'tasks'), query).map(({ entry }) => entry.group);
 
-    expect(groups('')).toEqual(['This screen', 'Actions', 'Actions', 'Navigate']);
+    expect(groups('')).toEqual(['This screen', 'Go to', 'Go to', 'Actions', 'Actions', 'Actions']);
     // A query of spaces is no query.
-    expect(groups('   ')).toEqual(['This screen', 'Actions', 'Actions', 'Navigate']);
+    expect(groups('   ')).toEqual(['This screen', 'Go to', 'Go to', 'Actions', 'Actions', 'Actions']);
   });
 
   test('the Help action opens the help for the screen being shown, and says so', () => {
@@ -479,7 +492,7 @@ describe('search hits from a module', () => {
   test('a module that can search says so, and the registry lists its search', () => {
     const search = async () => [hit];
     const registry = registryWith(testModule({ id: 'chat', title: 'Chat', desk: 'today', path: '/chat', routes: [{ path: '/chat', screen: 'chat' }], paletteSearch: search }), testModule());
-    expect(registry.paletteSearches()).toEqual([{ moduleId: 'chat', search }]);
+    expect(registry.paletteSearches()).toEqual([{ moduleId: 'chat', search, eachProfile: false }]);
   });
 
   test('hits are a group of their own, after the actions and before the pages; the query that found them does not rank them away; each opens its address', async () => {
@@ -496,5 +509,95 @@ describe('search hits from a module', () => {
   test('with no hits the list is as it was', () => {
     const ranked = rankEntries(listed(registryWith(testModule()), undefined), '');
     expect(withHits(ranked, [])).toBe(ranked);
+  });
+});
+
+describe('what the palette searches', () => {
+  const profiles = ['default', 'research', 'ops'];
+
+  test('a screen that shows every profile (Today) searches every profile, and says so in the footer', () => {
+    expect(searchProfiles({ scope: 'all', effective: 'research', profiles })).toEqual(profiles);
+    expect(searchScopeText('all')).toBe('Searching all profiles');
+  });
+
+  test('any other screen searches the profile it shows, and says which', () => {
+    expect(searchProfiles({ scope: 'research', effective: 'default', profiles })).toEqual(['research']);
+    expect(searchScopeText('research')).toBe('Searching profile research only');
+  });
+
+  test('before Hermes has listed its profiles only the profile this tab works on is known, and while even that is not known the scope says nothing', () => {
+    expect(searchProfiles({ scope: 'all', effective: 'research', profiles: undefined })).toEqual(['research']);
+    expect(searchProfiles({ scope: undefined, effective: undefined, profiles: undefined })).toEqual([undefined]);
+    expect(searchScopeText(undefined)).toBe('');
+  });
+
+  test('the hits of several profiles are one list: the profiles take turns, a hit that opens the same address is listed once, and the list is capped', () => {
+    const hit = (path: string) => ({ id: path, label: path, path });
+    const merged = mergeProfileHits([[hit('/a1'), hit('/a2'), hit('/a3')], [hit('/b1'), hit('/a2')], [hit('/c1')]], 4);
+
+    expect(merged.map((entry) => entry.path)).toEqual(['/a1', '/b1', '/c1', '/a2']);
+    expect(mergeProfileHits([], 8)).toEqual([]);
+  });
+
+  test('a module asks once for each profile only when it says its answer depends on the profile', () => {
+    const search = async () => [];
+    const registry = registryWith(testModule({ id: 'chat', desk: 'today', path: '/chat', routes: [{ path: '/chat', screen: 'chat' }], paletteSearch: search, paletteSearchEachProfile: true }));
+    expect(registry.paletteSearches()).toEqual([{ moduleId: 'chat', search, eachProfile: true }]);
+  });
+});
+
+describe('palette order and names', () => {
+  /** The Desk as the product has it: Today, Talk (the module is called Chat), Work (its first module is called Overview) and a Control module. */
+  function desk() {
+    return registryWith(
+      testModule({ id: 'today', title: 'Today', desk: 'today', path: '/today', summary: 'What needs you', routes: [{ path: '/today', screen: 'today' }] }),
+      testModule({ id: 'chat', title: 'Chat', desk: 'talk', path: '/chat', summary: 'Talk to Hermes', routes: [{ path: '/chat', screen: 'chat' }] }),
+      testModule({ id: 'work-overview', title: 'Overview', desk: 'work', path: '/work', summary: 'Everything in flight', routes: [{ path: '/work', screen: 'work' }] }),
+      testModule({ id: 'tasks', title: 'Tasks', desk: 'work', path: '/work/tasks', summary: 'Every task', routes: [{ path: '/work/tasks', screen: 'tasks' }] }),
+      testModule({ id: 'channels', title: 'Channels', path: '/connect/channels', group: 'connect', summary: 'Where Hermes listens', keywords: ['telegram', 'discord'], routes: [{ path: '/connect/channels', screen: 'channels' }] }),
+    );
+  }
+
+  test('with no query the primary places come first, as Today, Talk, Work and Control, before any action', () => {
+    const ranked = rankEntries(listed(desk(), undefined), '');
+
+    expect(ranked.slice(0, 4).map(({ entry }) => [entry.group, entry.label])).toEqual([
+      ['Go to', 'Today'],
+      ['Go to', 'Talk'],
+      ['Go to', 'Work'],
+      ['Go to', 'Control'],
+    ]);
+  });
+
+  test('a destination is called Talk or Work, not by the title of the module it opens on, and the module title still finds it', () => {
+    const entries = listed(desk(), undefined);
+
+    expect(entries.map((entry) => entry.label)).not.toContain('Chat');
+    expect(entries.map((entry) => entry.label)).not.toContain('Overview');
+    expect(rankEntries(entries, 'chat').map(({ entry }) => entry.label)).toContain('Talk');
+    expect(rankEntries(entries, 'overview').map(({ entry }) => entry.label)).toContain('Work');
+  });
+
+  test('the words a module names for itself find it: telegram finds Channels', () => {
+    expect(rankEntries(listed(desk(), undefined), 'telegram').map(({ entry }) => entry.label)).toEqual(['Channels']);
+  });
+
+  test('a loose scatter of letters is not a match: hello does not find Shell hooks, log does not find a word that only holds the letters', () => {
+    const registry = registryWith(
+      testModule({ id: 'hooks', title: 'Shell hooks', path: '/agents/hooks', routes: [{ path: '/agents/hooks', screen: 'hooks' }] }),
+      testModule({ id: 'maint', title: 'Maintenance sweep', path: '/system/maintenance', routes: [{ path: '/system/maintenance', screen: 'maint' }] }),
+      testModule({ id: 'hello', title: 'Hello world', path: '/agents/hello', routes: [{ path: '/agents/hello', screen: 'hello' }] }),
+    );
+    const entries = listed(registry, undefined);
+
+    expect(rankEntries(entries, 'hello').map(({ entry }) => entry.label)).toEqual(['Hello world']);
+    expect(rankEntries(entries, 'log out').map(({ entry }) => entry.label)).toEqual(['Sign out']);
+  });
+
+  test('Sign out is an action of the shell, with words a person looks for', () => {
+    const entry = listed(desk(), undefined).find((candidate) => candidate.label === 'Sign out');
+
+    expect(entry).toMatchObject({ group: 'Actions', target: { kind: 'shell', action: 'shell.sign-out' } });
+    for (const query of ['sign out', 'log out', 'logout']) expect(rankEntries(listed(desk(), undefined), query).map(({ entry }) => entry.label)).toContain('Sign out');
   });
 });

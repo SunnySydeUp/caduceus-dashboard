@@ -86,3 +86,54 @@ export function hookCreate(form: HookForm, profile: string): HookRequest {
 export function hookRemove(hook: Pick<Hook, 'event' | 'command'>, profile: string): HookRequest {
   return { method: 'DELETE', path: route(profile), body: { event: hook.event, command: hook.command } };
 }
+
+export interface HookEventGroup {
+  title: string;
+  events: { id: string; label: string }[];
+}
+
+/** Plain words for the events owners reach for. An event not listed shows its Hermes name as it is. */
+const EVENT_WORDS: Record<string, string> = {
+  pre_tool_call: 'Before a tool runs',
+  post_tool_call: 'After a tool runs',
+  transform_terminal_output: 'Change what a terminal command printed',
+  transform_tool_result: 'Change what a tool returned',
+  pre_llm_call: 'Before the model is called',
+  post_llm_call: 'After the model answers',
+  transform_llm_output: 'Change the model’s reply',
+  on_stream_start: 'When a reply starts streaming',
+  on_stream_delta: 'Each time a piece of a reply streams in',
+  on_stream_end: 'When a reply has finished streaming',
+  pre_api_request: 'Before a request to the model provider',
+  post_api_request: 'After a request to the model provider',
+  api_request_error: 'When a request to the model provider fails',
+  on_session_start: 'When a session starts',
+  on_session_end: 'When a session ends',
+  on_session_reset: 'When a session is reset',
+  on_session_delete: 'When a session is deleted',
+  subagent_start: 'When a helper agent starts',
+  subagent_stop: 'When a helper agent stops',
+  pre_gateway_dispatch: 'When a chat message arrives, before it is answered',
+  agent_loop_stopped: 'When a running turn is stopped',
+  pre_approval_request: 'Before Hermes asks you to approve something',
+  post_approval_response: 'After you answer an approval',
+};
+
+const EVENT_GROUPS: { title: string; matches(id: string): boolean }[] = [
+  { title: 'Tools', matches: (id) => id.includes('tool') },
+  { title: 'Sessions and helper agents', matches: (id) => id.includes('session') || id.includes('subagent') || id.includes('skill') },
+  { title: 'Model requests', matches: (id) => id.includes('api_') || id.includes('_api') || id.includes('auxiliary') },
+  { title: 'Replies', matches: (id) => id.includes('llm') || id.includes('stream') || id.includes('interim') || id === 'pre_verify' },
+  { title: 'Chat messages and approvals', matches: (id) => id.includes('gateway') || id.includes('approval') || id.includes('human_input') || id === 'agent_loop_stopped' },
+];
+
+/** The events Hermes lists in groups with plain words, in the order Hermes gave them; what no group takes is last, under Other. */
+export function groupHookEvents(events: readonly string[]): HookEventGroup[] {
+  const groups: HookEventGroup[] = [...EVENT_GROUPS.map(({ title }) => ({ title, events: [] })), { title: 'Other', events: [] }];
+  for (const id of events) {
+    const index = EVENT_GROUPS.findIndex((group) => group.matches(id));
+    const words = EVENT_WORDS[id];
+    groups[index < 0 ? groups.length - 1 : index].events.push({ id, label: words ? `${words} · ${id}` : id });
+  }
+  return groups.filter((group) => group.events.length > 0);
+}

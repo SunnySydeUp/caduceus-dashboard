@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { crewAge, deskNavigation, type CrewRow } from './nav-order.ts';
+import { controlBadge, crewAge, deskNavigation, type CrewRow } from './nav-order.ts';
 import { Icon } from '../icons.tsx';
 import { Layer } from '../overlays/Layer.tsx';
 import { useCrew } from '../modules/crew/use-crew.ts';
@@ -29,11 +29,18 @@ function useDesk() {
   return useMemo(() => deskNavigation(registry, crew), [registry, crew]);
 }
 
-/** The placement the current page sits under: what the tab bar, the rail and the sidebar light. */
-function useCurrentPlacement(): DeskPlacement {
+/** What needs a look in Control (a failed run in Notices), as the one count on the More tab and the Control entry. */
+function useControlBadge() {
+  const { control } = useDesk();
+  return useMemo(() => controlBadge({ control }), [control]);
+}
+
+/** The placement the current page sits under: what the tab bar, the rail and the sidebar light. A page that is nowhere (a 404) lights nothing. */
+function useCurrentPlacement(): DeskPlacement | undefined {
   const registry = useRegistry();
-  const { moduleId, pathname } = useRouteInfo();
-  return moduleId === undefined ? 'control' : registry.destinationOf(moduleId, pathname);
+  const { moduleId, pathname, title } = useRouteInfo();
+  if (moduleId === undefined) return title === 'Control' ? 'control' : undefined;
+  return registry.destinationOf(moduleId, pathname);
 }
 
 /** Whether this row is the agent the tab is on, while the tab is in Talk. */
@@ -57,6 +64,7 @@ export function Wordmark() {
 /** Compact windows: the bottom tab bar. Today, Talk and Work from the registry, and More, which opens Control. */
 export function TabBar() {
   const { destinations } = useDesk();
+  const moreBadge = useControlBadge();
   const current = useCurrentPlacement();
   return (
     <nav className="tabbar" aria-label="Main">
@@ -70,6 +78,7 @@ export function TabBar() {
       <AppLink className="tab" to={CONTROL_PATH} aria-current={current === 'control' ? 'page' : undefined}>
         <Icon name="more" />
         <span>More</span>
+        <NavBadgeCount badge={moreBadge} />
       </AppLink>
     </nav>
   );
@@ -96,16 +105,19 @@ function SearchButton({ compact }: { compact: boolean }) {
 
 function ControlLink({ compact }: { compact: boolean }) {
   const current = useCurrentPlacement();
+  const badge = useControlBadge();
   return (
     <AppLink className={`nav-item${compact ? ' rail__item' : ''}`} to={CONTROL_PATH} aria-current={current === 'control' ? 'page' : undefined}>
       {compact ? (
         <span className="rail__icon">
           <Icon name="sliders" />
+          <NavBadgeCount badge={badge} />
         </span>
       ) : (
         <Icon name="sliders" />
       )}
       <span className="nav-label">Control</span>
+      {!compact && <NavBadgeCount badge={badge} />}
     </AppLink>
   );
 }

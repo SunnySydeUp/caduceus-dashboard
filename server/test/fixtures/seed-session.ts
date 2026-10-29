@@ -68,6 +68,8 @@ export interface SeedMessage {
   tool_name?: string;
   /** An assistant row's reasoning. */
   reasoning?: string;
+  /** What Hermes types a user row that is not something the owner wrote as such (`steer`: a mid-turn steer, which is also how a denial with a reason is delivered). */
+  display_kind?: string;
 }
 
 /** Creates the session `id` in the home's default profile with `messages` (oldest first); returns the row ids in the same order. */

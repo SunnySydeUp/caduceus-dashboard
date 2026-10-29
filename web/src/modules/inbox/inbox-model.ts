@@ -1,5 +1,6 @@
 // The Inbox's pure part (M2 #01): which items a profile chip shows, what a card says and how a question's answer is put to Hermes. No DOM and no React. The items themselves are derived by the Caduceus server (`server/src/inbox.ts`).
-import type { ActivityEvent, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
+import type { ActivityEvent, InboxAction, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
+import { clipWords } from '@caduceus/contracts/clip-words';
 
 /**
  * The items a profile scope shows: every item for `all` (and while the scope is not known yet), else the profile's own. An item whose profile
@@ -56,4 +57,44 @@ export function clarifyAnswer(item: InboxClarify, picked: Readonly<Record<string
 /** The events of the feed newer than the last one a page has already heard of: what is worth a toast. */
 export function newActivity(events: readonly ActivityEvent[], heard: number): ActivityEvent[] {
   return events.filter((event) => event.seq > heard);
+}
+
+/** How much of the owner's own words the confirmation says back. */
+const SAID_BACK_MAX = 240;
+
+/** What the words an action asked for are called when they are said back. */
+const WORDS_NAME: Record<string, string> = { note: 'Your note', answer: 'Your answer', profile: 'Give it to' };
+
+/**
+ * The confirmation of an action, once the owner has written the words it asked for: it says them back, so the step that confirms shows what is about to be sent.
+ * An action with no words of its own to say keeps the confirmation its source gave it, or a plain question.
+ */
+export function confirmWithWords(action: InboxAction, typed: string | undefined): NonNullable<InboxAction['confirm']> {
+  const base = action.confirm ?? { title: `${action.label}?` };
+  if (!action.input || typed === undefined || typed.trim() === '') return base;
+  const said = `${WORDS_NAME[action.input.field] ?? 'You wrote'}: \u201c${clipWords(typed.trim(), SAID_BACK_MAX)}\u201d.`;
+  return { ...base, text: base.text ? `${said} ${base.text}` : said };
+}
+
+/** What a screen tells the owner once an action on a notice has gone: what it did and, where there is something to say, what happens next. */
+export function doneWords(action: InboxAction, profile: string | undefined): { message: string; detail?: string } {
+  const to = profile === undefined ? '' : ` to ${profile}`;
+  switch (action.id) {
+    case 'answer':
+      return { message: `Answer sent${to}`, detail: 'The task is back in work.' };
+    case 'approve':
+      return { message: 'Approved', detail: action.request.path.includes('/pairing/') ? 'They can now talk to the bot.' : 'The task is done.' };
+    case 'reject':
+      return { message: `Sent back${to}`, detail: 'It is back in work, with your note.' };
+    case 'retry':
+      return { message: 'Retrying', detail: 'A worker picks it up again.' };
+    case 'acknowledge':
+      return { message: 'Acknowledged', detail: 'The task is marked done.' };
+    case 'reassign':
+      return { message: 'Reassigned', detail: 'The new profile picks it up.' };
+    case 'decline':
+      return { message: 'Declined', detail: 'The request is cleared. They can ask again.' };
+    default:
+      return { message: `${action.label}: sent` };
+  }
 }

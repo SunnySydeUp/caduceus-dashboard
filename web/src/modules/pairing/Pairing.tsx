@@ -4,6 +4,7 @@ import { closeAllLayers } from '../../overlays/layers.ts';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
@@ -12,7 +13,7 @@ import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
 import { approvePending, clearPendingRequests, personWords, revokeApproved } from './pairing-actions.ts';
 import { usePairing } from './pairing-data.ts';
-import { ageWords, platformName, type ApprovedUser, type PendingRequest } from './pairing-model.ts';
+import { ageWords, expiryWords, platformName, type ApprovedUser, type PendingRequest } from './pairing-model.ts';
 import '../profiles/profiles.css';
 import './pairing.css';
 
@@ -78,6 +79,7 @@ function PersonCard({ row, busy, onApprove, onMenu }: { row: Row; busy: boolean;
           {row.kind === 'pending' ? <StatusBadge state="waiting" label={`Asked ${ageWords(row.request.ageMinutes)}`} /> : <StatusBadge state="online" label={row.user.approvedAt ? `Approved ${new Date(row.user.approvedAt).toLocaleDateString()}` : 'Approved'} variant="plain" />}
         </div>
       </div>
+      {row.kind === 'pending' && <p className="pr-note">{expiryWords(row.request.ageMinutes)} if you do nothing.</p>}
       {row.kind === 'pending' && !row.request.approvable && <p className="pr-note">An older Hermes wrote this request without an id, so it cannot be approved here. Approve it with its code: <code>hermes pairing approve {row.request.platform} CODE</code>.</p>}
       <div className="pr-card__actions">
         {row.kind === 'pending' && (
@@ -146,9 +148,9 @@ export function Pairing() {
     const who = whoOf(row);
     const copy: MenuAction = { id: 'copy', icon: 'copy', label: 'Copy user id', sub: `The id ${platformName(who.platform)} knows them by`, run: () => void navigator.clipboard?.writeText(who.userId).then(() => toast('Copied the user id'), () => toast('Could not copy: this browser did not allow it', { tone: 'warning' })) };
     if (row.kind === 'pending') {
-      return [{ id: 'approve', icon: 'check', label: 'Approve…', sub: row.request.approvable ? `Tier 2 · for ${profile}` : 'Needs its code: see the note on the card', disabled: !row.request.approvable, run: () => void approve(row.request) }, copy];
+      return [{ id: 'approve', icon: 'check', label: 'Approve…', sub: row.request.approvable ? `Needs your passkey · for ${profile}` : 'Needs its code: see the note on the card', disabled: !row.request.approvable, run: () => void approve(row.request) }, copy];
     }
-    return [copy, { id: 'revoke', icon: 'user-plus', label: 'Revoke…', sub: `Tier 2 · for ${profile}`, danger: true, run: () => void revoke(row.user) }];
+    return [copy, { id: 'revoke', icon: 'user-plus', label: 'Revoke…', sub: `Needs your passkey · for ${profile}`, danger: true, run: () => void revoke(row.user) }];
   };
 
   const loaded = pending !== undefined && approved !== undefined;
@@ -184,7 +186,7 @@ export function Pairing() {
         }
       />
       <p className="help-text">
-        When a stranger sends a direct message to one of your bots, Hermes keeps their request here instead of answering. You approve the people you know. <Term id="pairing">Pairing</Term> is per profile, and per <AppLink to="/connect/channels">channel</AppLink>.
+        When a stranger sends a direct message to one of your bots, Hermes keeps their request here instead of answering. You approve the people you know. There is no button to refuse one person: a request you ignore goes away by itself after an hour, and Clear pending drops them all. <Term id="pairing">Pairing</Term> is per profile, and per <AppLink to="/connect/channels">channel</AppLink>.
       </p>
       {view.failed && (
         <div className="banner" data-tone="danger" role="alert">
@@ -196,7 +198,7 @@ export function Pairing() {
           </button>
         </div>
       )}
-      {!loaded && !view.failed && <p role="status">Loading pairing requests…</p>}
+      {!loaded && !view.failed && <Loading label="Loading pairing requests…" lines={3} onRetry={() => void view.reload()} />}
       {nothing && (
         <div className="empty">
           <span className="empty__icon">

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { ProfileCard } from '../src/modules/profiles/profiles-model.ts';
-import { configuredChannels, gatewayProcesses, gatewayRows, isUnconfigured, migrationView, plainDuration, type GatewayInputs } from '../src/modules/gateway/gateway-model.ts';
+import { configuredChannels, gatewayImpactText, gatewayModeLabel, gatewayProcesses, gatewayRows, isUnconfigured, migrationView, plainDuration, type GatewayInputs } from '../src/modules/gateway/gateway-model.ts';
 import { restartBanner } from '../src/restart-to-apply.ts';
 
 const card = (name: string, extra: Partial<ProfileCard> = {}): ProfileCard => ({
@@ -199,5 +199,34 @@ describe('a host with no gateway configured', () => {
     expect(configuredChannels({ platforms: [] })).toBe(0);
     expect(configuredChannels({ detail: 'x' })).toBeUndefined();
     expect(configuredChannels(undefined)).toBeUndefined();
+  });
+});
+
+describe('the two ways a host runs its gateways', () => {
+  test('are always called One shared gateway and One gateway per profile, on every page', () => {
+    expect(gatewayModeLabel('multiplex')).toBe('One shared gateway');
+    expect(gatewayModeLabel('multiple')).toBe('One gateway per profile');
+    expect(gatewayModeLabel('single')).toBe('One gateway per profile');
+    expect(gatewayModeLabel('none')).toBeUndefined();
+    expect(gatewayModeLabel(undefined)).toBeUndefined();
+  });
+});
+
+describe('what a restart or a stop says it does to work in progress', () => {
+  test('a restart waits for working agents, and says so once, without also saying their turn ends', () => {
+    const text = gatewayImpactText('restart', { activeAgents: 2 });
+
+    expect(text).toContain('2 agents are working now');
+    expect(text).toContain('waits for them to finish');
+    expect(text).not.toMatch(/turn ends|finishes work in progress first/);
+    expect(gatewayImpactText('restart', { activeAgents: 1 })).toContain('1 agent is working now');
+    expect(gatewayImpactText('restart', {})).toContain('waits for work in progress to finish');
+  });
+
+  test('a restart of a shared gateway restarts the profiles it serves; a stop ends the turns and takes them down', () => {
+    expect(gatewayImpactText('restart', { alsoServes: ['coder', 'writer'] })).toContain('also serves coder and writer, which restart with it');
+    const stop = gatewayImpactText('stop', { alsoServes: ['coder'], activeAgents: 1 });
+    expect(stop).toContain('which go down with it');
+    expect(stop).toContain('1 agent is working now, and its turn ends');
   });
 });

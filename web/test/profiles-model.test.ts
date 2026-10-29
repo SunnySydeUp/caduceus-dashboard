@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { availableTabs, tabPath } from '../src/modules/profiles/profile-tabs.ts';
-import { cliCommand, deleteRefusal, gatewayView, overviewMetrics, parseProfiles, renameProblem, type ProfileCard } from '../src/modules/profiles/profiles-model.ts';
+import { cliCommand, deleteRefusal, gatewayView, overviewMetrics, parseProfiles, renameProblem, skillCountWords, type ProfileCard } from '../src/modules/profiles/profiles-model.ts';
 
 /** A profile as Hermes's `GET /api/profiles` lists it (only what Caduceus reads). */
 const entry = (name: string, extra: Record<string, unknown> = {}) => ({
@@ -154,5 +154,11 @@ describe('the tabs of a profile\'s detail', () => {
     expect(availableTabs(['model', 'skills', 'overview', 'files']).map((tab) => tab.id)).toEqual(['overview', 'skills', 'model', 'files']);
     expect(tabPath('coder', 'overview')).toBe('/agents/profiles/coder');
     expect(tabPath('coder', 'danger')).toBe('/agents/profiles/coder/danger');
+  });
+});
+
+describe('the count of skills in words', () => {
+  test('says 1 skill, not 1 skills', () => {
+    expect([0, 1, 2, 58].map(skillCountWords)).toEqual(['0 skills', '1 skill', '2 skills', '58 skills']);
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import type { LiveRun } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
-import { BOARD_STATUSES, BLOCK_KINDS, type BoardStatus, type BoardTask, type BlockKind } from '../src/modules/work/board-model.ts';
+import { BOARD_STATUSES, BLOCK_KINDS, blockReason, failureLine, taskHits, type BoardStatus, type BoardTask, type BlockKind } from '../src/modules/work/board-model.ts';
 import type { Job } from '../src/modules/work/schedules-model.ts';
 import { groupWork, readyTaskId, whenInWords, WORK_GROUPS, type WorkGroupId, type WorkInput, type WorkRow } from '../src/modules/work/work-desk-model.ts';
 
@@ -63,17 +63,62 @@ function keys(input: Partial<WorkInput>, agent?: string): Record<WorkGroupId, st
 describe('where a Kanban task goes', () => {
   test('each status and each block kind has one group: what needs the owner waits, a worker on it runs, finished work is ready for review, and what has not started is scheduled', () => {
     const blocked = (kind: BlockKind | null) => task(`blocked-${kind}`, 'blocked', { blockKind: kind });
+    const failed = task('blocked-failed', 'blocked', { failures: 2, lastFailureError: 'worker exited cleanly (rc=0) without kanban_complete' });
     const tasks = [
       ...BOARD_STATUSES.filter((status) => status !== 'blocked').map((status) => task(status, status, status === 'done' ? { completedAt: seconds(NOW - MINUTE) } : {})),
       ...[...BLOCK_KINDS, null].map(blocked),
+      failed,
     ];
     const placed = keys({ boards: [{ slug: 'default', tasks }], ready: tasks.filter((candidate) => candidate.status === 'done').map((done) => readyTask('default', done)) });
     const at = (id: string) => `task:default/${id}`;
 
-    expect(placed.waiting.sort()).toEqual(['review', 'blocked-needs_input', 'blocked-capability', 'blocked-null'].map(at).sort());
+    expect(placed.waiting.sort()).toEqual(['review', 'blocked-needs_input', 'blocked-capability', 'blocked-failed'].map(at).sort());
     expect(placed.running).toEqual([at('running')]);
     expect(placed.review).toEqual([at('done')]);
-    expect(placed.scheduled.sort()).toEqual(['triage', 'todo', 'scheduled', 'ready', 'blocked-dependency', 'blocked-transient'].map(at).sort());
+    expect(placed.scheduled.sort()).toEqual(['triage', 'todo', 'scheduled', 'ready', 'blocked-dependency', 'blocked-transient', 'blocked-null'].map(at).sort());
+  });
+});
+
+describe('what a block and a failure say', () => {
+  test('a block the owner typed shows their reason and is not Waiting on you', () => {
+    const { groups } = groupWork({ ...none, boards: [{ slug: 'default', tasks: [task('t_b', 'blocked', { summary: 'Waiting on design' })] }] });
+
+    expect(groups.waiting).toEqual([]);
+    expect(groups.scheduled[0]).toMatchObject({ line: 'Waiting on design', action: 'open' });
+  });
+
+  test('a failed worker is Waiting with one verb, Retry, and a human line instead of the protocol text', () => {
+    const failed = task('t_f', 'blocked', { failures: 1, lastFailureError: 'worker exited cleanly (rc=0) without kanban_complete' });
+    const { groups } = groupWork({ ...none, boards: [{ slug: 'default', tasks: [failed] }] });
+
+    expect(groups.waiting[0]).toMatchObject({ action: 'retry', line: 'The worker stopped before it finished. Retry it.' });
+    expect(failureLine('disk full')).toBe('Failed: disk full');
+  });
+
+  test('a running task never shows an old block reason', () => {
+    const { groups } = groupWork({ ...none, boards: [{ slug: 'default', tasks: [task('t_r', 'running', { summary: 'Waiting on design' })] }] });
+
+    expect(groups.running[0].line).toBe('A worker is on it');
+  });
+});
+
+describe('the line a blocked card shows', () => {
+  test('the owner’s own reason shows on the card, a failure is in plain words, and a task that is not blocked has none', () => {
+    expect(blockReason(task('a', 'blocked', { summary: 'Waiting on design' }))).toMatchObject({ label: 'Waiting on design' });
+    expect(blockReason(task('b', 'blocked', { failures: 1, lastFailureError: 'rc=0 without kanban_complete' }))?.label).toBe('The worker stopped before it finished. Retry it.');
+    expect(blockReason(task('c', 'blocked', { blockKind: 'needs_input' }))).toMatchObject({ label: 'Needs your input', tone: 'warning' });
+    expect(blockReason(task('d', 'running', { summary: 'old' }))).toBeUndefined();
+  });
+});
+
+describe('the tasks the palette finds', () => {
+  test('a task matches when its title has every word, in any case, and at most eight are listed', () => {
+    const tasks = Array.from({ length: 10 }, (_, index) => task(`t${index}`, 'running', { title: `Draft the Release notes ${index}` }));
+    const board = { tasks: [...tasks, task('other', 'todo', { title: 'Fix the login' })] } as Parameters<typeof taskHits>[0];
+
+    expect(taskHits(board, 'release DRAFT')).toHaveLength(8);
+    expect(taskHits(board, 'login')).toEqual([{ id: 'task:other', label: 'Fix the login', sub: 'Todo · coder', path: '/work/tasks/other' }]);
+    expect(taskHits(board, '  ')).toEqual([]);
   });
 });
 

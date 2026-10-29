@@ -53,7 +53,7 @@ function Reasoning({ profile, saved, reload }: { profile: string; saved: string;
           <Icon name="lock" />
           Save reasoning default…
         </WriteButton>
-        <span className="subtle md-note">Writes config.yaml · Tier 3</span>
+        <span className="subtle md-note">Writes config.yaml · needs your passkey and the profile name</span>
       </div>
     </div>
   );

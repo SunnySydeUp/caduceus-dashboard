@@ -11,10 +11,11 @@ export function setSkillEnabled(profile: string, name: string, enabled: boolean)
 }
 
 /** Creates a skill from a whole SKILL.md text. */
-export function createSkill(profile: string, input: { name: string; category: string; content: string }): Promise<ActionOutcome> {
+export function createSkill(profile: string, input: { name: string; category: string; content: string }, onConfirmed?: () => void): Promise<ActionOutcome> {
   return runTiered(
     fetchTiered({
       ...createRequest(profile, input),
+      onConfirmed,
       confirm: {
         title: `Create the skill ${input.name} in ${profile}?`,
         text: `Hermes writes the SKILL.md you composed${input.category.trim() ? ` in the ${input.category.trim()} category` : ''}. The agent can use it from the next session.`,
@@ -27,10 +28,11 @@ export function createSkill(profile: string, input: { name: string; category: st
 }
 
 /** Replaces a skill's SKILL.md with the text the editor holds. */
-export function saveSkill(profile: string, name: string, content: string): Promise<ActionOutcome> {
+export function saveSkill(profile: string, name: string, content: string, onConfirmed?: () => void): Promise<ActionOutcome> {
   return runTiered(
     fetchTiered({
       ...saveRequest(profile, name, content),
+      onConfirmed,
       confirm: {
         title: `Save the SKILL.md of ${name} in ${profile}?`,
         text: 'Hermes replaces the file with this text, exactly as you see it. The frontmatter is not rewritten.',

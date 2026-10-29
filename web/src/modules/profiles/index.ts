@@ -19,8 +19,8 @@ export const profilesModule: AppModule = {
   routes: [
     { path: '/agents/profiles', screen: Profiles },
     { path: '/agents/profiles/new', screen: ProfileBuilder, title: 'New profile', parent: '/agents/profiles' },
-    { path: '/agents/profiles/:name', screen: ProfileDetail, title: 'Profile', parent: '/agents/profiles' },
-    { path: '/agents/profiles/:name/:tab', screen: ProfileDetail, title: 'Profile', parent: '/agents/profiles' },
+    { path: '/agents/profiles/:name', screen: ProfileDetail, title: ':name', parent: '/agents/profiles' },
+    { path: '/agents/profiles/:name/:tab', screen: ProfileDetail, title: ':name', parent: '/agents/profiles' },
   ],
   help: () => import('./help.ts').then((m) => m.profilesHelp),
 };

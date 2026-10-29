@@ -1,6 +1,12 @@
 // Today's API (`/_caduceus/api/today`), shared by the Caduceus server and the web app (M8 #03). Hermes says what finished; Caduceus owns the one concept Hermes
 // lacks, "ready for review": work that is done and has not been opened since. The server derives the list on every ask and stores only which items were opened.
 
+/** What a task's result says when the owner approved it from Caduceus (`POST /_caduceus/api/work/tasks/:id/approve`). Hermes will not complete a task with no evidence, so the approval is the evidence. */
+export const OWNER_APPROVED = 'Approved by the owner from Caduceus.';
+
+/** What a task's result says when the owner moved it to Done by hand from Caduceus and gave no words of their own (the Board's move). */
+export const OWNER_CLOSED_BY_HAND = 'Marked done by the owner from Caduceus.';
+
 /** What an item that is ready for review is: a Kanban task that reached Done, or a run that finished (a chat's, or a scheduled job's agent run). */
 export type ReadyKind = 'task' | 'run';
 

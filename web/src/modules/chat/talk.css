@@ -71,9 +71,16 @@
 /* The View menu: the roles are switches with a tick, the activity mode is a segmented control that fills the panel. */
 .talk__view { min-inline-size: 15rem; }
 .talk__view .seg button { padding-inline: var(--cd-space-2); }
-/* On a phone Details is an icon; its word stays for screen readers. */
+/* On a phone, and in any header too narrow to hold the title beside labelled buttons (a tablet with the sessions column open), the buttons are icons and their words are for a screen reader.
+   The container is the inner row that holds only the title and the buttons, not the sticky header itself: containment gives its box no width of its own, and a menu panel
+   (absolutely placed by its own `.pop`) never sits against the sticky wrapper that `--talk-header-h` measures. */
+.talk__header .page-header { container: talkhead / inline-size; }
 .app[data-size="compact"] .talk__button-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.app[data-size="compact"] .talk__details-button { inline-size: max(var(--cd-control-h), var(--cd-target-min)); padding: 0; justify-content: center; }
+.app[data-size="compact"] .talk__details-button, .app[data-size="compact"] .talk__new-button { inline-size: max(var(--cd-control-h-sm), var(--cd-target-min)); padding: 0; justify-content: center; }
+@container talkhead (max-width: 40rem) {
+  .talk__button-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .talk__details-button, .talk__new-button { inline-size: max(var(--cd-control-h-sm), var(--cd-target-min)); padding: 0; justify-content: center; }
+}
 
 /* The start of a new chat (NewChatStart.tsx): the agent, and the rest of the crew as chips. Rows of chips are spaced so their enlarged targets do not overlap. */
 .chat__start { display: grid; justify-items: center; gap: var(--cd-space-3); padding-block: var(--cd-space-12) var(--cd-space-8); text-align: center; }

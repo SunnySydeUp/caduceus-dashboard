@@ -7,13 +7,14 @@ import { closeAllLayers } from '../../overlays/layers.ts';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { useSizeClass } from '../../shell/use-size-class.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
-import { type GatewayAction, type GatewayRow, gatewayProcesses, gatewayRows, isUnconfigured, plainDuration } from './gateway-model.ts';
+import { type GatewayAction, type GatewayRow, gatewayModeLabel, gatewayProcesses, gatewayRows, isUnconfigured, plainDuration } from './gateway-model.ts';
 import { useGateways, type GatewaysView } from './gateway-data.ts';
 import './gateway.css';
 
@@ -130,7 +131,7 @@ function ActionSheet({ row, onAction, onClose }: { row: GatewayRow; onAction(act
               <Icon name={ACTION_ICONS[action.id]} />
               <span>
                 <span>{action.label}</span>
-                <small>{action.tier === 'T1' ? 'Tier 1 · you confirm' : 'Tier 2 · you confirm, then use your passkey'}</small>
+                <small>{action.tier === 'T1' ? 'You confirm first' : 'You confirm, then use your passkey'}</small>
               </span>
             </WriteButton>
           </li>
@@ -199,6 +200,7 @@ export function Gateway() {
   const processes = gatewayProcesses(inputs);
   const running = rows.filter((row) => row.running).length;
   const mode = view.topology?.gateway_mode;
+  const modeLabel = gatewayModeLabel(mode);
   const unconfigured = view.cards !== undefined && isUnconfigured(rows, view.channels);
 
   const perform = async (row: GatewayRow, action: GatewayAction) => {
@@ -221,18 +223,18 @@ export function Gateway() {
       <PageHeader
         overline="Connect"
         title="Gateway"
-        subtitle={view.cards ? `${running} of ${rows.length} gateway${rows.length === 1 ? '' : 's'} running${mode === 'multiplex' ? ' · one gateway for every profile' : ''}` : 'Whether each profile’s messaging gateway is running.'}
+        subtitle={view.cards ? `${running} of ${rows.length} gateway${rows.length === 1 ? '' : 's'} running${modeLabel ? ` · ${modeLabel}` : ''}` : 'Whether each profile’s messaging gateway is running.'}
         actions={
-          mode !== 'multiplex' && (
+          mode === 'multiple' && (
             <AppLink className="btn btn--secondary" to="/connect/gateway/migrate">
               <Icon name="stack" />
-              Migrate
+              Move to one shared gateway
             </AppLink>
           )
         }
       />
       <p className="help-text">
-        The <Term id="gateway">gateway</Term> connects Hermes to chat platforms. A host can run one for each profile, or one <Term id="multiplexed-gateway">multiplexed gateway</Term> for all of them. Before a restart or an update, a <Term id="drain">drain</Term> lets work in progress finish.
+        The <Term id="gateway">gateway</Term> connects Hermes to chat platforms. A host runs either {`“One gateway per profile”`} or {`“One shared gateway”`} (a <Term id="multiplexed-gateway">multiplexed gateway</Term> that serves every profile). Before a restart or an update, a <Term id="drain">drain</Term> lets work in progress finish.
       </p>
       <div className="gw-health-row">
         <HealthBadge />
@@ -247,7 +249,7 @@ export function Gateway() {
           </button>
         </div>
       )}
-      {!view.cards && !view.failed && <p role="status">Loading gateways…</p>}
+      {!view.cards && !view.failed && <Loading label="Loading gateways…" lines={3} onRetry={() => void view.reload()} />}
       {unconfigured ? (
         <Empty view={view} />
       ) : (

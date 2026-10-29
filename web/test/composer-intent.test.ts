@@ -51,7 +51,7 @@ describe('the hint under the composer', () => {
   test('each intent says what it does, and Ask names the agent', () => {
     expect(intentHint('ask', 'coder')).toBe('coder answers here, and you can follow along.');
     expect(intentHint('delegate', 'coder')).toBe('Runs in the background. You are told only when it needs you or finishes.');
-    expect(intentHint('repeat', 'coder')).toBe('Pick when it should run again. It shows up under Work.');
+    expect(intentHint('repeat', 'coder')).toBe('Pick when it should run again. It shows up under Work. Your words stay in this box.');
   });
 
   test('the three hints differ', () => {

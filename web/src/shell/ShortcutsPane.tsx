@@ -10,7 +10,7 @@ const FIXED: { caps: string[]; what: string }[] = [
   { caps: ['↵'], what: 'Run the active result' },
 ];
 
-/** What the keyboard does inside the Chat module's sessions list: they work while the focus is in the list, so they are not shortcuts to remap. */
+/** What the keyboard does inside Talk's sessions list: they work while the focus is in the list, so they are not shortcuts to remap. */
 const SESSION_KEYS: { caps: string[]; what: string }[] = [
   { caps: ['j', '↓'], what: 'Next session' },
   { caps: ['k', '↑'], what: 'Previous session' },
@@ -61,7 +61,7 @@ export function ShortcutsPane() {
         ))}
         {[
           { caption: 'In sheets and the palette', keys: FIXED },
-          { caption: 'In the Chat sessions list', keys: SESSION_KEYS },
+          { caption: 'In the Talk sessions list', keys: SESSION_KEYS },
           { caption: 'In the Notices list', keys: NOTICES_KEYS },
           { caption: 'In a terminal', keys: terminalKeys(platform) },
         ].map(({ caption, keys }) => (

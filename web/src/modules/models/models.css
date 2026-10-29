@@ -88,3 +88,5 @@
 .md-progress { inline-size: 100%; block-size: var(--cd-space-2); accent-color: var(--cd-accent); }
 .md-local, .md-local .md-lead, .md-local .md-card__facts { overflow-wrap: anywhere; }
 .md-local .md-card__facts { grid-template-columns: minmax(0, auto) minmax(0, 1fr); }
+
+.md-phone { display: grid; gap: var(--cd-space-2); justify-items: start; }

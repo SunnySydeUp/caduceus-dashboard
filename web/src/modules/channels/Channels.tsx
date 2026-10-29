@@ -1,7 +1,9 @@
 import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
+import { PopoverMenu } from '../../shell/PopoverMenu.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
@@ -11,7 +13,7 @@ import { WriteButton } from '../../shell/WriteButton.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import { setChannelEnabled, testChannel } from './channel-actions.ts';
 import { useChannels } from './channels-data.ts';
-import { channelStatus, filterChannels, type Channel, type ChannelFilter } from './channels-model.ts';
+import { channelStatus, enableBlocker, filterChannels, groupChannels, type Channel, type ChannelFilter } from './channels-model.ts';
 import { ChannelDrawer, type DrawerTab } from './ChannelDrawer.tsx';
 import { startOnboarding } from './onboarding-actions.ts';
 import { QrOnboardingSheet } from './QrOnboardingSheet.tsx';
@@ -32,6 +34,8 @@ interface TestOutcome {
 function ChannelCard({ channel, profile, test, busy, onConfigure, onToggle, onTest, onQr }: { channel: Channel; profile: string; test: TestOutcome | undefined; busy: boolean; onConfigure(tab: DrawerTab): void; onToggle(): void; onTest(): void; onQr?(): void }) {
   const status = channelStatus(channel);
   const switchLabel = useId();
+  const whyId = useId();
+  const why = enableBlocker(channel);
   return (
     <li className="ch-card" data-state={channel.state}>
       <div className="ch-card__top">
@@ -42,21 +46,20 @@ function ChannelCard({ channel, profile, test, busy, onConfigure, onToggle, onTe
         </div>
         <div className="ch-card__switch">
           <span id={switchLabel} className="sr-only">
-            {channel.name} enabled
+            {channel.name}
           </span>
-          <WriteButton
-            type="button"
-            role="switch"
-            className="switch"
-            aria-checked={channel.enabled}
-            aria-labelledby={switchLabel}
-            disabled={busy || (!channel.configured && !channel.enabled)}
-            title={!channel.configured && !channel.enabled ? `Configure ${channel.name} first` : undefined}
-            onClick={onToggle}
-          />
+          <WriteButton type="button" role="switch" className="switch" aria-checked={channel.enabled} aria-labelledby={switchLabel} aria-describedby={why ? whyId : undefined} disabled={busy || why !== undefined} onClick={onToggle} />
         </div>
       </div>
-      <p className="ch-card__desc">{channel.description}</p>
+      {why && (
+        <p className="ch-card__why" id={whyId}>
+          <Icon name="info" small />
+          <span>{why}</span>
+        </p>
+      )}
+      <p className="ch-card__desc" title={channel.description}>
+        {channel.description}
+      </p>
       {channel.error && (
         <p className="ch-card__error" role="note">
           <Icon name="alert" small />
@@ -87,24 +90,38 @@ function ChannelCard({ channel, profile, test, busy, onConfigure, onToggle, onTe
         </p>
       )}
       <div className="ch-card__actions">
-        <button type="button" className={`btn ${status.setup ? 'btn--primary' : 'btn--secondary'}`} onClick={() => onConfigure('connection')} aria-label={`${status.setup ? 'Configure' : 'Edit'} ${channel.name}`}>
+        <button type="button" className={`btn ${status.setup ? 'btn--primary' : 'btn--secondary'}`} onClick={() => onConfigure('connection')} aria-label={`${status.setup ? 'Set up' : 'Edit'} ${channel.name}`}>
           <Icon name="sliders" />
-          {status.setup ? 'Configure' : 'Edit'}
+          {status.setup ? 'Set up' : 'Edit'}
         </button>
-        {onQr && (
-          <WriteButton type="button" className="btn btn--secondary" disabled={busy} onClick={onQr}>
-            <Icon name="camera" />
-            {channel.id === 'telegram' ? 'Create with QR' : 'Pair with QR'}
-          </WriteButton>
-        )}
-        <WriteButton type="button" className="btn btn--secondary" disabled={busy} aria-label={`Test ${channel.name}`} onClick={onTest}>
-          <Icon name="play" />
-          Test
-        </WriteButton>
-        <button type="button" className="btn btn--ghost" aria-label={`${channel.name} settings for ${profile}`} onClick={() => onConfigure('behaviour')}>
-          <Icon name="settings" />
-          Settings
-        </button>
+        <PopoverMenu
+          label={`More for ${channel.name}`}
+          align="end"
+          trigger={(props) => (
+            <button {...props} className="btn btn--ghost btn--icon" aria-label={`More for ${channel.name}`}>
+              <Icon name="more" />
+            </button>
+          )}
+        >
+          {({ close }) => (
+            <>
+              <button type="button" className="pop__item" disabled={busy} onClick={() => (close(true), onTest())}>
+                <Icon name="play" />
+                Test {channel.name}
+              </button>
+              {onQr && (
+                <WriteButton type="button" className="pop__item" disabled={busy} onClick={() => (close(true), onQr())}>
+                  <Icon name="camera" />
+                  {channel.id === 'telegram' ? 'Create with QR' : 'Pair with QR'}
+                </WriteButton>
+              )}
+              <button type="button" className="pop__item" aria-label={`${channel.name} behaviour settings for ${profile}`} onClick={() => (close(true), onConfigure('behaviour'))}>
+                <Icon name="settings" />
+                Behaviour settings
+              </button>
+            </>
+          )}
+        </PopoverMenu>
       </div>
     </li>
   );
@@ -125,6 +142,7 @@ export function Channels() {
 
   const { channels } = view;
   const shown = useMemo(() => (channels ? filterChannels(channels, { query, show }) : undefined), [channels, query, show]);
+  const groups = useMemo(() => groupChannels(shown ?? []), [shown]);
   const opened = channels?.find((channel) => channel.id === open?.id);
   const connected = channels?.filter((channel) => channel.state === 'connected').length ?? 0;
   const inUse = channels?.filter((channel) => channel.enabled && channel.configured).length ?? 0;
@@ -192,7 +210,7 @@ export function Channels() {
           </button>
         </div>
       )}
-      {!channels && !view.failed && <p role="status">Loading channels…</p>}
+      {!channels && !view.failed && <Loading label="Loading channels…" lines={4} onRetry={() => void view.reload()} />}
       {channels && (
         <div className="ch-tools">
           <div className="input-wrap ch-search">
@@ -205,23 +223,31 @@ export function Channels() {
           <RadioGroup labelledBy={filterLabel} value={show} options={FILTERS} onChange={setShow} className="seg" />
         </div>
       )}
-      {profile && shown && shown.length > 0 && (
-        <ul className="ch-cards" aria-label="Channels">
-          {shown.map((channel) => (
-            <ChannelCard
-              key={channel.id}
-              channel={channel}
-              profile={profile}
-              test={tests[channel.id]}
-              busy={busy === channel.id}
-              onConfigure={(tab) => setOpen({ id: channel.id, tab })}
-              onToggle={() => void toggle(channel)}
-              onTest={() => void test(channel)}
-              onQr={channel.id === 'telegram' || channel.id === 'whatsapp' ? () => void pair(channel.id as QrPlatform) : undefined}
-            />
-          ))}
-        </ul>
-      )}
+      {profile &&
+        groups.map((group) => (
+          <section key={group.id} className="ch-group" aria-labelledby={`ch-group-${group.id}`}>
+            {groups.length > 1 && (
+              <h2 id={`ch-group-${group.id}`} className="ch-group__title">
+                {group.title}
+              </h2>
+            )}
+            <ul className="ch-cards" aria-label={groups.length > 1 ? group.title : 'Channels'}>
+              {group.channels.map((channel) => (
+                <ChannelCard
+                  key={channel.id}
+                  channel={channel}
+                  profile={profile}
+                  test={tests[channel.id]}
+                  busy={busy === channel.id}
+                  onConfigure={(tab) => setOpen({ id: channel.id, tab })}
+                  onToggle={() => void toggle(channel)}
+                  onTest={() => void test(channel)}
+                  onQr={channel.id === 'telegram' || channel.id === 'whatsapp' ? () => void pair(channel.id as QrPlatform) : undefined}
+                />
+              ))}
+            </ul>
+          </section>
+        ))}
       {channels && shown && shown.length === 0 && (
         <div className="empty">
           <span className="empty__icon">

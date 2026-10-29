@@ -2,27 +2,13 @@
 // each goes through `fetchTiered`, which shows the shared dialog with the profile chip for the route's tier. The page that asks
 // and the restart-to-apply banner both use these, so a restart is the same action wherever it starts.
 import { runTiered, type ActionOutcome } from './modules/profiles/profile-actions.ts';
+import { gatewayImpactText, type GatewayImpact } from './modules/gateway/gateway-model.ts';
 import { fetchTiered } from './tiered.ts';
 
 export type GatewayVerb = 'start' | 'stop' | 'restart' | 'drain' | 'cancel-drain';
 
-interface Impact {
-  /** The other profiles a multiplexed gateway serves: it takes them with it. */
-  alsoServes?: readonly string[];
-  activeAgents?: number;
-}
-
-const joined = (names: readonly string[]) => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
-
-/** What a stop or restart interrupts, in a sentence. */
-function interrupts({ alsoServes = [], activeAgents = 0 }: Impact): string {
-  const shared = alsoServes.length > 0 ? ` It also serves ${joined(alsoServes)}, which go down with it.` : '';
-  const busy = activeAgents > 0 ? ` ${activeAgents === 1 ? '1 agent is' : `${activeAgents} agents are`} working now, and ${activeAgents === 1 ? 'its' : 'their'} turn ends.` : '';
-  return `${shared}${busy}`;
-}
-
 /** Runs one gateway action for `profile` through the policy, asking first for what the tier needs. */
-export function runGatewayAction(verb: GatewayVerb, profile: string, impact: Impact = {}): Promise<ActionOutcome> {
+export function runGatewayAction(verb: GatewayVerb, profile: string, impact: GatewayImpact = {}): Promise<ActionOutcome> {
   const query = `?profile=${encodeURIComponent(profile)}`;
   switch (verb) {
     case 'start':
@@ -46,7 +32,7 @@ export function runGatewayAction(verb: GatewayVerb, profile: string, impact: Imp
           path: `/api/gateway/stop${query}`,
           confirm: {
             title: `Stop the gateway of ${profile}?`,
-            text: `Chat platforms disconnect, and scheduled jobs and Kanban tasks stop running until it is started again.${interrupts(impact)}`,
+            text: `Chat platforms disconnect, and scheduled jobs and Kanban tasks stop running until it is started again.${gatewayImpactText('stop', impact)}`,
             object: profile,
             profile,
             confirmLabel: 'Stop gateway',
@@ -60,7 +46,7 @@ export function runGatewayAction(verb: GatewayVerb, profile: string, impact: Imp
           path: `/api/gateway/restart${query}`,
           confirm: {
             title: `Restart the gateway of ${profile}?`,
-            text: `Chat platforms reconnect on their own after a few seconds, and Hermes finishes work in progress first.${interrupts(impact)}`,
+            text: `Chat platforms reconnect on their own after a few seconds.${gatewayImpactText('restart', impact)}`,
             object: profile,
             profile,
             confirmLabel: 'Restart gateway',
@@ -107,10 +93,10 @@ export function runGatewayMigration(): Promise<ActionOutcome> {
       method: 'POST',
       path: '/api/gateway/migrate',
       confirm: {
-        title: 'Move to one gateway for every profile?',
-        text: 'Hermes stops each profile’s own gateway and starts one that serves them all. Chat platforms disconnect while it does, and come back on their own.',
+        title: 'Move to one shared gateway?',
+        text: 'Hermes stops each profile’s own gateway and starts one shared gateway that serves them all. Chat platforms disconnect while it does, and come back on their own.',
         object: 'every profile',
-        confirmLabel: 'Migrate gateways',
+        confirmLabel: 'Move to one shared gateway',
       },
     }),
   );

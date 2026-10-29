@@ -55,7 +55,7 @@ export const maintenanceHelp: ModuleHelp = {
         { h: 'The checks' },
         {
           ul: [
-            'The [[doctor]] looks over Hermes’s install: Python, dependencies, keys, the config and the services it needs. It can take a minute.',
+            'The [[doctor]] looks over Hermes’s install: Python, dependencies, keys, the config and the services it needs. It can take a minute. When it lists problems it ends with exit code 1; the sheet then says Doctor found N issues to look at, in a warning tone, because that is a result to read, not a crash.',
             'The security audit looks for weak spots such as loose permissions or keys left in the open. Hermes does not change anything.',
             'Prompt size reads how many tokens the standing parts of a prompt take. It only reads, so it asks for nothing.',
             'A [[support-dump]] is a summary of this Hermes setup for a bug report. Secrets are not in it, and nothing is uploaded.',

@@ -286,6 +286,23 @@ function PasskeysSection({ passkeys, hasPassword, change, announce }: SectionPro
   );
 }
 
+/** What a disabled button says when it needs a passkey: why, and a button that takes the owner to the form that adds one. */
+function NeedPasskey({ why }: { why: string }) {
+  const goToForm = () => {
+    const field = document.getElementById('new-passkey-name');
+    field?.scrollIntoView({ block: 'center' });
+    field?.focus();
+  };
+  return (
+    <p className="help-text">
+      Add a passkey first: {why}.{' '}
+      <button type="button" className="btn btn--ghost btn--sm" onClick={goToForm}>
+        Go to Add a passkey
+      </button>
+    </p>
+  );
+}
+
 function PasswordSection({ hasPassword, hasPasskeys, change, announce }: SectionProps & { hasPassword: boolean; hasPasskeys: boolean }) {
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -369,7 +386,7 @@ function PasswordSection({ hasPassword, hasPasskeys, change, announce }: Section
           )}
         </div>
       )}
-      {!hasPasskeys && <p className="help-text">Add a passkey first: it confirms password changes.</p>}
+      {!hasPasskeys && <NeedPasskey why="it confirms password changes" />}
     </section>
   );
 }
@@ -408,7 +425,7 @@ function ReadOnlySection({ hasPasskeys, change, announce }: SectionProps & { has
           {on ? 'Turn off read-only mode' : 'Turn on read-only mode'}
         </WriteButton>
       </div>
-      {!hasPasskeys && <p className="help-text">Add a passkey first: it confirms this change.</p>}
+      {!hasPasskeys && <NeedPasskey why="it confirms this change" />}
     </section>
   );
 }

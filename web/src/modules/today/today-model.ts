@@ -33,6 +33,8 @@ export interface ScheduleView {
   now: number;
   markers: BarMarker[];
   rows: DayRow[];
+  /** The soonest run still to come, on any day, so that a day with no runs can say what is next; `undefined` when no routine is scheduled. */
+  nextRoutine: { name: string; profile: string; when: number } | undefined;
 }
 
 /** The device's own midnight before `time` and the one after it (a day is 23 or 25 hours long where the clocks change). */
@@ -74,7 +76,15 @@ export function scheduleDay(jobs: readonly Job[], now: number): ScheduleView {
   }
   const coming = rows.filter((row) => row.kind === 'next').sort((a, b) => a.when - b.when);
   const past = rows.filter((row) => row.kind !== 'next').sort((a, b) => b.when - a.when);
-  return { now: place(now), markers: markers.sort((a, b) => a.at - b.at), rows: [...coming, ...past] };
+  // The soonest run still to come on any day: what an empty day can say is next.
+  const [soonest] = jobs.filter((job) => job.enabled && job.nextRunAt !== undefined && job.nextRunAt > now).sort((a, b) => (a.nextRunAt ?? 0) - (b.nextRunAt ?? 0));
+  const nextRoutine = soonest?.nextRunAt === undefined ? undefined : { name: soonest.name, profile: soonest.profile, when: soonest.nextRunAt };
+  return { now: place(now), markers: markers.sort((a, b) => a.at - b.at), rows: [...coming, ...past], nextRoutine };
+}
+
+/** What an empty schedule says when routines exist but none runs today: which one is next. `undefined` when there is none to name, and the usual words stand. */
+export function scheduleEmptyText(view: ScheduleView, now: number): string | undefined {
+  return view.nextRoutine && `No routines run today. Next: ${view.nextRoutine.name}, ${relativeTime(view.nextRoutine.when, now)}.`;
 }
 
 /** One line of "While you were away": a run that finished, or a routine that ran. `to` is where a run's chat opens. */
@@ -154,12 +164,47 @@ export function askedBy(item: InboxItem): { who: string; what: string } {
 
 export type EmptyBlock = 'needs' | 'ready' | 'schedule' | 'away-first' | 'away-quiet' | 'crew';
 
-/** What an empty block says and the one action that fills it. `module` is the id of the module the action opens (the screen reads its address from the registry). */
-export const EMPTY: Record<EmptyBlock, { text: string; action: { label: string; module: 'chat' | 'work' | 'schedules' | 'profiles' } }> = {
+/** The module an empty block's action opens, and the part of its address after the module's own (`/new`: the create screen, not the list). */
+interface EmptyAction {
+  label: string;
+  module: 'chat' | 'tasks' | 'schedules' | 'profiles';
+  suffix?: string;
+}
+
+/** What an empty block says and the one action that fills it. A label that promises to do something opens the screen where it is done. */
+export const EMPTY: Record<EmptyBlock, { text: string; action: EmptyAction }> = {
   needs: { text: 'Nothing needs you right now. When an agent needs a decision, it shows here.', action: { label: 'Talk to an agent', module: 'chat' } },
-  ready: { text: 'Nothing is waiting for your review. Finished tasks, runs and routines show here until you open them.', action: { label: 'Give the crew work', module: 'work' } },
-  schedule: { text: 'No routines run today. A routine you schedule shows here, with when it runs next.', action: { label: 'Schedule a routine', module: 'schedules' } },
+  ready: { text: 'Nothing is waiting for your review. Finished tasks, runs and routines show here until you open them.', action: { label: 'Give the crew work', module: 'tasks', suffix: '/new' } },
+  schedule: { text: 'No routines run today. A routine you schedule shows here, with when it runs next.', action: { label: 'Schedule a routine', module: 'schedules', suffix: '/new' } },
   'away-first': { text: 'This is your first visit to Today. Runs and routines that finish while you are away show here.', action: { label: 'See the schedule', module: 'schedules' } },
-  'away-quiet': { text: 'Nothing happened while you were away.', action: { label: 'Schedule a routine', module: 'schedules' } },
+  'away-quiet': { text: 'Nothing happened while you were away.', action: { label: 'Schedule a routine', module: 'schedules', suffix: '/new' } },
   crew: { text: 'No agents yet. Each Hermes profile is an agent of your crew.', action: { label: 'Add a profile', module: 'profiles' } },
 };
+
+/** Where an empty block's action leads: its module's address, read from the registry by `pathOf`, then the screen the label promises. */
+export function emptyTarget(which: EmptyBlock, pathOf: (module: EmptyAction['module']) => string | undefined): string {
+  const { module, suffix = '' } = EMPTY[which].action;
+  const path = pathOf(module);
+  return path === undefined ? '/' : `${path}${suffix}`;
+}
+
+/** How many failures Today lists before it says how many more there are: a bad night must not push the decisions off the screen. */
+export const LOOK_SHOWN = 3;
+
+/** One failure that needs a look: what failed, why in a line, and where it can be dealt with. */
+export interface LookRow {
+  id: string;
+  title: string;
+  line: string | undefined;
+  profile: string | undefined;
+  at: number;
+  /** Where it opens: the task or the job, else Notices. */
+  to: string;
+}
+
+/** The failed work and jobs (a task that gave up, a run that stopped, a routine that failed), newest first. A decision or a piece of news is not a failure. */
+export function needsALook(items: readonly InboxItem[]): { rows: LookRow[]; more: number } {
+  const failures = items.flatMap((item): LookRow[] => (item.kind === 'notice' && item.group === 'failed' ? [{ id: item.id, title: item.title, line: item.detail, profile: item.profile, at: item.at, to: item.link?.to ?? '/notices' }] : []));
+  failures.sort((a, b) => b.at - a.at);
+  return { rows: failures.slice(0, LOOK_SHOWN), more: Math.max(0, failures.length - LOOK_SHOWN) };
+}

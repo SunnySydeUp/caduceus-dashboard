@@ -15,7 +15,7 @@ export function BannerStack() {
   // page and move nothing. Set during this render, so that the banner and the new page are in the same paint.
   const [letIn, setLetIn] = useState<{ pathname: string; ids: readonly string[] }>({ pathname, ids: [] });
   if (letIn.pathname !== pathname) setLetIn({ pathname, ids: quietIds(all) });
-  const banners = shownBanners(all, letIn.ids);
+  const banners = shownBanners(all, letIn.ids, pathname);
   if (banners.length === 0) return null;
   const shown = open ? banners : banners.slice(0, 1);
   return (

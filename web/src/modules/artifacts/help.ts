@@ -26,6 +26,7 @@ export const artifactsHelp: ModuleHelp = {
             'Markdown is drawn with its numbered citations. Images and PDFs open in the page. Text is shown as text.',
             'An HTML page is shown in a sandboxed frame that cannot run scripts or reach Caduceus.',
             'A file of a kind Caduceus does not know is offered as a download only.',
+            'An artifact has no share link of its own. Sharing is per chat: open the chat it came from (the Open the chat link under the file) and use Share there, or download the file and send it.',
           ],
         },
         { h: 'Delete, pin and the size limit' },

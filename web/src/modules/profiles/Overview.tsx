@@ -2,21 +2,20 @@ import { useCallback, useRef, useState, type CSSProperties, type ReactNode } fro
 import { useGatewayEvent, useLiveLoad } from '../../gateway.ts';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
-import { useProfileScope } from '../../shell/profile-context.tsx';
+import { AppLink } from '../../shell/navigation.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
 import { GatewayBadge } from './GatewayBadge.tsx';
 import { autoDescribe, saveDescription, type Described } from './profile-actions.ts';
-import { useProfileCommands } from './ProfileCommands.tsx';
 import { fetchOverview, type Overview as OverviewData } from './profiles-data.ts';
-import { cliCommand, type ProfileCard } from './profiles-model.ts';
+import type { ProfileCard } from './profiles-model.ts';
 import type { TabProps } from './ProfileDetail.tsx';
 
 const number = new Intl.NumberFormat();
 
 /** Overview numbers, asked of Hermes again when the profile's sessions or Hermes itself change. Nothing is stored. */
-function useOverview(card: ProfileCard): OverviewData | undefined {
+function useOverview(card: ProfileCard): { overview: OverviewData | undefined; reload(): void } {
   const [overview, setOverview] = useState<OverviewData>();
   const latest = useRef(0);
   const load = useCallback(() => {
@@ -25,7 +24,7 @@ function useOverview(card: ProfileCard): OverviewData | undefined {
   }, [card]);
   useLiveLoad(load);
   useGatewayEvent('sessions.changed', load);
-  return overview;
+  return { overview, reload: load };
 }
 
 function Stat({ label, value, children }: { label: string; value: string; children?: ReactNode }) {
@@ -181,37 +180,26 @@ function ProposalSheet({ card, proposal, onClose, reload }: { card: ProfileCard;
 
 /** Agents › Profiles › a profile's Overview: counts, performance, who it is, where it runs. */
 export function Overview({ card, view }: TabProps) {
-  const overview = useOverview(card);
-  const { effective } = useProfileScope();
-  const commands = useProfileCommands();
+  const { overview, reload: reloadNumbers } = useOverview(card);
   const metrics = overview?.metrics;
   const percent = metrics ? Math.round(metrics.successRate * 100) : 0;
   const status = view.statuses[card.name];
 
   return (
     <div className="pf-ov">
-      <div className="row">
-        {effective?.name !== card.name && (
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => commands.useInThisTab(card)}>
-            <Icon name="user" />
-            Use in this tab
-          </button>
-        )}
-        {!card.isDefault && (
-          <WriteButton type="button" className="btn btn--secondary btn--sm" onClick={() => void commands.makeDefault(card)}>
-            <Icon name="fingerprint" />
-            Make default
-          </WriteButton>
-        )}
-        <button type="button" className="btn btn--secondary btn--sm" onClick={() => void commands.copyCliCommand(card)} aria-label={`Copy CLI command: ${cliCommand(card.name)}`}>
-          <Icon name="copy" />
-          Copy CLI command
-        </button>
-      </div>
       {overview && overview.missing.length > 0 && (
         <p className="banner pf-missing" data-tone="warning" role="status">
           <Icon name="alert" />
           <span className="banner__content">Hermes did not answer for {overview.missing.join(', ')}, so those numbers show as zero.</span>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={reloadNumbers}>
+            <Icon name="refresh" />
+            Retry
+          </button>
+        </p>
+      )}
+      {overview && overview.unavailable.length > 0 && (
+        <p className="help-text pf-missing">
+          <Icon name="info" small /> This Hermes has no {overview.unavailable.join(', ')}, so those numbers show as zero.
         </p>
       )}
       <div className="pf-stats" aria-busy={!metrics}>
@@ -242,6 +230,16 @@ export function Overview({ card, view }: TabProps) {
             {(status?.gateway_running ?? card.gatewayRunning) ? 'Hermes’s messaging gateway is running for this profile.' : 'No messaging gateway is running for this profile. Chats from Caduceus and the command line still work.'} This is the{' '}
             <Term id="gateway-status">gateway status</Term> Hermes reports.
           </p>
+          <div className="row">
+            <AppLink className="btn btn--secondary btn--sm" to={`/connect/gateway?profile=${encodeURIComponent(card.name)}`}>
+              <Icon name="broadcast" />
+              Open Gateway
+            </AppLink>
+            <AppLink className="btn btn--secondary btn--sm" to={`/connect/channels?profile=${encodeURIComponent(card.name)}`}>
+              <Icon name="plug" />
+              Channels
+            </AppLink>
+          </div>
         </div>
         <div className="panel panel--pad pf-box">
           <div className="pf-box__head">

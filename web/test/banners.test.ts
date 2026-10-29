@@ -24,3 +24,22 @@ describe('quiet banners', () => {
     expect(shownBanners([...all, banner('update', true)], letIn).map((shown) => shown.id)).not.toContain('update');
   });
 });
+
+describe('banners that stay away from a page', () => {
+  const update: Banner = { ...banner('update-available:hermes', true), hideOn: ['/system/maintenance', '/chat'] };
+
+  test('do not show on the page they link to, or under a path they name, even when let in', () => {
+    const letIn = [update.id];
+
+    expect(shownBanners([update], letIn, '/today').map((shown) => shown.id)).toEqual([update.id]);
+    expect(shownBanners([update], letIn, '/system/maintenance')).toEqual([]);
+    expect(shownBanners([update], letIn, '/chat')).toEqual([]);
+    expect(shownBanners([update], letIn, '/chat/s1')).toEqual([]);
+    // A path that only starts with the same letters is another page.
+    expect(shownBanners([update], letIn, '/chatter').map((shown) => shown.id)).toEqual([update.id]);
+  });
+
+  test('a banner with no such paths shows everywhere', () => {
+    expect(shownBanners([banner('offline')], [], '/chat/s1').map((shown) => shown.id)).toEqual(['offline']);
+  });
+});

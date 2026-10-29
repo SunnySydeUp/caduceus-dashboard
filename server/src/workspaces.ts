@@ -32,6 +32,15 @@ function folderName(folderPath: string): string {
   return name === '' ? folderPath : name.slice(0, MAX_NAME);
 }
 
+/** Why the file guard refuses a folder as a workspace, in words. */
+const REFUSALS = {
+  'bad-path': 'Give the full path of a folder on the Mac that runs Hermes, such as /Users/you/project.',
+  'outside-roots': 'This folder is outside the folders Caduceus lets Hermes work in, so it cannot be a workspace.',
+  'protected-path': 'This folder holds Hermes’s keys or Caduceus’s own data, so it cannot be a workspace.',
+  'secret-path': 'This folder holds keys or credentials, so it cannot be a workspace.',
+  'persistence-path': 'This folder is one that runs code later (a shell start-up file, SSH, launch agents or Hermes’s own scripts and skills), so it cannot be a workspace.',
+} as const;
+
 export interface WorkspaceRegistry {
   /** The entries, in the owner's order. */
   list(): Workspace[];
@@ -77,6 +86,15 @@ export function mountWorkspaces(app: Hono<AuthEnv>, { store, registry, files, ba
 
   app.get(ROUTE, (c) => c.json({ workspaces: registry.list() }));
 
+  // Whether the file guard would accept a folder as a workspace, so the Files screen offers "Add as a workspace" only where it can work. It reads
+  // and changes nothing: the add itself (the POST below) is checked again, and is a Tier 1.
+  app.get(`${ROUTE}/check`, (c) => {
+    const given = c.req.query('path');
+    if (typeof given !== 'string' || given === '') return c.json({ error: 'bad-request' }, 400);
+    const check = files.check(given, 'workspace');
+    return c.json(check.ok ? { ok: true } : { ok: false, reason: check.reason, message: REFUSALS[check.reason] });
+  });
+
   app.post(ROUTE, async (c) => {
     const gated = await gate(c, 'POST');
     if ('refusal' in gated) return gated.refusal;
@@ -85,16 +103,7 @@ export function mountWorkspaces(app: Hono<AuthEnv>, { store, registry, files, ba
     const named = isRecord(body) && body.name !== undefined ? workspaceName(body.name) : undefined;
     if (typeof given !== 'string' || (isRecord(body) && body.name !== undefined && named === undefined)) return c.json({ error: 'bad-request' }, 400);
     const check = files.check(given, 'workspace');
-    if (!check.ok) {
-      const messages = {
-        'bad-path': 'Give the full path of a folder on the Mac that runs Hermes, such as /Users/you/project.',
-        'outside-roots': 'This folder is outside the folders Caduceus lets Hermes work in, so it cannot be a workspace.',
-        'protected-path': 'This folder holds Hermes’s keys or Caduceus’s own data, so it cannot be a workspace.',
-        'secret-path': 'This folder holds keys or credentials, so it cannot be a workspace.',
-        'persistence-path': 'This folder is one that runs code later (a shell start-up file, SSH, launch agents or Hermes’s own scripts and skills), so it cannot be a workspace.',
-      } as const;
-      return c.json({ error: check.reason, message: messages[check.reason] }, check.reason === 'bad-path' ? 400 : 403);
-    }
+    if (!check.ok) return c.json({ error: check.reason, message: REFUSALS[check.reason] }, check.reason === 'bad-path' ? 400 : 403);
     const entries = registry.list();
     if (entries.length >= MAX_WORKSPACES) return c.json({ error: 'too-many-workspaces', message: `Caduceus keeps up to ${MAX_WORKSPACES} workspaces.` }, 409);
     // Hermes's own file list is the check that Hermes can see the folder: a path that is not there is an `ENOENT` answer, not an HTTP error.

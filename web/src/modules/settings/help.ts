@@ -17,6 +17,7 @@ export const settingsHelp: ModuleHelp = {
           ],
         },
         { p: 'Some changes are protected by [[risk-tiers|risk tiers]]: Caduceus asks you to confirm, or to use a [[passkey|passkey]], before it makes them.' },
+        { p: 'Sign out, under the list, ends the session on this device after you confirm. Your other devices stay signed in. The tidy addresses /settings/security, /settings/audit and /settings/repairs lead to Security, the audit log and Health.' },
       ],
       related: ['settings-appearance', 'settings-notifications', 'settings-voice', 'settings-keyboard', 'settings-security', 'settings-install'],
     },
@@ -113,7 +114,7 @@ export const settingsHelp: ModuleHelp = {
       body: [
         { p: 'A [[push-subscription|push notification]] reaches this device when Caduceus is closed. When an agent asks for an approval, the title is the decision, such as “Approve `git push` on coder?”, and the text is the exact command. Tapping it opens Today, where the decision is a card and Allow once lets the run go on. If it was answered meanwhile, the card is gone.' },
         { h: 'Turning it on' },
-        { p: 'Choose Turn on notifications. Your browser asks for permission only then, never by itself. On iPhone and iPad the page must be on the Home Screen first; until it is, Show me how opens the install guide. If you said no in the browser, allow notifications in its site settings.' },
+        { p: 'Choose Turn on notifications. Your browser asks for permission only then, never by itself. On iPhone and iPad the page must be on the Home Screen first; until it is, Show me how opens the install guide. If you said no in the browser, the card lists the steps for each browser; allow notifications there, then press Check again.' },
         { h: 'What to be told of' },
         {
           ul: [

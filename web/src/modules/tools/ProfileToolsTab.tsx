@@ -4,7 +4,7 @@ import type { TabProps } from '../profiles/ProfileDetail.tsx';
 import { ToolsetsPanel } from './ToolsetsPanel.tsx';
 import './tools.css';
 
-/** A profile's Tools & MCP tab: its toolsets, as Agents › Tools & MCP shows them, and a way on to the per-platform grid and the Tool gateway. */
+/** A profile's Tools & MCP tab: its toolsets, as Agents › Tools & MCP shows them, and a way on to the per-platform grid and Tool routing. */
 export function ProfileToolsTab({ card }: TabProps) {
   const scope = `?profile=${encodeURIComponent(card.name)}`;
   return (
@@ -24,7 +24,7 @@ export function ProfileToolsTab({ card }: TabProps) {
             Per platform
           </AppLink>
           <AppLink className="btn btn--secondary btn--sm" to={`/agents/tools/routing${scope}`}>
-            Tool gateway
+            Tool routing
           </AppLink>
           <AppLink className="btn btn--secondary btn--sm" to={`/agents/tools/hooks${scope}`}>
             Hooks

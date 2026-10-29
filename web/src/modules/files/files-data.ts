@@ -1,7 +1,8 @@
 // Reading Hermes's file routes for Workspace › Files. Only GETs live here; every change goes through `files-actions.ts`. The proxy refuses a path outside the
 // managed roots with a 403 whose message says so, and Hermes answers `{ detail }` for the rest.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MEDIA_PREVIEW_LIMIT, OFFICE_LIMIT, listUrl, parentOf, parseListing, previewKind, readUrl, streamUrl, TEXT_PREVIEW_LIMIT, type FileEntry, type Listing, type PreviewKind } from './files-model.ts';
+import { isRecord } from '@caduceus/contracts/policy/guards';
+import { MEDIA_PREVIEW_LIMIT, OFFICE_LIMIT, listUrl, openFailure, parentOf, parseListing, previewKind, readUrl, streamUrl, TEXT_PREVIEW_LIMIT, type FileEntry, type ListAnswer, type Listing, type PreviewKind } from './files-model.ts';
 
 function reasonOf(body: unknown, status: number): string {
   if (typeof body === 'object' && body !== null) {
@@ -12,14 +13,17 @@ function reasonOf(body: unknown, status: number): string {
   return `Hermes answered HTTP ${status}.`;
 }
 
-export type Folder = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'ready'; listing: Listing; selected: FileEntry | undefined };
+export type Folder = { state: 'loading' } | { state: 'failed'; message: string; back: string | undefined } | { state: 'ready'; listing: Listing; selected: FileEntry | undefined };
 
-async function list(path: string | undefined): Promise<{ ok: true; listing: Listing } | { ok: false; message: string; status: number }> {
+async function list(path: string | undefined): Promise<ListAnswer> {
   const res = await fetch(listUrl(path)).catch(() => undefined);
   if (!res) return { ok: false, message: 'Caduceus did not answer, so the folder could not be read.', status: 0 };
   const body: unknown = await res.json().catch(() => undefined);
   const listing = res.ok ? parseListing(body) : undefined;
-  return listing ? { ok: true, listing } : { ok: false, message: reasonOf(body, res.status), status: res.status };
+  if (listing) return { ok: true, listing };
+  // The proxy's refusals carry a `reason` (`protected-path`, `outside-roots`…) next to the message.
+  const reason = !res.ok && isRecord(body) && typeof body.reason === 'string' ? body.reason : undefined;
+  return { ok: false, message: reasonOf(body, res.status), status: res.status, ...(reason ? { reason } : {}) };
 }
 
 /**
@@ -29,14 +33,14 @@ async function list(path: string | undefined): Promise<{ ok: true; listing: List
 export async function openPath(path: string | undefined): Promise<Folder> {
   if (path === undefined) {
     const root = await list(undefined);
-    return root.ok ? { state: 'ready', listing: root.listing, selected: undefined } : { state: 'failed', message: root.message };
+    return root.ok ? { state: 'ready', listing: root.listing, selected: undefined } : { state: 'failed', message: root.message, back: undefined };
   }
   const parent = await list(parentOf(path));
   const found = parent.ok ? parent.listing.entries.find((entry) => entry.path === path) : undefined;
   if (parent.ok && found && !found.directory) return { state: 'ready', listing: parent.listing, selected: found };
   const own = await list(path);
   if (own.ok) return { state: 'ready', listing: own.listing, selected: undefined };
-  return { state: 'failed', message: parent.ok && !found ? 'There is nothing at this address. It may have been moved or deleted.' : own.message };
+  return { state: 'failed', ...openFailure(path, parent, own) };
 }
 
 /** The folder or file an address shows; `reload` asks again (after an upload, a delete or a save). */
@@ -120,4 +124,27 @@ export function usePreview(entry: FileEntry | undefined, kind: PreviewKind | und
     };
   }, [entry, kind, version]);
   return { preview, reload: () => setVersion((now) => now + 1) };
+}
+
+/** What the file guard says about making a folder a workspace: fine, or why not (`undefined` while it is being asked). */
+export type WorkspaceCheck = { ok: true } | { ok: false; message: string } | undefined;
+
+/** Asks Caduceus whether `path` could be a workspace (a read; the add itself is checked again). `enabled` false asks nothing. */
+export function useWorkspaceCheck(path: string | undefined, enabled: boolean): WorkspaceCheck {
+  const [answer, setAnswer] = useState<{ path: string; check: WorkspaceCheck }>();
+  useEffect(() => {
+    if (!enabled || path === undefined) return;
+    const controller = new AbortController();
+    // Only the guard's own answer is a refusal. When the check itself fails (signed out, Caduceus busy, no network), the offer stays: the add checks again and says why.
+    fetch(`/_caduceus/api/work/workspaces/check?path=${encodeURIComponent(path)}`, { signal: controller.signal })
+      .then(async (res): Promise<unknown> => (res.ok ? res.json() : undefined))
+      .catch(() => undefined)
+      .then((body) => {
+        if (controller.signal.aborted) return;
+        const refused = isRecord(body) && body.ok === false;
+        setAnswer({ path, check: refused ? { ok: false, message: typeof body.message === 'string' ? body.message : 'This folder cannot be a workspace.' } : { ok: true } });
+      });
+    return () => controller.abort();
+  }, [path, enabled]);
+  return enabled && answer !== undefined && answer.path === path ? answer.check : undefined;
 }

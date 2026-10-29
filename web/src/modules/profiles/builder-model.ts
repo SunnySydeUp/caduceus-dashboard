@@ -191,3 +191,13 @@ export function summary(plan: readonly PlanStep[], results: Readonly<Record<stri
     left: remaining(plan, results).map((step) => ({ step, result: results[step.id] })),
   };
 }
+
+/**
+ * What a new profile that is not given a model will have, said the way the profile shows it afterwards: Hermes reads the default profile's
+ * model for it. `defaultModel` is the model of the default profile, when it has one.
+ */
+export function unchosenModelNote(defaultModel: string | null | undefined): { tone: 'info' | 'warning'; text: string } {
+  return defaultModel
+    ? { tone: 'info', text: `No model is chosen here, so the profile starts with the default profile’s model, ${defaultModel}. Change it on its Model tab.` }
+    : { tone: 'warning', text: 'No model is chosen, and the default profile has none either, so the profile cannot chat until you set one on its Model tab.' };
+}

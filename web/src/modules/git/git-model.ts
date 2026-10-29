@@ -213,3 +213,14 @@ export function cleanCommitMessage(answer: string): string | undefined {
   if (/^(["'`]).*\1$/s.test(message)) message = message.slice(1, -1).trim();
   return message === '' ? undefined : message;
 }
+
+/**
+ * Where the repository stands against its remote, in words. Hermes's status has no field for a remote, only the counts (0 and 0 whether
+ * the branch is in step or has nothing to be in step with), so a remote is known by a branch of it in the branch list (`origin/main`).
+ */
+export function remoteWords(status: Pick<RepoStatus, 'ahead' | 'behind'>, branches: readonly Branch[]): { line: string; canPush: boolean; why: string | undefined } {
+  if (!branches.some((branch) => branch.isRemote)) {
+    return { line: 'No remote', canPush: false, why: 'This repository has no remote to push to. Add one in a terminal on the Mac that runs Hermes (git remote add origin <url>, then git fetch), and Push works.' };
+  }
+  return { line: status.ahead === 0 && status.behind === 0 ? 'In step with its remote' : `${status.ahead} ahead, ${status.behind} behind`, canPush: true, why: undefined };
+}

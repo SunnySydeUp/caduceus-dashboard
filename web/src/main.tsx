@@ -20,6 +20,13 @@ captureInstallEvents();
 registerServiceWorker();
 startThemeColorSync();
 
+// What a lazily loaded page shows until its code is in: a plain note, so a slow link never shows a blank screen. It uses only the shared styles (`.boot-note`).
+const loading = (
+  <p className="boot-note" role="status">
+    Loading…
+  </p>
+);
+
 // The server sends signed-out page loads to /sign-in.
 const signIn = location.pathname === '/sign-in';
 const shared = location.pathname.startsWith('/share/');
@@ -27,7 +34,7 @@ const root = createRoot(document.getElementById('root')!);
 if (signIn) {
   root.render(
     <StrictMode>
-      <Suspense fallback={null}>
+      <Suspense fallback={loading}>
         <SignIn />
       </Suspense>
     </StrictMode>,
@@ -35,7 +42,7 @@ if (signIn) {
 } else if (shared) {
   root.render(
     <StrictMode>
-      <Suspense fallback={null}>
+      <Suspense fallback={loading}>
         <SharePage />
       </Suspense>
     </StrictMode>,

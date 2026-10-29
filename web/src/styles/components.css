@@ -103,9 +103,6 @@ kbd, .kbd { display: inline-grid; place-items: center; min-inline-size: 1.25rem;
 .chip svg.i { inline-size: 14px; block-size: 14px; }
 .chip__x { display: inline-grid; place-items: center; inline-size: 18px; block-size: 18px; margin-inline-end: calc(var(--cd-space-1) * -1); border-radius: 50%; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; }
 .chip--profile { padding-inline-start: var(--cd-space-1); color: var(--cd-fg-default); }
-/* A chip that only says something (Today's All profiles): it does not look pressable. */
-.chip--static { cursor: default; }
-@media (hover: hover) { .chip--static:hover { background: var(--cd-bg-surface); } }
 
 /* ---- Segmented ---- */
 .seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--cd-radius-md); background: var(--cd-bg-surface-2); border: 1px solid var(--cd-border-subtle); }
@@ -133,13 +130,16 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 
 /* switch / checkbox / radio */
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-3); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); }
-.switch { position: relative; inline-size: 2.5rem; block-size: 1.5rem; flex: none; border-radius: var(--cd-radius-full); border: 1px solid var(--cd-border-control); background: var(--cd-bg-surface-2); cursor: pointer; padding: 0; transition: background-color var(--cd-dur-fast) var(--cd-ease-standard); }
-.switch::after { content: ""; position: absolute; inset-block: min(-1px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(-1px, calc((100% - var(--cd-target-min)) / 2)); }
-.switch::before { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 1.125rem; block-size: 1.125rem; border-radius: 50%; background: var(--cd-fg-muted); transition: translate var(--cd-dur-fast) var(--cd-ease-standard), background-color var(--cd-dur-fast); }
-.switch[aria-checked="true"] { background: var(--cd-accent); border-color: var(--cd-accent); }
+/* The track is 40 x 24; on a touch screen the button itself is `--cd-target-min` tall and wide, and the extra is a transparent border that the track and its
+   outline are drawn inside (an inset shadow, a background clipped to the padding box). Negative margins keep the layout the track's own size. */
+.switch { --sw-bx: max(0px, calc((var(--cd-target-min) - 2.5rem) / 2)); --sw-by: max(0px, calc((var(--cd-target-min) - 1.5rem) / 2)); position: relative; inline-size: calc(2.5rem + 2 * var(--sw-bx)); block-size: calc(1.5rem + 2 * var(--sw-by)); margin: calc(var(--sw-by) * -1) calc(var(--sw-bx) * -1); flex: none; border: solid transparent; border-width: var(--sw-by) var(--sw-bx); border-radius: calc(0.75rem + var(--sw-bx)) / calc(0.75rem + var(--sw-by)); background: var(--cd-bg-surface-2); background-clip: padding-box; box-shadow: inset 0 0 0 1px var(--cd-border-control); cursor: pointer; padding: 0; transition: background-color var(--cd-dur-fast) var(--cd-ease-standard); }
+.switch:focus-visible { outline: none; }
+.switch:focus-visible::after { content: ""; position: absolute; inset: 0; border-radius: 0.75rem; outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }
+.switch::before { content: ""; position: absolute; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 1.125rem; block-size: 1.125rem; border-radius: 50%; background: var(--cd-fg-muted); transition: translate var(--cd-dur-fast) var(--cd-ease-standard), background-color var(--cd-dur-fast); }
+.switch[aria-checked="true"] { background: var(--cd-accent); box-shadow: inset 0 0 0 1px var(--cd-accent); }
 .switch[aria-checked="true"]::before { background: var(--cd-on-accent); translate: 1rem 0; }
 [dir="rtl"] .switch[aria-checked="true"]::before { translate: -1rem 0; }
-.switch:disabled { opacity: 1; background: var(--cd-bg-surface-2); border-color: var(--cd-border-default); cursor: not-allowed; }
+.switch:disabled { opacity: 1; background: var(--cd-bg-surface-2); box-shadow: inset 0 0 0 1px var(--cd-border-default); cursor: not-allowed; }
 .switch:disabled::before { background: var(--cd-fg-disabled); }
 .check { display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); cursor: pointer; }
 .check input { appearance: none; margin: 0; inline-size: 1.125rem; block-size: 1.125rem; border: 1.5px solid var(--cd-border-control); border-radius: var(--cd-radius-sm); background: var(--cd-bg-input); display: grid; place-items: center; flex: none; cursor: pointer; }
@@ -299,6 +299,13 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 .skel { display: block; border-radius: var(--cd-radius-sm); background: linear-gradient(90deg, color-mix(in srgb, var(--cd-fg-default) 9%, var(--cd-bg-surface)) 0%, color-mix(in srgb, var(--cd-fg-default) 4%, var(--cd-bg-surface)) 50%, color-mix(in srgb, var(--cd-fg-default) 9%, var(--cd-bg-surface)) 100%); background-size: 200% 100%; animation: hc-shimmer 1.4s linear infinite; }
 @keyframes hc-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 .skel-row { display: grid; grid-template-columns: 2rem 1fr 4rem; gap: var(--cd-space-3); align-items: center; }
+/* The shared loading state (shell/Loading.tsx): a skeleton that holds the room of its rows, then "taking longer than usual" with Retry. */
+.loading { display: grid; gap: var(--cd-space-3); }
+.loading__lines { display: grid; gap: var(--cd-space-2); }
+.loading__line { block-size: var(--cd-space-4); }
+.loading__line:nth-child(odd) { inline-size: 100%; }
+.loading__line:nth-child(even) { inline-size: 70%; }
+.loading__late { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); font-size: var(--cd-text-sm); }
 
 /* ---- Code / diff ---- */
 .code { border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); overflow: hidden; background: var(--cd-bg-inset); }

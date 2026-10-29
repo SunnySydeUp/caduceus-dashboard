@@ -141,15 +141,16 @@ function ProfileMenu({ card, cards, onClose }: { card: ProfileCard; cards: reado
   const navigate = useAppNavigate();
   const { effective } = useProfileScope();
   const refusal = deleteRefusal(card, cards);
+  // On the profile's own page the header already has Use in this tab and New chat, so the menu does not offer them again, nor Open profile.
+  const onProfilePage = useRouteInfo().pathname.startsWith(`/agents/profiles/${encodeURIComponent(card.name)}`);
   const actions: MenuAction[] = [
-    { id: 'open', icon: 'chev-r', label: 'Open profile', run: () => void navigate(`/agents/profiles/${card.name}`) },
-    { id: 'chat', icon: 'chat', label: `New chat as ${card.name}`, run: () => void navigate(`/chat/new?profile=${encodeURIComponent(card.name)}`) },
-    ...(effective?.name !== card.name ? [{ id: 'use', icon: 'user', label: 'Use in this tab', sub: 'Sets this tab’s profile only', run: () => commands.useInThisTab(card) } satisfies MenuAction] : []),
-    ...(!card.isDefault ? [{ id: 'default', icon: 'fingerprint', label: 'Make default…', sub: 'Tier 2 · changes Hermes’s default profile', run: () => void commands.makeDefault(card) } satisfies MenuAction] : []),
+    ...(onProfilePage ? [] : [{ id: 'open', icon: 'chev-r', label: 'Open profile', run: () => void navigate(`/agents/profiles/${card.name}`) } satisfies MenuAction, { id: 'chat', icon: 'chat', label: `New chat as ${card.name}`, run: () => void navigate(`/chat/new?profile=${encodeURIComponent(card.name)}`) } satisfies MenuAction]),
+    ...(!onProfilePage && effective?.name !== card.name ? [{ id: 'use', icon: 'user', label: 'Use in this tab', sub: 'Sets this tab’s profile only', run: () => commands.useInThisTab(card) } satisfies MenuAction] : []),
+    ...(!card.isDefault ? [{ id: 'default', icon: 'fingerprint', label: 'Make default…', sub: 'Needs your passkey · changes Hermes’s default profile', run: () => void commands.makeDefault(card) } satisfies MenuAction] : []),
     { id: 'clone', icon: 'copy', label: 'Clone…', sub: 'Opens the builder with this profile’s settings', run: () => commands.openCreate(card) },
     { id: 'cli', icon: 'terminal', label: 'Copy CLI command', sub: cliCommand(card.name), run: () => void commands.copyCliCommand(card) },
     { id: 'rename', icon: 'type', label: 'Rename…', sub: card.isRoot ? 'Sets its display name' : 'You can undo it', run: () => commands.openRename(card) },
-    { id: 'delete', icon: 'trash', label: 'Delete…', sub: refusal ?? 'Tier 3 · type the name', danger: true, run: () => void commands.remove(card) },
+    { id: 'delete', icon: 'trash', label: 'Delete…', sub: refusal ?? 'Needs your passkey · you type the name', danger: true, run: () => void commands.remove(card) },
   ];
   return (
     <Sheet title={card.name} detents={['auto', 'full']} onClose={onClose}>

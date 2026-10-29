@@ -12,6 +12,12 @@ export const settingsModule: AppModule = {
   key: ',',
   summary: 'Appearance, keyboard shortcuts, security, signed-in devices and installing the app',
   routes: [{ path: '/settings', screen: lazy(() => import('./Settings.tsx').then((m) => ({ default: m.Settings }))) }],
+  // Security, the audit log and Repairs are reached from Settings, so the tidy Settings addresses a link or a bookmark may use go to where they live.
+  redirects: [
+    { from: '/settings/security', to: '/system/security' },
+    { from: '/settings/audit', to: '/system/security/audit' },
+    { from: '/settings/repairs', to: '/observe/health' },
+  ],
   help: () => import('./help.ts').then((m) => m.settingsHelp),
   paletteSearch: async (query) => {
     // Imported when a search runs: the module list imports this module, so a static import would be a cycle.

@@ -3,7 +3,7 @@
 // is allowed. Single-key shortcuts can be turned off and every shortcut can be remapped, as WCAG 2.1.4 asks.
 
 import type { ModuleRegistry } from './module-registry.ts';
-import { deskModules, deskNavigation } from './shell/nav-order.ts';
+import { deskModules, deskNavigation, ownerName } from './shell/nav-order.ts';
 
 export type Platform = 'mac' | 'other';
 
@@ -47,6 +47,8 @@ export function stepOf(input: KeyInput, platform: Platform): string | undefined 
 export const PALETTE_OPEN = 'palette.open';
 export const HELP_OPEN = 'help.open';
 export const SHORTCUTS_OPEN = 'shortcuts.open';
+/** The shell's own "Sign out" (the palette's and Control's): it asks to confirm, then ends this device's session. It has no key. */
+export const SIGN_OUT = 'shell.sign-out';
 export const goAction = (moduleId: string) => `go:${moduleId}`;
 export const commandAction = (moduleId: string, commandId: string) => `cmd:${moduleId}:${commandId}`;
 
@@ -62,15 +64,16 @@ export interface ShortcutDef {
 
 /** Every shortcut that exists now: the shell's two, a `g` jump for each module with a key, and each command's own. */
 export function shortcutDefs(registry: ModuleRegistry<unknown>): ShortcutDef[] {
-  const modules = deskModules(deskNavigation(registry, []));
+  const navigation = deskNavigation(registry, []);
+  const modules = deskModules(navigation);
   return [
     { action: PALETTE_OPEN, label: 'Open the command palette', group: 'Everywhere', default: 'mod+k' },
     { action: HELP_OPEN, label: 'Show help for this screen', group: 'Everywhere', default: '?' },
-    ...modules.filter((module) => module.key).map((module) => ({ action: goAction(module.id), label: `Go to ${module.title}`, group: 'Go to', default: `g ${module.key!.toLowerCase()}` })),
+    ...modules.filter((module) => module.key).map((module) => ({ action: goAction(module.id), label: `Go to ${ownerName(navigation, module)}`, group: 'Go to', default: `g ${module.key!.toLowerCase()}` })),
     ...registry
       .paletteCommands()
       .filter((command) => command.shortcut)
-      .map((command) => ({ action: commandAction(command.moduleId, command.id), label: command.label, group: registry.module(command.moduleId)!.title, default: command.shortcut! })),
+      .map((command) => ({ action: commandAction(command.moduleId, command.id), label: command.label, group: ownerName(navigation, registry.module(command.moduleId)!), default: command.shortcut! })),
   ];
 }
 

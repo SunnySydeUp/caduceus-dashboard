@@ -8,8 +8,8 @@ export type BlockState<T> = { status: 'loading' } | { status: 'ready'; data: T }
 
 export interface Block<T> {
   state: BlockState<T>;
-  /** Reads again; what is shown stays until the new answer is in. */
-  reload(): void;
+  /** Reads again; what is shown stays until the new answer is in. A block that can say when the new answer is in returns a promise that settles then. */
+  reload(): void | Promise<void>;
 }
 
 /**
@@ -25,9 +25,9 @@ export function useBlock<T>(load: () => Promise<T>, key: string, enabled: boolea
 
   const reload = useCallback(() => {
     const ask = asks.ask();
-    loadNow.current().then(
-      (data) => asks.accepts(ask, false) && setState({ status: 'ready', data }),
-      (failure: unknown) => asks.accepts(ask, true) && setState({ status: 'error', message: failure instanceof Error ? failure.message : 'Hermes did not answer.' }),
+    return loadNow.current().then(
+      (data) => void (asks.accepts(ask, false) && setState({ status: 'ready', data })),
+      (failure: unknown) => void (asks.accepts(ask, true) && setState({ status: 'error', message: failure instanceof Error ? failure.message : 'Hermes did not answer.' })),
     );
   }, [asks]);
 

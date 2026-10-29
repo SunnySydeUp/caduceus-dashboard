@@ -114,3 +114,15 @@
 .tl-tools > summary { cursor: pointer; min-block-size: 2.75rem; display: flex; align-items: center; }
 .tl-tools__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cd-space-2); }
 .tl-tools__list > li { overflow-wrap: anywhere; }
+
+/* A disclosure with a chevron: the summary says it opens, and the chevron turns when it does. */
+.tl-disclosure > summary { list-style: none; display: flex; align-items: center; gap: var(--cd-space-2); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); cursor: pointer; }
+.tl-disclosure > summary::-webkit-details-marker { display: none; }
+.tl-disclosure > summary .chev { flex: none; color: var(--cd-fg-subtle); transition: rotate var(--cd-dur-fast) var(--cd-ease-standard); }
+.tl-disclosure[open] > summary .chev { rotate: 90deg; }
+.tl-disclosure[open] > summary { margin-block-end: var(--cd-space-2); }
+[dir="rtl"] .tl-disclosure > summary .chev { scale: -1 1; }
+.tl-disclosure > summary .tl-card__id { display: grid; }
+.tl-after { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
+.tl-after__title { font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); }
+.tl-after .banner { margin: 0; }

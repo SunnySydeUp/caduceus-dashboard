@@ -20,11 +20,13 @@
 .chat__more { justify-self: center; }
 .chat__user { display: grid; justify-items: end; gap: var(--cd-space-1); }
 /* The actions of a message (M1 #12): a toolbar that shows on hover or focus where there is a pointer, and the ⋮ button, which is always there. On a touch screen the toolbar is not drawn: the ⋮ menu and a press and hold hold every action. */
-.msgbar { display: flex; align-items: center; gap: var(--cd-space-1); }
+.msgbar { display: flex; align-items: center; gap: var(--cd-space-2); }
 .chat__user .msgbar { justify-content: flex-end; }
-.msgbar__tools { display: flex; gap: var(--cd-space-1); }
-.msgbar__more { opacity: 0.7; min-inline-size: var(--cd-target-min); }
-.msgbar__tool { min-inline-size: var(--cd-target-min); }
+.msgbar__tools { display: flex; gap: var(--cd-space-2); }
+.msgbar__more { opacity: 0.7; min-inline-size: var(--cd-target-min); min-block-size: var(--cd-target-min); }
+.msgbar__tool { min-inline-size: var(--cd-target-min); min-block-size: var(--cd-target-min); }
+/* Fork starts a new chat, which is easy to press by mistake on a phone: there it is one line of the ⋮ menu, which says what it does. */
+@media (max-width: 37.5rem) { .msgbar__tool[data-action="fork"] { display: none; } }
 .msgbar__tool { opacity: 0; }
 .msg-agent:hover .msgbar__tool, .msg-agent:focus-within .msgbar__tool, .chat__user:hover .msgbar__tool, .chat__user:focus-within .msgbar__tool, .msgbar__tool:focus-visible { opacity: 1; }
 .msg-agent:hover .msgbar__more, .msg-agent:focus-within .msgbar__more, .chat__user:hover .msgbar__more, .chat__user:focus-within .msgbar__more { opacity: 1; }
@@ -311,6 +313,12 @@ button.rich__toggle:focus-visible { outline: var(--cd-focus-ring-width) solid va
 .run__edit { inline-size: 100%; }
 .run__steers { margin: 0; padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); font-size: var(--cd-text-sm); overflow-wrap: anywhere; }
 .run__asked { overflow-wrap: anywhere; white-space: pre-wrap; }
+/* A side task's prompt can be a whole paragraph: its card shows one line (the full words are the tooltip and the top of the result sheet). */
+.run__text--task { -webkit-line-clamp: 1; line-clamp: 1; }
+/* The instructions Hermes puts in front of a scheduled job's prompt: a small folded note above the prompt. */
+.chat__scheduled { max-inline-size: 100%; font-size: var(--cd-text-sm); }
+.chat__scheduled > summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; gap: var(--cd-space-1-5); }
+.chat__scheduled-text { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .ctx__goal { display: grid; gap: var(--cd-space-2); min-inline-size: 0; padding: var(--cd-space-2) var(--cd-space-3); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-md); background: var(--cd-bg-surface); }
 .ctx__goal[data-status="active"] { border-color: var(--cd-tone-running-solid); }
 .ctx__goal-title { margin: 0; font-weight: var(--cd-weight-medium); overflow-wrap: anywhere; }
@@ -382,6 +390,9 @@ button.rich__toggle:focus-visible { outline: var(--cd-focus-ring-width) solid va
    computer (inside the composer, so it sits where the chip is) and a bottom sheet on a phone. */
 .draft-note { margin-inline: var(--cd-space-2); margin-block-start: var(--cd-space-2); }
 .draft-note__actions { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); margin-block-start: var(--cd-space-2); }
+.draft-hint { display: flex; align-items: flex-start; gap: var(--cd-space-1-5); margin: var(--cd-space-2) var(--cd-space-3) 0; font-size: var(--cd-text-sm); }
+@media (pointer: coarse) { .draft-hint a { display: inline-flex; align-items: center; min-block-size: var(--cd-target-min); } }
+.chat__none .empty__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--cd-space-2); margin-block-start: var(--cd-space-2); }
 .prompts { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
 .prompts__help { margin: 0; font-size: var(--cd-text-xs); }
 .prompts__bar { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); align-items: center; min-inline-size: 0; }

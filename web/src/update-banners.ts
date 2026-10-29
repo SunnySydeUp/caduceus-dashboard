@@ -12,19 +12,24 @@ const DRAIN_PRIORITY = 3;
 /** A nudge, below everything that needs the owner now. */
 const UPDATE_PRIORITY = 6;
 
-/** The banner for an update that is available, or `undefined` when there is none (a check that could not run is not news). */
+/**
+ * The banner for an update that is available, or `undefined` when there is none (a check that could not run is not news). It says which software, what is
+ * running now and how far behind it is. It stays off the Updates screen it links to and off a chat thread, where a banner only takes room from the conversation.
+ */
 export function updateBanner(label: 'Hermes' | 'Caduceus', check: UpdateCheck): Banner | undefined {
   if (!check.update_available) return undefined;
+  const behind = check.behind !== null && check.behind > 0 ? `, ${check.behind} ${check.behind === 1 ? 'change' : 'changes'} behind` : '';
   return {
     id: `update-available:${label.toLowerCase()}`,
     priority: UPDATE_PRIORITY,
     tone: 'info',
     icon: 'download',
-    title: `A ${label} update is available`,
-    body: check.behind !== null && check.behind > 0 ? `${check.behind} ${check.behind === 1 ? 'change' : 'changes'} since ${check.current_version}.` : `Version ${check.current_version} is installed.`,
+    title: `${label} has an update`,
+    body: `You are running ${check.current_version}${behind}. Nothing changes until you update.`,
     actions: [{ label: 'View update', to: UPDATES_PATH }],
     dismissible: true,
     quiet: true,
+    hideOn: [UPDATES_PATH, '/chat'],
   };
 }
 

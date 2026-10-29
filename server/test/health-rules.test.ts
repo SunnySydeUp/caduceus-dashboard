@@ -117,7 +117,7 @@ describe('the Kanban dispatcher', () => {
 
     const distress = healthy({ hermes: { kanbanStats: stats(0, null), kanbanDiagnostics: { diagnostics: [{}, {}], count: 3 } } });
     expect(evaluateHealth(distress).repairs).toEqual([
-      expect.objectContaining({ id: 'kanban-task-problems', severity: 'warning', subsystem: 'dispatcher', title: 'Kanban tasks have problems', link: { label: 'Open Board', to: '/work/board' } }),
+      expect.objectContaining({ id: 'kanban-task-problems', severity: 'warning', subsystem: 'dispatcher', title: 'Kanban tasks have problems', link: { label: 'Open the failed tasks', to: '/work/tasks?filter=failed' } }),
     ]);
 
     expect(evaluateHealth(healthy({ hermes: { kanbanStats: stats(3, 60) } })).repairs).toEqual([]);
@@ -436,7 +436,7 @@ describe('what to do about a subsystem that is not healthy', () => {
     ['scheduler', 'no tick yet', { cronJobs: heartbeat(null) }, 'Nothing to do yet: the first tick is recorded once the gateway has run for a minute. If it never comes, restart the gateway from Gateway.'],
     ['dispatcher', 'dispatcher with gateway down', { status: GATEWAY_DOWN, kanbanStats: { by_status: { ready: 2 } } }, 'Start the gateway from Gateway: the dispatcher runs inside it.'],
     ['dispatcher', 'ready tasks overdue', { kanbanStats: { by_status: { ready: 1 }, oldest_ready_age_seconds: 3_600 } }, 'Look at the Kanban board: workers may all be busy. If none is running, restart the gateway from Gateway.'],
-    ['dispatcher', 'diagnostics', { kanbanDiagnostics: { count: 2 } }, 'Open the stalled tasks on the Kanban board and retry or block them.'],
+    ['dispatcher', 'diagnostics', { kanbanDiagnostics: { count: 2 } }, 'Open the failed tasks and retry or block them.'],
     ['providers', 'no credential works', { credentialPool: { providers: [{ provider: 'openai', entries: [{ last_status: 'dead' }] }] } }, 'Add the key again or sign in again in Keys.'],
     ['providers', 'some cooling down', { credentialPool: { providers: [{ provider: 'openai', entries: [{ last_status: 'ok' }, { last_status: 'exhausted' }] }] } }, 'These recover by themselves after a pause. If it lasts, check that key in Keys.'],
     ['host', 'disk filling', { systemStats: { memory: { percent: 40 }, disk: { percent: 90 } } }, 'Free some disk space on the Mac that runs Hermes: old backups and checkpoints are the usual cause.'],

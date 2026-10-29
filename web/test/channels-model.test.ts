@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { behaviourSections, behaviourUpdate, changedBehaviour, channelStatus, channelTestPath, channelUpdate, filterChannels, orderChannels, parseChannels, readSaveAnswer, readTestAnswer, validateChannelForm, type Channel } from '../src/modules/channels/channels-model.ts';
+import { behaviourSections, behaviourUpdate, behaviourHelp, changedBehaviour, channelStatus, channelTestPath, channelUpdate, enableBlocker, filterChannels, groupChannels, orderChannels, parseChannels, readSaveAnswer, readTestAnswer, testResultFor, validateChannelForm, type Channel } from '../src/modules/channels/channels-model.ts';
 
 const field = (key: string, extra: Record<string, unknown> = {}) => ({
   key,
@@ -286,5 +286,58 @@ describe('a channel’s behaviour settings', () => {
     const [channel] = behaviourSections(schema, config, 'discord');
     expect(changedBehaviour(channel.fields, { 'discord.history_backfill_limit': Number.NaN })).toEqual({});
     expect(changedBehaviour(channel.fields, { 'discord.voice_fx.ack_phrases': ['ok'] })).toEqual({ 'discord.voice_fx.ack_phrases': ['ok'] });
+  });
+});
+
+describe('finding the common chat apps on the list', () => {
+  const list = (...ids: string[]) => ids.map((id) => parseChannels({ platforms: [platform(id)] }).channels[0]);
+
+  test('puts Telegram, Discord, Slack, WhatsApp and Email first in that order, and the other platforms in a group after them', () => {
+    const groups = groupChannels(list('a2a', 'api_server', 'slack', 'matrix', 'telegram', 'email', 'discord', 'whatsapp'));
+
+    expect(groups.map((group) => [group.id, group.channels.map((channel) => channel.id)])).toEqual([
+      ['common', ['telegram', 'discord', 'slack', 'whatsapp', 'email']],
+      ['other', ['a2a', 'api_server', 'matrix']],
+    ]);
+  });
+
+  test('leaves out a group with nothing in it', () => {
+    expect(groupChannels(list('matrix')).map((group) => group.id)).toEqual(['other']);
+    expect(groupChannels(list('slack')).map((group) => group.id)).toEqual(['common']);
+    expect(groupChannels([])).toEqual([]);
+  });
+});
+
+describe('why a channel cannot be switched on yet', () => {
+  const telegram = (extra: Record<string, unknown>, fields: Record<string, unknown>[] = []) => parseChannels({ platforms: [platform('telegram', { name: 'Telegram', env_vars: fields, ...extra })] }).channels[0];
+
+  test('names the first required value that is missing, or says to set the channel up', () => {
+    const token = field('TELEGRAM_BOT_TOKEN', { required: true, prompt: 'Telegram bot token' });
+
+    expect(enableBlocker(telegram({}, [field('TELEGRAM_ALLOWED_USERS'), token]))).toBe('Add the telegram bot token first');
+    expect(enableBlocker(telegram({}))).toBe('Set up Telegram first');
+  });
+
+  test('says nothing once the channel is set up or already on, so it can be switched', () => {
+    expect(enableBlocker(telegram({ configured: true }))).toBeUndefined();
+    expect(enableBlocker(telegram({ enabled: true }))).toBeUndefined();
+  });
+
+  test('a test of a channel that is not set up says to set it up first, not to enable it, which the switch would refuse', () => {
+    const disabled = { ok: false, message: 'Telegram is disabled. Enable it, then restart the gateway.' };
+
+    expect(testResultFor(telegram({}), disabled)).toEqual({ ok: false, message: 'Telegram is not set up yet. Set it up first, then enable it and restart the gateway.' });
+    expect(testResultFor(telegram({ configured: true }), disabled)).toEqual(disabled);
+    expect(testResultFor(telegram({}), { ok: true, message: 'fine' })).toEqual({ ok: true, message: 'fine' });
+  });
+});
+
+describe('help for a behaviour key', () => {
+  test('says one line for the keys owners meet, by the key or its last word, and nothing for a key it does not know', () => {
+    expect(behaviourHelp('streaming.buffer_threshold')).toMatch(/characters/);
+    expect(behaviourHelp('discord.auto_thread')).toMatch(/thread/);
+    expect(behaviourHelp('telegram.extra.allow_cjk_rich_messages')).toMatch(/Chinese, Japanese and Korean/);
+    expect(behaviourHelp('discord.something_new')).toBeUndefined();
+    expect(behaviourSections({ fields: { 'telegram.extra.allow_cjk_rich_messages': { type: 'boolean' } } }, {}, 'telegram')[0].fields[0].label).toBe('Extra › Allow CJK rich messages');
   });
 });

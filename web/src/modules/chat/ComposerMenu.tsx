@@ -131,7 +131,8 @@ export function useComposerMenu({ chat, profile, text, caret, workspace, onEdit 
           label: entry.command,
           detail: entry.description,
           ...(entry.disabled === undefined ? {} : { disabled: entry.disabled }),
-          ...(entry.note === undefined ? {} : { note: entry.note }),
+          // With words typed there are no headings (the best match is first, whatever its group): a skill says what it is on its row.
+          ...(entry.note !== undefined ? { note: entry.note } : typed !== '' && entry.kind === 'skill' ? { note: 'Skill' } : {}),
           ...(group === undefined ? {} : { group }),
           choose: () => applyCommand(text, entry),
         };

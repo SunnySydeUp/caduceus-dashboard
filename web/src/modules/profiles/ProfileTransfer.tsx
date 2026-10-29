@@ -93,7 +93,7 @@ export function ImportSheet({ cards, onClose, onImported }: { cards: readonly Pr
       title="Import a profile"
       detents={['full']}
       className="bd-sheet"
-      initialFocus="input[type=file]"
+      initialFocus=".pf-picker__input"
       onClose={onClose}
       footer={
         <div className="bd-foot">
@@ -101,7 +101,7 @@ export function ImportSheet({ cards, onClose, onImported }: { cards: readonly Pr
             Cancel
           </button>
           <WriteButton type="button" className="btn btn--primary" disabled={busy || !preview?.name || preview.problem !== undefined} aria-busy={busy} onClick={() => void submit()}>
-            <Icon name="arrow-up" />
+            <Icon name="upload" />
             Import profile…
           </WriteButton>
         </div>
@@ -113,7 +113,16 @@ export function ImportSheet({ cards, onClose, onImported }: { cards: readonly Pr
           <label className="field__label" htmlFor={`${id}-file`}>
             Archive (.tar.gz)
           </label>
-          <input id={`${id}-file`} className="input" type="file" accept=".tar.gz,.tgz,application/gzip,application/x-gzip" onChange={(event) => void choose(event)} />
+          <div className="pf-picker">
+            <input id={`${id}-file`} className="pf-picker__input" type="file" accept=".tar.gz,.tgz,application/gzip,application/x-gzip" aria-describedby={`${id}-file-name`} onChange={(event) => void choose(event)} />
+            <label htmlFor={`${id}-file`} className="btn btn--secondary pf-picker__button">
+              <Icon name="upload" />
+              {file ? 'Choose another file' : 'Choose a file'}
+            </label>
+            <span id={`${id}-file-name`} className="pf-picker__name" role="status">
+              {file ? file.name : 'No file chosen'}
+            </span>
+          </div>
         </div>
         {read.state === 'reading' && <p role="status">Reading the archive…</p>}
         {read.state === 'refused' && (
@@ -174,7 +183,7 @@ export function ImportProfile({ cards, reload }: { cards: readonly ProfileCard[]
   return (
     <>
       <WriteButton type="button" className="btn btn--secondary" onClick={() => setOpen(true)}>
-        <Icon name="arrow-up" />
+        <Icon name="upload" />
         Import profile…
       </WriteButton>
       {open && <ImportSheet cards={cards} onClose={() => setOpen(false)} onImported={reload} />}

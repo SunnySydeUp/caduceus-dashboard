@@ -10,13 +10,14 @@ export const gatewayHelp: ModuleHelp = {
       keywords: 'connect gateway start stop restart drain messaging platforms status process restart to apply banner',
       body: [
         { p: 'The [[gateway]] is the part of [[hermes]] that connects it to chat platforms such as Telegram. Scheduled jobs and Kanban dispatch run inside it too, so when it is stopped they wait. Each [[profile]] has a row here with its status dot, the same dot the profile cards show.' },
+        { p: 'A host runs its gateways in one of two ways, and this page names it under the title. “One gateway per profile” means each profile has its own gateway process. “One shared gateway” means a single [[multiplexed-gateway|multiplexed gateway]] serves every profile. “Move to one shared gateway” changes a host from the first to the second, and is offered only on a host that still runs one gateway per profile.' },
         { h: 'Keeping up to date' },
         { p: 'Everything on this page is read from Hermes each time you look; Caduceus keeps no copy. The page asks again when Hermes reconnects, when its gateway or channels change and when you come back to the tab, so stopping a gateway from the command line shows up without a reload. If you stop a gateway of a profile other than the one Hermes itself runs under, the dot may take until the next of those moments to change.' },
         { h: 'What you can do' },
         {
           ul: [
             'Start brings a stopped gateway up. It is a Tier 1 action: you confirm.',
-            'Stop and Restart are Tier 2 actions ([[risk-tiers|risk tiers]]): you confirm, then use a [[passkey|passkey]]. Both say who is affected, including other profiles that share a [[multiplexed-gateway|multiplexed gateway]].',
+            'Stop and Restart are Tier 2 actions ([[risk-tiers|risk tiers]]): you confirm, then use a [[passkey|passkey]]. Both say who is affected, including other profiles that share a [[multiplexed-gateway|shared gateway]]. A restart waits for agents that are working to finish, so their turns are not cut off; a stop ends their turns.',
             'Drain is also Tier 2. It makes the gateway stop taking new turns and lets work in progress finish; the gateway stays up. Cancel drain lets it take turns again. A [[drain|drain]] applies to the gateway of the root profile, the one Hermes runs under.',
             'None of these is allowed in [[read-only-mode|read-only mode]].',
           ],
@@ -33,18 +34,18 @@ export const gatewayHelp: ModuleHelp = {
     },
     {
       id: 'gateway-migrate',
-      title: 'Migrate to one gateway',
-      summary: 'Move from one gateway for every profile to a single multiplexed gateway.',
+      title: 'Move to one shared gateway',
+      summary: 'Move from one gateway per profile to one shared gateway.',
       route: '/connect/gateway/migrate',
-      keywords: 'migrate multiplex multiplexed single gateway blockers plan one gateway per profile',
+      keywords: 'migrate multiplex multiplexed single shared gateway blockers plan one gateway per profile',
       body: [
-        { p: 'A host that runs one gateway for every profile can run a single [[multiplexed-gateway|multiplexed gateway]] instead, which serves every profile from one process. Hermes works out a plan first and lists anything that blocks it.' },
+        { p: 'A host that runs one gateway per profile can run one shared gateway instead (a [[multiplexed-gateway|multiplexed gateway]]), which serves every profile from one process. Hermes works out a plan first and lists anything that blocks it.' },
         {
           ul: [
             'The plan comes from Hermes each time you open the page. It lists each profile’s own gateway today, any notices, and the blockers.',
-            'While any blocker remains, Migrate is switched off. Fix what the blocker says, and the page updates when Hermes reports a change.',
-            'Migrate is a Tier 2 action ([[risk-tiers|risk tiers]]): you confirm, then use a [[passkey|passkey]]. Hermes stops each profile’s own gateway and starts the one gateway, so chat platforms disconnect for a moment.',
-            'A host that already runs one gateway, or has one profile, has nothing to migrate, and the page says so.',
+            'The page shows each profile’s gateway with the same status the Gateway page shows. While any blocker remains, the move is switched off. Fix what the blocker says, and the page updates when Hermes reports a change.',
+            'Moving is a Tier 2 action ([[risk-tiers|risk tiers]]): you confirm, then use a [[passkey|passkey]]. Hermes stops each profile’s own gateway and starts the one gateway, so chat platforms disconnect for a moment.',
+            'A host that already runs one shared gateway, or has one profile, has nothing to move: the page says so and offers no button.',
           ],
         },
         { p: 'The command Hermes runs is shown on the page, for anyone who prefers to run it in a terminal.' },
@@ -68,7 +69,7 @@ export const gatewayHelp: ModuleHelp = {
     {
       id: 'multiplexed-gateway',
       term: 'Multiplexed gateway',
-      definition: 'One Hermes gateway process that serves every profile, instead of one gateway for each profile. Gateway › Migrate moves a host to it.',
+      definition: 'One Hermes gateway process that serves every profile (shown as “One shared gateway”), instead of one gateway for each profile. Gateway › Migrate moves a host to it.',
       page: 'gateway-migrate',
     },
     {

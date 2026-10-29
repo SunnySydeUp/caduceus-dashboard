@@ -62,6 +62,23 @@ describe('checking a config text', () => {
     ]);
   });
 
+  // Hermes's schema lists `model` as one text, but the file it writes holds a section (default, provider, base_url, context_length):
+  // its own file is never a problem.
+  test('a key Hermes lists as one setting but writes as a section is fine in its own file', () => {
+    const real = buildConfigForm({
+      schema: { fields: { ...SCHEMA.fields, model: { type: 'string', description: 'Default model (e.g. anthropic/claude-sonnet-4.6)', category: 'general' }, model_context_length: { type: 'number', description: 'Context window override', category: 'general' } }, category_order: SCHEMA.category_order },
+      defaults: { ...DEFAULTS, model: '' },
+      current: { ...DEFAULTS, model: 'claude-sonnet-4.6', model_context_length: 0 },
+      saved: { model: { default: 'claude-sonnet-4.6', provider: 'anthropic', base_url: 'https://api.anthropic.com' } },
+    });
+    const text = 'model:\n  default: claude-sonnet-4.6\n  provider: anthropic\n  base_url: https://api.anthropic.com\n  context_length: 200000\nagent:\n  max_turns: 40\n';
+
+    expect(checkConfigYaml(text, { form: real, current: {} }).problems).toEqual([]);
+    // A plain text is still fine, and a section is still wrong for a setting Hermes never writes as one.
+    expect(checkConfigYaml('model: claude-sonnet-4.6\n', { form: real, current: {} }).problems).toEqual([]);
+    expect(checkConfigYaml('agent:\n  max_turns:\n    nested: 1\n', { form: real, current: {} }).problems).toMatchObject([{ key: 'agent.max_turns' }]);
+  });
+
   test('a mask is a credential kept: fine where the current config has one set, a problem on its line where it has none', () => {
     const text = `auxiliary:\n  vision:\n    api_key: "${CONFIG_SECRET_MASK}"\n`;
 

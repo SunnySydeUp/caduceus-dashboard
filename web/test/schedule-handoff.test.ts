@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { jobProblems } from '../src/modules/work/job-form.ts';
-import { offerSchedule, scheduleDraftFrom, takeSchedule } from '../src/modules/work/schedule-handoff.ts';
+import { clearSchedule, OFFER_TTL_MS, offerSchedule, scheduleDraftFrom, takeSchedule } from '../src/modules/work/schedule-handoff.ts';
 
 // What the composer's Repeat gives the schedule builder to start from (M8 #06): an agent job with the message as its prompt, for the chat's agent.
 describe('the draft Repeat hands to the schedule builder', () => {
@@ -32,6 +32,16 @@ describe('the draft Repeat hands to the schedule builder', () => {
     offerSchedule({ text: 'first', profile: 'default' });
     offerSchedule({ text: 'second', profile: 'coder' });
     expect(takeSchedule()).toEqual({ text: 'second', profile: 'coder' });
+    expect(takeSchedule()).toBeUndefined();
+  });
+
+  test('an offer older than the time limit is not taken, and clearing drops a waiting offer', () => {
+    offerSchedule({ text: 'old', profile: 'default' }, 1000);
+    expect(takeSchedule(1000 + OFFER_TTL_MS + 1)).toBeUndefined();
+    offerSchedule({ text: 'fresh', profile: 'default' }, 1000);
+    expect(takeSchedule(1000 + OFFER_TTL_MS)).toEqual({ text: 'fresh', profile: 'default' });
+    offerSchedule({ text: 'dropped', profile: 'default' });
+    clearSchedule();
     expect(takeSchedule()).toBeUndefined();
   });
 });

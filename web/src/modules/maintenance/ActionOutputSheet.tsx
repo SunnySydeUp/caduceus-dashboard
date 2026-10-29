@@ -3,12 +3,13 @@ import { useEffect, useRef } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { useActionOutput } from './diagnostics-data.ts';
-import type { DiagnosticAction } from './diagnostics-model.ts';
+import { endWords, type DiagnosticAction } from './diagnostics-model.ts';
 import './maintenance.css';
 
 export function ActionOutputSheet({ action, run, onClose }: { action: DiagnosticAction; run: number; onClose(): void }) {
   const output = useActionOutput(action.id, run);
   const log = useRef<HTMLPreElement>(null);
+  const ending = endWords(output);
   // The newest line stays in view while the output grows.
   useEffect(() => {
     const element = log.current;
@@ -32,14 +33,9 @@ export function ActionOutputSheet({ action, run, onClose }: { action: Diagnostic
             <Icon name="running" small /> Hermes is working…
           </>
         )}
-        {output.status === 'ok' && (
-          <>
-            <Icon name="succeeded" small /> Finished.
-          </>
-        )}
-        {output.status === 'failed' && (
-          <span className="mt-error">
-            <Icon name="failed" small /> Hermes ended with an error{output.exitCode === null ? '' : ` (exit code ${output.exitCode})`}.
+        {ending && (
+          <span className={ending.tone === 'success' ? undefined : ending.tone === 'warning' ? 'mt-warn' : 'mt-error'}>
+            <Icon name={ending.tone === 'success' ? 'succeeded' : ending.tone === 'warning' ? 'alert' : 'failed'} small /> {ending.text}
           </span>
         )}
         {output.status === 'lost' && (

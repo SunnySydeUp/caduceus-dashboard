@@ -3,7 +3,7 @@ import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { WriteButton } from '../../shell/WriteButton.tsx';
 import { Term } from '../../shell/Term.tsx';
-import { emptyDraft, validateWebhookForm, webhookName, webhookTier, type WebhookDraft } from './webhooks-model.ts';
+import { emptyDraft, validateWebhookForm, webhookName, type WebhookDraft } from './webhooks-model.ts';
 
 /** Where a result can go besides the log: a hint for the field, not a limit (Hermes accepts any platform it knows). */
 const TARGETS = ['log', 'telegram', 'discord', 'slack', 'whatsapp', 'signal', 'matrix', 'email', 'sms'];
@@ -29,7 +29,6 @@ export function CreateWebhook({ profile, onCreate, onClose }: { profile: string;
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
   const problems = attempted ? validateWebhookForm(draft) : {};
-  const tier = webhookTier(draft);
   const set = <K extends keyof WebhookDraft>(key: K, value: WebhookDraft[K]) => setDraft((current) => ({ ...current, [key]: value }));
 
   const submit = async () => {
@@ -54,7 +53,7 @@ export function CreateWebhook({ profile, onCreate, onClose }: { profile: string;
       footer={
         <WriteButton type="submit" form={formId} className="btn btn--primary" disabled={busy} aria-busy={busy}>
           <Icon name="lock" />
-          {tier === 'T3' ? 'Create (Tier 3)…' : 'Create…'}
+          Create…
         </WriteButton>
       }
     >
@@ -157,7 +156,7 @@ export function CreateWebhook({ profile, onCreate, onClose }: { profile: string;
               </label>
               <input id={`${id}-script`} className="input input--mono" autoCapitalize="off" spellCheck={false} value={draft.script} aria-describedby={`${id}-script-help`} onChange={(event) => set('script', event.target.value)} />
               <p className="field__help" id={`${id}-script-help`}>
-                A script Hermes runs on every event first. It runs code on this machine, so a webhook with one is a Tier 3 action: you type its name to confirm.
+                A script Hermes runs on every event first. It runs code on this machine, so creating a webhook with one needs your passkey and you type its name to confirm.
               </p>
             </div>
           </div>

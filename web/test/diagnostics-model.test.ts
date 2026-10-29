@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { InstallFacts } from '@caduceus/contracts/caduceus-api';
-import { bugReportText, DIAGNOSTIC_ACTIONS, foldAction, startAction } from '../src/modules/maintenance/diagnostics-model.ts';
+import { bugReportText, DIAGNOSTIC_ACTIONS, endWords, foldAction, startAction } from '../src/modules/maintenance/diagnostics-model.ts';
 
 const FACTS: InstallFacts = {
   caduceus: { version: '1.0.0 (abc123def456)', node: 'v22.22.2', platform: 'Darwin 25.4.0', arch: 'arm64' },
@@ -66,5 +66,26 @@ describe('the diagnostic actions', () => {
       ['dump', 'T1'],
       ['config-migrate', 'T1'],
     ]);
+  });
+});
+
+describe('how a finished action is worded', () => {
+  const failed = (lines: string[], exitCode: number | null = 1) => ({ status: 'failed' as const, lines, exitCode });
+
+  test('doctor that lists issues found them: a warning, with the count, not a crash', () => {
+    const lines = ['Checking Python…', '  Found 6 issue(s) to address:', '  1. Missing key'];
+    expect(endWords(failed(lines))).toEqual({ tone: 'warning', text: 'Doctor found 6 issues to look at (it exits with code 1 when it does).' });
+    expect(endWords(failed(['  Found 1 issue(s) to address:']))).toMatchObject({ tone: 'warning', text: expect.stringContaining('found 1 issue to look at') });
+  });
+
+  test('an error with no issues listed stays an error, with its exit code', () => {
+    expect(endWords(failed(['Traceback…'], 2))).toEqual({ tone: 'danger', text: 'Hermes ended with an error (exit code 2).' });
+    expect(endWords(failed(['Traceback…'], null))).toEqual({ tone: 'danger', text: 'Hermes ended with an error.' });
+  });
+
+  test('a clean finish is a success, and one still running or lost has no ending to word', () => {
+    expect(endWords({ status: 'ok', lines: [], exitCode: 0 })).toEqual({ tone: 'success', text: 'Finished.' });
+    expect(endWords(startAction())).toBeUndefined();
+    expect(endWords({ status: 'lost', lines: [], exitCode: null })).toBeUndefined();
   });
 });

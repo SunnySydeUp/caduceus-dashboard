@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { Icon } from '../icons.tsx';
+import { Icon, type IconName } from '../icons.tsx';
 import type { AppModule } from '../app-registry.ts';
 import { deskNavigation } from './nav-order.ts';
+import { useHelp } from './help-context.tsx';
 import { AppLink } from './navigation.tsx';
 import { NavBadgeCount } from './NavBadgeCount.tsx';
 import { PageHeader } from './PageHeader.tsx';
 import { useRegistry } from './registry-context.tsx';
+import { signOut } from './sign-out.ts';
 
 function ModuleRows({ modules }: { modules: AppModule[] }) {
   return (
@@ -30,6 +32,42 @@ function ModuleRows({ modules }: { modules: AppModule[] }) {
   );
 }
 
+/** What belongs to this device and not to a module: the help for the app and signing out. They are listed (and searched) beside the modules, so Sign out is not buried in Settings. */
+interface DeviceRow {
+  id: 'help' | 'sign-out';
+  title: string;
+  summary: string;
+  icon: IconName;
+  /** Extra words the search matches. */
+  keywords: string;
+}
+
+const DEVICE_ROWS: DeviceRow[] = [
+  { id: 'help', title: 'Help', summary: 'How Caduceus works, the words it uses and the keyboard shortcuts', icon: 'question', keywords: 'guide glossary shortcuts how to' },
+  { id: 'sign-out', title: 'Sign out', summary: 'End the session on this device. Your other devices stay signed in.', icon: 'lock', keywords: 'log out logout leave' },
+];
+
+function DeviceRows({ rows }: { rows: DeviceRow[] }) {
+  const { openHelp } = useHelp();
+  return (
+    <ul className="list panel">
+      {rows.map((row) => (
+        <li key={row.id}>
+          <button type="button" className="list-row" onClick={() => (row.id === 'help' ? openHelp({ screen: '/control' }) : void signOut())}>
+            <span className="list-row__icon">
+              <Icon name={row.icon} />
+            </span>
+            <span className="list-row__main">
+              <span className="list-row__title">{row.title}</span>
+              <span className="list-row__sub">{row.summary}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Control: every module that is not Today, Talk or Work, in the groups the old sidebar had, with search. A phone's More tab opens it. */
 export function Control() {
   const registry = useRegistry();
@@ -41,8 +79,9 @@ export function Control() {
   const { destinations, control } = deskNavigation(registry, []);
   const listed = control.map(({ group, modules }) => ({ id: group.id as string, title: group.title, modules }));
   const everything = [...destinations.map(({ id, title, modules }) => ({ id: id as string, title, modules })), ...listed];
-  const sections = needle ? everything.map((section) => ({ ...section, modules: section.modules.filter((m) => `${m.title} ${m.summary}`.toLowerCase().includes(needle)) })) : listed;
+  const sections = needle ? everything.map((section) => ({ ...section, modules: section.modules.filter((m) => `${m.title} ${m.summary} ${(m.keywords ?? []).join(' ')}`.toLowerCase().includes(needle)) })) : listed;
   const shown = sections.filter((section) => section.modules.length > 0);
+  const deviceRows = DEVICE_ROWS.filter((row) => !needle || `${row.title} ${row.summary} ${row.keywords}`.toLowerCase().includes(needle));
 
   const search = (value: string) => {
     setQuery(value);
@@ -67,7 +106,7 @@ export function Control() {
         </div>
       </div>
       <div className="control__results" aria-live="polite">
-        {shown.length === 0 && (
+        {shown.length === 0 && deviceRows.length === 0 && (
           <div className="empty">
             <div className="empty__icon">
               <Icon name="search" />
@@ -84,6 +123,14 @@ export function Control() {
             <ModuleRows modules={section.modules} />
           </section>
         ))}
+        {deviceRows.length > 0 && (
+          <section className="control__group" aria-labelledby="control-device">
+            <h2 className="overline" id="control-device">
+              This device
+            </h2>
+            <DeviceRows rows={deviceRows} />
+          </section>
+        )}
       </div>
     </div>
   );

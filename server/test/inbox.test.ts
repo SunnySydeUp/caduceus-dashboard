@@ -384,7 +384,7 @@ describe('sources beyond live chats', () => {
     expect(columns).toEqual(['device_id', 'ref', 'stamp', 'until', 'at']);
   });
 
-  test('a person waiting to be paired is a decision with Approve, and goes when the request is approved in Hermes', async () => {
+  test('a person waiting to be paired is a decision with Approve and, as the only one waiting, Decline, and goes when the request is approved in Hermes', async () => {
     await openServer();
     const inbox = await watchInbox({ notices: true });
     await seedPairingRequest(hermes.home, 'telegram', '4711', 'Ada', 'work');
@@ -392,7 +392,7 @@ describe('sources beyond live chats', () => {
     const state = await inbox.until((current) => current.items.some((item) => item.category === 'pairing'));
     const item = state.items.find((candidate) => candidate.category === 'pairing')!;
 
-    expect(item).toMatchObject({ kind: 'notice', group: 'decision', profile: 'work', title: 'Ada (4711) wants to talk to your Telegram bot', actions: [expect.objectContaining({ id: 'approve' })] });
+    expect(item).toMatchObject({ kind: 'notice', group: 'decision', profile: 'work', title: 'Ada (4711) wants to talk to your Telegram bot', actions: [expect.objectContaining({ id: 'approve' }), expect.objectContaining({ id: 'decline' })] });
     expect(state.items.filter((candidate) => candidate.group === 'decision')).toHaveLength(1);
     // Approved somewhere else (the CLI, another device): through Hermes's own route here.
     const action = (item as Extract<InboxItem, { kind: 'notice' }>).actions[0]!;

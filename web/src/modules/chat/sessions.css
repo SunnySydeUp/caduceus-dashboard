@@ -23,6 +23,7 @@
    (`--sl-head`), so the first heading stands as far below the Filters bar as every later one stands below the row before it. */
 .sl__body { flex: 1 1 0; min-block-size: 0; margin-block-start: calc(var(--sl-gap) * -1); overflow-y: auto; overscroll-behavior: contain; display: grid; gap: var(--cd-space-2); min-inline-size: 0; align-content: start; }
 .sl__status { margin: 0; }
+.sl__action { justify-self: start; }
 .sl__pull { overflow: hidden; display: flex; align-items: center; justify-content: center; gap: var(--cd-space-2); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
 /* At rest the pull has no height: it must not take a gap of the list either. */
 .sl__pull[aria-hidden="true"] { display: none; }
@@ -77,7 +78,7 @@
 .sl__time, .sl__who, .sl__state { flex: none; color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); }
 .sl__state[data-state="Needs you"] { color: var(--cd-tone-warning-fg); font-weight: var(--cd-weight-medium); }
 .sl__state[data-state="Failed"] { color: var(--cd-tone-danger-fg); font-weight: var(--cd-weight-medium); }
-/* The ⋮ button of a row is there for the keyboard and the pointer without being drawn on every row: it takes the time's place on hover and on focus. On a touch screen a press and hold or a swipe reaches the same actions, so the button only takes a tap once it has focus. */
+/* The ⋮ button of a row is there for the keyboard and the pointer without being drawn on every row: it takes the time's place on hover and on focus. */
 .sl__item > .sl__kebab { position: absolute; inset-inline-end: 0; opacity: 0; }
 .sl__item:focus-within > .sl__kebab { opacity: 1; background: var(--cd-bg-surface-2); }
 .sl__item:focus-within .sl__time { visibility: hidden; }
@@ -85,9 +86,10 @@
   .sl__item:hover > .sl__kebab { opacity: 1; background: var(--cd-bg-surface-2); }
   .sl__item:hover .sl__time { visibility: hidden; }
 }
+/* On a touch screen nobody hovers: the button is always drawn, faint, after the row's own words, so that pin, archive and share are found without a press and hold. */
 @media (pointer: coarse) {
-  .sl__item > .sl__kebab { pointer-events: none; }
-  .sl__item:focus-within > .sl__kebab { pointer-events: auto; }
+  .sl__item > .sl__kebab { position: static; opacity: 1; color: var(--cd-fg-subtle); }
+  .sl__item:focus-within .sl__time { visibility: visible; }
 }
 /* On the narrowest phones the title needs the room: the gaps and the pane's inset shrink. */
 @media (max-width: 380px) {

@@ -21,7 +21,7 @@ export function intentHint(intent: Intent, agent: string): string {
     case 'delegate':
       return 'Runs in the background. You are told only when it needs you or finishes.';
     case 'repeat':
-      return 'Pick when it should run again. It shows up under Work.';
+      return 'Pick when it should run again. It shows up under Work. Your words stay in this box.';
   }
 }
 
@@ -33,7 +33,7 @@ export function intentChip(intent: Intent): string | undefined {
     case 'delegate':
       return `${INTENT_META.delegate.label}: runs in the background`;
     case 'repeat':
-      return `${INTENT_META.repeat.label}: you pick when`;
+      return `${INTENT_META.repeat.label}: you pick when, your words stay here`;
   }
 }
 

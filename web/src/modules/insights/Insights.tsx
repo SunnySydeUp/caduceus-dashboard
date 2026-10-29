@@ -5,6 +5,7 @@ import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { useSearch } from '@tanstack/react-router';
 import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
+import { Loading, useTakingLonger } from '../../shell/Loading.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
@@ -93,6 +94,33 @@ function Tile({ label, value, sub }: { label: React.ReactNode; value: string; su
         <strong>{value}</strong>
         {sub && <span className="subtle">{sub}</span>}
       </dd>
+    </div>
+  );
+}
+
+/** The room of the summary tiles while Hermes adds the usage up: the same grid as the answer, so nothing jumps; slow, it says so and offers a retry. */
+function UsageSkeleton({ onRetry }: { onRetry(): void }) {
+  const late = useTakingLonger(true);
+  return (
+    <div role="status" aria-busy="true">
+      <span className="sr-only">{late ? 'Loading usage from Hermes. This is taking longer than usual.' : 'Loading usage from Hermes…'}</span>
+      <div className="ins-tiles" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div key={index} className="panel panel--pad ins-tile">
+            <span className="skel loading__line" style={{ inlineSize: '50%' }} />
+            <span className="skel loading__line" />
+          </div>
+        ))}
+      </div>
+      {late && (
+        <p className="loading__late">
+          <span className="muted">Taking longer than usual. Hermes may be busy.</span>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
+            <Icon name="refresh" />
+            <span>Retry</span>
+          </button>
+        </p>
+      )}
     </div>
   );
 }
@@ -221,7 +249,7 @@ function QuotaCard({ quota }: { quota: QuotaState }) {
       <h2 id="ins-quota-title" className="section__title">
         Provider quota
       </h2>
-      {quota.state === 'loading' && <p role="status" className="subtle">Asking your provider…</p>}
+      {quota.state === 'loading' && <Loading label="Asking your provider…" lines={2} />}
       {quota.state === 'none' && (
         <p className="subtle">
           Not available. Only some providers report account limits, and this one does not (or Hermes could not ask it).
@@ -362,7 +390,7 @@ function Budgets({ budgets, client, profiles, reload }: { budgets: Loaded<Budget
       <p className="subtle ins-note">
         A <Term id="budget">budget</Term> is an amount for a day, week or month. Caduceus tells you in Notices at 80% and 100%. At 100% the budget guard below also stops unattended work.
       </p>
-      {budgets.state === 'loading' && <p role="status" className="subtle">Loading budgets…</p>}
+      {budgets.state === 'loading' && <Loading label="Loading budgets…" lines={2} onRetry={() => void reload()} />}
       {budgets.state === 'failed' && (
         <div className="banner" data-tone="warning" role="alert">
           <Icon name="alert" />
@@ -448,7 +476,7 @@ export function Insights() {
   return (
     <div className="ins">
       <PageHeader overline="Observe" title="Insights" subtitle={<>What your agents used and cost, from Hermes’s own accounting.</>} actions={<PeriodPicker days={days} onChange={setDays} />} />
-      {data.state === 'loading' && <p role="status" className="subtle">Loading usage from Hermes…</p>}
+      {data.state === 'loading' && <UsageSkeleton onRetry={reload} />}
       {data.state === 'failed' && (
         <div className="banner" data-tone="warning" role="alert">
           <Icon name="alert" />

@@ -34,3 +34,11 @@
 .ib-sheet .sheet { inset-block-end: var(--kb-inset); max-block-size: calc(100svh - var(--kb-inset) - var(--cd-safe-top) - var(--cd-space-6)); }
 .ib-note { display: grid; gap: var(--cd-space-3); }
 .ib-note .input { inline-size: 100%; min-block-size: 6rem; resize: vertical; }
+
+/* Allow always says that it needs a passkey, in words: the fingerprint alone does not tell a person before they tap. */
+.ib-stacked { display: grid; justify-items: center; line-height: var(--cd-leading-sm); }
+.ib-stacked small { font-weight: var(--cd-weight-regular); font-size: var(--cd-text-xs); color: var(--cd-fg-muted); }
+
+/* What a sheet that asks for words is about: the item's title and what it says (the question, the worker's note), in full. */
+.ib-about { margin: 0; display: grid; gap: var(--cd-space-1); padding: var(--cd-space-2) var(--cd-space-3); border-inline-start: 3px solid var(--cd-border-strong); border-radius: var(--cd-radius-md); background: var(--cd-bg-inset); overflow-wrap: anywhere; }
+.ib-about p { margin: 0; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }

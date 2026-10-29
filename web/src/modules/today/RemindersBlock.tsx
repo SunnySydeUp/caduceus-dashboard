@@ -216,14 +216,68 @@ function Calendar({ reminders, today }: { reminders: Reminder[]; today: string }
   );
 }
 
+/** Where this device remembers that the owner hid the Reminders trouble. It only hides the failure: Reminders come back by themselves when they can be read. */
+const HIDDEN_KEY = 'caduceus.today.reminders-hidden';
+
+function useHiddenTrouble(): [boolean, (hidden: boolean) => void] {
+  const [hidden, setHidden] = useState(() => localStorage.getItem(HIDDEN_KEY) === '1');
+  const change = (next: boolean) => {
+    if (next) localStorage.setItem(HIDDEN_KEY, '1');
+    else localStorage.removeItem(HIDDEN_KEY);
+    setHidden(next);
+  };
+  return [hidden, change];
+}
+
+/** Reminders are optional, so when they cannot be read the block is one calm line: what is wrong is behind Details, Retry says it is trying, and Hide puts the line away on this device. */
+function RemindersTrouble({ message, reload, onHide }: { message: string; reload(): void | Promise<void>; onHide(): void }) {
+  const [retrying, setRetrying] = useState(false);
+  const retry = () => {
+    setRetrying(true);
+    void Promise.resolve(reload()).finally(() => setRetrying(false));
+  };
+  return (
+    <section className="today-block" aria-labelledby="today-reminders" data-block="reminders">
+      <h2 className="today-block__title" id="today-reminders">
+        Reminders
+      </h2>
+      <div className="today-quiet panel">
+        <p className="subtle">Reminders are not available right now. Everything else on Today works.</p>
+        <div className="today-quiet__acts">
+          <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
+            <Icon name="refresh" small />
+            {retrying ? 'Retrying…' : 'Retry'}
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={onHide}>
+            Hide
+          </button>
+        </div>
+        <details className="today-quiet__details">
+          <summary>Details</summary>
+          <p className="subtle">{message}</p>
+          <p className="subtle">Caduceus reads Reminders with the remindctl command on the Mac that runs it. Run “remindctl status” on that Mac to see what it needs.</p>
+        </details>
+      </div>
+    </section>
+  );
+}
+
 export function RemindersBlock({ now }: { now: number }) {
   const block = useBlock(readReminders, 'reminders', true);
   const { reload } = block;
+  const [hidden, setHidden] = useHiddenTrouble();
+  const { state } = block;
   useEffect(() => {
     const back = () => document.visibilityState === 'visible' && reload();
     document.addEventListener('visibilitychange', back);
     return () => document.removeEventListener('visibilitychange', back);
   }, [reload]);
+  // Reminders that can be read again are shown again, hidden or not.
+  useEffect(() => {
+    if (state.status === 'ready' && hidden) setHidden(false);
+  });
+  if (hidden && state.status !== 'ready') return null;
+  if (state.status === 'error') return <RemindersTrouble message={state.message} reload={reload} onHide={() => setHidden(true)} />;
   return (
     <TodayBlock id="reminders" title="Reminders" block={block} empty={() => undefined} room="22rem" to={noTarget}>
       {(reminders) => <Calendar reminders={reminders} today={dateKey(new Date(now))} />}

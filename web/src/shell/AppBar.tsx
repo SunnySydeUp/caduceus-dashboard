@@ -1,5 +1,7 @@
+import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import { Icon } from '../icons.tsx';
 import type { SizeClass } from '../size-class.ts';
+import { backAction } from '../back-target.ts';
 import { CONTROL_GROUPS } from '../module-registry.ts';
 import { deskNavigation } from './nav-order.ts';
 import type { ConnectionState } from '../gateway-connection.ts';
@@ -12,8 +14,7 @@ import { useHelp } from './help-context.tsx';
 import { useRegistry } from './registry-context.tsx';
 import { useShellActions } from './ShellActions.tsx';
 import { PALETTE_OPEN } from '../shortcuts.ts';
-import type { RouteInfo } from './navigation.tsx';
-import type { AppModule } from '../app-registry.ts';
+
 
 const CONNECTION: Record<ConnectionState, { label: string; tone: 'success' | 'warning' | 'neutral' }> = {
   connected: { label: 'Connected', tone: 'success' },
@@ -32,22 +33,12 @@ function ConnectionDot() {
       <span className={`dot${state === 'offline' ? ' dot--dashed' : ''}${state === 'reconnecting' ? ' pulse' : ''}`} data-tone={tone} aria-hidden="true" />
       {counted && (
         <span className="appbar__conn-count" aria-hidden="true">
-          {attempt}
+          Retry {attempt}
         </span>
       )}
       <span className="sr-only">{spoken}</span>
     </span>
   );
-}
-
-/** Where "back" leads on a phone: the route's parent, else one level up inside the module, else Control (for a module in Control) or nowhere. */
-function backTarget(info: RouteInfo, module: AppModule | undefined): string | null {
-  if (info.parent) return info.parent;
-  if (info.title === 'Control') return null;
-  if (!module) return '/';
-  if (info.pathname === module.path) return module.desk === 'control' ? '/control' : null;
-  const up = info.pathname.slice(0, info.pathname.lastIndexOf('/'));
-  return up.startsWith(module.path) ? up : module.path;
 }
 
 export function AppBar({ size }: { size: SizeClass }) {
@@ -63,7 +54,9 @@ export function AppBar({ size }: { size: SizeClass }) {
   const shellModuleId = registry.shellModuleOf(info.moduleId, info.pathname);
   const module = shellModuleId ? registry.module(shellModuleId) : undefined;
   const title = info.title ?? module?.title ?? 'Page not found';
-  const back = compact ? backTarget(info, module) : null;
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  const back = compact ? backAction(info, module, canGoBack) : null;
   // The crumb before the module: its Control group, or the destination (Today, Talk, Work) it sits in.
   const group = module?.group ? CONTROL_GROUPS.find((g) => g.id === module.group)?.title : deskNavigation(registry, []).destinations.find((d) => d.id === module?.desk)?.title;
 
@@ -75,11 +68,23 @@ export function AppBar({ size }: { size: SizeClass }) {
     if (module && title !== module.title) crumbs.push({ label: module.title, to: shellModuleId === info.moduleId ? (info.parent ?? module.path) : module.path });
     crumbs.push({ label: title });
   }
+  // A page whose crumb trail is only its own name (Today, Work) already says it in its heading: the app bar says it again only once the heading has scrolled away.
+  const echoesHeading = !compact && crumbs.length === 1 && !titleShown;
 
   return (
     <header className={`appbar${titleShown ? ' is-scrolled' : ''}`}>
       {compact && back && (
-        <AppLink className="btn btn--ghost btn--icon appbar__back" to={back} aria-label="Back">
+        <AppLink
+          className="btn btn--ghost btn--icon appbar__back"
+          to={back.to}
+          aria-label="Back"
+          onClick={(event) => {
+            // Back goes where the user came from; the link's address (one level up) is for a direct load, a middle click and a long press.
+            if (!back.history || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            router.history.back();
+          }}
+        >
           <Icon name="chev-l" />
         </AppLink>
       )}
@@ -93,7 +98,7 @@ export function AppBar({ size }: { size: SizeClass }) {
           <span className="appbar__title-text truncate" aria-hidden={!titleShown}>
             {title}
           </span>
-        ) : calm ? null : (
+        ) : calm || echoesHeading ? null : (
           <nav aria-label="Breadcrumb">
             <ol className="crumbs">
               {crumbs.map((crumb, index) => (

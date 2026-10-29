@@ -32,7 +32,7 @@ export const terminalHelp: ModuleHelp = {
         {
           ul: [
             'A shell nobody is watching ends after 10 minutes. A shell with nothing typed for 30 minutes ends, watched or not. Stopping Caduceus ends every shell. The screen tells you which of these happened.',
-            'Restart stops the shell and starts a new one in the same folder, after one confirmation ([[risk-tiers|Tier 1]]). Anything running in it is stopped.',
+            'Restart stops the shell and starts a new one in the same folder, after one confirmation ([[risk-tiers|Tier 1]]). Anything running in it is stopped. It works only while the shell is connected; when the screen says Not connected, use Reconnect.',
           ],
         },
         { h: 'What Caduceus records' },

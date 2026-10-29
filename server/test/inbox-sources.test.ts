@@ -67,7 +67,7 @@ describe('pairing requests', () => {
 
     expect(ada).toMatchObject({ id: 'pairing:work:telegram:req-1', group: 'decision', category: 'pairing', profile: 'work', title: 'Ada (4711) wants to talk to your Telegram bot' });
     expect(ada?.actions).toEqual([
-      expect.objectContaining({ id: 'approve', request: { method: 'POST', path: '/api/pairing/approve', body: { platform: 'telegram', request_id: 'req-1', profile: 'work' } }, confirm: expect.objectContaining({ object: 'Ada' }) }),
+      expect.objectContaining({ id: 'approve', request: { method: 'POST', path: '/api/pairing/approve', body: { platform: 'telegram', request_id: 'req-1', profile: 'work' } }, confirm: expect.objectContaining({ title: expect.stringContaining('Ada') }) }),
     ]);
     expect(ada?.link).toEqual({ label: 'Open Pairing', to: '/connect/pairing?profile=work' });
   });
@@ -76,6 +76,17 @@ describe('pairing requests', () => {
     const [, old] = pairingNotices(answer, 'work');
     expect(old?.actions).toEqual([]);
     expect(old?.link?.to).toBe('/connect/pairing?profile=work');
+  });
+
+  test('the only person waiting can be declined: Hermes has no way to refuse one request, only to clear the profile\'s waiting list, which is the same thing for one', () => {
+    const alone = { pending: [answer.pending[0]], approved: [] };
+    const [ada] = pairingNotices(alone, 'work');
+    expect(ada?.actions.map((action) => action.id)).toEqual(['approve', 'decline']);
+    const decline = ada?.actions.find((action) => action.id === 'decline');
+    expect(decline?.request).toEqual({ method: 'POST', path: '/api/pairing/clear-pending?profile=work' });
+    expect(decline?.confirm?.text).toContain('Ada');
+    // With two people waiting, one card must not clear the other, so there is no Decline: Pairing has the whole list.
+    expect(pairingNotices(answer, 'work').flatMap((notice) => notice.actions.map((action) => action.id))).not.toContain('decline');
   });
 
   test('an answer with nothing waiting is no items', () => {
@@ -183,6 +194,25 @@ describe('Kanban tasks', () => {
       ['retry', '/_caduceus/api/work/tasks/t_1/retry?board=default'],
       ['reassign', '/api/plugins/kanban/tasks/t_1/reassign?board=default'],
     ]);
+  });
+
+  test('the confirmations say what the owner is deciding on: the worker\'s note with Approve, the task with a rejection, and neither is cut in the middle of a word', () => {
+    const long = `${'The migration is written and the tests pass. '.repeat(12)}Last sentence.`;
+    const [review] = workNotices(boards(task({ latest_summary: long })));
+    const approve = review?.actions.find((a) => a.id === 'approve')?.confirm;
+    expect(approve?.text).toMatch(/^The worker says: “The migration is written/);
+    expect(approve?.text).toMatch(/…” Approving marks the task done/);
+    // The cut falls after a whole word of the sentence, never inside one.
+    expect(review?.detail).toMatch(/(?:^|\s)(?:The|migration|is|written|and|the|tests|pass)…$/);
+    const reject = review?.actions.find((a) => a.id === 'reject')?.confirm;
+    expect(reject).toMatchObject({ title: 'Send “Write the report” back?', confirmLabel: 'Send back' });
+    const [plain] = workNotices(boards(task()));
+    expect(plain?.actions.find((a) => a.id === 'approve')?.confirm?.text).toBe('Approving marks the task done, with your approval as its result.');
+  });
+
+  test('a worker that ended without reporting is said in plain words, not in Hermes\'s protocol', () => {
+    const [notice] = workNotices(boards(task({ status: 'blocked', block_kind: 'transient', consecutive_failures: 2, last_failure_error: 'worker exited rc=0 without kanban_complete' })));
+    expect(notice?.detail).toBe('The worker stopped before it finished.');
   });
 
   test('a task that is simply waiting, running or done is not an item; the stamp changes when the state does', () => {

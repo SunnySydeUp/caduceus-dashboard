@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
@@ -44,7 +45,7 @@ export function EnginePanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!choice && !view.failed && <p role="status">Loading the context engine…</p>}
+      {!choice && !view.failed && <Loading label="Loading the context engine…" lines={3} onRetry={() => void view.reload()} />}
       {choice && (
         <fieldset className="mm-group">
           <legend className="sr-only">Context engine of {profile}</legend>

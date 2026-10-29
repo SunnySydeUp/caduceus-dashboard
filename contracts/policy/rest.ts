@@ -316,7 +316,8 @@ const POLICY: Record<string, Policy> = {
   'GET /api/messaging/telegram/onboarding/{pairing_id}': READ,
   'GET /api/messaging/whatsapp/onboarding/{pairing_id}': READ,
   'PUT /api/messaging/platforms/{platform_id}': T2,
-  'POST /api/messaging/platforms/{platform_id}/test': T1,
+  // Only reads the platform's state, the gateway's report and the pairing store (`web_routers/messaging.py`): it sends nothing to the chat platform and writes nothing, so it is a read.
+  'POST /api/messaging/platforms/{platform_id}/test': READ,
   'POST /api/messaging/telegram/onboarding/start': T1,
   'POST /api/messaging/whatsapp/onboarding/start': T1,
   'POST /api/messaging/telegram/onboarding/{pairing_id}/apply': T2,

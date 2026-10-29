@@ -55,6 +55,7 @@ export function ProfileBuilder() {
   const [finished, setFinished] = useState(false);
   const { baseline, failed: baselineFailed } = useBaseline(draft.start);
   const catalogue = useMcpCatalog('default').value?.entries ?? [];
+  const defaultModel = profiles.cards?.find((card) => card.isDefault)?.model;
 
   useEffect(() => {
     save({ draft, step, results });
@@ -150,18 +151,25 @@ export function ProfileBuilder() {
   };
   const leave = () => void navigate('/agents/profiles');
 
+  // On a wide screen the page has no layer to focus for it: the Name field takes the focus when the builder opens.
+  useEffect(() => {
+    if (!compact) document.querySelector<HTMLElement>('.bd [data-first]')?.focus({ preventScroll: true });
+    // Once, when the builder opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const props = { draft, set, baseline, baselineFailed, problems: attempted ? problems : {} };
   const panel =
     step === 'identity' ? (
       <IdentityStep {...props} cards={profiles.cards ?? []} chooseStart={(start) => void chooseStart(start)} seeding={seeding} />
     ) : step === 'model' ? (
-      <ModelStep {...props} />
+      <ModelStep {...props} defaultModel={defaultModel} />
     ) : step === 'skills' ? (
       <SkillsStep {...props} />
     ) : step === 'mcps' ? (
       <McpStep {...props} />
     ) : (
-      <ReviewStep draft={draft} plan={plan} baseline={baseline} results={results} running={running} heldAt={held ? `${STEPS.find((candidate) => candidate.id === held)!.label}` : undefined} />
+      <ReviewStep draft={draft} plan={plan} baseline={baseline} results={results} running={running} defaultModel={defaultModel} heldAt={held ? `${STEPS.find((candidate) => candidate.id === held)!.label}` : undefined} />
     );
 
   const partial = started && outcome.left.length > 0 && !running;
@@ -223,7 +231,7 @@ export function ProfileBuilder() {
         }
       />
       {compact ? (
-        <Sheet title={`New profile · Step ${index + 1} of ${STEPS.length}`} detents={['full']} className="bd-sheet" footer={footer} onClose={leave}>
+        <Sheet title={`New profile · Step ${index + 1} of ${STEPS.length}`} detents={['full']} className="bd-sheet" initialFocus="[data-first]" footer={footer} onClose={leave}>
           {body}
         </Sheet>
       ) : (

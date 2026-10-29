@@ -1,5 +1,5 @@
-/* The decide-anywhere tray (M8 #05; docs/design/mocks/desk/talk.html). A warning-toned pill with the waiting agents' sigils, and under it the open list of decision cards.
-   Tokens only; logical properties throughout. */
+/* The decide-anywhere tray (M8 #05; docs/design/mocks/desk/talk.html). A warning-toned pill with the waiting agents' sigils; it opens one decision at a time in a sheet, so a decision's buttons
+   are all in view and nothing scrolls inside the page's scroll. Tokens only; logical properties throughout. */
 .talk-tray { display: grid; gap: var(--cd-space-2); min-inline-size: 0; }
 .talk-tray__btn { display: inline-flex; align-items: center; gap: var(--cd-space-2); justify-self: start; max-inline-size: 100%; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); padding-inline: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-full); border: 1px solid color-mix(in srgb, var(--cd-tone-warning-solid) 55%, var(--cd-border-subtle)); background: var(--cd-tone-warning-soft); color: var(--cd-tone-warning-fg); font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); text-align: start; cursor: pointer; }
 .talk-tray__btn:focus-visible { outline: var(--cd-focus-ring-width) solid var(--cd-focus-ring); outline-offset: var(--cd-focus-ring-offset); }
@@ -8,12 +8,8 @@
 .talk-tray__faces .sigil + .sigil { margin-inline-start: calc(var(--cd-space-2) * -1); }
 .talk-tray__label { min-inline-size: 0; overflow-wrap: anywhere; }
 .talk-tray__chev { flex: none; }
-.talk-tray__btn[aria-expanded="true"] .talk-tray__chev { rotate: 180deg; }
 
-.talk-tray__list { scroll-margin-block-end: calc(var(--shell-bottom) + var(--composer-h, 6rem) + var(--cd-space-4)); min-inline-size: 0; padding: var(--cd-space-3); background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+/* The decision in the sheet: the shared decision card, on the sheet's own ground. */
+.talk-tray__card { min-inline-size: 0; outline: none; }
 .talk-tray__cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); }
-/* A compact card: the shared decision card on a raised ground, with a smaller question and less padding. */
-.talk-tray .today-card { padding: var(--cd-space-3); background: var(--cd-bg-surface-2); border-color: var(--cd-border-subtle); gap: var(--cd-space-2); }
-.talk-tray .today-card .ib-decision__q, .talk-tray .today-card__q { font-size: var(--cd-text-base); line-height: var(--cd-leading-base); }
-/* Compact: the command itself is what the owner decides on, whole; the longer explanation waits in the full card (Today, Inbox). */
-.talk-tray .today-card .ib-rule { display: none; }
+.talk-tray__sheet .today-card { padding: var(--cd-space-3); background: var(--cd-bg-surface-2); border-color: var(--cd-border-subtle); gap: var(--cd-space-2); }

@@ -100,10 +100,10 @@ export function ChannelDrawer({ channel, profile, tab, onTab, onClose, reload }:
     );
     footer = (
       <>
-        <WriteButton type="button" className="btn btn--secondary" disabled={testing || busy} aria-busy={testing} onClick={() => void test()}>
+        <button type="button" className="btn btn--secondary" disabled={testing || busy} aria-busy={testing} onClick={() => void test()}>
           <Icon name="play" />
           Test
-        </WriteButton>
+        </button>
         <WriteButton type="submit" form={connectionForm} className="btn btn--primary" disabled={busy || (!dirty && channel.configured)} aria-busy={busy}>
           <Icon name="lock" />
           Save…
@@ -147,6 +147,7 @@ export function ChannelDrawer({ channel, profile, tab, onTab, onClose, reload }:
           {channel.name} sections
         </span>
       </div>
+      {channel.description && <p className="help-text">{channel.description}</p>}
       {body}
     </>
   );

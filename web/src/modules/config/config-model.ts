@@ -105,6 +105,13 @@ function readValue(raw: unknown, kind: FieldKind): ConfigValue | undefined {
 /** Keys that Hermes puts in every answer whatever the profile says; their value says nothing about the profile. */
 export const IMPLIED_BY_HERMES: Record<string, ConfigValue> = { model_context_length: 0 };
 
+/**
+ * Keys the schema lists as one text, but that Hermes writes in the profile's file as a section (`model:` holds `default`, `provider`,
+ * `base_url`, `context_length`). The answers of `/api/config` flatten the section to the text; the file does not. In the raw YAML a
+ * section here is Hermes's own shape, not a mistake. Hermes's `_normalize_config_for_web` names `model` as the only such key.
+ */
+export const WRITTEN_AS_SECTION: Record<string, true> = { model: true };
+
 function schemaFields(schema: unknown): { key: string; kind: FieldKind; description: string; section: string; options: string[] }[] {
   const fields = isRecord(schema) && isRecord(schema.fields) ? schema.fields : {};
   return Object.entries(fields).flatMap(([key, raw]) => {

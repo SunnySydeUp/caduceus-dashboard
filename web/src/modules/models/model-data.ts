@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLiveLoad } from '../../gateway.ts';
 import { parseFallback, type Fallback } from './fallback.ts';
 import { parseMoa, type Moa } from './moa.ts';
-import { parseUsage, usagePath, type Usage, type UsageDays } from './usage.ts';
+import { analyticsFailure, parseUsage, usagePath, type Usage, type UsageDays } from './usage.ts';
 import { parseCatalogue, recommendedProvider, type Catalogue, type ModelChoice } from './model-catalogue.ts';
 import { parseAuxiliary, readModelInfo, readReasoning, readRecommended, recommendedDefaultPath, type Auxiliary, type ModelInfo } from './model-settings.ts';
 
@@ -133,25 +133,39 @@ export const useMoa = (profile: string | undefined): LoadedView<Moa> => useProfi
 export const useFallback = (profile: string | undefined): LoadedView<Fallback> => useProfileLoad(profile, async (name) => parseFallback(await read(scoped('/api/config', name))));
 
 /** Hermes's usage of each model over the last `days` days, for a profile; another period asks again. */
-export function useUsage(profile: string | undefined, days: UsageDays): LoadedView<Usage> {
+export function useUsage(profile: string | undefined, days: UsageDays): LoadedView<Usage> & { unavailable: boolean } {
   const [value, setValue] = useState<Usage>();
   const [failed, setFailed] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const latest = useRef(0);
   const reload = useCallback(async () => {
     if (!profile) return;
     const request = ++latest.current;
     try {
-      const next = parseUsage(await read(usagePath(profile, days)));
+      const res = await fetch(usagePath(profile, days));
+      if (request !== latest.current) return;
+      if (!res.ok) {
+        const kind = analyticsFailure(res.status);
+        // What another profile or period showed is not this one's usage.
+        setValue(undefined);
+        setUnavailable(kind === 'unavailable');
+        setFailed(kind === 'failed');
+        return;
+      }
+      const next = parseUsage(await res.json());
       if (request !== latest.current) return;
       setValue(next);
       setFailed(false);
+      setUnavailable(false);
     } catch {
-      if (request === latest.current) setFailed(true);
+      if (request !== latest.current) return;
+      setUnavailable(false);
+      setFailed(true);
     }
   }, [profile, days]);
   useEffect(() => {
     void reload();
   }, [reload]);
   useLiveLoad(() => void reload());
-  return { value, failed, reload };
+  return { value, failed, unavailable, reload };
 }

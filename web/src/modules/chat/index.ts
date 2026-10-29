@@ -42,7 +42,8 @@ export const chatModule: AppModule = {
     { id: 'new-chat', label: 'New chat', icon: 'plus', sub: 'Start a conversation with Hermes', shortcut: 'mod+shift+o', run: openNewChat },
     { id: 'saved-prompts', label: 'Saved prompts', icon: 'book', sub: 'Insert, save or edit a prompt for the message box', run: () => requestPromptLibrary(openNewChat) },
   ],
-  // The words inside sessions: Hermes searches them (its own index); the palette lists what it finds and opens a hit at the first message that matches.
+  // The words inside sessions: Hermes searches them (its own index; each profile has its own); the palette lists what it finds and opens a hit at the first message that matches. On a screen that shows every profile it asks each one.
+  paletteSearchEachProfile: true,
   paletteSearch: async (query, { profile, signal }) => {
     const hits = await searchSessions((path) => readHermes(path, signal), query, { profile: profile ?? 'default', limit: PALETTE_HITS });
     const now = Date.now() / 1000;

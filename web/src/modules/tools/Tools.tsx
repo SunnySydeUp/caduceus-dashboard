@@ -29,7 +29,7 @@ const TABS: readonly ToolsTab[] = [
   { id: 'mcp', label: 'MCP servers', icon: 'plug', path: '/agents/tools/mcp', screen: McpPanel },
   { id: 'catalogue', label: 'Catalogue', icon: 'package', path: '/agents/tools/catalogue', screen: CatalogPanel },
   { id: 'platforms', label: 'Per platform', icon: 'rows', path: '/agents/tools/platforms', screen: PlatformsPanel },
-  { id: 'routing', label: 'Tool gateway', icon: 'plug', path: '/agents/tools/routing', screen: RoutingPanel },
+  { id: 'routing', label: 'Tool routing', icon: 'plug', path: '/agents/tools/routing', screen: RoutingPanel },
   { id: 'hooks', label: 'Hooks', icon: 'bolt', path: '/agents/tools/hooks', screen: HooksPanel },
   { id: 'terminal', label: 'Terminal', icon: 'terminal', path: '/agents/tools/terminal', screen: TerminalPanel },
 ];

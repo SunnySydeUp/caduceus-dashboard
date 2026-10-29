@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
@@ -50,7 +51,7 @@ export function GraphPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!graph && !view.failed && <p role="status">Loading the learning graph…</p>}
+      {!graph && !view.failed && <Loading label="Loading the learning graph…" lines={4} onRetry={() => void view.reload()} />}
       {graph && graph.nodes.length === 0 && (
         <div className="empty">
           <span className="empty__icon">

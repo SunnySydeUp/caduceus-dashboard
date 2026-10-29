@@ -57,6 +57,8 @@ export function SignIn() {
   // Where the way back from the identity provider says it ended (`?error=oidc-…`).
   const [passkeyError, setPasskeyError] = useState<string | undefined>(() => signInErrorMessage(new URLSearchParams(location.search).get('error')));
   const [busy, setBusy] = useState(false);
+  // The browser's own check of the passkeys on this address, before the owner did anything: a calm note, not an error.
+  const [autofillNote, setAutofillNote] = useState<string>();
   const [showPassword, setShowPassword] = useState(false);
   // Bumped after a passkey prompt, so the password field offers passkeys again (the prompt ended the autofill request).
   const [autofillRound, setAutofillRound] = useState(0);
@@ -84,7 +86,7 @@ export function SignIn() {
       try {
         if (await signInWithPasskey(true)) location.assign(nextPath());
       } catch (failure) {
-        if (active && failure instanceof PasskeyError && !failure.cancelled) setPasskeyError(failure.message);
+        if (active && failure instanceof PasskeyError && !failure.cancelled) setAutofillNote(failure.message);
       }
     });
     return () => {
@@ -96,6 +98,7 @@ export function SignIn() {
   const signInWithPasskeyPrompt = async () => {
     setBusy(true);
     setPasskeyError(undefined);
+    setAutofillNote(undefined);
     try {
       if (await signInWithPasskey(false)) return location.assign(nextPath());
     } catch (failure) {
@@ -215,6 +218,7 @@ export function SignIn() {
                 {passkeyError}
               </p>
             )}
+            {!passkeyError && autofillNote && <p className="help-text">{autofillNote}</p>}
           </>
         )}
         <HelpButton />

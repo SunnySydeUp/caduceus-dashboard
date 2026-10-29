@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { cleanCommitMessage, commitMessageRequest, diffFiles, gitAdvice, parseBranches, parseStatus, parseWorktrees, splitRows } from '../src/modules/git/git-model.ts';
+import { cleanCommitMessage, commitMessageRequest, diffFiles, gitAdvice, parseBranches, parseStatus, parseWorktrees, remoteWords, splitRows } from '../src/modules/git/git-model.ts';
 
 describe('the repository status', () => {
   test('reads the branch, the counts and the changed files; a folder in no repository is null', () => {
@@ -143,5 +143,19 @@ describe('the commit message request', () => {
     expect(cleanCommitMessage('"Fix the thing"')).toBe('Fix the thing');
     expect(cleanCommitMessage('Commit message: Fix it\n\nBecause it was broken.')).toBe('Fix it\n\nBecause it was broken.');
     expect(cleanCommitMessage('   ')).toBeUndefined();
+  });
+});
+
+describe('where a repository stands against its remote', () => {
+  const local = { name: 'main', checkedOut: true, isDefault: true, isRemote: false };
+  const remote = { name: 'origin/main', checkedOut: false, isDefault: false, isRemote: true };
+
+  test('a repository with no remote branch says so, and cannot be pushed', () => {
+    expect(remoteWords({ ahead: 0, behind: 0 }, [local])).toEqual({ line: 'No remote', canPush: false, why: expect.stringContaining('no remote') });
+  });
+
+  test('with a remote it says in step, or how far apart, and can be pushed', () => {
+    expect(remoteWords({ ahead: 0, behind: 0 }, [local, remote])).toEqual({ line: 'In step with its remote', canPush: true, why: undefined });
+    expect(remoteWords({ ahead: 2, behind: 1 }, [local, remote])).toEqual({ line: '2 ahead, 1 behind', canPush: true, why: undefined });
   });
 });

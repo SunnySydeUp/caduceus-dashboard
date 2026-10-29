@@ -39,10 +39,18 @@ export const chatHelp: ModuleHelp = {
         { h: 'Searching your sessions' },
         {
           ul: [
-            'The field at the top of the list searches the words inside every message of this profile’s sessions ([[session-search]]). Hermes does the searching with its own index, so it finds sessions started anywhere: Telegram, the terminal, a scheduled job. Caduceus keeps no copy of the text.',
+            'The field at the top of the list searches the words inside every message of this profile’s sessions ([[session-search]]). Hermes does the searching with its own index, so it finds sessions started anywhere: Telegram, the terminal, a scheduled job. Caduceus keeps no copy of the text. If Hermes is slow, the list says it is still searching after a few seconds and offers Cancel; Search again asks once more.',
             'Each result shows the session’s title, its profile, where it came from and when, with the words around the match and the matched words marked. A word you start (“deplo”) also finds longer words (“deployment”). The words you searched for are in the address (?q=), so a search can be bookmarked.',
             'Choose a result to open the session at the first message that has the words. Chat reads that part of the transcript from Hermes, however far back it is, scrolls to it and marks it, and the search inside the conversation opens on the same words. Press ↓ in the field to move into the results, ↑ and ↓ between them, and Escape to clear the field.',
             'The command palette (⌘K) lists the same sessions as you type, under Sessions, and opens them the same way.',
+          ],
+        },
+        { h: 'Links to chats, and scheduled runs' },
+        {
+          ul: [
+            'A link to a chat that is in another profile (an old bookmark, or a link without ?profile=) opens it under the right agent: Chat looks in your other profiles before it says anything is missing. If no profile has it, the page says “That conversation no longer exists.” and offers Open the latest chat and New chat.',
+            'A chat that a scheduled job started opens on the job’s own prompt. The instructions Hermes puts in front of every scheduled prompt are one folded line above it, “Scheduled run”.',
+            'Typing / in the message box lists the commands you use most (status, compress, undo, retry…) first, then Hermes’s other commands by group, then your skills under their own heading.',
           ],
         },
         { h: 'Claude Code and Codex sessions' },
@@ -112,7 +120,7 @@ export const chatHelp: ModuleHelp = {
         },
         { h: 'Ask, Delegate or Repeat' },
         {
-          p: 'Beside Send is a small button, Send as, that says what the next message is for; it lists Ask, Delegate and Repeat, each with a line about what it does, and marks the one chosen. Ask sends it to the agent here, as always. Press Send as, choose Delegate or Repeat, and a chip above the message box names the choice; its x goes back to Ask. Delegate starts it as a [[side-task|background task]]: it runs on its own agent, shows as Working for the agent and under Work, and you are told when it needs you or finishes. Repeat opens the schedule builder with your message and the agent filled in; nothing is created until you pick a time and confirm there.',
+          p: 'Beside Send is a small button, Send as, that says what the next message is for; it lists Ask, Delegate and Repeat, each with a line about what it does, and marks the one chosen. Ask sends it to the agent here, as always. Press Send as, choose Delegate or Repeat, and a chip above the message box names the choice; its x goes back to Ask. Delegate starts it as a [[side-task|background task]]: it runs on its own agent, shows as Working for the agent and under Work, and you are told when it needs you or finishes; the toast and the card have a See in Work link. Repeat opens the schedule builder with your message and the agent filled in; nothing is created until you pick a time and confirm there. Your words stay in the message box: if they are still there when you come back, a note says so and Clear the box removes them, so that what you type next does not join them.',
         },
         {
           p: 'The choice is for one message and goes back to Ask after it. Delegate and Repeat carry words only, so a slash command or attachments are not taken: switch to Ask for those.',
@@ -137,7 +145,7 @@ export const chatHelp: ModuleHelp = {
         },
         {
           ul: [
-            'An [[approval]] card shows what Hermes wants to run: the tool, the exact command, the folder it would run in and the rule that made Hermes ask. Allow once lets this one go ahead. Allow for this session lets that kind of command run for the rest of the chat. Allow always is a standing permission, so it asks for a passkey first ([[step-up]]). Deny keeps it from running; Deny… lets you say why, and the agent hears the reason.',
+            'An [[approval]] card shows what Hermes wants to run: the tool, the exact command, the folder it would run in and the rule that made Hermes ask. Allow once lets this one go ahead. Allow for this session lets that kind of command run for the rest of the chat. Allow always is a standing permission, so it asks for a passkey first ([[step-up]]). Deny keeps it from running; Deny… lets you say why, and the agent hears the reason. In the chat a reason you gave shows as a small note, “You denied this: …”, and a steer shows as “You steered: …”.',
             'On a wide screen the card sits above the message box and Enter means Allow once. On a phone a bar above the message box says an answer is waiting, and the card opens as a sheet from the bottom, above the keyboard, with Allow once under your thumb and Deny a step away.',
             'A [[clarify]] card is a question the agent needs answered. Press one of its suggestions, or type your own answer and press Send. Some questions let you pick several suggestions, and some come as a short form with several questions. Skip answers with nothing, and Hermes carries on. A clock on the card counts down to the moment Hermes stops waiting; if it runs out, the card says what Hermes did.',
             'A request is Hermes’s, not the page’s: reload, lock your phone or lose the network and it is there again when you are back, before the chat is ready for another message. Open the same chat on two devices and answering on one closes the card on the other, which says “Answered elsewhere”.',
@@ -312,7 +320,7 @@ export const chatHelp: ModuleHelp = {
             'Edit and resend (your own messages) lets you change a message and send it again. Hermes replaces the message and removes everything after it, then answers the new one. Because that discards later messages you confirm first, and the dialog says how many go.',
             'Regenerate (the last reply) asks Hermes for a new reply to your message, which replaces the old one. It asks you to confirm.',
             'Undo takes the last message and its reply out of the chat. A toast says how many messages Hermes removed and offers to put your message back in the message box.',
-            '[[fork|Fork from here]] starts a new chat from a message: Hermes copies the chat, and for an earlier message cuts the copy back to it. The new chat opens, with a link to the chat it came from under its title. A fork from one of your own messages ends before it and puts its words back in the message box to edit. The original chat is not changed.',
+            '[[fork|Fork from here]] starts a new chat from a message: Hermes copies the chat, and for an earlier message cuts the copy back to it. The new chat opens, with a link to the chat it came from under its title. A fork from one of your own messages ends before it and puts its words back in the message box to edit. The original chat is not changed. If Hermes cannot cut the copy at that message, the new chat opens anyway and a notice says why and that it may hold more than you wanted; Undo last exchange in it takes off the rest. On a phone Fork is a line of the ⋮ menu, not a button under the message.',
             'While Hermes is writing a reply these are switched off, and say why: Hermes refuses to cut its history under a running reply.',
           ],
         },

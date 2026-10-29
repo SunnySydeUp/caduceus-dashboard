@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { helpPageFor, helpProblems, parseInline, plainText, resolveHelpTarget, type GlossaryTerm, type HelpPage, type ModuleHelp } from '../src/help.ts';
+import { FOLD_AT_HEADINGS, helpPageFor, helpProblems, helpSections, parseInline, plainText, resolveHelpTarget, termBlockIndex, type GlossaryTerm, type HelpPage, type ModuleHelp } from '../src/help.ts';
 import { createModuleRegistry, type ModuleDefinition } from '../src/module-registry.ts';
 
 // The registry is generic over what a route renders, so these tests use plain strings as screens.
@@ -339,5 +339,31 @@ describe('what the help panel opens on', () => {
   test('a glossary term opens the page it points at, with the term to show above it, and the shortcuts open their own tab', () => {
     expect(resolveHelpTarget(registry, { term: 'skill' })).toEqual({ tab: 'help', page: 'writing', term: 'skill' });
     expect(resolveHelpTarget(registry, { shortcuts: true })).toEqual({ tab: 'shortcuts' });
+  });
+});
+
+describe('long help pages', () => {
+  const long = [{ p: 'Intro.' }, { h: 'One' }, { p: 'First.' }, { ul: ['a', 'b'] }, { h: 'Two' }, { p: 'Second, with a [[skill]].' }, { h: 'Three' }, { p: 'Third.' }];
+
+  test('are cut at their headings so the screen can fold them: the text before the first stays out of every section', () => {
+    expect(helpSections(long)).toEqual({
+      intro: [{ p: 'Intro.' }],
+      sections: [
+        { heading: 'One', blocks: [{ p: 'First.' }, { ul: ['a', 'b'] }] },
+        { heading: 'Two', blocks: [{ p: 'Second, with a [[skill]].' }] },
+        { heading: 'Three', blocks: [{ p: 'Third.' }] },
+      ],
+    });
+  });
+
+  test(`are left whole below ${FOLD_AT_HEADINGS} headings`, () => {
+    const short = [{ p: 'Intro.' }, { h: 'One' }, { p: 'First.' }, { h: 'Two' }, { p: 'Second.' }];
+    expect(helpSections(short)).toEqual({ intro: short, sections: [] });
+    expect(helpSections([])).toEqual({ intro: [], sections: [] });
+  });
+
+  test('a glossary term’s “More” finds the first passage that uses the term, so the page can open that section and mark it', () => {
+    expect(termBlockIndex(long, 'skill')).toBe(5);
+    expect(termBlockIndex(long, 'unknown')).toBe(-1);
   });
 });

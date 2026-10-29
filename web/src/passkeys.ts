@@ -98,10 +98,21 @@ export function stepUpLive(now = Date.now()): boolean {
   return now < stepUpEndsAt;
 }
 
+/**
+ * How many passkeys the owner has, or `undefined` when Caduceus cannot be asked. A confirmation that needs a passkey checks it as it opens, so it can say
+ * up front that there is none instead of failing at the last step.
+ */
+export async function passkeyCount(): Promise<number | undefined> {
+  const res = await fetch('/_caduceus/api/auth/methods').catch(() => undefined);
+  const body: unknown = res?.ok ? await res.json().catch(() => undefined) : undefined;
+  const count = typeof body === 'object' && body !== null && 'passkeys' in body ? (body.passkeys as { count?: unknown } | null)?.count : undefined;
+  return typeof count === 'number' ? count : undefined;
+}
+
 /** Confirms with a passkey: the current session gets a step-up grant for about 5 minutes. */
 export async function stepUp(): Promise<void> {
   const optionsRes = await postJson('/_caduceus/api/auth/step-up/options');
-  if ((await errorCode(optionsRes)) === 'no-passkey') throw new PasskeyError('Confirming needs a passkey. Add one in Security first.');
+  if ((await errorCode(optionsRes)) === 'no-passkey') throw new PasskeyError('There is no passkey to confirm with yet. Add one in Settings › Security.');
   if (!optionsRes.ok) throw new PasskeyError(`Caduceus could not start the confirmation (HTTP ${optionsRes.status}).`);
   const optionsJSON: PublicKeyCredentialRequestOptionsJSON = await optionsRes.json();
   const response = await ceremony(async () => (await webauthn()).startAuthentication({ optionsJSON }));

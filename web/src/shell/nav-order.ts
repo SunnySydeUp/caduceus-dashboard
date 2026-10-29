@@ -93,9 +93,31 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
   return { destinations, crew: rows, control: registry.controlGroups() };
 }
 
+/** What the owner calls a module: the destination it opens on (Today, Talk, Work), else its own title. The Chat module is Talk, the Overview is Work. */
+export function ownerName<Screen>({ destinations }: Pick<DeskNavigation<Screen>, 'destinations'>, module: { id: string; title: string }): string {
+  return destinations.find((destination) => destination.modules[0]?.id === module.id)?.title ?? module.title;
+}
+
 /** Every module the navigation reaches, in the order it lists them: the destinations' modules, then Control's. */
 export function deskModules<Screen>({ destinations, control }: Pick<DeskNavigation<Screen>, 'destinations' | 'control'>): ModuleDefinition<Screen>[] {
   return [...destinations.flatMap(({ modules }) => modules), ...control.flatMap(({ modules }) => modules)];
+}
+
+/**
+ * The counts of the modules in Control as one badge, for the phone's More tab and the Control entry: the owner sees there is something to look at (a failed
+ * run in Notices) without opening Control. `undefined` when no module in Control keeps a count. A count of one module is that module's own.
+ */
+export function controlBadge<Screen>({ control }: Pick<DeskNavigation<Screen>, 'control'>): NavBadge | undefined {
+  const badges = control.flatMap(({ modules }) => modules.flatMap((module) => module.badge ?? []));
+  if (badges.length === 0) return undefined;
+  return {
+    subscribe: (listener) => {
+      const stops = badges.map((badge) => badge.subscribe(listener));
+      return () => stops.forEach((stop) => stop());
+    },
+    count: () => badges.reduce((total, badge) => total + badge.count(), 0),
+    label: (count) => `${count} ${count === 1 ? 'thing needs' : 'things need'} a look in Control`,
+  };
 }
 
 /** How long ago a crew row's state began: "now" inside the first minute, then "5 min", "3 h". Empty when there is nothing going on. */

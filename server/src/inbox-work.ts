@@ -6,6 +6,7 @@ import type { InboxAction } from '@caduceus/contracts/inbox';
 import { parseStageTag, RUN_FAILED_STAGE } from '@caduceus/contracts/playbook-runs';
 import type { HermesBackend } from './hermes-backend.ts';
 import type { WebSocket } from 'ws';
+import { clipWords } from '@caduceus/contracts/clip-words';
 import { createPolledSource, type InboxSource, type NoticeDraft } from './inbox-source.ts';
 
 /** One board as Hermes answers `GET /board`: its slug and its tasks, each with the column's name as `status`. */
@@ -15,6 +16,16 @@ export interface BoardTasks {
 }
 
 const text = (value: unknown): string | undefined => (typeof value === 'string' && value.trim() !== '' ? value : undefined);
+/** How much of a notice's words a screen holds, and how much a confirmation quotes. Cut at a whole word. */
+const DETAIL_MAX = 400;
+const CONFIRM_QUOTE = 160;
+const shorten = (value: string | undefined, max = DETAIL_MAX): string | undefined => (value === undefined ? undefined : clipWords(value, max));
+
+/** Why a worker's attempts failed, in words the owner can use: Hermes's protocol text (a worker that ended without reporting) is replaced, anything else is kept. */
+function failureWords(error: string | undefined): string {
+  if (error === undefined || /without\s+kanban_complete|rc\s*=\s*0/i.test(error)) return 'The worker stopped before it finished.';
+  return shorten(error) ?? 'Its attempts failed.';
+}
 
 /** What the owner can do about the tasks of the boards Hermes holds, as notices. Pure. */
 export function workNotices(boards: readonly BoardTasks[]): NoticeDraft[] {
@@ -37,23 +48,24 @@ export function workNotices(boards: readonly BoardTasks[]): NoticeDraft[] {
       if (parseStageTag(task.idempotency_key)?.stage === RUN_FAILED_STAGE) {
         if (status === 'done' || status === 'archived') return [];
         const acknowledge: InboxAction = { id: 'acknowledge', label: 'Acknowledge', request: { method: 'POST', path: `${base}/approve${query}` }, confirm: { title: `Acknowledge “${title}”?`, text: 'The task is marked done. The run stays stopped until you re-run a stage from its run page.', ...object, confirmLabel: 'Acknowledge' }, primary: true };
-        return [{ ...common, stamp: stampOf('run-stopped'), group: 'failed', title, detail: text(task.body)?.replace(/^## Goal\s+/, '').slice(0, 400), actions: [acknowledge] }];
+        return [{ ...common, stamp: stampOf('run-stopped'), group: 'failed', title, detail: shorten(text(task.body)?.replace(/^## Goal\s+/, '')), actions: [acknowledge] }];
       }
       if (status === 'review') {
-        const approve: InboxAction = { id: 'approve', label: 'Approve', request: { method: 'POST', path: `${base}/approve${query}` }, confirm: { title: `Approve “${title}”?`, text: 'The task is marked done with your approval as its result.', ...object, confirmLabel: 'Approve' }, primary: true };
-        const reject: InboxAction = { id: 'reject', label: 'Reject + note', request: { method: 'POST', path: `${base}/reject${query}` }, input: { field: 'note', label: 'What needs to change?', required: true } };
-        return [{ ...common, stamp: stampOf('review'), group: 'decision', title: `Review: ${title}`, detail: text(task.latest_summary) === title ? undefined : text(task.latest_summary)?.slice(0, 400), actions: [approve, reject] }];
+        const workerSays = shorten(text(task.latest_summary) === title ? undefined : text(task.latest_summary), CONFIRM_QUOTE);
+        const approve: InboxAction = { id: 'approve', label: 'Approve', request: { method: 'POST', path: `${base}/approve${query}` }, confirm: { title: `Approve “${title}”?`, text: `${workerSays ? `The worker says: “${workerSays}” ` : ''}Approving marks the task done, with your approval as its result.`, ...object, confirmLabel: 'Approve' }, primary: true };
+        const reject: InboxAction = { id: 'reject', label: 'Reject + note', request: { method: 'POST', path: `${base}/reject${query}` }, confirm: { title: `Send “${title}” back?`, text: 'Your note is posted as a comment and the task goes back to Ready for its worker.', ...object, confirmLabel: 'Send back' }, input: { field: 'note', label: 'What needs to change?', required: true } };
+        return [{ ...common, stamp: stampOf('review'), group: 'decision', title: `Review: ${title}`, detail: shorten(text(task.latest_summary) === title ? undefined : text(task.latest_summary)), actions: [approve, reject] }];
       }
       if (status !== 'blocked') return [];
       if (kind === 'needs_input') {
-        const answer: InboxAction = { id: 'answer', label: 'Answer', request: { method: 'POST', path: `${base}/answer${query}` }, input: { field: 'answer', label: 'Your answer', required: true }, confirm: { title: `Answer “${title}”?`, text: 'Your answer is posted as a comment and the task goes back to work.', ...object, confirmLabel: 'Answer' }, primary: true };
-        return [{ ...common, stamp: stampOf('needs-input'), group: 'decision', title: `Needs input: ${title}`, detail: text(task.latest_summary)?.slice(0, 400) ?? text(task.block_reason)?.slice(0, 400), actions: [answer] }];
+        const answer: InboxAction = { id: 'answer', label: 'Answer', request: { method: 'POST', path: `${base}/answer${query}` }, input: { field: 'answer', label: 'Your answer', required: true }, confirm: { title: `Answer “${title}”?`, text: 'Your answer is posted as a comment and the task goes back to work.', ...object, confirmLabel: 'Send answer' }, primary: true };
+        return [{ ...common, stamp: stampOf('needs-input'), group: 'decision', title: `Needs input: ${title}`, detail: shorten(text(task.latest_summary) ?? text(task.block_reason)), actions: [answer] }];
       }
       // Blocked for another reason after attempts that failed: Hermes stopped trying.
       if (kind === 'dependency' || failures === 0) return [];
       const retry: InboxAction = { id: 'retry', label: 'Retry', request: { method: 'POST', path: `${base}/retry${query}` }, confirm: { title: `Retry “${title}”?`, text: 'The task goes back to Ready and a worker picks it up again.', ...object, confirmLabel: 'Retry' }, primary: true };
       const reassign: InboxAction = { id: 'reassign', label: 'Reassign', request: { method: 'POST', path: `/api/plugins/kanban/tasks/${encodeURIComponent(id)}/reassign${query}`, body: { reclaim_first: false } }, input: { field: 'profile', label: 'Profile to give it to', required: true }, confirm: { title: `Reassign “${title}”?`, text: 'Another profile takes the task.', ...object, confirmLabel: 'Reassign' } };
-      return [{ ...common, stamp: stampOf('gave-up'), group: 'failed', title: `Gave up: ${title}`, detail: text(task.last_failure_error)?.slice(0, 400) ?? 'Its attempts failed.', actions: [retry, reassign] }];
+      return [{ ...common, stamp: stampOf('gave-up'), group: 'failed', title: `Gave up: ${title}`, detail: failureWords(text(task.last_failure_error)), actions: [retry, reassign] }];
     }),
   );
 }

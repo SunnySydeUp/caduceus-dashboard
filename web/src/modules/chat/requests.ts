@@ -148,7 +148,13 @@ export function cancelledApprovals(requests: readonly OpenRequest[], payload: { 
 }
 
 /** What the agent is told when the owner denies an approval and says why: Hermes's approval takes no reason, so it goes as a steering note. */
-export const denyNote = (reason: string): string => `I denied that action. My reason: ${reason.trim()}`;
+const DENY_PREFIX = 'I denied that action. My reason: ';
+export const denyNote = (reason: string): string => `${DENY_PREFIX}${reason.trim()}`;
+
+/** How a steer row of the history reads in the transcript: a denial's reason as what the owner did ("You denied this: …"), any other steer as the words they steered with. */
+export function steerNote(words: string): string {
+  return words.startsWith(DENY_PREFIX) ? `You denied this: ${words.slice(DENY_PREFIX.length).trim()}` : `You steered: ${words}`;
+}
 
 /** The answers to a clarify card, by question id: the text typed or picked, or the list of picks for a multiple-choice question. */
 export type ClarifyAnswers = Record<string, string | readonly string[]>;

@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Icon } from '../../icons.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
 import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
-import { BLOCK_META, STATUS_META, priorityLabel, type BoardTask } from './board-model.ts';
+import { blockReason, STATUS_META, priorityLabel, type BoardTask } from './board-model.ts';
 import { ageLabel, lastRun, rowWindow, updatedAt, waitsForOwner, type RowWindow, type SortColumn, type SortSpec } from './tasks-model.ts';
 import { playbookLabel, playbookOfTask, type PlaybookNames } from './task-playbook.ts';
 import { taskHref } from './TaskPeek.tsx';
@@ -70,7 +70,7 @@ function useRowWindow(body: RefObject<HTMLElement | null>, count: number): { win
 }
 
 function StatusCell({ task }: { task: BoardTask }) {
-  const reason = task.status === 'blocked' && task.blockKind ? BLOCK_META[task.blockKind].label : undefined;
+  const reason = blockReason(task)?.label;
   return (
     <>
       <span className="tag" data-tone={STATUS_TONE[task.status]}>

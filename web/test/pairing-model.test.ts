@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ageWords, parsePairing, platformName } from '../src/modules/pairing/pairing-model.ts';
+import { ageWords, expiryWords, parsePairing, platformName } from '../src/modules/pairing/pairing-model.ts';
 
 describe('reading Hermes’s pairing lists', () => {
   test('a request an older Hermes wrote has no id, so it is listed but cannot be approved; an answer that is not lists is no requests', () => {
@@ -20,5 +20,17 @@ describe('how a request is named', () => {
   test('its age is in the words a person would use, rounded down, and a platform id reads as a name', () => {
     expect([0, 1, 2, 59, 60, 119, 600].map(ageWords)).toEqual(['just now', '1 minute ago', '2 minutes ago', '59 minutes ago', '1 hour ago', '1 hour ago', '10 hours ago']);
     expect([platformName('telegram'), platformName('whatsapp_cloud'), platformName('qqbot')]).toEqual(['Telegram', 'Whatsapp cloud', 'Qqbot']);
+  });
+});
+
+describe('how long a request waits', () => {
+  test('Hermes keeps it for an hour and then drops it, so an owner who ignores it has refused it', () => {
+    expect([0, 10, 59, 60, 90].map(expiryWords)).toEqual([
+      'Goes away by itself in about 60 minutes',
+      'Goes away by itself in about 50 minutes',
+      'Goes away by itself within a minute',
+      'Goes away by itself within a minute',
+      'Goes away by itself within a minute',
+    ]);
   });
 });

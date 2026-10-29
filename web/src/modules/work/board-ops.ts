@@ -1,6 +1,7 @@
 // What Work › Board changes in Hermes's Kanban, free of the DOM and of React: the requests (as data, so a server test sends the very same ones
 // to the real Hermes through Caduceus), which moves Hermes accepts, and the change that undoes each one. `board-actions.ts` adds the dialogs
 // and the toasts. Nothing here is kept: the board is whatever Hermes says it is (D1).
+import { OWNER_CLOSED_BY_HAND } from '@caduceus/contracts/today';
 import { READ_ONLY_MESSAGE } from '../../tiered-fetch.ts';
 import { UNASSIGNED, type BoardStatus, type BoardTask, type LaneGrouping } from './board-model.ts';
 import { board as boardQuery, type Plain } from './task-requests.ts';
@@ -38,7 +39,7 @@ export type CardChange =
   | { kind: 'priority'; to: number };
 
 /** The words that stand for a task closed by hand, when its closer gave none: Hermes will not complete a task with no evidence. */
-export const CLOSED_BY_HAND = 'Marked done by the owner from Caduceus.';
+export const CLOSED_BY_HAND = OWNER_CLOSED_BY_HAND;
 
 /** The fields of a task patch for one change; the same for `PATCH /tasks/{id}` and `POST /tasks/bulk`. */
 export function changeFields(change: CardChange): Record<string, unknown> {
@@ -46,7 +47,9 @@ export function changeFields(change: CardChange): Record<string, unknown> {
   if (change.kind === 'priority') return { priority: change.to };
   if (change.to === 'archived') return { status: 'archived' };
   if (change.to === 'done') {
-    const evidence = change.note?.trim() || CLOSED_BY_HAND;
+    // Always the owner's words first, then their note: Today knows a task the owner closed by these words (`today-review.ts`), with or without a note.
+    const note = change.note?.trim();
+    const evidence = note ? `${CLOSED_BY_HAND} ${note}` : CLOSED_BY_HAND;
     return { status: 'done', result: evidence, summary: evidence };
   }
   const reason = change.note?.trim();

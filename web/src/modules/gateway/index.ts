@@ -28,7 +28,7 @@ export const gatewayModule: AppModule = {
   summary: 'Whether each profile’s messaging gateway runs; start, stop, restart',
   routes: [
     { path: '/connect/gateway', screen: Gateway },
-    { path: '/connect/gateway/migrate', screen: Migrate, title: 'Migrate', parent: '/connect/gateway' },
+    { path: '/connect/gateway/migrate', screen: Migrate, title: 'Move to one shared gateway', parent: '/connect/gateway' },
   ],
   paletteCommands: () => [{ id: 'restart-gateway', label: 'Restart gateway', icon: 'refresh', sub: 'The gateway of this tab’s profile', tier: 'T2', run: restartTabGateway }],
   help: () => import('./help.ts').then((m) => m.gatewayHelp),

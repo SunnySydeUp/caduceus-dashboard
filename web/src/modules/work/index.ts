@@ -133,6 +133,17 @@ export const tasksModule: AppModule = {
     { id: 'open-tasks', label: 'Open tasks', icon: 'tasks', sub: 'Every task, with saved filters', run: openTasks() },
     { id: 'tasks-waiting', label: 'Show tasks waiting for me', icon: 'waiting', sub: 'Reviews and questions', run: openTasks('filter=waiting') },
   ],
+  paletteSearch: async (query, { signal }) => {
+    try {
+      const { loadBoardOnce } = await import('./board-data.ts');
+      const { taskHits } = await import('./board-model.ts');
+      const board = await loadBoardOnce(undefined);
+      if (signal.aborted) return [];
+      return taskHits(board, query).map((hit) => ({ ...hit, icon: 'tasks' as const, group: 'Tasks' as const }));
+    } catch {
+      return [];
+    }
+  },
   help: () => import('./tasks-help.ts').then((m) => m.tasksHelp),
 };
 

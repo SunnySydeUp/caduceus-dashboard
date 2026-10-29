@@ -9,9 +9,9 @@ import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
-import { useProfileProjects, useProjectActions, useProjectTree } from './projects-data.ts';
+import { useProfileProjects, useProjectActions, useProjectTree, useWorkspaceRegistry } from './projects-data.ts';
 import { groupTree, withOwnedProjects, type ProjectNode } from './projects-model.ts';
-import { DiscoverSheet, NewProjectSheet, RenameSheet } from './ProjectSheets.tsx';
+import { AddWorkspaceSheet, DiscoverSheet, NewProjectSheet, RenameSheet } from './ProjectSheets.tsx';
 import { useDefaultFolder } from './workspace-data.ts';
 import { Workspaces } from './Workspaces.tsx';
 import './projects.css';
@@ -28,7 +28,7 @@ function lastActiveText(seconds: number): string {
   return seconds > 0 ? `last used ${new Date(seconds * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}` : 'never used';
 }
 
-function Row({ node, mine, active, onRename, onActivate }: { node: ProjectNode; mine: boolean; active: boolean; onRename(): void; onActivate(): void }) {
+function Row({ node, mine, active, saved, onAddWorkspace, onRename, onActivate }: { node: ProjectNode; mine: boolean; active: boolean; saved: boolean; onAddWorkspace(): void; onRename(): void; onActivate(): void }) {
   return (
     <li className="pj__item">
       <div className="pj__row">
@@ -47,15 +47,24 @@ function Row({ node, mine, active, onRename, onActivate }: { node: ProjectNode; 
           </span>
           <Icon name="chev-r" small />
         </AppLink>
-        {mine && (
+        {(mine || (node.path !== undefined && !saved)) && (
           <span className="pj__actions">
-            <button type="button" className="btn btn--secondary btn--sm" onClick={onRename}>
-              Rename<span className="sr-only"> {node.name}</span>
-            </button>
-            <WriteButton type="button" className="btn btn--secondary btn--sm" onClick={onActivate}>
-              {active ? 'Stop using as active' : 'Make active'}
-              <span className="sr-only"> {node.name}</span>
-            </WriteButton>
+            {node.path !== undefined && !saved && (
+              <button type="button" className="btn btn--secondary btn--sm" onClick={onAddWorkspace}>
+                Add as workspace<span className="sr-only">: {node.name}</span>
+              </button>
+            )}
+            {mine && (
+              <>
+                <button type="button" className="btn btn--secondary btn--sm" onClick={onRename}>
+                  Rename<span className="sr-only"> {node.name}</span>
+                </button>
+                <WriteButton type="button" className="btn btn--secondary btn--sm" onClick={onActivate}>
+                  {active ? 'Stop using as active' : 'Make active'}
+                  <span className="sr-only"> {node.name}</span>
+                </WriteButton>
+              </>
+            )}
           </span>
         )}
       </div>
@@ -82,9 +91,12 @@ export function Projects() {
   const owned = useProfileProjects(profile);
   const actions = useProjectActions();
   const home = useDefaultFolder();
-  const [sheet, setSheet] = useState<'new' | 'discover' | { rename: ProjectNode }>();
+  const [sheet, setSheet] = useState<'new' | 'discover' | { rename: ProjectNode } | { workspace: ProjectNode }>();
   const grouped = tree.value ? groupTree(withOwnedProjects(tree.value.projects, owned.value?.projects ?? [])) : undefined;
   const mineIds = new Set(owned.value?.projects.map((project) => project.id));
+  const registry = useWorkspaceRegistry();
+  const [workspacesKey, setWorkspacesKey] = useState(0);
+  const savedPaths = new Set(registry.value?.map((entry) => entry.path));
   const reload = () => {
     tree.reload();
     owned.reload();
@@ -121,7 +133,7 @@ export function Projects() {
         }
       />
       <p className="help-text">
-        A <Term id="project">project</Term> is a named set of folders that Hermes groups sessions and Kanban boards by. Hermes keeps them and builds this tree from every profile’s sessions, so what you see is what Hermes has. Your <Term id="workspace">workspaces</Term> are below.
+        A <Term id="project">project</Term> groups sessions and boards by folder; Hermes keeps it and builds this list from every profile’s sessions. A <Term id="workspace">workspace</Term> is a folder you save below, so the composer and the Brief editor offer it. Use Add as workspace on a project to save its folder.
       </p>
 
       {tree.error && (
@@ -169,11 +181,11 @@ export function Projects() {
             </div>
           ) : (
             <>
-              {profile !== undefined && grouped.owned.length > 0 && <p className="subtle">Rename and Make active are offered for the projects of the profile in use, {profile}.</p>}
+              {profile !== undefined && grouped.owned.length > 0 && <p className="subtle">Profile in use: {profile}. Rename and Make active work on the projects of that profile.</p>}
               {grouped.owned.length > 0 && (
                 <ul className="pj__list" aria-label="Projects you made">
                   {grouped.owned.map((node) => (
-                    <Row key={node.id} node={node} mine={mineIds.has(node.id)} active={owned.value?.activeId === node.id} onRename={() => setSheet({ rename: node })} onActivate={() => void toggleActive(node)} />
+                    <Row key={node.id} node={node} mine={mineIds.has(node.id)} active={owned.value?.activeId === node.id} saved={savedPaths.has(node.path ?? '')} onAddWorkspace={() => setSheet({ workspace: node })} onRename={() => setSheet({ rename: node })} onActivate={() => void toggleActive(node)} />
                   ))}
                 </ul>
               )}
@@ -183,7 +195,7 @@ export function Projects() {
                   <p className="subtle">Repositories your sessions worked in. Nobody made these projects: Discover repos turns them into real ones.</p>
                   <ul className="pj__list" aria-label="Repositories Hermes found">
                     {grouped.found.map((node) => (
-                      <Row key={node.id} node={node} mine={false} active={false} onRename={() => undefined} onActivate={() => undefined} />
+                      <Row key={node.id} node={node} mine={false} active={false} saved={savedPaths.has(node.path ?? '')} onAddWorkspace={() => setSheet({ workspace: node })} onRename={() => undefined} onActivate={() => undefined} />
                     ))}
                   </ul>
                 </>
@@ -194,11 +206,14 @@ export function Projects() {
         </section>
       )}
 
-      <Workspaces />
+      <Workspaces key={workspacesKey} />
 
       {sheet === 'new' && profile !== undefined && <NewProjectSheet profile={profile} actions={actions} onDone={reload} onClose={() => setSheet(undefined)} />}
       {sheet === 'discover' && profile !== undefined && <DiscoverSheet profile={profile} actions={actions} owned={owned.value} startFolder={home} onDone={reload} onClose={() => setSheet(undefined)} />}
-      {typeof sheet === 'object' && profile !== undefined && (
+      {typeof sheet === 'object' && 'workspace' in sheet && sheet.workspace.path !== undefined && (
+        <AddWorkspaceSheet client={registry.client} initial={{ path: sheet.workspace.path, name: sheet.workspace.name }} onDone={() => { registry.reload(); setWorkspacesKey((key) => key + 1); }} onClose={() => setSheet(undefined)} />
+      )}
+      {typeof sheet === 'object' && 'rename' in sheet && profile !== undefined && (
         <RenameSheet
           title="Rename project"
           initial={sheet.rename.name}

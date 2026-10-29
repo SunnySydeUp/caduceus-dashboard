@@ -1,6 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import type { InboxApproval, InboxItem } from '@caduceus/contracts/inbox';
-import { groupItems, inCategory, noticesIn, initialSelection, noticesSearch, readNoticesView, snoozeUntil, stepSelection } from '../src/modules/notices/notices-model.ts';
+import { failedLabel, failedNotices, groupItems, inCategory, noticesIn, initialSelection, noticesSearch, readNoticesView, snoozeUntil, stepSelection } from '../src/modules/notices/notices-model.ts';
+
+describe('the Notices badge', () => {
+  test('it counts the notices that failed, and not those for information or a decision', () => {
+    const notice = (group: 'failed' | 'fyi' | 'decision'): InboxItem => ({ kind: 'notice', id: group, ref: group, stamp: '', group, category: 'work', profile: undefined, at: 0, title: group, detail: undefined, actions: [], link: undefined });
+    expect(failedNotices([notice('failed'), notice('failed'), notice('fyi'), notice('decision')])).toBe(2);
+    expect(failedLabel(1)).toBe('1 notice has failed');
+    expect(failedLabel(3)).toBe('3 notices have failed');
+  });
+});
 
 // Notices' pure part (M2 #01, M8 #08): the notices and the activity feed the Inbox kept in Control: how they are grouped and filtered, what the address holds, where j / k
 // move, and when a snooze ends. What counts as a decision (and so lives on Today) is `today-model.test.ts`.

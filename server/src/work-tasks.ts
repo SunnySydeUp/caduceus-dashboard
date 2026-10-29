@@ -8,6 +8,7 @@
 // `?board=` does. Nothing is kept: Hermes writes the task, and the answer is what Hermes printed.
 import type { Hono } from 'hono';
 import { isRecord } from '@caduceus/contracts/policy/guards';
+import { OWNER_APPROVED } from '@caduceus/contracts/today';
 import { authClient, type AuthEnv } from './auth-routes.ts';
 import type { AuditLog } from './audit-log.ts';
 import type { HermesBackend } from './hermes-backend.ts';
@@ -209,12 +210,11 @@ export function mountWorkTasks(app: Hono<AuthEnv>, { backend, policy, onWrite }:
   /** A note the owner wrote; the server stamps the author, as it does for every comment that passes through it. */
   const words = (value: unknown): string | undefined => (typeof value === 'string' && value.trim() !== '' && value.length <= 4000 ? value.trim() : undefined);
   const comment = (taskId: string, text: string): Step => ({ method: 'POST', path: `${task(taskId)}/comments`, body: { body: text, author: KANBAN_AUTHOR } });
-  const APPROVED = 'Approved by the owner from Caduceus.';
 
   // Retry: the task goes back to Ready and the dispatcher gives it to a worker again.
   command('retry', (taskId) => [status(taskId, { status: 'ready' })]);
   // Approve: a task in review is done, with the approval as its evidence of completion (Hermes will not complete one with none).
-  command('approve', (taskId) => [status(taskId, { status: 'done', result: APPROVED, summary: APPROVED })]);
+  command('approve', (taskId) => [status(taskId, { status: 'done', result: OWNER_APPROVED, summary: OWNER_APPROVED })]);
   // Reject + note: the note is a comment by the owner, and the task goes back to Ready for its worker.
   command('reject', (taskId, body) => {
     const note = words(body.note);

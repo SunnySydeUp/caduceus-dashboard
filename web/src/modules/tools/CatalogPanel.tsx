@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
 import { StatusBadge } from '../../shell/StatusBadge.tsx';
@@ -7,10 +8,12 @@ import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { useSizeClass } from '../../shell/use-size-class.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
+import { Rich } from '../chat/Rich.tsx';
+import { wrapProse } from '../skills/prose.ts';
 import { ActionLogSheet, type LogRun, type LogVerdict } from '../skills/ActionLogSheet.tsx';
 import { installEntry } from './mcp-actions.ts';
 import { useMcpCatalog } from './mcp-data.ts';
-import { commandLine, filterCatalog, installProblems, type CatalogEntry, type CatalogFilter } from './mcp-model.ts';
+import { commandLine, filterCatalog, installProblems, needsHermesComputer, type CatalogEntry, type CatalogFilter } from './mcp-model.ts';
 import './tools.css';
 
 const FILTERS = [
@@ -157,7 +160,20 @@ function InstallSheet({ entry, profile, onInstalled, onClose }: { entry: Catalog
             ))}
           </fieldset>
         )}
-        {entry.postInstall && <p className="tl-note tl-pre">{entry.postInstall}</p>}
+        {entry.postInstall && (
+          <div className="tl-after">
+            <h3 className="tl-after__title">After you install</h3>
+            {needsHermesComputer(entry.postInstall) && (
+              <p className="banner" data-tone="info" role="note">
+                <Icon name="info" />
+                <span className="banner__content">One of these steps needs the computer that runs Hermes. A link to localhost does not open from this device.</span>
+              </p>
+            )}
+            <div className="tl-note">
+              <Rich text={wrapProse(entry.postInstall)} anchor={`mcp-after-${entry.name}`} />
+            </div>
+          </div>
+        )}
       </form>
     </Sheet>
   );
@@ -207,7 +223,7 @@ export function CatalogPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!catalog && !view.failed && <p role="status">Loading the catalogue…</p>}
+      {!catalog && !view.failed && <Loading label="Loading the catalogue…" lines={4} onRetry={() => void view.reload()} />}
       {catalog && catalog.diagnostics.length > 0 && (
         <div className="banner" data-tone="warning" role="status">
           <Icon name="info" />

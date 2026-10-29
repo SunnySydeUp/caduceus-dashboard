@@ -15,6 +15,7 @@
 /* Send and its Send as chevron are one pill. */
 .composer__split { display: inline-flex; flex: none; }
 .composer__send { border-start-end-radius: 0; border-end-end-radius: 0; border-start-start-radius: var(--cd-radius-full); border-end-start-radius: var(--cd-radius-full); }
+.composer__send { min-inline-size: var(--cd-target-min); min-block-size: var(--cd-target-min); }
 .composer__more { display: grid; place-items: center; inline-size: max(2rem, var(--cd-target-min)); min-block-size: max(var(--cd-control-h), var(--cd-target-min)); border: 0; border-inline-start: 1px solid color-mix(in srgb, var(--cd-on-accent) 25%, transparent); border-start-end-radius: var(--cd-radius-full); border-end-end-radius: var(--cd-radius-full); border-start-start-radius: 0; border-end-start-radius: 0; background: var(--cd-accent); color: var(--cd-on-accent); cursor: pointer; }
 @media (hover: hover) { .composer__more:not(:disabled):hover { background: var(--cd-accent-hover); } }
 .composer__more:disabled, .composer__send:disabled { opacity: 0.5; cursor: default; }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Icon, type IconName } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { closeAllLayers } from '../../overlays/layers.ts';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
@@ -65,7 +66,7 @@ function WebhookCard({ webhook, busy, onToggle, onMenu }: { webhook: Webhook; bu
           <h3 className="wh-card__name">{webhook.name}</h3>
           <StatusBadge state={webhook.enabled ? 'online' : 'offline'} label={webhook.enabled ? 'On' : 'Off'} variant="plain" />
         </div>
-        <WriteButton type="button" role="switch" className="switch" aria-checked={webhook.enabled} aria-label={`${webhook.name} is ${webhook.enabled ? 'on' : 'off'}`} disabled={busy} onClick={onToggle} />
+        <WriteButton type="button" role="switch" className="switch" aria-checked={webhook.enabled} aria-label={webhook.name} disabled={busy} onClick={onToggle} />
       </div>
       {webhook.description && <p className="wh-card__desc">{webhook.description}</p>}
       <code className="wh-card__url mono">{webhook.url}</code>
@@ -160,7 +161,7 @@ export function Webhooks() {
   const menuActions = (webhook: Webhook): MenuAction[] => [
     { id: 'copy', icon: 'copy', label: 'Copy address', sub: webhook.url, run: () => void navigator.clipboard?.writeText(webhook.url).then(() => toast('Copied the address'), () => toast('Could not copy: this browser did not allow it', { tone: 'warning' })) },
     { id: 'toggle', icon: 'sliders', label: webhook.enabled ? 'Switch off' : 'Switch on', sub: webhook.enabled ? 'Hermes refuses its events until it is back on' : 'Hermes accepts its events again', run: () => void toggle(webhook) },
-    { id: 'delete', icon: 'trash', label: 'Delete…', sub: `Tier 1 · from ${profile}`, danger: true, run: () => void remove(webhook) },
+    { id: 'delete', icon: 'trash', label: 'Delete…', sub: `You confirm · from ${profile}`, danger: true, run: () => void remove(webhook) },
   ];
 
   const empty = receiver !== undefined && receiver.subscriptions.length === 0;
@@ -203,7 +204,7 @@ export function Webhooks() {
           </button>
         </div>
       )}
-      {!receiver && !view.failed && <p role="status">Loading webhooks…</p>}
+      {!receiver && !view.failed && <Loading label="Loading webhooks…" lines={3} onRetry={() => void view.reload()} />}
       {receiver && (
         <section className="wh-receiver" aria-label="Webhook receiver">
           <div className="wh-receiver__text">

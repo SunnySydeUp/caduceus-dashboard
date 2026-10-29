@@ -7,6 +7,7 @@ import type { Hono } from 'hono';
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { Reminder, RemindersFailure, RemindersFailureReason, RemindersState } from '@caduceus/contracts/today';
 import type { AuthEnv } from './auth-routes.ts';
+import { clipWords } from '@caduceus/contracts/clip-words';
 
 /** What is run: `remindctl export --json`, which includes completed reminders. Fixed on purpose. */
 const ARGUMENTS = ['export', '--json', '--no-input', '--no-color'] as const;
@@ -79,8 +80,8 @@ function run(command: string): Promise<string> {
     const failure = error as RunFailure;
     if (failure.code === 'ENOENT') return done.reject(new RemindersUnavailable('not-installed', 'remindctl is not installed on this Mac. Install it with: brew install steipete/tap/remindctl'));
     if (failure.killed === true || failure.signal === 'SIGTERM') return done.reject(new RemindersUnavailable('timeout', 'remindctl did not answer in time.'));
-    // Its first line of complaint says what is wrong (no access to Reminders, say); the rest of its output is not passed on.
-    const complaint = stderr.split('\n')[0]?.trim().slice(0, 200);
+    // Its first line of complaint says what is wrong (no access to Reminders, say); the rest of its output is not passed on, and the line is cut at a whole word.
+    const complaint = clipWords(stderr.split('\n')[0]?.trim() ?? '', 200);
     done.reject(new RemindersUnavailable('failed', complaint ? `remindctl failed: ${complaint}` : 'remindctl failed. Run "remindctl status" on the Mac to check its access to Reminders.'));
   });
   // It is asked for nothing: its input is closed.

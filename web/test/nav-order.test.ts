@@ -3,7 +3,7 @@ import { createModuleRegistry, DESK_PLACEMENTS, type ModuleDefinition } from '..
 import { createAppRegistry } from '../src/modules/index.ts';
 import { inboxBadge } from '../src/modules/inbox/inbox-feed.ts';
 import type { CrewMember } from '../src/modules/crew/crew-state.ts';
-import { crewAge, deskModules, deskNavigation } from '../src/shell/nav-order.ts';
+import { controlBadge, crewAge, deskModules, deskNavigation, ownerName } from '../src/shell/nav-order.ts';
 
 type Screen = string;
 
@@ -178,5 +178,48 @@ describe('the time on a crew row', () => {
 
   test('is empty for an agent with nothing going on', () => {
     expect(crewAge(undefined, now)).toBe('');
+  });
+});
+
+describe('the owner’s names for places', () => {
+  const registry = registryOf(testModule('today', 'today'), testModule('chat', 'talk', { title: 'Chat' }), testModule('overview', 'work', { title: 'Overview', order: 0 }), testModule('tasks', 'work', { title: 'Tasks', order: 1 }), testModule('health', 'control', { title: 'Health' }));
+  const navigation = deskNavigation(registry, []);
+
+  test('the module a destination opens on is called by the destination: Talk, not Chat; Work, not Overview', () => {
+    const name = (id: string) => ownerName(navigation, registry.module(id)!);
+
+    expect([name('today'), name('chat'), name('overview')]).toEqual(['Today', 'Talk', 'Work']);
+    // Any other module keeps its own title.
+    expect([name('tasks'), name('health')]).toEqual(['Tasks', 'Health']);
+  });
+});
+
+describe('the count on the More tab', () => {
+  const badge = (initial: number) => {
+    let count = initial;
+    const listeners = new Set<() => void>();
+    return { badge: { subscribe: (listener: () => void) => (listeners.add(listener), () => listeners.delete(listener)), count: () => count, label: (n: number) => `${n} here` }, set: (next: number) => ((count = next), listeners.forEach((listener) => listener())) };
+  };
+
+  test('adds up what the modules in Control count, so a failure in Notices shows without opening Control, and follows them live', () => {
+    const notices = badge(4);
+    const repairs = badge(2);
+    const registry = registryOf(testModule('notices', 'control', { badge: notices.badge }), testModule('repairs', 'control', { badge: repairs.badge }), testModule('files', 'control'), testModule('today', 'today', { badge: badge(9).badge }));
+    const combined = controlBadge(deskNavigation(registry, []))!;
+    let heard = 0;
+    const stop = combined.subscribe(() => heard++);
+
+    expect(combined.count()).toBe(6);
+    // Today's own count is Today's, not Control's.
+    notices.set(5);
+    expect([combined.count(), heard]).toEqual([7, 1]);
+    expect([combined.label(1), combined.label(3)]).toEqual(['1 thing needs a look in Control', '3 things need a look in Control']);
+    stop();
+    notices.set(0);
+    expect(heard).toBe(1);
+  });
+
+  test('is absent when no module in Control keeps a count', () => {
+    expect(controlBadge(deskNavigation(registryOf(testModule('files', 'control')), []))).toBeUndefined();
   });
 });

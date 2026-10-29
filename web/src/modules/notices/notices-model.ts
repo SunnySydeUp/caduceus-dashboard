@@ -8,6 +8,16 @@ export function noticesIn(items: readonly InboxItem[], scope: string | undefined
   return inScope(items, scope).filter((item): item is InboxNotice => item.kind === 'notice' && item.group !== 'decision');
 }
 
+
+/** How many notices have failed: what the Notices badge counts. Failures only; the notices that are for information are not worth a number. */
+export function failedNotices(items: readonly InboxItem[]): number {
+  return items.filter((item) => item.kind === 'notice' && item.group === 'failed').length;
+}
+
+/** The text equivalent of the Notices badge. */
+export function failedLabel(count: number): string {
+  return count === 1 ? '1 notice has failed' : `${count} notices have failed`;
+}
 /** Where j (`1`) and k (`-1`) move the selection in the list of `ids`: they stop at the ends, and a selection that is gone starts at the first. */
 export function stepSelection(ids: readonly string[], current: string | undefined, delta: 1 | -1): string | undefined {
   if (ids.length === 0) return undefined;

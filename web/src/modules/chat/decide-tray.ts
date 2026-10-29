@@ -35,3 +35,28 @@ export function trayView({ items, storedId }: TrayInput): TrayView {
   const label = others.length === 1 ? '1 more needs you elsewhere' : `${others.length} more need you elsewhere`;
   return { items: others, faces, label, hidden: others.length === 0 };
 }
+
+/** The decision the tray's sheet shows, where it stands among those waiting, and what "Next" does. */
+export interface TrayStep {
+  /** `undefined` when nothing waits. */
+  shown: InboxItem | undefined;
+  /** Which one it is, counting from 1, and how many wait. */
+  position: number;
+  total: number;
+  /** The decision "Next" leads to (the one after, and the first after the last); `undefined` when only one waits. */
+  nextId: string | undefined;
+  /** "Next (2)": the others still waiting. */
+  nextLabel: string | undefined;
+}
+
+/**
+ * One decision at a time, so that its buttons are all in view without a scroll inside a scroll. `currentId` is the one the owner is on: it stays while the list changes around it, and
+ * when it has been answered (it is no longer in the list) the first of those left is shown.
+ */
+export function trayStep(items: readonly InboxItem[], currentId: string | undefined): TrayStep {
+  const found = items.findIndex((item) => item.id === currentId);
+  const at = found === -1 ? 0 : found;
+  const shown = items[at];
+  const others = items.length - 1;
+  return { shown, position: shown ? at + 1 : 0, total: items.length, nextId: others > 0 ? items[(at + 1) % items.length]?.id : undefined, nextLabel: others > 0 ? `Next (${others})` : undefined };
+}

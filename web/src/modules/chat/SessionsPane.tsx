@@ -616,7 +616,8 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
   };
   const deleted = (item: SessionItem) => async () => {
     const outcome = await run(actions.remove(item));
-    if (outcome.kind === 'done' && item.id === activeId) void navigate('/chat');
+    // The chat that was open is gone: Back must not return to it, so its entry is replaced.
+    if (outcome.kind === 'done' && item.id === activeId) void navigate('/chat', { replace: true });
   };
   const moveProfile = (targets: readonly SessionItem[]) => targets[0]?.profile ?? profile;
   const profilesOf = [...new Set(chosenItems.map((item) => item.profile ?? profile))];

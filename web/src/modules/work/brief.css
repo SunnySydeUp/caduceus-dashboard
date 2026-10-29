@@ -22,7 +22,7 @@
 .be__draft { display: grid; gap: var(--cd-space-3); }
 .sb .be__modes { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
 .sb .be__draftkinds { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
-.be__bar { align-items: center; padding-block-end: max(var(--cd-space-3), env(safe-area-inset-bottom)); }
+.be__bar { align-items: center; }
 .be__count { margin: 0; margin-inline-end: auto; }
 .be__bar .btn--primary { margin-inline-start: 0; }
 @media (prefers-reduced-motion: reduce) { .be__summary > .i { transition: none; } }

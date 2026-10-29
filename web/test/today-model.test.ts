@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { Job } from '../src/modules/work/schedules-model.ts';
 import type { ActivityEvent, InboxApproval, InboxClarify, InboxItem, InboxNotice } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
-import { askedBy, awayView, decisionsFor, EMPTY, readyRows, scheduleDay } from '../src/modules/today/today-model.ts';
+import { askedBy, awayView, decisionsFor, emptyTarget, EMPTY, needsALook, readyRows, scheduleDay, scheduleEmptyText } from '../src/modules/today/today-model.ts';
 
 // What Today makes of Hermes's cron jobs and runs, free of the DOM and of React: the schedule bar, the list under it, the away list, the ready list and the empty
 // states. Times are written in the device's own clock, as the screen shows them.
@@ -157,7 +157,66 @@ describe('an empty block', () => {
     for (const block of ['needs', 'ready', 'schedule', 'away-first', 'away-quiet', 'crew'] as const) {
       expect(EMPTY[block].text.length, block).toBeGreaterThan(10);
       expect(EMPTY[block].action.label.length, block).toBeGreaterThan(2);
-      expect(['chat', 'work', 'schedules', 'profiles'], block).toContain(EMPTY[block].action.module);
+      expect(['chat', 'tasks', 'schedules', 'profiles'], block).toContain(EMPTY[block].action.module);
     }
+  });
+
+  const paths: Record<string, string> = { chat: '/chat', tasks: '/work/tasks', schedules: '/work/schedules', profiles: '/profiles' };
+  const pathOf = (module: string) => paths[module];
+
+  test('"Give the crew work" opens the new task, and "Schedule a routine" the new schedule, not a list', () => {
+    expect(emptyTarget('ready', pathOf)).toBe('/work/tasks/new');
+    expect(emptyTarget('schedule', pathOf)).toBe('/work/schedules/new');
+    expect(emptyTarget('away-quiet', pathOf)).toBe('/work/schedules/new');
+  });
+
+  test('an action that only looks leads to its module\'s own screen, and a module the app does not have leads home', () => {
+    expect(emptyTarget('away-first', pathOf)).toBe('/work/schedules');
+    expect(emptyTarget('needs', pathOf)).toBe('/chat');
+    expect(emptyTarget('crew', () => undefined)).toBe('/');
+  });
+});
+
+describe('what needs a look', () => {
+  const core = { ref: 'r', stamp: '1', category: 'work', profile: 'coder', at: 1000 } as const;
+  const failed = (id: string, over: Partial<InboxNotice> = {}): InboxNotice => ({ ...core, id, kind: 'notice', group: 'failed', title: `Gave up: ${id}`, detail: 'Its attempts failed.', actions: [], link: { label: 'Open task', to: `/work/tasks/${id}` }, ...over });
+  const decision = (id: string): InboxNotice => ({ ...failed(id), group: 'decision' });
+
+  test('is the failed work and jobs, newest first, each leading to where it can be dealt with; decisions and news are not here', () => {
+    const items: InboxItem[] = [failed('old', { at: 500 }), decision('review'), failed('new', { at: 3000 }), failed('fyi', { group: 'fyi' })];
+    const view = needsALook(items);
+    expect(view.rows.map((row) => [row.id, row.title, row.line, row.to])).toEqual([
+      ['new', 'Gave up: new', 'Its attempts failed.', '/work/tasks/new'],
+      ['old', 'Gave up: old', 'Its attempts failed.', '/work/tasks/old'],
+    ]);
+    expect(view.more).toBe(0);
+  });
+
+  test('a failure with no link of its own leads to Notices, and nothing failing is an empty list', () => {
+    expect(needsALook([failed('a', { link: undefined })]).rows[0]?.to).toBe('/notices');
+    expect(needsALook([])).toEqual({ rows: [], more: 0 });
+  });
+
+  test('shows the newest three and counts the rest, so a bad night does not push the decisions off the screen', () => {
+    const items = [1, 2, 3, 4, 5].map((n) => failed(`f${n}`, { at: n * 1000 }));
+    const view = needsALook(items);
+    expect(view.rows.map((row) => row.id)).toEqual(['f5', 'f4', 'f3']);
+    expect(view.more).toBe(2);
+  });
+});
+
+describe('the next routine', () => {
+  const now = at(9, 41);
+
+  test('is the soonest run still to come, on any day, so an empty day can say what is next', () => {
+    const jobs = [job({ id: 'late', name: 'Weekly digest', nextRunAt: at(9, 0, 24) }), job({ id: 'soon', name: 'Morning briefing', profile: 'writer', nextRunAt: at(7, 0, 20) }), job({ id: 'paused', name: 'Paused', enabled: false, nextRunAt: at(10) })];
+    expect(scheduleDay(jobs, now).nextRoutine).toEqual({ name: 'Morning briefing', profile: 'writer', when: at(7, 0, 20) });
+    expect(scheduleDay([], now).nextRoutine).toBeUndefined();
+  });
+
+  test('an empty day with routines scheduled for another day names the next one; with none it says how to make one', () => {
+    const jobs = [job({ id: 'soon', name: 'Morning briefing', nextRunAt: at(7, 0, 20) })];
+    expect(scheduleEmptyText(scheduleDay(jobs, now), now)).toBe('No routines run today. Next: Morning briefing, in 21 h.');
+    expect(scheduleEmptyText(scheduleDay([], now), now)).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { StatusBadge, type StatusState } from '../../shell/StatusBadge.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -51,7 +52,7 @@ export function ProviderPanel({ profile }: { profile: string }) {
           </button>
         </div>
       )}
-      {!status && !view.failed && <p role="status">Loading memory providers…</p>}
+      {!status && !view.failed && <Loading label="Loading memory providers…" lines={4} onRetry={() => void view.reload()} />}
       {status && (
         <ul className="mm-cards" aria-label="Memory providers" data-layout={compact ? 'list' : 'grid'}>
           <li className="mm-card" data-active={status.active === ''} data-provider="">

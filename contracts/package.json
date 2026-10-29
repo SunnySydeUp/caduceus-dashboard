@@ -8,6 +8,7 @@
     "./hindsight-api": "./hindsight-api.ts",
     "./inbox": "./inbox.ts",
     "./today": "./today.ts",
+    "./clip-words": "./clip-words.ts",
     "./push": "./push.ts",
     "./budgets": "./budgets.ts",
     "./config-keys": "./config-keys.ts",

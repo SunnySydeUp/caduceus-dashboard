@@ -1,25 +1,26 @@
 // The blocks of Today (M8 #03). Each is its own section: it loads on its own and, when what it reads does not answer, says so inside itself with a Retry while the
 // others carry on. An empty block says why and carries the action that fills it. The decisions are `DecisionCard`s, the Inbox's own answers, so they keep its tiers,
 // undo and step-up.
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
+import { useTakingLonger } from '../../shell/Loading.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import type { CrewRow } from '../../shell/nav-order.ts';
 import type { Block } from '../../use-block.ts';
 import { ageWords } from '../inbox/inbox-model.ts';
 import { DecisionCard, Mark } from './DecisionCard.tsx';
-import { type AwayRow, type AwayView, type EmptyBlock, type ReadyRow, type ScheduleView, EMPTY } from './today-model.ts';
+import { type AwayRow, type AwayView, type EmptyBlock, type ReadyRow, type ScheduleView, EMPTY, needsALook, scheduleEmptyText } from './today-model.ts';
 
 /** Where an empty block's action leads: the address of the module it names, which the screen reads from the registry. */
 export type EmptyTarget = (empty: EmptyBlock) => string;
 
-function EmptyState({ which, to }: { which: EmptyBlock; to: EmptyTarget }) {
+function EmptyState({ which, to, note }: { which: EmptyBlock; to: EmptyTarget; note?: string }) {
   const { text, action } = EMPTY[which];
   return (
     <div className="today-empty panel">
-      <p className="subtle">{text}</p>
+      <p className="subtle">{note ?? text}</p>
       <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
         {action.label}
       </AppLink>
@@ -35,6 +36,8 @@ interface BlockProps<T> {
   block: Block<T>;
   /** Which empty state the block shows, when its data says it is empty. */
   empty: (data: T) => EmptyBlock | undefined;
+  /** Words that stand in for the empty state's own when the data can say more (the next routine, when a day has none). */
+  note?: (data: T) => string | undefined;
   /** The empty state whose room the block holds while it loads (its words are there, unseen), so that the usual quiet answer moves nothing below it; a block with its own usual shape gives `room` instead. */
   held?: EmptyBlock;
   /** The least height a block of its own usual shape holds while it loads (a CSS length). */
@@ -59,9 +62,16 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
 }
 
 /** One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its usual answer takes. */
-export function TodayBlock<T>({ id, title, count, block, empty, held, room, to, className, children }: BlockProps<T>) {
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, children }: BlockProps<T>) {
   const { state } = block;
   const which = state.status === 'ready' ? empty(state.data) : undefined;
+  // A wait that goes on says so, with the way out; and a Retry that is on its way says so on the button, so a press is never met with silence.
+  const late = useTakingLonger(state.status === 'loading');
+  const [retrying, setRetrying] = useState(false);
+  const retry = () => {
+    setRetrying(true);
+    void Promise.resolve(block.reload()).finally(() => setRetrying(false));
+  };
   return (
     <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={state.status === 'loading'}>
       <h2 className="today-block__title" id={`today-${id}`}>
@@ -71,8 +81,17 @@ export function TodayBlock<T>({ id, title, count, block, empty, held, room, to, 
       {state.status === 'loading' && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
-          <span className="sr-only">Loading {title.toLowerCase()}…</span>
+          <span className="sr-only">{late ? `Loading ${title.toLowerCase()} is taking longer than usual.` : `Loading ${title.toLowerCase()}…`}</span>
           {held && <HeldAnswer which={held} />}
+          {late && (
+            <p className="today-empty__late">
+              <span className="muted">Taking longer than usual.</span>
+              <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
+                <Icon name="refresh" small />
+                {retrying ? 'Retrying…' : 'Retry'}
+              </button>
+            </p>
+          )}
         </div>
       )}
       {state.status === 'error' && (
@@ -89,14 +108,14 @@ export function TodayBlock<T>({ id, title, count, block, empty, held, room, to, 
               <span className="banner__title">{title} could not be loaded</span>
               <span className="banner__body">{state.message}</span>
             </span>
-            <button type="button" className="btn btn--secondary btn--sm" onClick={block.reload}>
+            <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
               <Icon name="refresh" small />
-              Retry
+              {retrying ? 'Retrying…' : 'Retry'}
             </button>
           </p>
         </div>
       )}
-      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} /> : children(state.data))}
+      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} /> : children(state.data))}
     </section>
   );
 }
@@ -112,6 +131,39 @@ export function NeedsYouBlock({ block, now, to }: { block: Block<InboxItem[]>; n
         </ul>
       )}
     </TodayBlock>
+  );
+}
+
+/** Failed work and jobs (a task that gave up, a routine that failed, something Health flagged): a short list, each row leading to where it is dealt with. Nothing failed, nothing shown. */
+export function LookBlock({ items, now }: { items: readonly InboxItem[]; now: number }) {
+  const { rows, more } = needsALook(items);
+  if (rows.length === 0) return null;
+  return (
+    <section className="today-block" aria-labelledby="today-look" data-block="look">
+      <h2 className="today-block__title" id="today-look">
+        Needs a look
+        <span className="muted today-block__count">{rows.length + more}</span>
+      </h2>
+      <ul className="today-ready panel">
+        {rows.map((row) => (
+          <li key={row.id} className="today-row" data-failed>
+            <Mark profile={row.profile} size="sm" state="blocked" />
+            <span className="today-row__text">
+              <b>{row.title}</b>
+              <small>{row.line ? `${row.line} · ${ageWords(row.at, now)}` : ageWords(row.at, now)}</small>
+            </span>
+            <AppLink className="btn btn--secondary btn--sm" to={row.to} aria-label={`Open ${row.title}`}>
+              Open
+            </AppLink>
+          </li>
+        ))}
+      </ul>
+      {more > 0 && (
+        <p className="subtle today-more">
+          <AppLink to="/notices">{more === 1 ? '1 more in Notices' : `${more} more in Notices`}</AppLink>
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -199,7 +251,7 @@ const KIND_WORD: Record<ScheduleView['rows'][number]['kind'], string> = { next: 
 
 export function ScheduleBlock({ block, now, to }: { block: Block<ScheduleView>; now: number; to: EmptyTarget }) {
   return (
-    <TodayBlock id="day" title="Today’s schedule" block={block} empty={(view) => (view.rows.length === 0 ? 'schedule' : undefined)} held="schedule" to={to}>
+    <TodayBlock id="day" title="Today’s schedule" block={block} empty={(view) => (view.rows.length === 0 ? 'schedule' : undefined)} note={(view) => scheduleEmptyText(view, now)} held="schedule" to={to}>
       {(view) => (
         <div className="panel panel--pad">
           <Ribbon view={view} now={now} />

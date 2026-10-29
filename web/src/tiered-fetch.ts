@@ -22,6 +22,8 @@ export interface Confirmation {
   confirmLabel?: string;
   /** A T3 says whether it can be undone. */
   recoverability?: Recoverability;
+  /** The action deletes or removes something (the confirm button is drawn as a danger button). A button named Delete…, Remove… or Revoke… counts without saying so. */
+  destructive?: boolean;
 }
 
 export interface TieredRequest {
@@ -39,6 +41,11 @@ export interface TieredRequest {
   alreadyConfirmed?: boolean;
   /** Every file the request writes is in a workspace Caduceus knows: the server lowers a write from a T3 to what a workspace costs (`lowerInWorkspace`, architecture §5), so it is asked as that. */
   inWorkspace?: boolean;
+  /**
+   * Called once the request is on its way: at once for a request that needs no confirmation, and after the owner confirmed for one that does. A screen
+   * starts its "Saving…" state here, so the button behind the confirmation does not say Saving while the owner is still deciding.
+   */
+  onConfirmed?(): void;
 }
 
 export type TieredResult =
@@ -75,7 +82,7 @@ async function refusalFrom(response: Response): Promise<PolicyRefusal> {
 }
 
 export function createTieredFetch(deps: TieredDeps): (request: TieredRequest) => Promise<TieredResult> {
-  return async ({ method, path, body, form, headers, confirm, alreadyConfirmed, inWorkspace }) => {
+  return async ({ method, path, body, form, headers, confirm, alreadyConfirmed, inWorkspace, onConfirmed }) => {
     // The policy tables are large (the whole route map of Hermes) and only a request that is not a plain read needs them: they load with the first such request, not with the first screen.
     const { classifyRest, lacksExplicitProfile, lowerInWorkspace, profileOf, resolveTier } = await import('@caduceus/contracts/policy/rest');
     const url = new URL(path, 'http://caduceus.local');
@@ -99,7 +106,10 @@ export function createTieredFetch(deps: TieredDeps): (request: TieredRequest) =>
     const json = body === undefined ? undefined : JSON.stringify(body);
     const jsonHeaders = json === undefined ? undefined : { 'content-type': 'application/json' };
     const send = (extraHeaders?: Record<string, string>) => () => deps.fetch(path, { method, headers: { ...jsonHeaders, ...headers, ...extraHeaders }, body: form ?? json });
-    if (policy.tier === 'T0' || (policy.tier === 'T1' && alreadyConfirmed)) return { kind: 'sent', response: await send()() };
+    if (policy.tier === 'T0' || (policy.tier === 'T1' && alreadyConfirmed)) {
+      onConfirmed?.();
+      return { kind: 'sent', response: await send()() };
+    }
 
     const ask = deps.confirmer();
     if (!ask || !confirm) {
@@ -116,9 +126,11 @@ export function createTieredFetch(deps: TieredDeps): (request: TieredRequest) =>
       profile: confirm.profile ?? profileOf(match, facts) ?? undefined,
       confirmLabel: confirm.confirmLabel,
       recoverability: confirm.recoverability,
+      destructive: confirm.destructive,
     };
     const answer = await ask(request);
     if (!answer) return { kind: 'cancelled' };
+    onConfirmed?.();
     if (policy.tier === 'T1') return { kind: 'sent', response: await send()() };
     if (policy.tier === 'T2') return { kind: 'sent', response: await deps.withStepUp(send()) };
 

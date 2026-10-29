@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { ReadyState, TodayVisit } from '@caduceus/contracts/today';
+import { OWNER_APPROVED, type ReadyState, type TodayVisit } from '@caduceus/contracts/today';
 import { startCaduceusServer, type CaduceusServer } from '../src/caduceus-server.ts';
 import { ownerCookie } from './fixtures/owner.ts';
 import { HERMES_WORK_TIMEOUT_MS, launchTestHermes, type TestHermes } from './fixtures/real-hermes.ts';
@@ -57,11 +57,11 @@ function api() {
   };
 }
 
-async function finished(title: string, assignee = 'default'): Promise<string> {
+async function finished(title: string, assignee = 'default', summary = `${title}: done`): Promise<string> {
   const res = await hermes.backend.fetch('/api/plugins/kanban/tasks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title }) });
   const { task } = (await res.json()) as { task: { id: string } };
   await hermes.cli('kanban', 'assign', task.id, assignee);
-  await hermes.cli('kanban', 'complete', task.id, '--summary', `${title}: done`);
+  await hermes.cli('kanban', 'complete', task.id, '--summary', summary);
   return task.id;
 }
 
@@ -129,6 +129,20 @@ describe('ready for review', () => {
       expect(dump).not.toContain('Secret title');
     } finally {
       db.close();
+    }
+  }, HERMES_WORK_TIMEOUT_MS);
+
+  test('a task the owner approved from Caduceus is done, not ready: it does not come back for review', async () => {
+    const page = await open();
+    const approved = await finished('Approved by me', 'default', OWNER_APPROVED);
+    const other = await finished('Finished by its worker');
+    try {
+      const ids = (await page.ready()).items.map((item) => item.id);
+      expect(ids).toContain(`task:default:${other}`);
+      expect(ids).not.toContain(`task:default:${approved}`);
+    } finally {
+      // Off the board, so a later test's server, which may begin in the same second, does not count them as finished since it began.
+      for (const id of [approved, other]) await hermes.cli('kanban', 'archive', id);
     }
   }, HERMES_WORK_TIMEOUT_MS);
 

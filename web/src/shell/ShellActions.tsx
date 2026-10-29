@@ -4,12 +4,13 @@ import { closeAllLayers, hasOpenLayer } from '../overlays/layers.ts';
 import { IDLE, keyFlow, type FlowState } from '../keyboard-flow.ts';
 import type { PaletteEntry } from '../palette.ts';
 import { settled } from '../settled.ts';
-import { HELP_OPEN, PALETTE_OPEN, SHORTCUTS_OPEN, type KeyInput } from '../shortcuts.ts';
+import { HELP_OPEN, PALETTE_OPEN, SHORTCUTS_OPEN, SIGN_OUT, type KeyInput } from '../shortcuts.ts';
 import { HelpContext } from './help-context.tsx';
 import { Keycaps, useKeyboard } from './keyboard-context.tsx';
 import { useAppNavigate, useRouteInfo } from './navigation.tsx';
 import { useRegistry } from './registry-context.tsx';
 import { getTierConfirmer } from './tier-confirmation.ts';
+import { signOut } from './sign-out.ts';
 import { toast } from './toasts.ts';
 
 // Help is bundled with the app (it is precached, so it works offline) but not in the first load: the panel and every page load when it is first opened.
@@ -66,12 +67,13 @@ export function ShellActionsProvider({ children }: { children: ReactNode }) {
         shell: (action) => {
           if (action === HELP_OPEN) openHelp({ screen: pathname });
           else if (action === SHORTCUTS_OPEN) openHelp({ shortcuts: true });
+          else if (action === SIGN_OUT) void signOut();
         },
         help: openHelp,
         settled: closeAllLayers,
         confirm: confirmer && (async (request) => (await confirmer(request)) !== undefined),
       });
-      if (outcome === 'unconfirmable') toast(`“${entry.label}” needs a confirmation (Tier ${entry.tier?.slice(1)}) that cannot be asked for yet, so it was not run.`, { tone: 'danger' });
+      if (outcome === 'unconfirmable') toast(`“${entry.label}” needs a confirmation that cannot be asked for yet, so it was not run.`, { tone: 'danger' });
     },
     [navigate, openHelp, pathname],
   );

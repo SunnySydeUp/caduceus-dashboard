@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { AppLink, useAppNavigate, useRouteInfo } from '../../shell/navigation.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { RadioGroup } from '../../shell/RadioGroup.tsx';
@@ -39,7 +40,7 @@ function SkillRowView({ skill }: { skill: SkillRow }) {
           </span>
         </button>
         <div className="list-row__end sk-row__end">
-          <WriteButton type="button" role="switch" className="switch" aria-checked={skill.enabled} aria-label={`${skill.name} is ${skill.enabled ? 'on' : 'off'}`} disabled={commands.busy.has(skill.name)} onClick={() => void commands.toggle(skill)} />
+          <WriteButton type="button" role="switch" className="switch" aria-checked={skill.enabled} aria-label={skill.name} disabled={commands.busy.has(skill.name)} onClick={() => void commands.toggle(skill)} />
           <button type="button" className="btn btn--ghost btn--icon" aria-label={`Actions for ${skill.name}`} aria-haspopup="dialog" onClick={() => commands.openMenu(skill)}>
             <Icon name="dots-v" />
           </button>
@@ -148,7 +149,7 @@ export function InstalledSkills({ profile }: { profile: string }) {
             </button>
           </div>
         )}
-        {!skills && !failed && <p role="status">Loading skills…</p>}
+        {!skills && !failed && <Loading label="Loading skills…" lines={5} onRetry={() => void reload()} />}
         {skills && skills.length > 0 && (
           <div className="sk-tools" role="search" aria-label="Find skills">
             <SearchBox value={view.q} onChange={(q) => go({ view: { ...view, q }, skill: opened })} />

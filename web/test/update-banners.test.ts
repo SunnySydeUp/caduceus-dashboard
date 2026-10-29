@@ -5,15 +5,19 @@ import { drainBanner, drainStateOf, updateBanner } from '../src/update-banners.t
 const CHECK: UpdateCheck = { current_version: '0.21.4', behind: 3, update_available: true, can_apply: true, message: null };
 
 describe('the update-available banner', () => {
-  test('names what has an update and how many changes it brings, and links to the Updates screen', () => {
+  test('names what has an update, what is running and how far behind it is, and links to the Updates screen', () => {
     expect(updateBanner('Hermes', CHECK)).toMatchObject({
       id: 'update-available:hermes',
       tone: 'info',
-      title: 'A Hermes update is available',
-      body: '3 changes since 0.21.4.',
+      title: 'Hermes has an update',
+      body: 'You are running 0.21.4, 3 changes behind. Nothing changes until you update.',
       actions: [{ label: 'View update', to: '/system/maintenance' }],
       dismissible: true,
     });
+  });
+
+  test('stays off the page it links to and off a chat thread', () => {
+    expect(updateBanner('Hermes', CHECK)?.hideOn).toEqual(['/system/maintenance', '/chat']);
   });
 
   test('says nothing when there is no update, or the check could not run', () => {
@@ -22,7 +26,7 @@ describe('the update-available banner', () => {
   });
 
   test('says nothing of the count when the source could not count', () => {
-    expect(updateBanner('Caduceus', { ...CHECK, behind: -1, current_version: '1.0.0 (abc)' })).toMatchObject({ id: 'update-available:caduceus', body: 'Version 1.0.0 (abc) is installed.' });
+    expect(updateBanner('Caduceus', { ...CHECK, behind: -1, current_version: '1.0.0 (abc)' })).toMatchObject({ id: 'update-available:caduceus', body: 'You are running 1.0.0 (abc). Nothing changes until you update.' });
   });
 });
 

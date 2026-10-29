@@ -63,7 +63,8 @@ export function ConfigYaml() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `dirty` is read when Hermes answers, not each time it changes
   }, [raw]);
 
-  const blocker = useBlocker({ shouldBlockFn: () => dirty, enableBeforeUnload: () => dirty, withResolver: true });
+  // It asks only when the path changes: the Save… confirmation is a layer on the history, and closing it is not leaving the page.
+  const blocker = useBlocker({ shouldBlockFn: ({ current, next }) => dirty && current.pathname !== next.pathname, enableBeforeUnload: () => dirty, withResolver: true });
 
   const current = useMemo(() => readCurrentConfig(loaded ?? ''), [loaded]);
   const checked = useMemo(() => (form && text !== undefined ? checkConfigYaml(text, { form, current }) : undefined), [form, text, current]);
@@ -214,7 +215,16 @@ export function ConfigYaml() {
                 {reasonNotToSave && dirty && <span className="subtle"> · {reasonNotToSave}</span>}
               </p>
               <div className="cf-savebar__acts">
-                <button type="button" className="btn btn--secondary btn--sm" disabled={!dirty} onClick={() => setText(raw?.yaml)}>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  disabled={!dirty}
+                  onClick={() => {
+                    const discarded = text;
+                    setText(raw?.yaml);
+                    toast('Discarded the YAML edits', { undo: () => setText(discarded) });
+                  }}
+                >
                   Discard
                 </button>
                 <WriteButton type="button" className="btn btn--primary btn--sm" disabled={saving || reasonNotToSave !== undefined} title={reasonNotToSave} aria-haspopup="dialog" aria-busy={saving} onClick={() => setReviewing(true)}>

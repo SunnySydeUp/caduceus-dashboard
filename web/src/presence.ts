@@ -9,7 +9,9 @@ export function startPresence(): () => void {
   const tab = tabId(sessionStorage);
   const send = (visible: boolean) => {
     const body = JSON.stringify({ tab, visible });
-    // `keepalive` lets a request made as the page goes away finish.
+    // A beacon is for exactly this: a small report that is sent as the page hides or goes away, and that the browser neither cancels nor logs as an aborted
+    // request. Where it is not there (or refuses), `keepalive` lets an ordinary request finish as the page goes.
+    if (typeof navigator.sendBeacon === 'function' && navigator.sendBeacon('/_caduceus/api/presence', new Blob([body], { type: 'application/json' }))) return;
     void fetch('/_caduceus/api/presence', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => undefined);
   };
   let renew: ReturnType<typeof setInterval> | undefined;

@@ -34,7 +34,7 @@ export const configHelp: ModuleHelp = {
           ul: [
             'While you have edits, a bar at the bottom says how many. Review lists every changed setting with what it was and what it becomes, and which of them need a restart. Credentials show only that they are set, replaced or cleared.',
             'Save is a Tier 3 action ([[risk-tiers|risk tiers]]): config can switch on ways to run commands. You confirm with a [[passkey|passkey]] and type the name of the profile. It is not allowed in [[read-only-mode|read-only mode]] or while you are offline, and Caduceus records it with the names of the keys it changed, never their values.',
-            'Discard drops every edit. If you try to leave the page with edits, Caduceus asks first, and the browser asks before the tab is closed.',
+            'Discard drops every edit, and a message with Undo brings them back for a few seconds. If you try to leave the page with edits, Caduceus asks first, and the browser asks before the tab is closed.',
           ],
         },
         { h: 'Export, import, reset and migrate' },
