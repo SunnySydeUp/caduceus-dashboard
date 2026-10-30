@@ -4,6 +4,7 @@ import '../../docs/design/tokens.css';
 import './styles/components.css';
 import './styles/shell.css';
 import './styles/sigil.css';
+import './styles/motion.css';
 import './app.css';
 import { registerServiceWorker } from './pwa.ts';
 import { captureInstallEvents } from './shell/install.ts';

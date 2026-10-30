@@ -1,6 +1,6 @@
 // The blocks of Today (M8 #03). Each is its own section: it loads on its own and, when what it reads does not answer, says so inside itself with a Retry while the
-// others carry on. An empty block says why and carries the action that fills it. The decisions are `DecisionCard`s, the Inbox's own answers, so they keep its tiers,
-// undo and step-up.
+// others carry on. An empty block says why and carries the action that fills it. The decisions are `DecisionCard`s, the Inbox's own answers, so they keep its tiers
+// and step-up.
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
@@ -11,6 +11,8 @@ import type { CrewRow } from '../../shell/nav-order.ts';
 import type { Block } from '../../use-block.ts';
 import { ageWords } from '../inbox/inbox-model.ts';
 import { DecisionCard, Mark } from './DecisionCard.tsx';
+import { fold } from './fold.ts';
+import { foldAway, holdCard, releaseCard } from './fold-store.ts';
 import { type AwayRow, type AwayView, type EmptyBlock, type ReadyRow, type ScheduleView, EMPTY, needsALook, scheduleEmptyText } from './today-model.ts';
 
 /** Where an empty block's action leads: the address of the module it names, which the screen reads from the registry. */
@@ -120,13 +122,23 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
   );
 }
 
+/**
+ * Needs you. `block` is the decisions to draw (`useVisibleDecisions`: the stream's list with the cards that are answering kept in place and the folded ones left out), which Today
+ * also counts in its pill. A card whose answer is on its way stays where it stands; once it has folded into its agent it stays gone. An answer cannot be undone, so a folded card has
+ * nothing to come back for.
+ */
 export function NeedsYouBlock({ block, now, to }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget }) {
+  const answered = async (item: InboxItem, card: HTMLElement | null) => {
+    // A card that left the page while its answer was on its way has nothing to fold.
+    if (card) await fold(card, item.profile, () => foldAway(item.id));
+    else foldAway(item.id);
+  };
   return (
     <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to}>
       {(items) => (
         <ul className="today-cards">
-          {items.map((item) => (
-            <DecisionCard key={item.id} item={item} now={now} />
+          {items.map((item, at) => (
+            <DecisionCard key={item.id} item={item} now={now} onSending={(on) => (on ? holdCard(item, at) : releaseCard(item.id))} onAnswered={(card) => answered(item, card)} />
           ))}
         </ul>
       )}

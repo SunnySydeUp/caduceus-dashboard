@@ -10,10 +10,13 @@
 @media (pointer: coarse) { .rem__fold { min-block-size: var(--cd-target-min); } }
 @media (hover: hover) { .rem__fold:hover { background: var(--cd-overlay-hover); } }
 
-.rem__grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; view-transition-name: rem-grid; }
+.rem__grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; }
 .rem__grid th { padding-block: var(--cd-space-1); color: var(--cd-fg-subtle); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); text-align: center; }
 .rem__grid td { padding: 0; text-align: center; }
-.rem__week { view-transition-name: rem-week; }
+/* The names exist only while the reminders fold runs (type `reminders`, from RemindersBlock), so that a page transition does not split these parts from their page. */
+html:active-view-transition-type(reminders) .rem__grid { view-transition-name: rem-grid; }
+html:active-view-transition-type(reminders) .rem__week { view-transition-name: rem-week; }
+html:active-view-transition-type(reminders) .rem__list { view-transition-name: rem-list; }
 .rem__day { display: grid; grid-template-rows: auto var(--cd-leading-xs); align-content: center; justify-items: center; gap: var(--cd-space-0-5); inline-size: 100%; min-block-size: var(--cd-control-h); margin: 0; padding: 0; border: 1px solid transparent; border-radius: var(--cd-radius-md); background: transparent; color: var(--cd-fg-default); font: var(--cd-text-sm)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 @media (pointer: coarse) { .rem__day { min-block-size: var(--cd-target-min); } }
 @media (hover: hover) { .rem__day:hover { background: var(--cd-overlay-hover); } }
@@ -25,7 +28,7 @@
 .rem__load .i { color: var(--cd-tone-success-fg); }
 .rem__day[data-selected] .rem__load, .rem__day[data-selected] .rem__load .i { color: inherit; }
 
-.rem__list { display: grid; gap: var(--cd-space-4); min-inline-size: 0; view-transition-name: rem-list; }
+.rem__list { display: grid; gap: var(--cd-space-4); min-inline-size: 0; }
 .rem__heading { display: flex; align-items: baseline; gap: var(--cd-space-2); margin-block: 0 var(--cd-space-1); margin-inline: 0; font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); }
 .rem__heading[data-tone="danger"] { color: var(--cd-tone-danger-fg); }
 .rem__none { margin: 0; }
@@ -46,10 +49,10 @@
 ::view-transition-group(rem-grid), ::view-transition-group(rem-week), ::view-transition-group(rem-list) { animation-duration: var(--cd-dur-slow); animation-timing-function: var(--cd-ease-sheet); }
 ::view-transition-image-pair(rem-grid) { overflow: clip; }
 ::view-transition-old(rem-grid), ::view-transition-new(rem-grid), ::view-transition-old(rem-week), ::view-transition-new(rem-week), ::view-transition-old(rem-list), ::view-transition-new(rem-list) { animation-duration: var(--cd-dur-base); }
-/* The rest of the page does not take part: no browser cross-fade over it, whose time no token sets. The old snapshot is hidden and the new one drawn plainly, since
+/* Type-scoped (`:active-view-transition-type`): a browser without view-transition types gets the plain cross-fade of the page, which is accepted. The rest of the page does not take part: no browser cross-fade over it, whose time no token sets. The old snapshot is hidden and the new one drawn plainly, since
    the browser's own `plus-lighter` blend would add the two full-opacity snapshots into a white flash. */
-::view-transition-old(root) { display: none; }
-::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html:active-view-transition-type(reminders)::view-transition-old(root) { display: none; }
+html:active-view-transition-type(reminders)::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 
 @media (max-width: 23.9375rem) {
   .rem { margin-inline: calc(-1 * var(--cd-page-px)); padding-inline: 0; border-inline: 0; border-radius: 0; }

@@ -2,6 +2,8 @@ import { useState, type KeyboardEvent } from 'react';
 import { Icon } from '../icons.tsx';
 import type { ProfileSummary } from '../profile-scope.ts';
 import { Sheet } from '../overlays/Sheet.tsx';
+import { useConnection } from './connection.ts';
+import { heartbeatWords } from './heartbeat.ts';
 import { Sigil } from './Sigil.tsx';
 import { useProfileScope } from './profile-context.tsx';
 import { StatusBadge } from './StatusBadge.tsx';
@@ -90,15 +92,16 @@ function AllProfilesNote({ onClose }: { onClose(): void }) {
   );
 }
 
-/** The app bar's profile chip: the scope of this tab, opening the switcher. On a screen locked to All profiles it opens a note that says so: there is nothing to switch. */
-export function ProfileChip() {
+/** What the scope says on this screen: its name and sigil, whether the screen is cross-profile, and whether it is locked to All profiles (Today), where there is nothing to switch. */
+function useScopeLook() {
   const { scope, mode } = useProfileScope();
-  if (mode === 'all') return <SwitchChip label="All profiles" sigil="all" note />;
-  return <SwitchChip label={scope === 'all' ? 'All profiles' : (scope ?? 'Profile')} sigil={scope ?? '?'} cross={mode === 'cross'} />;
+  if (mode === 'all') return { label: 'All profiles', sigil: 'all', cross: false, locked: true };
+  return { label: scope === 'all' ? 'All profiles' : (scope ?? 'Profile'), sigil: scope ?? '?', cross: mode === 'cross', locked: false };
 }
 
-/** The chip that opens the switcher (or, on a screen locked to All profiles, the note). Its open state lives here, so a screen with nothing to switch never holds the switcher. */
-function SwitchChip({ label, sigil, cross = false, note = false }: { label: string; sigil: string; cross?: boolean; note?: boolean }) {
+/** The phone's app bar chip: the scope of this tab, opening the switcher. On a screen locked to All profiles it opens a note that says so: there is nothing to switch. */
+export function ProfileChip() {
+  const { label, sigil, cross, locked } = useScopeLook();
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -107,14 +110,52 @@ function SwitchChip({ label, sigil, cross = false, note = false }: { label: stri
         className="chip chip--profile appbar__profile"
         data-cross={cross ? '' : undefined}
         aria-haspopup="dialog"
-        aria-label={note ? 'Profile scope: All profiles. This screen always shows every profile' : `Profile scope: ${label}. Switch profile`}
+        aria-label={locked ? 'Profile scope: All profiles. This screen always shows every profile' : `Profile scope: ${label}. Switch profile`}
         onClick={() => setOpen(true)}
       >
         <Sigil name={sigil} size="xs" />
         <span className="truncate">{label}</span>
-        <Icon name={note ? 'info' : 'chev-d'} small />
+        <Icon name={locked ? 'info' : 'chev-d'} small />
       </button>
-      {open && (note ? <AllProfilesNote onClose={() => setOpen(false)} /> : <ProfileSwitcher onClose={() => setOpen(false)} />)}
+      {open && (locked ? <AllProfilesNote onClose={() => setOpen(false)} /> : <ProfileSwitcher onClose={() => setOpen(false)} />)}
+    </>
+  );
+}
+
+/**
+ * The scope at the head of the side card (the sidebar's head, the rail's first item after the fold toggle): the scope's sigil, wrapped in the heartbeat ring that carries
+ * the connection (steady success ring connected, steady warning ring reconnecting, dashed neutral ring offline; `shell.css`), and its name. The button opens the switcher.
+ * Its name says the connection in words, so the ring is never the only way to know. On Talk the scope is the open agent; on a screen locked to All profiles (Today) it is
+ * plain text with no button, because there is nothing to choose.
+ */
+export function ScopeButton({ placement }: { placement: 'head' | 'rail' }) {
+  const { label, sigil, cross, locked } = useScopeLook();
+  const status = useConnection();
+  const [open, setOpen] = useState(false);
+  const words = heartbeatWords(status);
+  const body = (
+    <>
+      <span className="scope__mark" data-link={status.state}>
+        <Sigil name={sigil} size="sm" />
+      </span>
+      <span className="scope__name">{label}</span>
+    </>
+  );
+  if (locked) {
+    return (
+      <div className={`scope scope--${placement}`}>
+        {body}
+        <span className="sr-only">. {words}.</span>
+      </div>
+    );
+  }
+  return (
+    <>
+      <button type="button" className={`scope scope--${placement} scope--button`} data-cross={cross ? '' : undefined} aria-haspopup="dialog" aria-label={`Profile scope: ${label}. ${words}.`} onClick={() => setOpen(true)}>
+        {body}
+        {placement === 'head' && <Icon name="chev-d" small />}
+      </button>
+      {open && <ProfileSwitcher onClose={() => setOpen(false)} />}
     </>
   );
 }

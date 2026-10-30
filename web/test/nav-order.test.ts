@@ -3,7 +3,8 @@ import { createModuleRegistry, DESK_PLACEMENTS, type ModuleDefinition } from '..
 import { createAppRegistry } from '../src/modules/index.ts';
 import { inboxBadge } from '../src/modules/inbox/inbox-feed.ts';
 import type { CrewMember } from '../src/modules/crew/crew-state.ts';
-import { controlBadge, crewAge, deskModules, deskNavigation, ownerName } from '../src/shell/nav-order.ts';
+import { controlBadge, crewAge, crumbTrail, deskModules, deskNavigation, deskTravel, ownerName, placementOfPage } from '../src/shell/nav-order.ts';
+import { heartbeatWords } from '../src/shell/heartbeat.ts';
 
 type Screen = string;
 
@@ -221,5 +222,76 @@ describe('the count on the More tab', () => {
 
   test('is absent when no module in Control keeps a count', () => {
     expect(controlBadge(deskNavigation(registryOf(testModule('files', 'control')), []))).toBeUndefined();
+  });
+});
+
+describe('which way a page slides across the Desk', () => {
+  test('is forward to a later place and back to an earlier one, in the order Today, Talk, Work, Control', () => {
+    expect(deskTravel('today', 'talk')).toBe('forward');
+    expect(deskTravel('today', 'control')).toBe('forward');
+    expect(deskTravel('talk', 'work')).toBe('forward');
+    expect(deskTravel('control', 'work')).toBe('back');
+    expect(deskTravel('work', 'today')).toBe('back');
+  });
+
+  test('is the same inside one place, including between two agents in Talk', () => {
+    expect(DESK_PLACEMENTS.map((place) => deskTravel(place, place))).toEqual(['same', 'same', 'same', 'same']);
+  });
+
+  test('is unknown when either page is in no place (a 404 or a redirect on its way)', () => {
+    expect(deskTravel(undefined, 'talk')).toBe('unknown');
+    expect(deskTravel('talk', undefined)).toBe('unknown');
+    expect(deskTravel(undefined, undefined)).toBe('unknown');
+  });
+});
+
+describe('the place a page sits under', () => {
+  const registry = registryOf(testModule('home', 'today'), testModule('chat', 'talk'), testModule('files', 'control'));
+
+  test('is the place of the module that owns the page', () => {
+    expect(placementOfPage(registry, { moduleId: 'chat', title: undefined, pathname: '/chat/s_1' })).toBe('talk');
+    expect(placementOfPage(registry, { moduleId: 'files', title: undefined, pathname: '/files' })).toBe('control');
+  });
+
+  test('is Control for the Control page, which belongs to no module, and none for a page that is nowhere', () => {
+    expect(placementOfPage(registry, { moduleId: undefined, title: 'Control', pathname: '/control' })).toBe('control');
+    expect(placementOfPage(registry, { moduleId: undefined, title: undefined, pathname: '/nowhere' })).toBeUndefined();
+  });
+});
+
+describe('the trail above a deep page', () => {
+  const registry = registryOf(
+    testModule('home', 'today', { title: 'Today' }),
+    testModule('chat', 'talk', { title: 'Chat', path: '/chat' }),
+    testModule('tasks', 'work', { title: 'Tasks', path: '/work/tasks' }),
+    testModule('health', 'control', { title: 'Health', group: 'observe', path: '/observe/health' }),
+  );
+  const page = (moduleId: string, pathname: string, title?: string, parent?: string) => ({ moduleId, pathname, title, parent });
+
+  test('is empty for the root of a Today or Work module (the card and the Work tabs say where it is), and names the group of a Control module', () => {
+    expect(crumbTrail(registry, page('home', '/home'))).toEqual([]);
+    expect(crumbTrail(registry, page('tasks', '/work/tasks'))).toEqual([]);
+    expect(crumbTrail(registry, page('health', '/observe/health'))).toEqual([{ label: 'Observe', to: '/control' }]);
+  });
+
+  test('names the destination a Work page sits in, then the module when the page is below its root', () => {
+    expect(crumbTrail(registry, page('tasks', '/work/tasks/t_1', 'Task t_1', '/work/tasks'))).toEqual([
+      { label: 'Work', to: '/work/tasks' },
+      { label: 'Tasks', to: '/work/tasks' },
+    ]);
+  });
+
+  test('is empty in Talk, whose thread has a header of its own, and for a page that is in no module', () => {
+    expect(crumbTrail(registry, page('chat', '/chat/s_1', 'A chat', '/chat'))).toEqual([]);
+    expect(crumbTrail(registry, { moduleId: undefined, pathname: '/nowhere', title: undefined, parent: undefined })).toEqual([]);
+  });
+});
+
+describe('the connection said in words', () => {
+  test('names each state, with the attempt count while reconnecting', () => {
+    expect(heartbeatWords({ state: 'connected', attempt: 0 })).toBe('Hermes connected');
+    expect(heartbeatWords({ state: 'reconnecting', attempt: 3 })).toBe('Hermes reconnecting, attempt 3');
+    expect(heartbeatWords({ state: 'reconnecting', attempt: 0 })).toBe('Hermes connecting');
+    expect(heartbeatWords({ state: 'offline', attempt: 5 })).toBe('Hermes offline');
   });
 });

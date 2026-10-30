@@ -1097,7 +1097,6 @@ export function Chat() {
   }
   return (
     <>
-      {!conversation && <PageHeader title="Chat" />}
       <div className="chat" data-conversation={conversation ? '' : undefined}>
       {!compact && <SessionsPane profile={profile} activeId={storedId} scope={TALK_SCOPE} />}
       {terminal ? (

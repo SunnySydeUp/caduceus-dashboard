@@ -23,11 +23,12 @@ import { StepUpDialog } from './StepUpDialog.tsx';
 import { TierDialog } from './TierDialog.tsx';
 import { ToastRegion } from './ToastRegion.tsx';
 import { useSizeClass } from './use-size-class.ts';
-import { useKeyboardOpen, useTabBarHidden } from './use-viewport.ts';
+import { useKeyboardOpen, useTabBarShrunk } from './use-viewport.ts';
 
 /**
- * The adaptive shell every signed-in page lives in, laid out as the Desk: a bottom tab bar (Today, Talk, Work, More) under 600 px, a rail from
- * 600 px and a sidebar (Today, Talk, Work, the crew, Search, Control) from 1200 px, with the app bar, banner stack and toast region around the page.
+ * The adaptive shell every signed-in page lives in, laid out as the Desk: a floating tab dock (Today, Talk, Work, More) and the app bar under 600 px, a rail from 600 px
+ * and a sidebar (Today, Talk, Work, the crew) from 1200 px. From 600 px there is no app bar: the side card holds the scope (with the heartbeat ring), the one search,
+ * and Help and Control in its foot, and the page starts at the top of the window beside it. The banner stack and the toast region sit around the page.
  * It knows nothing of any module: navigation, routes and search all come from the module registry's placements.
  */
 export function AppShell() {
@@ -35,7 +36,7 @@ export function AppShell() {
   const nav = navModeFor(size, useShellPrefs().sidebarCollapsed);
   const { pathname } = useRouteInfo();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const tabBarHidden = useTabBarHidden(nav === 'bar', pathname);
+  const tabBarShrunk = useTabBarShrunk(nav === 'bar', pathname);
   const keyboardOpen = useKeyboardOpen();
   useConnectionBanners();
   useReadOnlyBanner();
@@ -59,7 +60,7 @@ export function AppShell() {
     shownPath.current = pathname;
   }, [pathname]);
 
-  const stateClasses = `${tabBarHidden ? ' is-tabbar-hidden' : ''}${keyboardOpen ? ' is-keyboard' : ''}`;
+  const stateClasses = `${tabBarShrunk ? ' is-tabbar-shrunk' : ''}${keyboardOpen ? ' is-keyboard' : ''}`;
   return (
     <ProfileScopeProvider>
       <KeyboardProvider>
@@ -77,11 +78,19 @@ export function AppShell() {
             </a>
             {nav !== 'bar' && <nav className="side" aria-label="Main">{nav === 'sidebar' ? <Sidebar /> : <Rail size={size === 'large' ? 'large' : 'medium'} onOpenDrawer={() => setDrawerOpen(true)} />}</nav>}
             <div className="app__body">
-              <AppBar size={size} />
-              <SubNav />
-              {nav === 'bar' && <Bridge />}
-              <BannerStack />
+              {nav === 'bar' ? (
+                <>
+                  <AppBar />
+                  <SubNav />
+                  <Bridge />
+                  <BannerStack />
+                </>
+              ) : (
+                <BannerStack />
+              )}
               <main className="main" id="main" tabIndex={-1}>
+                {/* From 600 px the Work views are canvas tabs at the top of the page column; on a phone they are the band under the app bar. */}
+                {nav !== 'bar' && <SubNav />}
                 <Outlet />
               </main>
             </div>

@@ -19,7 +19,8 @@
 /* Nobody: an empty tile with a dashed edge. */
 .sigil--none { background: transparent; border: 1.5px dashed var(--cd-border-strong); }
 
-/* State: a ring around the tile and a badge on its corner. Each state has its own ring (a pulse, an arc, a solid ring, a dashed ring) and its own badge icon. */
+/* State: a ring around the tile and a badge on its corner. Each state has its own ring (steady, a travelling sheen, solid, dashed) and its own badge icon. Waiting for you never blinks:
+   its ring is steady, and only Running loops. */
 .sigil::before { content: ""; position: absolute; inset: calc(var(--cd-space-1) * -1); border-radius: calc(28% + var(--cd-space-1)); border: 2px solid transparent; pointer-events: none; }
 .sigil[data-size="xs"]::before, .sigil[data-size="sm"]::before { inset: calc(var(--cd-space-0-5) * -1.5); border-width: 1.5px; }
 .sigil > b { position: absolute; inset-inline-end: calc(var(--cd-space-1) * -1.25); inset-block-end: calc(var(--cd-space-1) * -1.25); inline-size: max(0.9375rem, 38%); block-size: max(0.9375rem, 38%);
@@ -27,16 +28,36 @@
 .sigil > b svg.i { inline-size: 100%; block-size: 100%; stroke-width: 2.2; }
 .sigil[data-size="xs"] > b { display: none; }
 .sigil[data-state="waiting"]::before { border-color: var(--cd-status-waiting); } .sigil[data-state="waiting"] > b { color: var(--cd-tone-warning-fg); }
-.sigil[data-state="working"]::before { border-color: var(--cd-fg-default) transparent transparent transparent; } .sigil[data-state="working"] > b { color: var(--cd-fg-default); }
+.sigil[data-state="working"] > b { color: var(--cd-fg-default); }
 .sigil[data-state="done"]::before { border-color: var(--cd-status-succeeded); } .sigil[data-state="done"] > b { color: var(--cd-tone-success-fg); }
 .sigil[data-state="blocked"]::before { border-style: dashed; border-color: var(--cd-status-failed); } .sigil[data-state="blocked"] > b { color: var(--cd-tone-danger-fg); }
 /* The device chose to hide the Finished marks (Settings › Chat › Finished marks on agents): no ring and no tick; the state is still said in words. */
 [data-finished-marks-hidden] .sigil[data-state="done"]::before { border-color: transparent; }
 [data-finished-marks-hidden] .sigil[data-state="done"] > b { display: none; }
 
-@keyframes hc-sigil-spin { to { transform: rotate(360deg); } }
-@keyframes hc-sigil-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cd-status-waiting) 50%, transparent); } 100% { box-shadow: 0 0 0 0.5625rem transparent; } }
-.sigil[data-state="working"]::before { animation: hc-sigil-spin 1.5s linear infinite; }
-.sigil[data-state="waiting"]::before { animation: hc-sigil-pulse 2s ease-out infinite; }
-@media (prefers-reduced-motion: reduce) { .sigil[data-state="working"]::before, .sigil[data-state="waiting"]::before { animation: none !important; } }
-[data-motion="reduce"] .sigil[data-state="working"]::before, [data-motion="reduce"] .sigil[data-state="waiting"]::before { animation: none !important; }
+/* Running: no run has a progress to show, so the ring is indeterminate: a faint full track with a soft bright sheen that travels round it. The ring is a gradient with its middle masked
+   away (the padding is the ring's width), and the sheen's angle is a registered property, so the browser can animate it. Where it cannot, the sheen stays still on the track. */
+@property --sheen { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.sigil[data-state="working"]::before { border: 0; padding: 2px; background: conic-gradient(from var(--sheen), transparent 0 55%, var(--cd-fg-default) 92%, transparent), color-mix(in srgb, var(--cd-fg-default) 26%, transparent);
+  -webkit-mask: linear-gradient(currentcolor 0 0) content-box, linear-gradient(currentcolor 0 0); -webkit-mask-composite: xor; mask: linear-gradient(currentcolor 0 0) content-box exclude, linear-gradient(currentcolor 0 0); }
+.sigil[data-size="xs"][data-state="working"]::before, .sigil[data-size="sm"][data-state="working"]::before { padding: 1.5px; }
+@keyframes hc-sigil-sheen { to { --sheen: 1turn; } }
+.sigil[data-state="working"]::before { animation: hc-sigil-sheen var(--cd-dur-pulse) linear infinite; }
+@media (prefers-reduced-motion: reduce) { .sigil[data-state="working"]::before { animation: none !important; } }
+[data-motion="reduce"] .sigil[data-state="working"]::before { animation: none !important; }
+/* Forced colours: the gradient and its mask are not kept as a ring, so Running is a plain solid ring in the text colour and Waiting a steady ring in the highlight colour; the badge icons and the words say the rest. */
+@media (forced-colors: active) {
+  .sigil[data-state="working"]::before { background: none; -webkit-mask: none; mask: none; padding: 0; border: 2px solid CanvasText; animation: none; }
+  .sigil[data-size="xs"][data-state="working"]::before, .sigil[data-size="sm"][data-state="working"]::before { border-width: 1.5px; }
+  .sigil[data-state="waiting"]::before { border-color: Highlight; }
+}
+
+/* Rolling numbers (web/src/shell/RollingNumber.tsx): a changing count rolls to its next value, down when it drops and up when it grows. The old and the new number share one cell; the cell
+   clips them to one line, so each slides out of it or in to it. The durations are tokens (0 under reduced motion). The plain number for a screen reader is the `sr-only` one. */
+.roll { display: inline-grid; overflow: clip; vertical-align: top; block-size: 1lh; font-variant-numeric: tabular-nums; }
+.roll > span { grid-area: 1 / 1; }
+.roll[data-dir="down"] { --roll: 1; } .roll[data-dir="up"] { --roll: -1; }
+@keyframes hc-roll-out { to { transform: translateY(calc(var(--roll) * 100%)); opacity: 0; } }
+@keyframes hc-roll-in { from { transform: translateY(calc(var(--roll) * -100%)); opacity: 0; } }
+.roll[data-dir] > .roll__out { animation: hc-roll-out var(--cd-dur-glide) var(--cd-ease-standard) both; }
+.roll[data-dir] > .roll__in { animation: hc-roll-in var(--cd-dur-glide) var(--cd-ease-standard) both; }

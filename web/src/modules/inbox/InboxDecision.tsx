@@ -1,7 +1,8 @@
 // The decision on one Inbox item (M2 #01): the same typed answers the chat's approval card gives (Allow once, for this session, always, Deny with
 // a reason) and the same question card (choices, free text, a countdown), over an item that may belong to any chat in any profile. In the bottom
 // sheet on a phone, in the detail pane beside the list elsewhere. The answer goes to Caduceus (`inbox-actions.ts`), which gives it to Hermes.
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import type { InboxApproval, InboxClarify, InboxDecision as Decision, InboxItem, InboxNotice, InboxQuestion } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
@@ -12,6 +13,7 @@ import { countdownOf } from '../chat/requests.ts';
 import { decideItem, type DecisionOutcome } from './inbox-actions.ts';
 import { useNoticeActions } from './NoticeActions.tsx';
 import { ageWords, clarifyAnswer, type ClarifyResult } from './inbox-model.ts';
+import './decision-confirm.css';
 import './inbox.css';
 
 /** The page's clock in ms, ticking each second while `active`. */
@@ -26,38 +28,73 @@ function useNow(active: boolean): number {
   return now;
 }
 
-/** Sends a decision and says what became of it; `error` is why the last one did not go, in words. */
-export function useDecision(item: InboxItem, onDone?: () => void) {
+/** What the owner answered, as the button that sent it says it back: the approval's choice, an answer, or a question skipped. */
+type Sent = 'once' | 'session' | 'always' | 'deny' | 'answer' | 'skip';
+
+/** What a screen that lists the decision hears while an answer goes (`onSending`) and when it has gone (`onDone`). */
+export interface DecisionHooks {
+  /** An answer is on its way (`true`), or it came back without going (`false`: it failed, or the owner declined the confirmation). A list that keeps the card on screen until it has folded away listens here. */
+  onSending?(sending: boolean): void;
+  /** Hermes has the answer, or is no longer asking. The card has shown its confirmation by now; what this returns, a promise or not, is waited for (a list folds the card away in it). */
+  onDone?(outcome: 'resolved' | 'already-answered'): void | Promise<void>;
+}
+
+/** Sends a decision and says what became of it; `error` is why the last one did not go, in words, and `sent` is what went (the button that sent it confirms it in place). */
+export function useDecision(item: InboxItem, { onDone, onSending }: DecisionHooks = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [sent, setSent] = useState<Sent>();
   // Another item, another answer in flight.
   useEffect(() => {
     setBusy(false);
     setError(undefined);
+    setSent(undefined);
   }, [item.id]);
   const decide = async (decision: Decision) => {
-    if (busy) return;
+    if (busy || sent !== undefined) return;
     setBusy(true);
     setError(undefined);
+    onSending?.(true);
     let outcome: DecisionOutcome;
     try {
       outcome = await decideItem(item, decision);
     } catch (failure) {
       outcome = { kind: 'failed', message: failure instanceof Error ? failure.message : String(failure) };
     }
-    setBusy(false);
-    // Once Hermes has the answer, or is no longer asking, there is nothing left to decide here.
-    if (outcome.kind === 'resolved' || outcome.kind === 'already-answered') onDone?.();
-    if (outcome.kind === 'resolved') {
-      if (!('choice' in decision)) {
-        const skipped = Object.values(decision.result.answers).every((given) => given === '');
-        toast(skipped ? 'Skipped' : 'Answer sent', { tone: 'success', detail: skipped ? 'The agent carries on without an answer.' : 'The agent carries on with your answer.' });
-      } else if (decision.choice === 'deny') toast('Denied', { tone: 'success', detail: 'The command does not run. The agent is told, and can try another way.' });
+    if (outcome.kind !== 'resolved') setBusy(false);
+    else {
+      const skipped = !('choice' in decision) && Object.values(decision.result.answers).every((given) => given === '');
+      // At once: whoever hears `onDone` below looks at the confirmation as it is drawn.
+      flushSync(() => {
+        setBusy(false);
+        setSent('choice' in decision ? decision.choice : skipped ? 'skip' : 'answer');
+      });
+      if (!('choice' in decision)) toast(skipped ? 'Skipped' : 'Answer sent', { tone: 'success', detail: skipped ? 'The agent carries on without an answer.' : 'The agent carries on with your answer.' });
+      else if (decision.choice === 'deny') toast('Denied', { tone: 'success', detail: 'The command does not run. The agent is told, and can try another way.' });
       else toast(decision.choice === 'always' ? 'Allowed always' : 'Allowed', { tone: 'success', detail: 'The agent carries on.' });
-    } else if (outcome.kind === 'already-answered') toast('Already answered elsewhere', { tone: 'info', detail: 'Hermes was no longer waiting for this one.' });
+    }
+    if (outcome.kind === 'already-answered') toast('Already answered elsewhere', { tone: 'info', detail: 'Hermes was no longer waiting for this one.' });
     else if (outcome.kind === 'failed') setError(outcome.message);
+    // Once Hermes has the answer, or is no longer asking, there is nothing left to decide here.
+    if (outcome.kind === 'resolved' || outcome.kind === 'already-answered') await onDone?.(outcome.kind);
+    else onSending?.(false);
   };
-  return { busy, error, decide };
+  return { busy, error, sent, decide };
+}
+
+/** A button's words, and the words it takes on once its answer has gone (a check and the past tense). Both are drawn and the swap is a fade, so the button keeps its width; a screen reader reads only the one that shows. */
+function Confirms({ sent, done, children }: { sent: boolean; done: string; children: ReactNode }) {
+  return (
+    <span className="ib-confirm" data-sent={sent || undefined}>
+      <span className="ib-confirm__no" aria-hidden={sent || undefined}>
+        {children}
+      </span>
+      <span className="ib-confirm__yes" aria-hidden={!sent}>
+        <Icon name="check" />
+        {done}
+      </span>
+    </span>
+  );
 }
 
 function Where({ item }: { item: InboxApproval | InboxClarify }) {
@@ -80,11 +117,13 @@ function Where({ item }: { item: InboxApproval | InboxClarify }) {
   );
 }
 
-function ApprovalDecision({ item, onDone }: { item: InboxApproval; onDone?: () => void }) {
+function ApprovalDecision({ item, hooks }: { item: InboxApproval; hooks: DecisionHooks }) {
   const reasonId = useId();
   const [denying, setDenying] = useState(false);
   const [reason, setReason] = useState('');
-  const { busy, error, decide } = useDecision(item, onDone);
+  const { busy, error, sent, decide } = useDecision(item, hooks);
+  /** Once an answer has gone only the button that sent it stays as it was, to say so; the others are done with. */
+  const closed = (choice: Sent) => busy || (sent !== undefined && sent !== choice);
   const offered = (choice: InboxApproval['choices'][number]) => item.choices.includes(choice);
   useEffect(() => {
     setDenying(false);
@@ -119,25 +158,31 @@ function ApprovalDecision({ item, onDone }: { item: InboxApproval; onDone?: () =
         </p>
       )}
       <div className="ib-acts">
-        <WriteButton type="button" className="btn btn--primary" data-act="once" disabled={busy} onClick={() => void decide({ choice: 'once' })}>
-          <Icon name="check" />
-          Allow once
+        <WriteButton type="button" className="btn btn--primary" data-act="once" disabled={closed('once')} onClick={() => void decide({ choice: 'once' })}>
+          <Confirms sent={sent === 'once'} done="Allowed">
+            <Icon name="check" />
+            Allow once
+          </Confirms>
         </WriteButton>
         {offered('session') && (
-          <WriteButton type="button" className="btn btn--secondary" data-act="session" disabled={busy} onClick={() => void decide({ choice: 'session' })}>
-            Allow for this session
+          <WriteButton type="button" className="btn btn--secondary" data-act="session" disabled={closed('session')} onClick={() => void decide({ choice: 'session' })}>
+            <Confirms sent={sent === 'session'} done="Allowed for this session">
+              Allow for this session
+            </Confirms>
           </WriteButton>
         )}
         {offered('always') && (
-          <WriteButton type="button" className="btn btn--secondary" data-act="always" disabled={busy} onClick={() => void decide({ choice: 'always' })}>
-            <Icon name="fingerprint" />
-            <span className="ib-stacked">
-              Allow always
-              <small>Needs passkey</small>
-            </span>
+          <WriteButton type="button" className="btn btn--secondary" data-act="always" disabled={closed('always')} onClick={() => void decide({ choice: 'always' })}>
+            <Confirms sent={sent === 'always'} done="Allowed always">
+              <Icon name="fingerprint" />
+              <span className="ib-stacked">
+                Allow always
+                <small>Needs passkey</small>
+              </span>
+            </Confirms>
           </WriteButton>
         )}
-        <button type="button" className="btn btn--danger-quiet" data-act="deny" aria-expanded={denying} aria-controls={reasonId} disabled={busy} onClick={() => setDenying((open) => !open)}>
+        <button type="button" className="btn btn--danger-quiet" data-act="deny" aria-expanded={denying} aria-controls={reasonId} disabled={busy || sent !== undefined} onClick={() => setDenying((open) => !open)}>
           Deny…
         </button>
       </div>
@@ -154,8 +199,10 @@ function ApprovalDecision({ item, onDone }: { item: InboxApproval; onDone?: () =
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDenying(false)}>
               Back
             </button>
-            <WriteButton type="button" className="btn btn--danger btn--sm" data-act="deny-confirm" disabled={busy} onClick={() => void decide({ choice: 'deny', reason })}>
-              Deny{reason.trim() ? ' with reason' : ''}
+            <WriteButton type="button" className="btn btn--danger btn--sm" data-act="deny-confirm" disabled={closed('deny')} onClick={() => void decide({ choice: 'deny', reason })}>
+              <Confirms sent={sent === 'deny'} done="Denied">
+                Deny{reason.trim() ? ' with reason' : ''}
+              </Confirms>
             </WriteButton>
           </div>
         </div>
@@ -190,11 +237,13 @@ function QuestionFields({ question, picked, typed, busy, onPick, onType }: { que
   );
 }
 
-function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => void }) {
+function ClarifyDecision({ item, hooks }: { item: InboxClarify; hooks: DecisionHooks }) {
   const titleId = useId();
   const [picked, setPicked] = useState<Record<string, string[]>>({});
   const [typed, setTyped] = useState<Record<string, string>>({});
-  const { busy, error, decide } = useDecision(item, onDone);
+  const { busy, error, sent, decide } = useDecision(item, hooks);
+  /** While an answer goes, and once it has gone, nothing more is asked: the fields are closed. */
+  const fieldsClosed = busy || sent !== undefined;
   useEffect(() => {
     setPicked({});
     setTyped({});
@@ -216,6 +265,7 @@ function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => 
   };
   const answer = clarifyAnswer(item, picked, typed);
   const ready = Object.values(answer.answers).some((given) => given !== '');
+  const sendClosed = busy || (sent === undefined ? !ready : sent !== 'answer');
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (ready) send(answer);
@@ -252,7 +302,7 @@ function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => 
             {only && only.choices.length > 0 && (
               <div className="ib-choices" role="group" aria-label="Suggested answers">
                 {only.choices.map((choice) => (
-                  <button key={choice} type="button" className="chip" disabled={busy} onClick={() => pick(only, choice)}>
+                  <button key={choice} type="button" className="chip" disabled={fieldsClosed} onClick={() => pick(only, choice)}>
                     {choice}
                   </button>
                 ))}
@@ -262,9 +312,11 @@ function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => 
               <label className="sr-only" htmlFor={`${titleId}-free`}>
                 Answer in your own words
               </label>
-              <input className="input" id={`${titleId}-free`} value={typed[only?.qid ?? ''] ?? ''} placeholder={only && only.choices.length > 0 ? 'Or type your own answer…' : 'Type your answer…'} autoComplete="off" disabled={busy} onChange={(event) => setTyped({ [only?.qid ?? '']: event.target.value })} />
-              <WriteButton type="submit" className="btn btn--primary" disabled={busy || !ready}>
-                Send
+              <input className="input" id={`${titleId}-free`} value={typed[only?.qid ?? ''] ?? ''} placeholder={only && only.choices.length > 0 ? 'Or type your own answer…' : 'Type your answer…'} autoComplete="off" disabled={fieldsClosed} onChange={(event) => setTyped({ [only?.qid ?? '']: event.target.value })} />
+              <WriteButton type="submit" className="btn btn--primary" disabled={sendClosed}>
+                <Confirms sent={sent === 'answer'} done="Sent">
+                  Send
+                </Confirms>
               </WriteButton>
             </div>
           </div>
@@ -276,7 +328,7 @@ function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => 
                 question={question}
                 picked={picked[question.qid] ?? []}
                 typed={typed[question.qid] ?? ''}
-                busy={busy}
+                busy={fieldsClosed}
                 onPick={(choice) => pick(question, choice)}
                 onType={(text) => {
                   setTyped((now) => ({ ...now, [question.qid]: text }));
@@ -285,16 +337,20 @@ function ClarifyDecision({ item, onDone }: { item: InboxClarify; onDone?: () => 
               />
             ))}
             <div className="ib-acts">
-              <WriteButton type="submit" className="btn btn--primary" disabled={busy || !ready}>
-                Send answer
+              <WriteButton type="submit" className="btn btn--primary" disabled={sendClosed}>
+                <Confirms sent={sent === 'answer'} done="Sent">
+                  Send answer
+                </Confirms>
               </WriteButton>
             </div>
           </>
         )}
       </form>
       <div className="ib-skip">
-        <WriteButton type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => send(clarifyAnswer(item, {}, {}))}>
-          Skip
+        <WriteButton type="button" className="btn btn--ghost btn--sm" disabled={busy || (sent !== undefined && sent !== 'skip')} onClick={() => send(clarifyAnswer(item, {}, {}))}>
+          <Confirms sent={sent === 'skip'} done="Skipped">
+            Skip
+          </Confirms>
         </WriteButton>
       </div>
     </section>
@@ -335,8 +391,8 @@ function NoticeDetail({ item, embedded }: { item: InboxNotice; embedded?: boolea
   );
 }
 
-/** The decision on `item`, whatever it is: an approval or a question, or a notice in full. `embedded`: in a card that already says what it is about. `onDone` hears that the answer went (or that Hermes no longer asked). */
-export function InboxDecision({ item, onDone, embedded }: { item: InboxItem; onDone?: () => void; embedded?: boolean }) {
+/** The decision on `item`, whatever it is: an approval or a question, or a notice in full. `embedded`: in a card that already says what it is about. `onDone` hears that the answer went (or that Hermes no longer asked), `onSending` that one is on its way (`DecisionHooks`). */
+export function InboxDecision({ item, onDone, onSending, embedded }: DecisionHooks & { item: InboxItem; embedded?: boolean }) {
   if (item.kind === 'notice') return <NoticeDetail item={item} embedded={embedded} />;
-  return item.kind === 'approval' ? <ApprovalDecision item={item} onDone={onDone} /> : <ClarifyDecision item={item} onDone={onDone} />;
+  return item.kind === 'approval' ? <ApprovalDecision item={item} hooks={{ onDone, onSending }} /> : <ClarifyDecision item={item} hooks={{ onDone, onSending }} />;
 }

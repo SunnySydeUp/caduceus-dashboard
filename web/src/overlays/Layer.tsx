@@ -65,6 +65,7 @@ export function Layer({ kind, className, panelClassName, role = 'dialog', labell
 
   useEffect(() => {
     const layer = openLayer({
+      kind,
       requestClose: () => requestClose.current(),
       escapable,
       el: root.current ?? undefined,

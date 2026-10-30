@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { lazyRouteComponent } from '@tanstack/react-router';
 import type { AppModule } from '../../app-registry.ts';
 import { withProfile } from '../../profile-scope.ts';
 import { requestPromptLibrary } from './prompts-handoff.ts';
@@ -9,7 +10,8 @@ import { sourceIcon } from './sessions-model.ts';
 /** How many sessions the palette lists for a query (the sessions pane lists more). */
 const PALETTE_HITS = 8;
 
-const Chat = lazy(() => import('./Chat.tsx').then((m) => ({ default: m.Chat })));
+// Waited for by the router (and loadable ahead, when the owner reaches for a link: `AppLink`'s `preload`), so that Talk's header is on the page when a page transition takes its new picture.
+const Chat = lazyRouteComponent(() => import('./Chat.tsx'), 'Chat');
 
 /** Starts a new chat in this tab's profile: the address of the new-chat screen, which keeps the tab's `?profile=`. */
 function openNewChat(): void {

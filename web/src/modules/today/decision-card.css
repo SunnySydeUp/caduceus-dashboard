@@ -1,5 +1,7 @@
 /* The decision card (M8 #03, #05): one waiting decision as Today lists it and as the Talk tray lists it. Tokens only; logical properties throughout. */
-.today-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); align-content: start; min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid color-mix(in srgb, var(--cd-tone-warning-solid) 55%, var(--cd-border-subtle)); border-radius: var(--cd-radius-lg); }
+.today-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-3); align-content: start; min-inline-size: 0; padding: var(--cd-card-p); background: var(--cd-bg-surface); border: 1px solid color-mix(in srgb, var(--cd-tone-warning-solid) 55%, var(--cd-border-subtle)); border-radius: var(--cd-radius-lg); transition: border-color var(--cd-dur-slow) var(--cd-ease-standard); }
+/* Once its answer has gone the card's border settles from the waiting colour to the done one, while the button says so (decision-confirm.css). */
+.today-card:has([data-sent]) { border-color: color-mix(in srgb, var(--cd-tone-success-solid) 45%, var(--cd-border-subtle)); }
 .today-card__who { display: flex; align-items: center; gap: var(--cd-space-3); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); min-inline-size: 0; }
 .today-card__who b { color: var(--cd-fg-default); font-weight: var(--cd-weight-semibold); }
 .today-card__ask { min-inline-size: 0; overflow-wrap: anywhere; }
@@ -11,3 +13,17 @@
 .today-card .ib-decision__q { font-size: var(--cd-text-lg); line-height: var(--cd-leading-lg); letter-spacing: var(--cd-tracking-tight); }
 /* The room the answers take while their code loads, so that the card does not grow when they arrive. */
 .today-card__pending { min-block-size: calc(var(--cd-control-h) * 2 + var(--cd-space-2)); }
+
+/* An answered card folds into where its agent is drawn (fold.ts; a View Transition, started only when reduced motion is off, and the durations are tokens, which are 0 under it anyway).
+   The card travels to the sigil (or to the tab bar's count or the pill) and blurs and fades as it goes, the sigil comes in late over it, and the other cards and blocks glide up into the gap. */
+::view-transition-group(fold) { animation-duration: calc(var(--cd-dur-glide) * 1.5); animation-timing-function: var(--cd-ease-standard); z-index: 60; }
+::view-transition-old(fold), ::view-transition-new(fold) { block-size: 100%; object-fit: cover; }
+::view-transition-old(fold) { animation: hc-fold-out calc(var(--cd-dur-glide) * 1.5) var(--cd-ease-standard) both; }
+::view-transition-new(fold) { animation: hc-fold-in calc(var(--cd-dur-glide) * 1.5) linear both; }
+@keyframes hc-fold-out { 0% { opacity: 1; filter: blur(0); } 60% { opacity: 0.9; } 100% { opacity: 0; filter: blur(5px); } }
+@keyframes hc-fold-in { 0%, 80% { opacity: 0; } 100% { opacity: 1; } }
+::view-transition-group(*.decision) { animation-duration: var(--cd-dur-glide); animation-timing-function: var(--cd-ease-standard); }
+
+/* Where it landed gives a small spring bump (fold.ts sets the attribute for as long as it plays). */
+@keyframes hc-land { from { scale: 1.2; } }
+[data-landed] { animation: hc-land var(--cd-dur-glide) var(--cd-ease-spring); }

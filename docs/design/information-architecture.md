@@ -48,27 +48,28 @@ Nav switches on **window width**, never device detection. It uses Material 3 / A
 
 | | Compact < 600 (phone) | Medium 600–1199 (tablet, foldable, small laptop) | Large ≥ 1200 (desktop) |
 |---|---|---|---|
-| Primary nav | **Bottom tab bar, 4 tabs:** Today (badge counts only items that need the owner, per Apple HIG) · Talk · Work · More. Talk has a bridge row of sigils to switch agent | Navigation rail: Today, Talk, Work, one sigil per agent, Search, Control. Its menu button opens the full Desk as a drawer | Persistent sidebar: Today, Talk, Work, then the crew (one row per profile: sigil, name, live line, time), then Search and Control. It collapses to the rail (remembered per device) |
+| Primary nav | **Bottom tab bar (a floating dock), 4 tabs:** Today (badge counts only items that need the owner, per Apple HIG) · Talk · Work · More. Only the current tab shows its label. Talk has a bridge row of sigils to switch agent | Navigation rail: the scope, Search, Today, Talk, Work, one sigil per agent, then Help and Control in a fixed foot. Its menu button opens the full Desk as a drawer | Persistent sidebar: the scope (head), Search, Today, Talk, Work, the crew (one row per profile: sigil, name, live line, time; the only part that scrolls), then Help and Control in a fixed foot. It collapses to the rail (remembered per device) |
 | Control | **More** opens `/control`: every other module, in groups, with search | The rail's Control item opens the same list | Control in the sidebar opens the same list |
 | List / detail | Push navigation (list → detail); detail sheets for quick views. Talk's Details and session list are sheets | Two panes when ≥ 720 px | Two or three panes. Talk shows its session column and a Details panel |
-| Search / palette | App-bar search button opens a full-screen palette | ⌘K / search button | ⌘K, `/` in the composer, `?` shortcut sheet |
+| Search / palette | App-bar search button opens a full-screen palette | ⌘K / the Search item in the rail | ⌘K / the search field in the sidebar, `/` in the composer, `?` shortcut sheet |
 | Chat composer settings | Single config sheet (WebUI pattern) | Chips | Chips in the composer footer |
 | Back | Hardware/gesture back pops the route; sheets close first | same | Browser back |
 | Shortcuts | — | Hardware keyboard: same as desktop | ⌘K palette (session search lives inside it), ⇧⌘O new chat, `g`+letter, `j/k`. Single-letter shortcuts can be turned off (WCAG 2.1.4) |
 
-The tab bar hides while scrolling down in long lists, and while the keyboard is open in Talk. It reappears on scroll up. Its tap targets are ≥ 48 px and it respects `safe-area-inset-bottom`.
+The tab bar is a floating dock above the safe area. It shrinks while scrolling down in long lists and returns on scroll up; it hides while the keyboard is open in Talk. Its tap targets are ≥ 48 px. Moving between places animates (design-system §4.7, "Moving across the Desk").
 
 Navigation is data, not code. Every module declares a Desk placement (`today`, `talk`, `work` or `control`) in the registry; `deskNavigation` (`web/src/shell/nav-order.ts`) turns the registry and the crew into the tab bar, rail, sidebar and Control. The crew is ordered waiting (longest wait first), blocked, working, finished, idle.
 
 ## 3. Global chrome
-- **App bar**, from left to right:
-  - the context title or breadcrumb;
-  - a **profile chip** (decision 6: sigil + name; tapping it opens a profile switcher sheet);
-  - a realtime status dot (connected / reconnecting / offline);
-  - search / palette.
-  
-  On desktop the profile chip also shows "All profiles" on cross-profile views.
-- **Banner stack.** At most one banner is visible at a time, ordered by priority; the rest collapse into a "+N" pill. Banners cover: offline / reconnecting, resource pressure, gateway down, budget exceeded, update available.
+- **App bar: phones only (< 600 px).** Back or the mark, the title once the heading has scrolled away, a **profile chip** (decision 6: sigil + name; tapping it opens a profile switcher sheet), a realtime status dot (connected / reconnecting / offline), search / palette and help. A screen can put one button in the bar's slot (`#appbar-slot`).
+- **From 600 px there is no app bar.** Everything it held moved:
+  - the **scope** is the head of the side card: the scope's sigil, with the connection as a ring round it (the heartbeat: steady success ring connected, steady warning ring reconnecting, dashed neutral ring offline), and the scope's name, opening the profile switcher. On Talk it shows the open agent; on a screen locked to All profiles (Today) it is plain text, nothing to switch. In the rail it is a 44 px sigil button with a label. Its accessible name says the connection in words;
+  - **search** is one slim field under the card head ("Search or jump to…", ⌘K), a Search item in the rail;
+  - **Help** (route-aware) and Control are the card's foot, which never scrolls away; only the crew scrolls inside the card;
+  - the **breadcrumb** of a deep page (a task, Health under Observe) is linked text above the title in the page header;
+  - Work's **views** are canvas tabs at the top of the page column;
+  - the page starts at the top of the window, level with the card's top edge.
+- **Banner stack.** At most one banner is visible at a time, ordered by priority; the rest collapse into a "+N" pill. Banners cover: offline / reconnecting, resource pressure, gateway down, budget exceeded, update available. From 600 px the connection banner is sticky at the top of the page column, so an unhealthy connection stays said in words while the page scrolls.
 - **Toasts** go in a live region placed above the tab bar or composer. They never cover primary actions.
 
 ## 4. Talk screen anatomy (the chat thread)
@@ -81,7 +82,7 @@ Navigation is data, not code. Every module declares a Desk placement (`today`, `
 | Live run controls | Approval and clarify cards inline above the composer (keyboard: ↵ = allow once) | Same cards as bottom sheets; also delivered as push notifications with actions |
 | Details (context panel) | Right panel: Right now, workspace preview (Terminal, Files, Browser; Take over), Plan and run (Todo, Run: subagents, goal, usage), Work, About (model, folder, cost, context) | A sheet, opened from the thread header's Details button |
 | Decide-anywhere tray | Above the composer: "N more need you elsewhere" with the sigils of the other agents that wait, and the decisions of other agents and of other sessions of the same agent (labelled with the session title), answerable in place. Hidden when nothing else waits. The open session's own decision stays inline | Same, above the composer |
-| Terminal mode | Toggle in the app bar: the embedded TUI over `/api/pty` for power users. Details › Take over opens it after a T2 confirmation (passkey) | Opens through Details › Take over only (touch-hostile otherwise, upstream bugs #81119 / #76002) |
+| Terminal mode | Entered from the thread's More menu. While it is open, its toggle ("Terminal mode", pressed, returns to the chat) is in the page header's actions on a tablet or desktop (an icon in the app bar's slot on a phone): the embedded TUI over `/api/pty` for power users. Details › Take over opens it after a T2 confirmation (passkey) | Opens through Details › Take over only (touch-hostile otherwise, upstream bugs #81119 / #76002) |
 
 ## 5. Profile detail tabs
 Overview (gateway status, model, counts, performance: runs and success rate) · Identity (SOUL.md) · Instructions (AGENTS.md / HERMES.md) · Memory (MEMORY.md / USER.md) · Skills · Tools & MCP · Model · Gateway & channels · Files (config.yaml raw) · Danger zone (rename, export / import, delete).

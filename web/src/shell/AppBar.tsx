@@ -1,20 +1,14 @@
 import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import { Icon } from '../icons.tsx';
-import type { SizeClass } from '../size-class.ts';
 import { backAction } from '../back-target.ts';
-import { CONTROL_GROUPS } from '../module-registry.ts';
-import { deskNavigation } from './nav-order.ts';
 import type { ConnectionState } from '../gateway-connection.ts';
 import { useConnection } from './connection.ts';
 import { useHeadingScrolledAway } from './heading-visibility.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
 import { ProfileChip } from './ProfileSwitcher.tsx';
-import { Keycaps, useKeyboard } from './keyboard-context.tsx';
 import { useHelp } from './help-context.tsx';
 import { useRegistry } from './registry-context.tsx';
 import { useShellActions } from './ShellActions.tsx';
-import { PALETTE_OPEN } from '../shortcuts.ts';
-
 
 const CONNECTION: Record<ConnectionState, { label: string; tone: 'success' | 'warning' | 'neutral' }> = {
   connected: { label: 'Connected', tone: 'success' },
@@ -41,39 +35,26 @@ function ConnectionDot() {
   );
 }
 
-export function AppBar({ size }: { size: SizeClass }) {
+/**
+ * The phone's app bar (under 600 px only; from 600 px the page owns its top and the side card holds scope, search, help and the connection): Back or the mark, the page
+ * title once the page's own heading has scrolled away, the profile chip, the connection dot, Search and Help. A screen puts its own button in `#appbar-slot`.
+ */
+export function AppBar() {
   const registry = useRegistry();
   const info = useRouteInfo();
   const { openPalette } = useShellActions();
   const { openHelp } = useHelp();
-  const paletteKey = useKeyboard().keymap.bindingOf(PALETTE_OPEN);
-  const compact = size === 'compact';
-  // On a phone the app bar shows the title once the page's own heading has scrolled away.
   const titleShown = useHeadingScrolledAway();
 
   const shellModuleId = registry.shellModuleOf(info.moduleId, info.pathname);
   const module = shellModuleId ? registry.module(shellModuleId) : undefined;
   const title = info.title ?? module?.title ?? 'Page not found';
   const router = useRouter();
-  const canGoBack = useCanGoBack();
-  const back = compact ? backAction(info, module, canGoBack) : null;
-  // The crumb before the module: its Control group, or the destination (Today, Talk, Work) it sits in.
-  const group = module?.group ? CONTROL_GROUPS.find((g) => g.id === module.group)?.title : deskNavigation(registry, []).destinations.find((d) => d.id === module?.desk)?.title;
-
-  // Talk is a conversation with its own header (agent, title, Details): its top bar keeps only what is not about where you are: search, help and the connection.
-  const calm = module?.desk === 'talk';
-  const crumbs: { label: string; to?: string }[] = [];
-  if (!compact) {
-    if (group && group !== module?.title) crumbs.push({ label: group });
-    if (module && title !== module.title) crumbs.push({ label: module.title, to: shellModuleId === info.moduleId ? (info.parent ?? module.path) : module.path });
-    crumbs.push({ label: title });
-  }
-  // A page whose crumb trail is only its own name (Today, Work) already says it in its heading: the app bar says it again only once the heading has scrolled away.
-  const echoesHeading = !compact && crumbs.length === 1 && !titleShown;
+  const back = backAction(info, module, useCanGoBack());
 
   return (
     <header className={`appbar${titleShown ? ' is-scrolled' : ''}`}>
-      {compact && back && (
+      {back ? (
         <AppLink
           className="btn btn--ghost btn--icon appbar__back"
           to={back.to}
@@ -87,44 +68,23 @@ export function AppBar({ size }: { size: SizeClass }) {
         >
           <Icon name="chev-l" />
         </AppLink>
-      )}
-      {compact && !back && (
+      ) : (
         <span className="wordmark__glyph wordmark__glyph--sm" aria-hidden="true">
           C
         </span>
       )}
       <div className="appbar__title">
-        {compact ? (
-          <span className="appbar__title-text truncate" aria-hidden={!titleShown}>
-            {title}
-          </span>
-        ) : calm || echoesHeading ? null : (
-          <nav aria-label="Breadcrumb">
-            <ol className="crumbs">
-              {crumbs.map((crumb, index) => (
-                <li key={crumb.label}>
-                  {crumb.to ? <AppLink to={crumb.to}>{crumb.label}</AppLink> : <span aria-current={index === crumbs.length - 1 ? 'page' : undefined}>{crumb.label}</span>}
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
+        <span className="appbar__title-text truncate" aria-hidden={!titleShown}>
+          {title}
+        </span>
       </div>
-      {/* A screen puts its own button here (a portal): the chat's Todo and Run on a phone. */}
+      {/* A screen puts its own button here (a portal): the terminal mode toggle. */}
       <span id="appbar-slot" className="appbar__slot" />
-      {!calm && <ProfileChip />}
+      <ProfileChip />
       <ConnectionDot />
-      {size === 'large' ? (
-        <button type="button" className="appbar__search" aria-haspopup="dialog" onClick={openPalette}>
-          <Icon name="search" />
-          <span>Search or jump to…</span>
-          {paletteKey && <Keycaps binding={paletteKey} />}
-        </button>
-      ) : (
-        <button type="button" className="btn btn--ghost btn--icon" aria-label="Search and commands" aria-haspopup="dialog" onClick={openPalette}>
-          <Icon name="search" />
-        </button>
-      )}
+      <button type="button" className="btn btn--ghost btn--icon" aria-label="Search and commands" aria-haspopup="dialog" onClick={openPalette}>
+        <Icon name="search" />
+      </button>
       <button type="button" className="btn btn--ghost btn--icon" aria-label="Help for this screen" aria-haspopup="dialog" onClick={() => openHelp({ screen: info.pathname })}>
         <Icon name="question" />
       </button>

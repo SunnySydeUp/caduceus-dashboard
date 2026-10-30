@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-/** The tab bar hides after the page scrolled down this far (px), and on the way down only. */
-const HIDE_AFTER_PX = 72;
+/** The phone's dock shrinks after the page scrolled down this far (px), and on the way down only. */
+const SHRINK_AFTER_PX = 72;
 /** Scroll movements smaller than this do not flip the bar (touch jitter). */
 const SCROLL_JITTER_PX = 6;
 /** The viewport must shrink by more than this (px) for it to be the soft keyboard, not browser toolbars. */
@@ -13,13 +13,13 @@ function isEditable(element: Element | null): boolean {
 }
 
 /**
- * The compact tab bar hides while the page scrolls down and returns on scroll up (information architecture §2). It
- * stays while focus is inside it, and returns on every navigation.
+ * The phone's floating dock shrinks while the page scrolls down and returns to full size on scroll up (information architecture §2). It stays full size
+ * while focus is inside it, and returns on every navigation.
  */
-export function useTabBarHidden(enabled: boolean, pathname: string): boolean {
-  const [hidden, setHidden] = useState(false);
+export function useTabBarShrunk(enabled: boolean, pathname: string): boolean {
+  const [shrunk, setShrunk] = useState(false);
 
-  useEffect(() => setHidden(false), [pathname, enabled]);
+  useEffect(() => setShrunk(false), [pathname, enabled]);
   useEffect(() => {
     if (!enabled) return;
     let lastY = window.scrollY;
@@ -27,14 +27,14 @@ export function useTabBarHidden(enabled: boolean, pathname: string): boolean {
       const delta = window.scrollY - lastY;
       if (Math.abs(delta) < SCROLL_JITTER_PX) return;
       const focusInside = document.querySelector('.tabbar')?.contains(document.activeElement) ?? false;
-      setHidden(delta > 0 && window.scrollY > HIDE_AFTER_PX && !focusInside);
+      setShrunk(delta > 0 && window.scrollY > SHRINK_AFTER_PX && !focusInside);
       lastY = window.scrollY;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [enabled]);
 
-  return hidden;
+  return shrunk;
 }
 
 /**

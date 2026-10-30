@@ -11,6 +11,8 @@ export interface LayerEntry {
   requestClose(): void;
   /** Escape closes the layer unless this is `false` (confirmations that must be answered). */
   escapable: boolean;
+  /** What kind of layer this is; while a `sheet` is open the page behind steps back (motion.css). */
+  kind: 'sheet' | 'dialog' | 'drawer' | 'palette';
   /** The layer's root element, made inert while another layer is above it. */
   el: HTMLElement | undefined;
   /** The element that holds the layer's content; it takes focus when a layer above it closes. */
@@ -37,6 +39,32 @@ function syncPage() {
     if (layer.el) layer.el.inert = index < stack.length - 1;
   });
   document.documentElement.classList.toggle('has-overlay', open);
+  setSheetDepth(stack.some((layer) => layer.kind === 'sheet'));
+}
+
+/**
+ * Steps the page back behind a bottom sheet (motion.css). `clip-path` only interpolates between two shapes, so while the
+ * change plays the page carries a square one (`data-sheet-motion`); it is dropped once the transitions have finished,
+ * because a clip-path of any kind makes the page a stacking context.
+ */
+function setSheetDepth(open: boolean) {
+  const root = document.documentElement;
+  if (open === 'sheetOpen' in root.dataset) return;
+  const body = document.querySelector('.app__body');
+  // The page scales from the top of what is on screen, so the scroll position (kept while `overflow: hidden`) is its origin.
+  if (open) root.style.setProperty('--sheet-scroll-y', `${window.scrollY}px`);
+  root.dataset.sheetMotion = '';
+  if (body) void getComputedStyle(body).clipPath;
+  if (open) root.dataset.sheetOpen = '';
+  else delete root.dataset.sheetOpen;
+  if (!body) {
+    delete root.dataset.sheetMotion;
+    return;
+  }
+  void getComputedStyle(body).clipPath;
+  void Promise.allSettled(body.getAnimations().map((animation) => animation.finished)).then(() => {
+    if (open === 'sheetOpen' in root.dataset) delete root.dataset.sheetMotion;
+  });
 }
 
 function flushPops() {

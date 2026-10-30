@@ -9,7 +9,7 @@ export const modelsHelp: ModuleHelp = {
       route: '/agents/models',
       keywords: 'models main model default reasoning effort provider catalogue refresh recommended max output tokens expensive',
       body: [
-        { p: 'Models works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]), named under the title. Change it with the profile switcher in the top bar. Everything on the screen is read from [[hermes]] for that profile each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
+        { p: 'Models works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]), named under the title. Change it with the profile switcher (at the top of the side card, or in the app bar on a phone). Everything on the screen is read from [[hermes]] for that profile each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
         { h: 'The main model' },
         { p: 'The [[main-model|main model]] is the model a profile’s agent uses for its own work. Change model opens the picker. Hermes writes the choice to that profile’s config. New sessions use it; a chat that is already open keeps the model it has. You confirm first (Tier 1, see [[risk-tiers|risk tiers]]).' },
         { p: 'A profile with no model shows the one Hermes recommends for the first provider the profile can use, with a button to take it.' },

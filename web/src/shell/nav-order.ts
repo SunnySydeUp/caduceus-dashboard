@@ -2,7 +2,7 @@
 // so it runs under test. It reads only the module registry (each module's `desk` placement) and the crew's state; the shell draws what it returns.
 import type { IconName } from '../icons.tsx';
 import { crewStateLabel, type CrewMember, type CrewStateName } from '../modules/crew/crew-state.ts';
-import type { DeskPlacement, ModuleDefinition, ModuleRegistry, NavBadge, NavGroup } from '../module-registry.ts';
+import { CONTROL_GROUPS, DESK_PLACEMENTS, type DeskPlacement, type ModuleDefinition, type ModuleRegistry, type NavBadge, type NavGroup } from '../module-registry.ts';
 import { withProfile } from '../profile-scope.ts';
 import { plainDuration } from '../plain-duration.ts';
 
@@ -93,9 +93,56 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
   return { destinations, crew: rows, control: registry.controlGroups() };
 }
 
+/** Which way the owner moves across the Desk, whose places run Today, Talk, Work, Control: to a later place (`forward`), an earlier one (`back`), or `same`. A page that is in no place gives `unknown`. */
+export type DeskTravel = 'same' | 'forward' | 'back' | 'unknown';
+
+export function deskTravel(from: DeskPlacement | undefined, to: DeskPlacement | undefined): DeskTravel {
+  if (from === undefined || to === undefined) return 'unknown';
+  const step = DESK_PLACEMENTS.indexOf(to) - DESK_PLACEMENTS.indexOf(from);
+  if (step === 0) return 'same';
+  return step > 0 ? 'forward' : 'back';
+}
+
+/** The place a page sits under: what the tab bar, the rail and the sidebar light. A page that is in none (a 404, a redirect on its way) has none. */
+export function placementOfPage<Screen>(
+  registry: Pick<ModuleRegistry<Screen>, 'destinationOf'>,
+  { moduleId, title, pathname }: { moduleId: string | undefined; title: string | undefined; pathname: string },
+): DeskPlacement | undefined {
+  if (moduleId === undefined) return title === 'Control' ? 'control' : undefined;
+  return registry.destinationOf(moduleId, pathname);
+}
+
 /** What the owner calls a module: the destination it opens on (Today, Talk, Work), else its own title. The Chat module is Talk, the Overview is Work. */
 export function ownerName<Screen>({ destinations }: Pick<DeskNavigation<Screen>, 'destinations'>, module: { id: string; title: string }): string {
   return destinations.find((destination) => destination.modules[0]?.id === module.id)?.title ?? module.title;
+}
+
+/** One step of the trail above a deep page's title: where it leads. */
+export interface Crumb {
+  label: string;
+  to: string;
+}
+
+/**
+ * The trail above a deep page's title (a page's own title is the heading under it, so it is not part of the trail): the Control group or the destination (Today,
+ * Talk, Work) the page's module sits in, then the module itself when the page is below its root. Empty for the root page of a module in Today, Talk or Work (the card
+ * and the Work tabs already say where it is), for Talk (a thread has a header of its own) and for a page in no module. A Control module's root keeps its group.
+ */
+export function crumbTrail<Screen>(
+  registry: Pick<ModuleRegistry<Screen>, 'shellModuleOf' | 'module' | 'inPlacement' | 'controlGroups'>,
+  { moduleId, title, pathname, parent }: { moduleId: string | undefined; title: string | undefined; pathname: string; parent: string | undefined },
+): Crumb[] {
+  const shellModuleId = registry.shellModuleOf(moduleId, pathname);
+  const module = shellModuleId ? registry.module(shellModuleId) : undefined;
+  if (!module || module.desk === 'talk') return [];
+  const below = (title ?? module.title) !== module.title;
+  if (!below && !module.group) return [];
+  const destination = deskNavigation(registry, []).destinations.find(({ id }) => id === module.desk);
+  const group = module.group ? { label: CONTROL_GROUPS.find(({ id }) => id === module.group)?.title, to: '/control' } : { label: destination?.title, to: destination?.path };
+  const trail: Crumb[] = [];
+  if (group.label && group.to && group.label !== module.title) trail.push({ label: group.label, to: group.to });
+  if (below) trail.push({ label: module.title, to: shellModuleId === moduleId ? (parent ?? module.path) : module.path });
+  return trail;
 }
 
 /** Every module the navigation reaches, in the order it lists them: the destinations' modules, then Control's. */

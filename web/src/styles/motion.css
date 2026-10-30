@@ -1,0 +1,60 @@
+/* Motion that belongs to no one screen: depth behind a bottom sheet, and the large title handing over to the app bar.
+   Durations and easings are tokens (they are 0 ms under reduced motion); movement that is not time-based (scale, scroll-driven
+   animation) is switched off explicitly for reduced motion. */
+
+/* ---- Depth: while a bottom sheet is open the page behind steps back ----
+   Only the page body moves. The tab bar and the sheet itself sit outside it and stay put. A transform and a filter make the
+   page body the containing block of any `position: fixed` element inside it, which would re-anchor to the scaled page, so the
+   few fixed bits of page UI (the text-selection bar and toolbar) are hidden while a sheet is open: the page is inert then anyway.
+   The origin is the top of what is on screen (layers.ts keeps the scroll offset in --sheet-scroll-y while the page is locked). */
+body { transition: background-color var(--cd-dur-exit) var(--cd-ease-exit); }
+.app__body {
+  transform-origin: 50% var(--sheet-scroll-y, 0px);
+  transition: transform var(--cd-dur-exit) var(--cd-ease-exit), filter var(--cd-dur-exit) var(--cd-ease-exit), clip-path var(--cd-dur-exit) var(--cd-ease-exit);
+}
+/* While the change plays (layers.ts) the page has a square clip, so the rounded one has a shape to grow from and return to. */
+html[data-sheet-motion] .app__body { clip-path: inset(var(--sheet-scroll-y, 0px) 0 0 0 round 0); }
+html[data-sheet-open] body {
+  background: color-mix(in srgb, var(--cd-bg-inset) 70%, var(--cd-bg-sidebar));
+  transition-duration: var(--cd-dur-slow);
+  transition-timing-function: var(--cd-ease-sheet);
+}
+html[data-sheet-open] .app__body {
+  filter: brightness(0.82) saturate(0.9);
+  /* The corners belong to the top of what is on screen, not the top of the (scrolled) page. */
+  clip-path: inset(var(--sheet-scroll-y, 0px) 0 0 0 round var(--cd-radius-xl));
+  transition-duration: var(--cd-dur-slow);
+  transition-timing-function: var(--cd-ease-sheet);
+}
+html[data-sheet-open] :is(.selbar, .seltool) { visibility: hidden; }
+html:not([data-motion="reduce"])[data-sheet-open] .app__body { transform: translateY(var(--cd-space-2)) scale(0.94); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sheet-open] .app__body { transform: none; }
+}
+
+/* ---- Large title hand-over (compact only: the app bar title it hands over to shows only there) ----
+   The app bar title appears once the h1 has gone fully up behind the app bar (heading-visibility.ts). The h1's own view
+   timeline, inset by the app bar, ends at exactly that moment, so the two meet whatever the title's length or overline. The
+   h1 shrinks, lifts and fades as it leaves (a long title over more scroll, a short one over less); the subtitle, lower down,
+   fades over the first 60 px. */
+@supports (animation-timeline: scroll()) {
+  @keyframes hc-title-hand-over {
+    to { opacity: 0; scale: 0.78; translate: 0 calc(var(--cd-space-2) * -1); filter: blur(2px); }
+  }
+  @keyframes hc-sub-hand-over {
+    to { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html:not([data-motion="reduce"]) .app[data-size="compact"] .page-header h1:not(.talk__header *) {
+      transform-origin: 0 100%;
+      animation: hc-title-hand-over linear both;
+      animation-timeline: view(block var(--shell-top) 0px);
+      animation-range: exit 0% exit 100%;
+    }
+    html:not([data-motion="reduce"]) .app[data-size="compact"] .page-header__sub:not(.talk__header *) {
+      animation: hc-sub-hand-over linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60px;
+    }
+  }
+}

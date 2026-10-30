@@ -1,0 +1,7 @@
+/* A decision's button confirms in place once its answer has gone (`Confirms` in InboxDecision.tsx): the words it had fade up and out, and a check with the past tense
+   ("Allowed", "Sent") fades in from below, in the same room, so the button does not change width. Durations are tokens, which are 0 under reduced motion: then it is a plain swap. */
+.ib-confirm { display: inline-grid; align-items: center; justify-items: center; }
+.ib-confirm > * { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-2); transition: opacity var(--cd-dur-base) var(--cd-ease-standard), translate var(--cd-dur-moderate) var(--cd-ease-standard); }
+.ib-confirm__yes { opacity: 0; translate: 0 var(--cd-space-1-5); }
+.ib-confirm[data-sent] > .ib-confirm__no { opacity: 0; translate: 0 calc(var(--cd-space-1-5) * -1); }
+.ib-confirm[data-sent] > .ib-confirm__yes { opacity: 1; translate: 0 0; }

@@ -28,8 +28,15 @@ export interface TranscriptItem {
 }
 
 /** Height assumed for a message that is not on screen and has not been measured. */
-/** What covers the top of the page: the app bar and, in Talk, the header under it. The top of a jump clears both (with a little air). */
-const shellTop = () => (document.querySelector('.appbar')?.getBoundingClientRect().height ?? 56) + (document.querySelector('.talk__header')?.getBoundingClientRect().height ?? 0) + 8;
+/**
+ * What covers the top of the page: in Talk the header, which sticks at the shell's top (the phone's app bar, or from 600 px the card's inset and a sticky status banner), so
+ * its `top` and its height. The top of a jump clears it (with a little air).
+ */
+const shellTop = () => {
+  const header = document.querySelector<HTMLElement>('.talk__header');
+  const covered = header ? parseFloat(getComputedStyle(header).top) + header.getBoundingClientRect().height : (document.querySelector('.appbar')?.getBoundingClientRect().height ?? 0);
+  return covered + 8;
+};
 
 /** Where the reader is, as the DOM shows it: a message and, inside a tall one, the top-level block of it at the top of the screen (a diagram or image above it loading changes the message's height, not where the block is). */
 interface DomAnchor extends Anchor {

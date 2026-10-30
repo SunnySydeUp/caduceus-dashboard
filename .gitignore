@@ -14,3 +14,6 @@ docs/research/images/
 .env
 .env.*
 !.env.example
+
+# Local Impeccable critique snapshots
+.impeccable/

@@ -26,6 +26,13 @@ describe('a sigil', () => {
     expect(markup({ name: 'coder', size: 'xs' }).replace('data-size="xs"', '')).toBe(markup({ name: 'coder', size: 'xl' }).replace('data-size="xl"', ''));
   });
 
+  test('names its profile, so that something that belongs to the profile can find where it is drawn', () => {
+    expect(markup({ name: 'librarian' })).toContain('data-profile="librarian"');
+    expect(markup({ name: 'librarian', state: 'working' })).toContain('data-profile="librarian"');
+    expect(markup({ name: 'all' })).not.toContain('data-profile');
+    expect(renderToStaticMarkup(createElement(UnassignedSigil, { size: 'xs' }))).not.toContain('data-profile');
+  });
+
   test('shows a state as a ring and a badge icon, each state’s own', () => {
     const badges = (['waiting', 'working', 'done', 'blocked'] as const).map((state) => {
       const html = markup({ name: 'coder', state });

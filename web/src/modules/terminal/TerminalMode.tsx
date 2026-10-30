@@ -9,6 +9,7 @@ import type { TerminalStatus } from './terminal-connection.ts';
 import { ptySocketUrl } from './terminal-model.ts';
 import { isMac, TerminalPane, TouchKeys, type PaneControls } from './TerminalPane.tsx';
 import { TerminalModeToggle } from './TerminalModeToggle.tsx';
+import { useSizeClass } from '../../shell/use-size-class.ts';
 import './terminal.css';
 
 /**
@@ -20,6 +21,7 @@ export function TerminalMode({ profile, storedId }: { profile: string; storedId:
   const [ended, setEnded] = useState<string>();
   const [notice, setNotice] = useState<string>();
   const controls = useRef<PaneControls>(undefined);
+  const compact = useSizeClass() === 'compact';
 
   const onStatus = useCallback((next: TerminalStatus) => setStatus(next), []);
   const act = async (run: () => Promise<boolean | undefined>, done: string, nothing: string) => {
@@ -40,13 +42,17 @@ export function TerminalMode({ profile, storedId }: { profile: string; storedId:
         title="Terminal"
         subtitle={<>Hermes’s own <Term id="terminal-mode">terminal</Term> on this chat’s session.</>}
         actions={
-          <AppLink className="btn btn--secondary btn--sm" to={`/chat/${encodeURIComponent(storedId)}`}>
-            <Icon name="chat" small />
-            Back to chat view
-          </AppLink>
+          compact ? (
+            <AppLink className="btn btn--secondary btn--sm" to={`/chat/${encodeURIComponent(storedId)}`}>
+              <Icon name="chat" small />
+              Back to chat view
+            </AppLink>
+          ) : (
+            <TerminalModeToggle session={storedId} pressed inline />
+          )
         }
       />
-      <TerminalModeToggle session={storedId} pressed />
+      {compact && <TerminalModeToggle session={storedId} pressed />}
       <div className="tm-bar tm-bar--mode">
         <div className="tm-actions">
           <StatusBadge state={badge} label={badgeLabel} />

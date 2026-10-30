@@ -4,6 +4,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef } from 'react';
 import { Icon } from '../../icons.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
+import { RollingNumber } from '../../shell/RollingNumber.tsx';
 import { deskNavigation } from '../../shell/nav-order.ts';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { useRegistry } from '../../shell/registry-context.tsx';
@@ -17,6 +18,7 @@ import type { Job } from '../work/schedules-model.ts';
 import { InstallCard } from './InstallCard.tsx';
 import { readReady, recordVisit } from './today-data.ts';
 import { markOpened } from './ready-feed.ts';
+import { useVisibleDecisions } from './fold-store.ts';
 import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type EmptyBlock } from './today-model.ts';
 import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
 import './today.css';
@@ -90,7 +92,9 @@ export function Today() {
   const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: 'Hermes did not answer for its profiles.' } : { status: 'loading' } };
 
   const to = (which: EmptyBlock) => emptyTarget(which, (module) => registry.module(module)?.path);
-  const waiting = needs.state.status === 'ready' ? needs.state.data.length : 0;
+  // The pill counts what Needs you draws, so that it and the block's title agree while a card folds; the nav badge keeps the stream's count.
+  const visible = useVisibleDecisions(needs);
+  const waiting = visible.state.status === 'ready' ? visible.state.data.length : 0;
 
   return (
     <div className="today">
@@ -101,14 +105,16 @@ export function Today() {
           waiting > 0 ? (
             <span className="today-pill" data-tone="warning" role="status">
               <Icon name="waiting" small />
-              {waiting === 1 ? '1 needs you' : `${waiting} need you`}
+              <span>
+                <RollingNumber value={waiting} /> {waiting === 1 ? 'needs you' : 'need you'}
+              </span>
             </span>
           ) : undefined
         }
       />
       <div className="today__grid">
         <div className="today__col">
-          <NeedsYouBlock block={needs} now={now} to={to} />
+          <NeedsYouBlock block={visible} now={now} to={to} />
           {needs.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
           <ReadyBlock block={readyBlock} now={now} to={to} onOpen={(row) => void markOpened(row)} />
           <CrewBlock block={crewBlock} to={to} />

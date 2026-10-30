@@ -109,4 +109,11 @@ describe('what each crew state looks like', () => {
     // Idle is the absence of a state: no ring, no badge.
     expect(SIGIL_STATE_MARKS.idle).toEqual({ ring: 'none', icon: undefined });
   });
+
+  // The design rules: Waiting for you never blinks (its ring is steady), and Running is the only state that loops (its ring is a sheen travelling round a track).
+  test('keeps the waiting ring steady and gives only the running ring a motion', () => {
+    expect(SIGIL_STATE_MARKS.waiting.ring).toBe('steady');
+    expect(SIGIL_STATE_MARKS.working.ring).toBe('sheen');
+    for (const state of STATES.filter((name) => name !== 'working')) expect(SIGIL_STATE_MARKS[state].ring, state).not.toBe('sheen');
+  });
 });

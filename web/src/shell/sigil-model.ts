@@ -43,10 +43,14 @@ export function sigilFor(name: string): SigilMark {
   return { pattern, hue: (hashOf(name, HUE_SALT) % SIGIL_HUES) + 1 };
 }
 
-/** The ring around a sigil and the badge on its corner for each state: a ring of its own shape and a badge icon of its own, so colour is never the only signal. */
-export const SIGIL_STATE_MARKS: Record<CrewStateName, { ring: 'pulse' | 'arc' | 'solid' | 'dashed' | 'none'; icon: IconName | undefined }> = {
-  waiting: { ring: 'pulse', icon: 'waiting' },
-  working: { ring: 'arc', icon: 'running' },
+/**
+ * The ring around a sigil and the badge on its corner for each state: a ring of its own kind and a badge icon of its own, so colour is never the only signal.
+ * Waiting for you never blinks: its ring is steady. Running is the only state that moves: its ring is a faint full track with a soft sheen that travels round it
+ * (no run has a progress to show, so the ring is never partly full).
+ */
+export const SIGIL_STATE_MARKS: Record<CrewStateName, { ring: 'steady' | 'sheen' | 'solid' | 'dashed' | 'none'; icon: IconName | undefined }> = {
+  waiting: { ring: 'steady', icon: 'waiting' },
+  working: { ring: 'sheen', icon: 'running' },
   done: { ring: 'solid', icon: 'succeeded' },
   blocked: { ring: 'dashed', icon: 'failed' },
   idle: { ring: 'none', icon: undefined },

@@ -3,15 +3,18 @@
 // moves to where it sits in the month and the agenda slides down) for picking a day further out; picking one folds it again and lists that day. Read-only: nothing
 // here completes or edits a reminder, so nothing looks like a checkbox. It loads by itself after Today has settled (it is a lazy chunk) and fails on its own, like
 // every block. Reminders has no event to listen for, so it is read again when the tab comes back and when the gateway reconnects (`useBlock`); there is no timer.
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { Reminder } from '@caduceus/contracts/today';
 import { Icon } from '../../icons.tsx';
+import { morph } from '../../motion.ts';
 import { useBlock } from '../../use-block.ts';
 import { TodayBlock } from './TodayBlocks.tsx';
 import { agenda, dateKey, type DayCell, dayKey, monthCells, monthOf, overdueBefore, remindersOn, shiftDay, shiftMonth, timeWords, weekOf } from './reminders-model.ts';
 import { readReminders } from './reminders-data.ts';
 import './reminders.css';
+
+/** The type its folds give the View Transition: `reminders.css` names the grid, the week and the agenda only while one runs. */
+const REMINDERS_MORPH = { types: ['reminders'] };
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 /** How far ahead the agenda looks when it starts on today: today and tomorrow. The strip's counts carry the rest of the week. */
@@ -19,22 +22,6 @@ const AHEAD_DAYS = 2;
 const noTarget = () => '/today';
 
 const dayWords = (key: string, long = true) => new Date(`${key}T12:00:00`).toLocaleDateString([], { weekday: long ? 'long' : 'short', day: 'numeric', month: long ? 'long' : 'short' });
-
-/**
- * Folding and unfolding the month grows the calendar in place where the browser can; with reduced motion (the system's or Caduceus's own), or without View
- * Transitions, it changes at once. A change asked for while one is still running is dropped, so a double click cannot fold and unfold out of order.
- */
-function morph(update: () => void, running: { current: boolean }) {
-  if (typeof document.startViewTransition !== 'function' || document.documentElement.dataset.motion === 'reduce' || matchMedia('(prefers-reduced-motion: reduce)').matches) return update();
-  if (running.current) return;
-  running.current = true;
-  const transition = document.startViewTransition(() => flushSync(update));
-  // A transition the browser skips (the tab was hidden) rejects `ready`; the change itself is still made.
-  transition.ready.catch(() => undefined);
-  void transition.finished.finally(() => {
-    running.current = false;
-  });
-}
 
 /** `overdueSince` is today's key when the row is in Overdue: its time is then its day (Yesterday, or the date); the hour, when it has one, goes with its list. */
 function ReminderRow({ reminder, overdueSince }: { reminder: Reminder; overdueSince?: string }) {
@@ -87,7 +74,6 @@ function Calendar({ reminders, today }: { reminders: Reminder[]; today: string }
   // The month the unfolded grid shows; set from the strip's week each time it unfolds.
   const [shown, setShown] = useState(() => monthOf(today));
   const [open, setOpen] = useState(false);
-  const running = useRef(false);
   const gridId = useId();
   const day = selected ?? today;
   const week = anchor ?? today;
@@ -107,19 +93,19 @@ function Calendar({ reminders, today }: { reminders: Reminder[]; today: string }
       else if (!weeks.some((row) => row.some((cell) => cell.key === week)))
         setAnchor(shown.year === thisMonth.year && shown.month === thisMonth.month ? null : dateKey(new Date(shown.year, shown.month, 1)));
       setOpen(!open);
-    }, running);
+    }, REMINDERS_MORPH);
   const choose = (cell: DayCell) =>
     morph(() => {
       setSelected(cell.today ? null : cell.key);
       setAnchor(cell.today ? null : cell.key);
       setOpen(false);
-    }, running);
+    }, REMINDERS_MORPH);
   const backToToday = () =>
     morph(() => {
       setSelected(null);
       setAnchor(null);
       setOpen(false);
-    }, running);
+    }, REMINDERS_MORPH);
 
   return (
     <div className="rem panel">

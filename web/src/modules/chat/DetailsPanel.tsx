@@ -31,13 +31,15 @@ export function DetailsPanel({ layout, profile, opener, onClose, children }: { l
     return () => document.removeEventListener('keydown', escape);
   }, [covering, opener]);
 
-  // Over the thread, the panel starts below the header's Details button (which stays in reach to close it), or at the top bar when the page is scrolled past it.
+  // Over the thread, the panel starts below the header's Details button (which stays in reach to close it), or at the top of the shell when the page is scrolled past it (the app bar's
+  // bottom on a phone; from 600 px, where the header sticks to the shell's top, that top).
   useEffect(() => {
     if (!covering) return;
     let frame = 0;
     const place = () => {
       frame = 0;
-      const bar = document.querySelector('.appbar')?.getBoundingClientRect().bottom ?? 0;
+      const header = document.querySelector<HTMLElement>('.talk__header');
+      const bar = header ? parseFloat(getComputedStyle(header).top) : 0;
       const below = opener.current?.getBoundingClientRect().bottom ?? 0;
       panel.current?.style.setProperty('inset-block-start', `${Math.max(bar, below + GAP_PX)}px`);
     };

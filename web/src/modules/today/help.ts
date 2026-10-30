@@ -56,7 +56,7 @@ export const todayHelp: ModuleHelp = {
         { h: 'Choosing a profile' },
         {
           ul: [
-            'The profile chip in the app bar shows the scope. Open it to choose another profile: it opens as a sheet on a phone. On Today it only says All profiles and does not open.',
+            'The profile at the top of the side card (the profile chip in the phone’s app bar) shows the scope. Open it to choose another profile: it opens as a sheet. On Today it only says All profiles and does not open.',
             'A choice applies to this tab only. Other tabs and other devices keep their own.',
             'A new tab starts on the profile in its address (?profile=), else the one you last chose on this device, else Hermes’s own default.',
             'Links inside Caduceus keep the profile you chose.',
