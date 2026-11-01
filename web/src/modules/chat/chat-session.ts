@@ -4,6 +4,7 @@
 // Hermes is the source of truth: nothing about a session or a message is kept here beyond what the page is showing. The list
 // is `session.list`, the transcript is what `session.resume` / `session.history` return, and a streamed reply is built from
 // the events of the turn.
+import { plainFailureOf } from '../../failure-words.ts';
 import { CADUCEUS_SESSION_SOURCE, type ChatLimits } from '@caduceus/contracts/caduceus-api';
 import type {
   ApprovalRespondResult,
@@ -436,7 +437,7 @@ export function createChat(connection: ChatConnection, options: ChatOptions = {}
   const failureDetails = new Map<number, string>();
   let failurePending: string | undefined;
 
-  const fail = (error: unknown) => store.set({ error: error instanceof Error ? error.message : String(error) });
+  const fail = (error: unknown) => store.set({ error: plainFailureOf(error).message });
   /** Shows a queue and keeps it. A queue with nothing in it is not held. */
   const setQueue = (queue: QueuedMessage[], paused = store.state.queuePaused) => {
     const held = queue.length > 0 && paused;

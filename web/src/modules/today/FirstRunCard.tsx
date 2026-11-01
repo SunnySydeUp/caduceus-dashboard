@@ -1,8 +1,8 @@
 import { ONBOARDING_STEPS } from '@caduceus/contracts/onboarding';
 import { Icon } from '../../icons.tsx';
-import { useOnline } from '../../shell/connection.ts';
 import { dismissInstallOffer, promptInstall, useInstallOffer } from '../../shell/install.ts';
-import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
+import { NetworkAction } from '../../shell/NetworkAction.tsx';
+import { useAppNavigate } from '../../shell/navigation.tsx';
 import { toast } from '../../shell/toasts.ts';
 import { saveOnboarding, useOnboarding } from '../onboarding/onboarding-progress.ts';
 
@@ -12,16 +12,15 @@ import { saveOnboarding, useOnboarding } from '../onboarding/onboarding-progress
  * once setup is done or set aside, the card offers installing on its own. It is an offer, not a gate: each "Not now" is remembered (setup on the server for every device,
  * installing on this device, with Settings › Install app keeping the button), and nothing else on Today waits for it.
  * It waits for the server to say where setup stands, so that it never opens as the install offer and then turns into the setup one. Installing fetches the app's manifest and icons,
- * so offline the install offer waits.
+ * so offline the card stays, with the actions that need a network switched off and saying why (`NetworkAction`); "Not now" for installing is kept on this device and stays on.
  */
 export function FirstRunCard() {
   const progress = useOnboarding();
   const offer = useInstallOffer();
-  const online = useOnline();
   const navigate = useAppNavigate();
   if (!progress) return null;
   const setup = progress.state === 'new' || progress.state === 'in-progress';
-  const install = offer.today === 'install' && online;
+  const install = offer.today === 'install';
   if (!setup && !install) return null;
   const resuming = progress.state === 'in-progress';
   const skipSetup = () =>
@@ -49,22 +48,28 @@ export function FirstRunCard() {
         </div>
         <div className="banner__actions">
           {setup ? (
-            <AppLink className="btn btn--primary btn--sm" to="/onboarding">
+            <NetworkAction className="btn btn--primary btn--sm" label={resuming ? 'Continue setup' : 'Start setup'} to="/onboarding">
               {resuming ? 'Continue setup' : 'Start setup'}
-            </AppLink>
+            </NetworkAction>
           ) : (
-            <button type="button" className="btn btn--primary btn--sm" onClick={() => void promptInstall()}>
+            <NetworkAction className="btn btn--primary btn--sm" label="Install" onClick={() => void promptInstall()}>
               Install
-            </button>
+            </NetworkAction>
           )}
           {setup && install && (
-            <button type="button" className="btn btn--secondary btn--sm" onClick={() => void promptInstall()}>
+            <NetworkAction className="btn btn--secondary btn--sm" label="Install the app" onClick={() => void promptInstall()}>
               Install the app
+            </NetworkAction>
+          )}
+          {setup ? (
+            <NetworkAction className="btn btn--ghost btn--sm" label="Not now" onClick={() => void skipSetup()}>
+              Not now
+            </NetworkAction>
+          ) : (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={skipInstall}>
+              Not now
             </button>
           )}
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => void (setup ? skipSetup() : skipInstall())}>
-            Not now
-          </button>
         </div>
       </div>
       <span />

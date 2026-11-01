@@ -18,6 +18,7 @@ import { useShellActions } from './ShellActions.tsx';
 import { useNow } from './use-now.ts';
 import { useLinkHealth } from './connection.ts';
 import { asOfWords } from './link-memory.ts';
+import { CrewLine } from '../modules/crew/CrewLine.tsx';
 import { CrewPending } from '../modules/crew/CrewPending.tsx';
 import { useCrewRead } from '../modules/crew/use-crew-read.ts';
 import { morph } from '../motion.ts';
@@ -99,9 +100,10 @@ function TabLink({ name, to, icon, title, current, badge }: { name: string; to: 
       {current && <NavPill list="tabs" />}
       <span className="tab__icon">
         <Icon name={icon} />
-        <NavBadgeCount badge={badge} />
+        <NavBadgeCount badge={badge} part="count" />
       </span>
       <span className={current ? 'tab__label' : 'tab__label sr-only'}>{title}</span>
+      <NavBadgeCount badge={badge} part="words" />
     </AppLink>
   );
 }
@@ -140,7 +142,7 @@ function HelpButton({ compact, glides }: { compact: boolean; glides: boolean }) 
   const { pathname } = useRouteInfo();
   const helpKey = useKeyboard().keymap.bindingOf(HELP_OPEN);
   return (
-    <button type="button" className={`nav-item nav-item--button${compact ? ' rail__item' : ''}`} style={named('nav-help', glides)} aria-haspopup="dialog" onClick={() => openHelp({ screen: pathname })}>
+    <button type="button" className={`nav-item nav-item--button${compact ? ' rail__item rail__help' : ''}`} style={named('nav-help', glides)} aria-haspopup="dialog" onClick={() => openHelp({ screen: pathname })}>
       {compact ? (
         <span className="rail__icon">
           <Icon name="question" />
@@ -163,7 +165,7 @@ function ControlLink({ compact, glides }: { compact: boolean; glides: boolean })
         <span className="rail__icon">
           {current && <NavPill list="side" glides={glides} />}
           <Icon name="sliders" />
-          <NavBadgeCount badge={badge} />
+          <NavBadgeCount badge={badge} part="count" />
         </span>
       ) : (
         <>
@@ -172,7 +174,7 @@ function ControlLink({ compact, glides }: { compact: boolean; glides: boolean })
         </>
       )}
       <span className="nav-label">Control</span>
-      {!compact && <NavBadgeCount badge={badge} />}
+      {compact ? <NavBadgeCount badge={badge} part="words" /> : <NavBadgeCount badge={badge} />}
     </AppLink>
   );
 }
@@ -195,7 +197,7 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   useCurrentInView(crewScroller);
   const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
   return (
-    <div className="rail" ref={railTags.rail} {...railTags.handlers}>
+    <div className="rail" ref={railTags.rail} data-hinting={railTags.hinting ? '' : undefined} {...railTags.handlers}>
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
       <button
         type="button"
@@ -290,7 +292,7 @@ function CrewMate({ row, now, current, index, glides, stale }: { row: CrewRow; n
         <span className="mate__text">
           <span className="mate__name">{row.profile}</span>
           <span className="sr-only">: {row.stateLabel}. </span>
-          <small className="mate__line">{row.line}</small>
+          <CrewLine row={row} className="mate__line" />
         </span>
         {!stale && <span className="mate__time">{crewAge(row.since, now)}</span>}
       </AppLink>

@@ -1,17 +1,19 @@
 // The blocks of Today (M8 #03). Each is its own section: it loads on its own and, when what it reads does not answer, says so inside itself with a Retry while the
 // others carry on. An empty block says why and carries the action that fills it. The decisions are `DecisionCard`s, the Inbox's own answers, so they keep its tiers
 // and step-up.
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
-import { useLinkHealth } from '../../shell/connection.ts';
+import { useLinkHealth, useOnline } from '../../shell/connection.ts';
 import { asOfWords, cannotCheckWords } from '../../shell/link-memory.ts';
 import { Sigil } from '../../shell/Sigil.tsx';
+import { NetworkAction } from '../../shell/NetworkAction.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import type { CrewRow } from '../../shell/nav-order.ts';
-import { STILL_READING_WORDS } from '../../read-ladder.ts';
+import { isReading, STILL_READING_WORDS, type ReadStage } from '../../read-ladder.ts';
 import type { Block } from '../../use-block.ts';
 import { useReadLadder } from '../../use-read-ladder.ts';
+import { CrewLine } from '../crew/CrewLine.tsx';
 import { ageWords } from '../inbox/inbox-model.ts';
 import { DecisionCard, Mark } from './DecisionCard.tsx';
 import { fold } from './fold.ts';
@@ -57,9 +59,27 @@ function EmptyState({ which, to, note, unsure }: { which: EmptyBlock; to: EmptyT
   return (
     <div className="today-empty panel" data-stale={blind ? '' : undefined}>
       <p className="subtle">{link.healthy ? (unsure ? 'Can’t check right now.' : (note ?? text)) : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
+      {/* Plain navigation: it stays live offline, because reading mode still lets the owner move around the app (only actions that need the network are switched off). */}
       <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
         {action.label}
       </AppLink>
+    </div>
+  );
+}
+
+/**
+ * What a block says while the device is offline and it has nothing from before to show: one quiet line, in the voice of the empty blocks ("Can’t check right now. Last checked at
+ * 10:38."). The banner says why; the block does not say it again, and shows no failure.
+ */
+function CannotCheck({ retry }: { retry(): void }) {
+  const link = useLinkHealth();
+  return (
+    <div className="today-empty panel" data-stale="">
+      <p className="subtle">{cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
+      <NetworkAction className="btn btn--secondary btn--sm" label="Retry" onClick={retry}>
+        <Icon name="refresh" small />
+        Retry
+      </NetworkAction>
     </div>
   );
 }
@@ -84,6 +104,8 @@ interface BlockProps<T> {
   unsure?: boolean;
   /** The block's rows each say when they were last true while the link is down (the crew's lines), so its title does not say it again. */
   ownLines?: boolean;
+  /** The step of the read ladder to show while the block loads, when something other than the block's own wait decides it (Needs you waits for two reads). */
+  stage?: ReadStage;
   children(data: T): ReactNode;
 }
 
@@ -102,31 +124,48 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
 }
 
 /** One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its usual answer takes. */
-export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, unsure, children }: BlockProps<T>) {
-  const { state } = block;
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, unsure, stage: given, children }: BlockProps<T>) {
+  // While the device is offline a block is a reading mode: it keeps what it last showed (marked "As of"), or says it cannot check; it never shows a failure, because the banner is the
+  // one voice. A read that failed only because the device had no network is read again as soon as the network is back.
+  const online = useOnline();
+  const last = useRef<{ data: T }>(undefined);
+  if (block.state.status === 'ready') last.current = { data: block.state.data };
+  const offline = !online;
+  const kept = offline && block.state.status !== 'ready' ? last.current : undefined;
+  const state: Block<T>['state'] = kept ? { status: 'ready', data: kept.data } : block.state;
+  const silent = offline && state.status !== 'ready';
+  const wasOnline = useRef(online);
+  const { reload } = block;
+  useEffect(() => {
+    if (online && !wasOnline.current) void reload();
+    wasOnline.current = online;
+  }, [online, reload]);
   const which = state.status === 'ready' ? empty(state.data) : undefined;
   // What it shows (its rows, or its error) is from before the link dropped: it is marked, never hidden. A block still loading shows nothing of the kind, an empty one already says
   // it cannot check (`EmptyState`), and the crew says it on each of its own lines.
   const asOf = useAsOf();
-  const stale = state.status !== 'loading' && !which && asOf !== undefined;
+  const stale = state.status !== 'loading' && !which && asOf !== undefined && !silent;
   // A read on its way climbs the one ladder (`read-ladder.ts`): a skeleton; "Still reading Hermes…" at the top of the block once the wait is long; and only once it has
   // passed the longer bound does the block say it could not be read, with a Retry. A read that really failed says so at once. A Retry that is on its way says so on the button,
   // so a press is never met with silence.
   const [retrying, setRetrying] = useState(false);
   const [tries, setTries] = useState(0);
   // The wait starts when the block has asked, not when it was drawn: a block below the first screen asks only after the first paint, and must not call that a slow read.
-  const stage = useReadLadder(state.status === 'loading' && block.asked !== false, state.status === 'error', tries);
+  const own = useReadLadder(isReading({ status: state.status, asked: block.asked }) && !silent, state.status === 'error', tries);
+  const stage = given ?? own;
   const retry = () => {
     setRetrying(true);
     setTries((count) => count + 1);
     void Promise.resolve(block.reload()).finally(() => setRetrying(false));
   };
-  const slow = state.status === 'loading' && stage === 'still-reading';
-  const failed = state.status === 'error' || stage === 'failed';
+  const loading = state.status === 'loading' && !silent;
+  const slow = loading && stage === 'still-reading';
+  const failed = !silent && (state.status === 'error' || (state.status === 'loading' && stage === 'failed'));
   return (
-    <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={state.status === 'loading'} data-stale={stale ? '' : undefined}>
+    <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={loading} data-stale={stale ? '' : undefined}>
       <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow} />
-      {state.status === 'loading' && !failed && (
+      {silent && <CannotCheck retry={retry} />}
+      {loading && !failed && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
           <span className="sr-only">Loading {title.toLowerCase()}…</span>
@@ -168,16 +207,16 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
 /**
  * Needs you. `block` is the decisions to draw (`useVisibleDecisions`: the stream's list with the cards that are answering kept in place and the folded ones left out), which Today
  * also counts in its pill. A card whose answer is on its way stays where it stands; once it has folded into its agent it stays gone. An answer cannot be undone, so a folded card has
- * nothing to come back for. `unsure`: a read that bears on what needs the owner has failed (what is ready for review), so an empty list says it cannot check rather than that nothing needs them.
+ * nothing to come back for. `unsure`: a read that bears on what needs the owner has failed or been given up (what is ready for review), so an empty list says it cannot check rather than that nothing needs them. `stage` is the read ladder's step while that read is on its way: the block is then a skeleton, never an empty list (`crew/knowledge.ts`).
  */
-export function NeedsYouBlock({ block, now, to, unsure }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget; unsure: boolean }) {
+export function NeedsYouBlock({ block, now, to, unsure, stage }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget; unsure: boolean; stage?: ReadStage }) {
   const answered = async (item: InboxItem, card: HTMLElement | null) => {
     // A card that left the page while its answer was on its way has nothing to fold.
     if (card) await fold(card, item.profile, () => foldAway(item.id));
     else foldAway(item.id);
   };
   return (
-    <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to} unsure={unsure}>
+    <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to} unsure={unsure} stage={stage}>
       {(items) => (
         <ul className="today-cards">
           {items.map((item, at) => (
@@ -259,7 +298,7 @@ export function CrewBlock({ block, to }: { block: Block<CrewRow[]>; to: EmptyTar
                 <span className="today-tile__text">
                   <b>{row.profile}</b>
                   <span className="sr-only">: {row.stateLabel}. </span>
-                  <small>{staleLine ?? row.line}</small>
+                  <CrewLine row={row} text={staleLine} />
                 </span>
               </AppLink>
             </li>

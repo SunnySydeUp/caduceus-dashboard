@@ -32,6 +32,7 @@ import { LatestSession } from './LatestSession.tsx';
 import { setDetailsOpen, useDetailsLayout, useDetailsOpen } from './talk-prefs.ts';
 import { TALK_SCOPE } from './talk-sessions.ts';
 import type { WorkspaceView } from './talk-details.ts';
+import { useOnline } from '../../shell/connection.ts';
 import { useCrew } from '../crew/use-crew.ts';
 import './talk.css';
 import { createChat, transcriptOf, type Chat as ChatEngine, type ChatMessage, type ChatState } from './chat-session.ts';
@@ -132,6 +133,7 @@ function Composer({ chat, state, formRef, settings, reply, prefill, session }: {
   const [intent, setIntent] = useState<Intent>('ask');
   const navigate = useAppNavigate();
   const sendKey = useSendKey();
+  const online = useOnline();
   const [caret, setCaret] = useState(0);
   const box = useRef<HTMLTextAreaElement>(null);
   const attached = useAttachments();
@@ -228,7 +230,8 @@ function Composer({ chat, state, formRef, settings, reply, prefill, session }: {
   const go = (mode: 'steer' | 'queue') => {
     const prompt = text.trim();
     const files = attached.attachments;
-    if (!chat || sending || (!prompt && files.length === 0)) return;
+    // Offline nothing can be sent: the send button is off with its reason, and Enter leaves the words in the box.
+    if (!chat || sending || !online || (!prompt && files.length === 0)) return;
     const plan = planDraft({ intent, text, attachments: files.length });
     if (plan.kind === 'refuse') {
       toast(plan.reason === 'attachments' ? 'Attachments stay with Ask' : 'Commands stay with Ask', { tone: 'warning', detail: plan.message });

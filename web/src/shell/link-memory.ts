@@ -30,3 +30,11 @@ export function asOfWords(at: number | undefined, now: number): string {
 export function cannotCheckWords(at: number | undefined, now: number): string {
   return at === undefined ? 'Can’t check right now.' : `Can’t check right now. Last checked at ${clockWords(at, now)}.`;
 }
+
+/** What an action that needs the network says while the device is offline: its name, then why it is off. */
+export const NEEDS_CONNECTION = 'Needs a connection';
+
+/** The accessible name of a switched-off network action: "Retry. Needs a connection". */
+export function needsConnection(label: string): string {
+  return `${label}. ${NEEDS_CONNECTION}`;
+}

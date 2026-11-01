@@ -219,7 +219,7 @@ describe('the count on the More tab', () => {
     // Today's own count is Today's, not Control's.
     notices.set(5);
     expect([combined.count(), heard]).toEqual([7, 1]);
-    expect([combined.label(1), combined.label(3)]).toEqual(['1 thing needs a look in Control', '3 things need a look in Control']);
+    expect([combined.label(1), combined.label(3)]).toEqual([', 1 thing needs a look', ', 3 things need a look']);
     stop();
     notices.set(0);
     expect(heard).toBe(1);

@@ -3,6 +3,7 @@
 // Today's own block and Work read the list for themselves; opening an item anywhere goes through `markOpened` here, so the ring follows at once.
 import { useSyncExternalStore } from 'react';
 import type { ReadyItem, ReadyOpened } from '@caduceus/contracts/today';
+import type { ReadyAnswer } from '../crew/knowledge.ts';
 import { gatewayConnection } from '../../gateway.ts';
 import { settled } from '../../settled.ts';
 import { inboxFeed } from '../inbox/inbox-feed.ts';
@@ -10,8 +11,8 @@ import { readReady } from './today-data.ts';
 
 const NONE: readonly ReadyItem[] = [];
 let items = NONE;
-/** The last read of the list failed: what is held is from before, and may miss finished work. */
-let failed = false;
+/** Whether the list has been answered yet, and whether the last read failed (what is held is then from before, and may miss finished work). */
+let answer: ReadyAnswer = 'waiting';
 const listeners = new Set<() => void>();
 let started = false;
 /** Which ask is the latest: an answer that arrives late must not replace a newer one. */
@@ -19,7 +20,7 @@ let asked = 0;
 
 /**
  * Reads the list again. A failed read keeps what was known (the ring is a hint, and Today and Work say themselves when the list cannot be read), and is told to the crew
- * (`useReadyFailed`), whose idle lines must not claim that nothing is going on while the list cannot be read.
+ * (`useReadyAnswer`), whose idle lines must not claim that nothing is going on while the list cannot be read.
  */
 export async function refreshReady(): Promise<void> {
   if (!started) return;
@@ -28,11 +29,11 @@ export async function refreshReady(): Promise<void> {
     const next = await readReady();
     if (ask !== asked) return;
     items = next;
-    failed = false;
+    answer = 'answered';
     for (const listener of listeners) listener();
   } catch {
     if (ask !== asked) return;
-    failed = true;
+    answer = 'failed';
     for (const listener of listeners) listener();
   }
 }
@@ -73,9 +74,9 @@ export function useReadyItems(): readonly ReadyItem[] {
   return useSyncExternalStore(subscribe, () => items);
 }
 
-/** Whether the last read of the list failed, so that `useReadyItems` may be missing finished work. */
-export function useReadyFailed(): boolean {
-  return useSyncExternalStore(subscribe, () => failed);
+/** Whether the list has answered yet (`waiting` until the first read does), or the last read failed, so that `useReadyItems` may be missing finished work. */
+export function useReadyAnswer(): ReadyAnswer {
+  return useSyncExternalStore(subscribe, () => answer);
 }
 
 /**

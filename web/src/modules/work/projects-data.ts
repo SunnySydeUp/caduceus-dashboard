@@ -10,6 +10,7 @@ import { createProjectActions, type ProfileProjects, type ProjectActions } from 
 import { boardSlugs, linkedBoards, parseDocText, parseGitSummary, parseProjectTree, parseRecentCommits, projectTasks, repoDocs, type DocText, type GitSummary, type LinkedBoard, type LinkedTask, type ProjectTree, type RepoDoc } from './projects-model.ts';
 import { createWorkspaceRegistryClient, type WorkspaceRegistryClient } from './workspace-registry.ts';
 import { isUninitialisedStore } from '../../uninitialised-store.ts';
+import { plainFailureOf } from '../../failure-words.ts';
 
 const KANBAN = '/api/plugins/kanban';
 
@@ -41,7 +42,7 @@ function useReading<T>(load: (signal: AbortSignal) => Promise<T>, key: string): 
     const controller = new AbortController();
     latest.current(controller.signal).then(
       (value) => !controller.signal.aborted && setState({ key, value }),
-      (error: unknown) => !controller.signal.aborted && setState((previous) => ({ key, value: previous.key === key ? previous.value : undefined, error: error instanceof Error ? error.message : 'Hermes did not answer.' })),
+      (error: unknown) => !controller.signal.aborted && setState((previous) => ({ key, value: previous.key === key ? previous.value : undefined, error: plainFailureOf(error).message })),
     );
     return () => controller.abort();
   }, [key, round]);

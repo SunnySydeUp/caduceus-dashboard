@@ -21,3 +21,11 @@ export function readStage({ failed, waitedMs }: { failed: boolean; waitedMs: num
   if (failed || waitedMs >= GIVE_UP_MS) return 'failed';
   return waitedMs >= STILL_READING_MS ? 'still-reading' : 'reading';
 }
+
+/**
+ * Whether a block's wait is a read on its way, the only kind the ladder may time. A block that has not asked yet (it waits for the first paint or for the answer above it)
+ * is waiting, not reading: it must never be called slow. A block that does not say whether it has asked is taken to have asked.
+ */
+export function isReading({ status, asked }: { status: 'loading' | 'ready' | 'error'; asked?: boolean }): boolean {
+  return status === 'loading' && asked !== false;
+}

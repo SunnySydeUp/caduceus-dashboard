@@ -25,12 +25,22 @@ describe('the connection banner', () => {
     expect([...said]).toEqual(['You are offline | Offline']);
   });
 
-  it('says Hermes cannot be reached only once the device is online and the server does not answer, with the attempt in the body and not the title', () => {
+  it('says the Mac cannot be reached only once the device is online and the server does not answer, with what to check and the attempt in the body, not the title', () => {
     const banner = connectionBanner(facts({ state: 'offline', attempt: 5, unreachable: true, reason: 'Caduceus is not reachable.' }));
-    expect(banner?.title).toBe('Can’t reach Hermes');
+    expect(banner?.title).toBe('Can’t reach your Mac');
     expect(banner?.title).not.toMatch(/\d/);
     expect(banner?.body).toContain('attempt 5');
+    expect(banner?.body).toMatch(/asleep|awake|switched on|tailnet/i);
     expect(banner?.tone).toBe('warning');
+  });
+
+  it('blames Hermes, not the Mac, when the server answers and Hermes does not', () => {
+    expect(connectionBanner(facts({ state: 'offline', attempt: 2, backendState: 'stopped' }))?.title).toBe('Hermes isn’t answering');
+    expect(connectionBanner(facts({ state: 'offline', attempt: 2, reason: 'The connection dropped.' }))?.title).toBe('Hermes isn’t answering');
+  });
+
+  it('keeps the reconnecting words the browser check waits for', () => {
+    expect(connectionBanner(facts({ state: 'reconnecting', attempt: 3, reason: 'The connection dropped.' }))?.title).toBe('Reconnecting to Hermes');
   });
 
   it('gives the phone strip a short title that is never longer than the full one', () => {

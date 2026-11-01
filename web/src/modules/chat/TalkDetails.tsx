@@ -10,7 +10,7 @@ import { Sigil } from '../../shell/Sigil.tsx';
 import { confirmTier } from '../../shell/tier-confirmation.ts';
 import { useNow } from '../../shell/use-now.ts';
 import { WriteButton } from '../../shell/WriteButton.tsx';
-import { crewStateLabel, type CrewMember } from '../crew/crew-state.ts';
+import type { CrewMember } from '../crew/crew-state.ts';
 import { useInbox } from '../inbox/inbox-feed.ts';
 import { useLiveBoard } from '../work/board-data.ts';
 import { useJobs } from '../work/schedules-data.ts';
@@ -193,7 +193,7 @@ export function TalkDetails({ profile, member, state, chat, plan, view, onView }
         <Sigil name={profile} size="lg" state={member?.state} />
         <div>
           <h2>{profile}</h2>
-          <p className="subtle">{liveLine(member) || (member ? crewStateLabel[member.state] : '')}</p>
+          <p className="subtle">{liveLine(member)}</p>
         </div>
       </div>
       {sections.map((id) => (

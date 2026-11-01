@@ -2,7 +2,9 @@
 // agent scope, the one control at the head of the side card (the app bar's chip on a phone): All agents, or one. Board, Tasks, Playbooks, Schedules and Projects are the chips
 // above (the shell's Work sub-navigation). The grouping is `work-desk-model.ts`.
 import { useMemo, useState } from 'react';
+import { CAUSE, MAC_CHECK } from '../../failure-words.ts';
 import { Icon } from '../../icons.tsx';
+import { useReach } from '../../shell/connection.ts';
 import { Loading } from '../../shell/Loading.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
@@ -100,18 +102,12 @@ export function WorkDesk() {
     void reload();
     void review.reload();
   };
-  // A read that failed has not counted anything: a zero beside "could not be read" would say there is nothing going on, so each count is a dash and the words say it cannot check.
+  // A read that failed has not counted anything: a zero beside "could not be read" would say there is nothing going on, so the header says in words that it cannot check.
   const counts = `${waiting} waiting on you · ${groups.running.length} running · ${groups.review.length} ready for review · ${groups.scheduled.length} scheduled`;
-  const summary = unreachable ? (
-    <>
-      <span aria-hidden="true">— waiting on you · — running · — ready for review · — scheduled</span>
-      <span className="sr-only">{CANNOT_CHECK}</span>
-    </>
-  ) : loaded ? (
-    counts
-  ) : (
-    'Reading Hermes'
-  );
+  const summary = unreachable ? CANNOT_CHECK : loaded ? counts : 'Reading Hermes';
+  const reach = useReach();
+  // Who did not answer: this device, Caduceus on the Mac, or Hermes (`failure-words.ts`, the table every surface uses).
+  const cause = !reach.online ? CAUSE.offline : !reach.reachable ? CAUSE.mac : CAUSE.hermesSilent;
 
   return (
     <div className="bpage wd">
@@ -130,9 +126,10 @@ export function WorkDesk() {
         <div className="banner wb-repair" data-tone="danger" role="alert">
           <Icon name="alert" />
           <div className="banner__content">
-            <strong>{loaded ? 'Hermes did not answer in full, so this list may be out of date or missing rows' : 'Hermes did not answer, so there is nothing to show yet'}</strong>
+            <strong>{cause}</strong>
             <p>
-              Caduceus reads the tasks and the schedules from Hermes each time and keeps no copy. Check <AppLink to="/observe/health">Health</AppLink> to see whether the Hermes backend is running. Caduceus tries again by itself.
+              {loaded ? 'This list may be out of date or missing rows.' : 'There is nothing to show yet.'} Caduceus reads the tasks and the schedules from Hermes each time and keeps no copy.{' '}
+              {cause === CAUSE.mac ? MAC_CHECK : <>Check <AppLink to="/observe/health">Health</AppLink> to see whether the Hermes backend is running.</>} Caduceus tries again by itself.
             </p>
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={retry}>

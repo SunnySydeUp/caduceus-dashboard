@@ -6,6 +6,7 @@
 // socket is dialled again, so a change made while the page was away is never missed.
 import { isStableOpen, reconnectBackoffDelayMs, type ReconnectBackoffOptions } from '@caduceus/contracts/hermes/shared/reconnect-backoff';
 import { parseTaskDetail, type TaskDetail } from './task-model.ts';
+import { plainFailureOf } from '../../failure-words.ts';
 
 export interface LiveTaskState {
   /** `loading` until the first answer; `failed` while Hermes has given no task (the last good one, if any, is still in `detail`). */
@@ -140,7 +141,7 @@ export function createLiveTask({ fetchTask, openEvents, coalesceMs = DEFAULT_COA
       if (!socket && !dialing) void dial(detail.latestEventId);
     } catch (error) {
       if (closed) return;
-      set({ phase: 'failed', error: error instanceof Error ? error.message : String(error) });
+      set({ phase: 'failed', error: plainFailureOf(error).message });
       retryLater();
     } finally {
       loading = false;

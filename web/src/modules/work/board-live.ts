@@ -7,6 +7,7 @@
 // the foreground, the board is loaded again before the socket is, so a card that changed while the page was away is never stale.
 import { isStableOpen, reconnectBackoffDelayMs, type ReconnectBackoffOptions } from '@caduceus/contracts/hermes/shared/reconnect-backoff';
 import { parseBoard, type BoardData } from './board-model.ts';
+import { plainFailureOf } from '../../failure-words.ts';
 
 export interface LiveBoardState {
   /** `loading` until the first answer; `failed` while Hermes has given no board (the last good one, if any, is still in `board`). */
@@ -128,7 +129,7 @@ export function createLiveBoard({ fetchBoard, openEvents, coalesceMs = DEFAULT_C
       if (!socket && !dialing) void dial(board.latestEventId);
     } catch (error) {
       if (closed) return;
-      set({ phase: 'failed', error: error instanceof Error ? error.message : String(error) });
+      set({ phase: 'failed', error: plainFailureOf(error).message });
       retryLater();
     } finally {
       loading = false;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GIVE_UP_MS, READ_STAGE_STEPS_MS, readStage, STILL_READING_MS } from '../src/read-ladder.ts';
+import { GIVE_UP_MS, isReading, READ_STAGE_STEPS_MS, readStage, STILL_READING_MS } from '../src/read-ladder.ts';
 
 describe('the read ladder', () => {
   it('is a skeleton with no words until the wait is long', () => {
@@ -24,5 +24,14 @@ describe('the read ladder', () => {
   it('gives the clock the moments at which the step can change, in order', () => {
     expect(READ_STAGE_STEPS_MS).toEqual([STILL_READING_MS, GIVE_UP_MS]);
     expect(STILL_READING_MS).toBeLessThan(GIVE_UP_MS);
+  });
+
+  it('times only a read that has been asked: a block still waiting to ask is never slow', () => {
+    expect(isReading({ status: 'loading', asked: false })).toBe(false);
+    expect(isReading({ status: 'loading', asked: true })).toBe(true);
+    // A block that does not say is one that asked as soon as it was drawn.
+    expect(isReading({ status: 'loading' })).toBe(true);
+    expect(isReading({ status: 'ready', asked: true })).toBe(false);
+    expect(isReading({ status: 'error', asked: true })).toBe(false);
   });
 });

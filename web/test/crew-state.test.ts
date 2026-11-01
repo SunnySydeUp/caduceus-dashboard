@@ -73,7 +73,7 @@ describe('an idle crew', () => {
 
 describe('a crew read that failed', () => {
   test('says nothing can be checked for an agent it knows nothing of, instead of "Nothing going on"', () => {
-    const members = crew({ unread: true });
+    const members = crew({ knowledge: 'unread' });
 
     expect(members).toEqual([
       { profile: 'coder', state: 'idle', line: 'Can’t check', since: undefined, blind: true },
@@ -83,7 +83,7 @@ describe('a crew read that failed', () => {
   });
 
   test('keeps what is known true: a request or a run still shows, and only the rest is blind', () => {
-    const members = crew({ unread: true, items: [approval('coder', 'make deploy', 1)] });
+    const members = crew({ knowledge: 'unread', items: [approval('coder', 'make deploy', 1)] });
 
     expect(of(members, 'coder')).toMatchObject({ state: 'waiting' });
     expect(of(members, 'coder')).not.toHaveProperty('blind');

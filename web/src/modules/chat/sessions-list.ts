@@ -2,6 +2,7 @@
 // history: a profile can hold thousands of sessions), keeps what the filters leave, marks the sessions Hermes is working on, and reads
 // everything again whenever Hermes says the sessions changed. It keeps nothing of its own across loads (D1).
 import type { SessionActiveListResult } from '@caduceus/contracts/hermes/gateway';
+import { plainFailureOf } from '../../failure-words.ts';
 import type { ChatConnection } from './chat-session.ts';
 import { listPath, liveSessions, parseSessions, parseStats, selectSessions, type LiveKind, type SessionItem, type SessionPage, type SessionStats, type SessionsView } from './sessions-model.ts';
 import { parseProjects, parseProjectTree, type Project } from './sessions-projects.ts';
@@ -28,6 +29,8 @@ export interface SessionListState {
   refreshing: boolean;
   /** Why the last read failed, in Hermes's words; cleared by the next one that works. The rows stay: they are the last that were read. */
   error: string | undefined;
+  /** What Hermes or the browser said before it was made plain (a status code), for a Details disclosure. */
+  errorDetail: string | undefined;
   /** Sessions Hermes is working on now, by stored id. */
   live: Record<string, LiveKind>;
   /** Hermes's session counts and the week's token use; absent until read, and for the cross-profile list. */
@@ -66,7 +69,12 @@ export interface SessionListOptions {
   now?(): number;
 }
 
-const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+/** The list's error fields for a failed read: the cause in plain words, and what was said before it was made plain. */
+const failure = (error: unknown): Pick<SessionListState, 'error' | 'errorDetail'> => {
+  const { message, detail } = plainFailureOf(error);
+  return { error: message, errorDetail: detail };
+};
 
 export function createSessionList(options: SessionListOptions): SessionList {
   const { connection, rest, profile, pageSize = PAGE_SIZE, now = () => Date.now() / 1000 } = options;
@@ -78,6 +86,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
     loadingMore: false,
     refreshing: false,
     error: undefined,
+    errorDetail: undefined,
     live: {},
     stats: undefined,
     profileTotals: undefined,
@@ -168,11 +177,11 @@ export function createSessionList(options: SessionListOptions): SessionList {
           read = fresh;
           position = offset;
           total = last.total;
-          publish({ loaded: true, error: undefined, profileTotals: last.profileTotals, unreadableProfiles: last.errors });
+          publish({ loaded: true, error: undefined, errorDetail: undefined, profileTotals: last.profileTotals, unreadableProfiles: last.errors });
           await fill();
           await readAround();
         } catch (error) {
-          if (mine === generation) publish({ error: messageOf(error) });
+          if (mine === generation) publish(failure(error));
         }
       } while (again && !disposed);
     })().finally(() => {
@@ -205,9 +214,9 @@ export function createSessionList(options: SessionListOptions): SessionList {
       try {
         await readPage(position);
         await fill();
-        publish({ loadingMore: false, error: undefined });
+        publish({ loadingMore: false, error: undefined, errorDetail: undefined });
       } catch (error) {
-        publish({ loadingMore: false, error: messageOf(error) });
+        publish({ loadingMore: false, ...failure(error) });
       }
     },
     setView(next) {
@@ -225,7 +234,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
       read = [];
       position = 0;
       total = 0;
-      publish({ loaded: false, hasMore: false, error: undefined, profileTotals: undefined, unreadableProfiles: [] });
+      publish({ loaded: false, hasMore: false, error: undefined, errorDetail: undefined, profileTotals: undefined, unreadableProfiles: [] });
       void reload();
     },
     markRead(id) {

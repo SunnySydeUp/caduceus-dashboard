@@ -123,6 +123,6 @@ describe('the live task', () => {
     const failed = Promise.withResolvers<LiveTaskState>();
     failing.subscribe(() => failing.state.phase === 'failed' && failed.resolve(failing.state));
     const state = await failed.promise;
-    expect(state).toMatchObject({ phase: 'failed', error: 'Hermes answered HTTP 404' });
+    expect(state).toMatchObject({ phase: 'failed', error: 'Hermes doesn’t offer this yet' });
   });
 });

@@ -2,10 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 're
 import { Icon } from '../icons.tsx';
 import { Sheet } from '../overlays/Sheet.tsx';
 import { dismissBanner, isAlert, quietIds, setStripShown, shownBanners, useBanners, type Banner } from './banners.ts';
-import { useLinkHealth } from './connection.ts';
+import { useLinkHealth, useOnline } from './connection.ts';
 import { clockWords } from './link-memory.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
 import { useSizeClass } from './use-size-class.ts';
+
+/** What the phone's details sheet adds while the device is offline: what still works, and what is switched off. */
+const OFFLINE_STILL_WORKS = 'You can still read what was loaded and move around the app. Buttons that need a connection are switched off.';
 
 /** A banner's buttons and links (it may have none). */
 function BannerActions({ banner }: { banner: Banner }) {
@@ -68,6 +71,7 @@ export function BannerStack() {
   const glide = useRef<HTMLDivElement>(null);
   const phone = useSizeClass() === 'compact';
   const link = useLinkHealth();
+  const online = useOnline();
   const [details, setDetails] = useState(false);
   // A quiet banner waits for the next page (`Banner.quiet`): the ones waiting when the page changes are let in with it, so they arrive with the new
   // page and move nothing. Set during this render, so that the banner and the new page are in the same paint.
@@ -152,6 +156,8 @@ export function BannerStack() {
             <Sheet title={first.title} onClose={() => setDetails(false)}>
               <div className="banner-details">
                 {first.body && <p className="banner-details__body">{first.body}</p>}
+                {/* While the device is offline the page is a reading mode: the sheet says what still works. */}
+                {!online && first.id === 'connection' && <p className="banner-details__body">{OFFLINE_STILL_WORKS}</p>}
                 <BannerActions banner={first} />
               </div>
             </Sheet>

@@ -73,6 +73,11 @@ describe('the live line under the agent’s name', () => {
     expect(liveLine({ profile: 'coder', state: 'idle', line: 'Nothing going on', since: undefined })).toBe('Idle');
     expect(liveLine(undefined)).toBe('');
   });
+
+  test('never says an agent is idle while what it is read from is still on its way, and says when it cannot be checked', () => {
+    expect(liveLine({ profile: 'coder', state: 'idle', line: '', since: undefined, pending: 'reading' })).toBe('Reading…');
+    expect(liveLine({ profile: 'coder', state: 'idle', line: 'Can’t check', since: undefined, blind: true })).toBe('State unknown · Can’t check');
+  });
 });
 
 describe('the workspace preview', () => {

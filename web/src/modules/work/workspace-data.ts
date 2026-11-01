@@ -3,6 +3,7 @@
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import { useEffect, useState } from 'react';
 import { parseBranches, parseListing, type Branch, type Listing } from './workspace-model.ts';
+import { plainFailureOf } from '../../failure-words.ts';
 
 /** How long a typed path rests before Hermes is asked about it. */
 const TYPING_PAUSE_MS = 250;
@@ -31,7 +32,7 @@ function useRead<T>(url: string | undefined, parse: (body: unknown) => T, pause:
           (body) => setAnswer({ url, value: parse(body) }),
           (error: unknown) => {
             if (controller.signal.aborted) return;
-            setAnswer({ url, value: failed?.(error instanceof Error ? error.message : 'Hermes did not answer.') });
+            setAnswer({ url, value: failed?.(plainFailureOf(error).message) });
           },
         );
     }, pause);

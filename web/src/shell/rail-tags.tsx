@@ -13,7 +13,7 @@ const LONG_PRESS_MS = 500;
 const PRESS_SLOP_PX = 10;
 /** How long a long-press tag stays, and the first-time tags of a device. */
 const PRESS_TAG_MS = 2500;
-const FIRST_TAGS_MS = 3000;
+const FIRST_HINT_MS = 3000;
 
 /** What the rail draws as an item: the places, the crew, Search, Help, Control and the scope. */
 const ITEM = '.rail__item, .scope--rail';
@@ -49,24 +49,16 @@ function tagOf(item: HTMLElement): Tag | undefined {
   return { text, top: box.top + box.height / 2, start: rtl ? document.documentElement.clientWidth - box.left + TAG_GAP_PX : box.right + TAG_GAP_PX };
 }
 
-/** The items of the rail that are on the screen now (not cut off by the crew's scroller, not hidden). */
-function itemsOnScreen(rail: HTMLElement): HTMLElement[] {
-  return [...rail.querySelectorAll<HTMLElement>(ITEM)].filter((item) => {
-    const box = item.getBoundingClientRect();
-    if (box.width === 0 || box.height === 0) return false;
-    const clip = item.closest('.rail__scroll')?.getBoundingClientRect();
-    return !clip || (box.top >= clip.top - 1 && box.bottom <= clip.bottom + 1);
-  });
-}
-
 /**
  * The names of the rail's items as visible tags beside them, for a window short enough that the rail draws icons only. One mechanism for every item (the places, the
  * crew, Search, Help, Control and the scope): a mouse over the item, the keyboard on it, a finger resting on it for half a second (the page does not open then), and
- * all of them for three seconds the first time a device shows the compact rail. The name stays the item's name for a screen reader. The tags are drawn in the overlay
+ * and, the first time a device shows the compact rail, every name for three seconds inside the rail's own column (`hinting`: the icons give way to their names, so nothing
+ * lands on the page's text). The name stays the item's name for a screen reader. The tags are drawn in the overlay
  * root, because the rail scrolls and would cut them off.
  */
 export function useRailTags() {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [hinting, setHinting] = useState(false);
   const short = useShortWindow();
   const { railTagsSeen } = useShellPrefs();
   const rail = useRef<HTMLDivElement>(null);
@@ -77,6 +69,7 @@ export function useRailTags() {
   const hide = () => {
     clearTimeout(hideTimer.current);
     setTags([]);
+    setHinting(false);
   };
   const show = (items: HTMLElement[], forMs?: number) => {
     clearTimeout(hideTimer.current);
@@ -87,7 +80,8 @@ export function useRailTags() {
   useEffect(() => {
     if (!short || railTagsSeen || !rail.current) return;
     updateShellPrefs({ railTagsSeen: true });
-    show(itemsOnScreen(rail.current), FIRST_TAGS_MS);
+    setHinting(true);
+    hideTimer.current = window.setTimeout(() => setHinting(false), FIRST_HINT_MS);
   }, [short, railTagsSeen]);
   useEffect(() => {
     if (!short) hide();
@@ -151,5 +145,5 @@ export function useRailTags() {
     )),
     document.getElementById('overlays')!,
   );
-  return { rail, handlers, hide, label };
+  return { rail, handlers, hide, label, hinting };
 }

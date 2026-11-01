@@ -290,7 +290,7 @@ describe('workspaces under a remote backend', () => {
 
       const listing = parseListing((await owner.call('GET', '/api/fs/list?path=%2Fsrv%2Fremote-only%2Fapp')).body);
       expect(listing).toEqual({ kind: 'missing' });
-      expect(folderProblem(listing, remote)).toBe('Hermes does not find this folder on the Mac that runs it. The terminal backend of this profile is Docker / Podman, so the agent works on another machine, but Hermes can only check folders on its own Mac: a folder that exists only there is refused here.');
+      expect(folderProblem(listing, remote)).toBe('Hermes does not find this folder on the Mac that runs it. The terminal backend of this agent is Docker / Podman, so the agent works on another machine, but Hermes can only check folders on its own Mac: a folder that exists only there is refused here.');
       expect(folderProblem({ kind: 'folder', folders: [], files: 0 }, remote)).toBeUndefined();
     } finally {
       chat?.dispose();

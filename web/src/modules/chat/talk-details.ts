@@ -3,7 +3,7 @@
 import type { GoalSnapshot, Usage } from '@caduceus/contracts/hermes/gateway';
 import type { LiveRun } from '@caduceus/contracts/inbox';
 import { plainDuration } from '../../plain-duration.ts';
-import { crewStateLabel, type CrewMember } from '../crew/crew-state.ts';
+import { crewStateWords, type CrewMember } from '../crew/crew-state.ts';
 import { STATUS_META, type BoardTask } from '../work/board-model.ts';
 import type { Job } from '../work/schedules-model.ts';
 import { waitsForOwner } from '../work/tasks-model.ts';
@@ -12,11 +12,11 @@ import type { ChatMessage, ChatTurn } from './chat-session.ts';
 import { contextRing } from './composer-model.ts';
 import type { OpenRequest } from './requests.ts';
 
-/** The line under the agent's name: its state in words and what it is doing, so the state is never colour alone. An idle agent has only the state. */
+/** The line under the agent's name: its state in words and what it is doing, so the state is never colour alone. An idle agent has only the state; one still being read has only that it is; one that cannot be checked says so. */
 export function liveLine(member: CrewMember | undefined): string {
   if (member === undefined) return '';
-  const state = crewStateLabel[member.state];
-  return member.state === 'idle' ? state : `${state} · ${member.line}`;
+  const state = crewStateWords(member);
+  return member.pending || (member.state === 'idle' && !member.blind) ? state : `${state} · ${member.line}`;
 }
 
 // ── Right now ──

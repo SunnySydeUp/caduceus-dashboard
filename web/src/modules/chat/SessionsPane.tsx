@@ -5,6 +5,8 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type RefObject, type TouchEvent } from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { gatewayConnection, useGatewayStatus } from '../../gateway.ts';
+import { useOnline } from '../../shell/connection.ts';
+import { FailureDetails } from '../../shell/FailureDetails.tsx';
 import { Icon } from '../../icons.tsx';
 import { Sheet } from '../../overlays/Sheet.tsx';
 import { fetchTiered } from '../../tiered.ts';
@@ -87,6 +89,7 @@ const INITIAL: SessionListState = {
   loadingMore: false,
   refreshing: false,
   error: undefined,
+  errorDetail: undefined,
   live: {},
   stats: undefined,
   profileTotals: undefined,
@@ -535,6 +538,13 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
 
   const state = useStore(list, INITIAL);
   const { items, loaded, error, refreshing } = state;
+  const online = useOnline();
+  // A list that could not be read while the device was offline is read again as soon as the network is back.
+  useEffect(() => {
+    if (online && error) void list?.refresh();
+    // Only the network coming back asks again: the error's own change must not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online, list]);
   // The pin limit (Settings › Chat) is held here, where the pinned sessions are known: a pin that would pass it is refused with the limit named.
   const pinLimit = useChatBehaviour().account.pinLimit;
   const actions = useMemo<SessionActions>(() => {
@@ -880,12 +890,18 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
           onCreate={(input) => doing(() => worktreeActions.startSession(sheet.item, input))}
         />
       )}
-      {error && (
+      {error && !online && (
+        <p className="subtle sl__status" role="status">
+          {loaded ? 'You can read the sessions that were loaded. The list updates when you are back online.' : 'Sessions load when you are back online.'}
+        </p>
+      )}
+      {error && online && (
         <div className="banner" data-tone="danger" role="alert">
           <Icon name="alert" />
           <div className="banner__content">
-            <strong>{loaded ? 'Hermes did not answer, so this list may be out of date' : 'Hermes did not give the sessions'}</strong>
-            <p>{error}</p>
+            <strong>{error}</strong>
+            <p>{loaded ? 'This list may be out of date.' : 'The sessions could not be read.'}</p>
+            <FailureDetails detail={state.errorDetail} />
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void list?.refresh()}>
             <Icon name="refresh" small />

@@ -10,7 +10,10 @@ import { useProfileScope } from '../../shell/profile-context.tsx';
 import { useRegistry } from '../../shell/registry-context.tsx';
 import { useNow } from '../../shell/use-now.ts';
 import { feedBlock, mapBlock, useBlock, type Block } from '../../use-block.ts';
+import { isReading } from '../../read-ladder.ts';
+import { useReadLadder } from '../../use-read-ladder.ts';
 import { usePainted, useSettled } from '../../use-settled.ts';
+import { knowledge, isPending, type ReadyAnswer } from '../crew/knowledge.ts';
 import { useCrew } from '../crew/use-crew.ts';
 import { inboxFeed, useInbox } from '../inbox/inbox-feed.ts';
 import { useJobs } from '../work/schedules-data.ts';
@@ -18,7 +21,8 @@ import type { Job } from '../work/schedules-model.ts';
 import { readReady, recordVisit } from './today-data.ts';
 import { markOpened } from './ready-feed.ts';
 import { useVisibleDecisions } from './fold-store.ts';
-import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type EmptyBlock } from './today-model.ts';
+import type { InboxItem } from '@caduceus/contracts/inbox';
+import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type AwayView, type EmptyBlock } from './today-model.ts';
 import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
 import './today.css';
 
@@ -47,7 +51,8 @@ export function Today() {
   const visit = useBlock(recordVisit, 'visit', painted);
   // The schedule and the away list read Hermes's cron, which keeps Hermes busy for most of a second on a first load (the blueprints). The first screen is waiting for the
   // review state above, and Hermes answers one thing at a time, so they are asked for once that has answered (or failed): the blocks hold their room meanwhile.
-  const jobs = useJobs(ready.state.status !== 'loading');
+  const jobsAsked = ready.state.status !== 'loading';
+  const jobs = useJobs(jobsAsked);
   const firstLook = useRef(true);
   const finished = feed.activity[0]?.seq;
   useEffect(() => {
@@ -64,16 +69,28 @@ export function Today() {
   }, [ready.reload]);
 
   const decisions = useMemo(() => decisionsFor(feed.items), [feed.items]);
-  const needs = feedBlock(feed, decisions, () => inboxFeed().retry());
+  const stream = feedBlock(feed, decisions, () => inboxFeed().retry());
+  // "Nothing needs you right now" is true only once what it is made of has answered: the Inbox's stream (the decisions) and the review state above (a finished task waits on the owner
+  // too). Until then Needs you is a skeleton, then "Still reading Hermes…", and when a read failed or was given up it says it cannot check (`crew/knowledge.ts`).
+  const readyAnswer: ReadyAnswer = ready.state.status === 'loading' ? 'waiting' : ready.state.status === 'error' ? 'failed' : 'answered';
+  const reading = feed.status === 'connecting' || readyAnswer === 'waiting';
+  const stage = useReadLadder(isReading({ status: reading ? 'loading' : 'ready', asked: ready.asked }), false);
+  const known = knowledge({ feed: feed.status, hermesUp: feed.hermesUp, ready: readyAnswer, stage });
+  const quiet = stream.state.status === 'ready' && stream.state.data.length === 0;
+  const needs: Block<InboxItem[]> = quiet && isPending(known) ? { ...stream, state: { status: 'loading' } } : stream;
   const readyBlock = mapBlock(ready, readyRows);
 
   const jobsBlock: Block<Job[]> = {
     reload: () => jobs.reload(),
+    // Held back until the review state above has answered (`useJobs` above): until then it is waiting, not reading, and must not be called slow.
+    asked: jobsAsked,
     state: jobs.jobs ? { status: 'ready', data: jobs.jobs } : jobs.failed ? { status: 'error', message: 'Hermes did not answer for its schedules.' } : { status: 'loading' },
   };
   const schedule = mapBlock(jobsBlock, (list) => scheduleDay(list, now));
   // Away needs the visit (when the owner was last here), the jobs (what ran) and the Inbox's stream (what finished): it waits for all three and fails if one does.
-  const away: Block<ReturnType<typeof awayView>> = {
+  const away: Block<AwayView> = {
+    // It asks for the visit after the first paint and for the jobs after the review state: it has asked once both have.
+    asked: jobsAsked && visit.asked !== false,
     reload: () => {
       visit.reload();
       void jobs.reload();
@@ -113,8 +130,8 @@ export function Today() {
       />
       <div className="today__grid">
         <div className="today__col">
-          <NeedsYouBlock block={visible} now={now} to={to} unsure={ready.state.status === 'error'} />
-          {needs.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
+          <NeedsYouBlock block={visible} now={now} to={to} unsure={known === 'unread'} stage={isPending(known) ? known : undefined} />
+          {stream.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
           <ReadyBlock block={readyBlock} now={now} to={to} onOpen={(row) => void markOpened(row)} />
           <CrewBlock block={crewBlock} to={to} />
         </div>

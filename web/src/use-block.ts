@@ -69,5 +69,5 @@ export function feedBlock<T>(feed: { status: 'connecting' | 'live' | 'offline'; 
 /** The same block with its data made into something else; while it loads, or when it failed, it is as it was. Its `reload` is the original's. */
 export function mapBlock<T, U>(block: Block<T>, map: (data: T) => U): Block<U> {
   const { state } = block;
-  return { reload: block.reload, state: state.status === 'ready' ? { status: 'ready', data: map(state.data) } : state };
+  return { reload: block.reload, asked: block.asked, state: state.status === 'ready' ? { status: 'ready', data: map(state.data) } : state };
 }

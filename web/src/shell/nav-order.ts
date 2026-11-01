@@ -35,6 +35,8 @@ export interface CrewRow {
   /** What a screen says next to the sigil, so the state is never shown by colour alone. */
   stateLabel: string;
   line: string;
+  /** A read the crew is made of is still on its way: the line is empty (draw a skeleton) or "Still reading Hermes…", and the state is not claimed (`CrewMember.pending`). */
+  pending?: CrewMember['pending'];
   /** Since when the state holds (ms since the epoch); `undefined` for an idle agent. */
   since: number | undefined;
   /** Talk, scoped to this agent's profile. */
@@ -85,6 +87,7 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
       state: member.state,
       stateLabel: crewStateWords(member),
       line: member.line,
+      ...(member.pending ? { pending: member.pending } : {}),
       since: member.since,
       path: withProfile(talk?.path ?? '/', member.profile),
       ...(talk ? { newChat: withProfile(`${talk.path}/new`, member.profile) } : {}),
@@ -163,7 +166,7 @@ export function controlBadge<Screen>({ control }: Pick<DeskNavigation<Screen>, '
       return () => stops.forEach((stop) => stop());
     },
     count: () => badges.reduce((total, badge) => total + badge.count(), 0),
-    label: (count) => `${count} ${count === 1 ? 'thing needs' : 'things need'} a look in Control`,
+    label: (count) => `, ${count} ${count === 1 ? 'thing needs' : 'things need'} a look`,
   };
 }
 

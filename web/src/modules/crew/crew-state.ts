@@ -2,6 +2,8 @@
 // and what is ready for review) and stores nothing.
 import type { LiveRun, InboxApproval, InboxClarify, InboxItem } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
+import { STILL_READING_WORDS } from '../../read-ladder.ts';
+import { isPending, type Knowledge } from './knowledge.ts';
 
 /** How an agent stands: a person is needed, it is working, it finished something not yet looked at, something failed, or nothing is going on. */
 export type CrewStateName = 'waiting' | 'working' | 'done' | 'blocked' | 'idle';
@@ -26,10 +28,13 @@ export interface CrewMember {
   since: number | undefined;
   /** Nothing is known of this agent because a read the crew is made of failed: it is drawn at rest, but neither its words nor its line claim that it is. */
   blind?: true;
+  /** A read the crew is made of is still on its way, so nothing is known of this agent yet: drawn at rest, with no line (a skeleton) and then "Still reading Hermes…", and never "Idle" or "Nothing going on". */
+  pending?: 'reading' | 'still-reading';
 }
 
-/** The words that stand beside a member's sigil: its state's, or that its state is not known (its line says why: it cannot be checked). */
-export function crewStateWords({ state, blind }: Pick<CrewMember, 'state' | 'blind'>): string {
+/** The words that stand beside a member's sigil: its state's, or that its state is not known yet (still being read) or cannot be checked (its line says why). */
+export function crewStateWords({ state, blind, pending }: Pick<CrewMember, 'state' | 'blind' | 'pending'>): string {
+  if (pending) return pending === 'still-reading' ? STILL_READING_WORDS : 'Reading…';
   return blind ? 'State unknown' : crewStateLabel[state];
 }
 
@@ -43,8 +48,8 @@ export interface CrewInput {
   running: readonly LiveRun[];
   /** What is ready for review (finished and not opened since), newest first: Today's list. Opening an item anywhere takes it off, and with it the agent's Finished state. */
   ready: readonly ReadyItem[];
-  /** A read the lists above come from has failed (the Inbox cannot be read or cannot reach Hermes, or the ready list cannot be read): what they hold may be out of date or missing. */
-  unread?: boolean;
+  /** What is known of the reads the lists above come from (`knowledge.ts`); `known` when omitted. Not `known`: what they hold may be missing or out of date, so an agent they say nothing about is neither idle nor claimed to be. */
+  knowledge?: Knowledge;
 }
 
 /** A line is one short sentence: longer text is cut with an ellipsis. */
@@ -72,9 +77,9 @@ const withOthers = (line: string, others: number, word: string): string => (othe
 /**
  * One member for each profile. Precedence, when more than one is true of a profile: waiting, working, blocked, done, idle.
  * Waiting and working report what has gone on longest (the oldest request, the oldest run); blocked and done report the newest failure and the newest finished work. When
- * `unread` an agent the lists say nothing about is `blind`, not idle: what is known (a request, a run) stays true, and nothing is claimed beyond it.
+ * the lists are not `known` an agent they say nothing about is not idle: `pending` while a read is on its way, `blind` when one failed. What is known (a request, a run) stays true, and nothing is claimed beyond it.
  */
-export function deriveCrew({ profiles, items, running, ready, unread = false }: CrewInput): CrewMember[] {
+export function deriveCrew({ profiles, items, running, ready, knowledge = 'known' }: CrewInput): CrewMember[] {
   return profiles.map((profile): CrewMember => {
     const mine = items.filter((item) => item.profile === profile);
     const waits: Waiting[] = [
@@ -94,7 +99,8 @@ export function deriveCrew({ profiles, items, running, ready, unread = false }: 
     const [newest] = finished;
     if (newest) return { profile, state: 'done', line: withOthers(shorten(`Finished “${newest.title}”`), finished.length - 1, 'finished'), since: newest.at };
 
-    // An agent the lists say nothing about is idle only if the lists could be read: otherwise nothing is known of it.
-    return unread ? { profile, state: 'idle', line: CANNOT_CHECK, since: undefined, blind: true } : { profile, state: 'idle', line: 'Nothing going on', since: undefined };
+    // An agent the lists say nothing about is idle only if the lists have answered: until then it is being read, and if they could not be read nothing is known of it.
+    if (isPending(knowledge)) return { profile, state: 'idle', line: knowledge === 'still-reading' ? STILL_READING_WORDS : '', since: undefined, pending: knowledge };
+    return knowledge === 'unread' ? { profile, state: 'idle', line: CANNOT_CHECK, since: undefined, blind: true } : { profile, state: 'idle', line: 'Nothing going on', since: undefined };
   });
 }

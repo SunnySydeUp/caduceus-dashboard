@@ -232,7 +232,7 @@ a.btn { text-decoration: none; }
 /* ---- A rail on a short window. Under 36rem tall (a phone on its side, a short laptop window; the nav mode still follows the width only) the rail draws icons only, 44 px
    tall: a label is a visible tag beside the item (`rail-tags.tsx`, which uses the same height), and it stays the item's name for a screen reader. The head (fold toggle, scope,
    Search), the places (Today, Talk, Work) and the foot (Help and Control with its badge) are fixed; only the crew between them scrolls, with the same edge fades.
-   Under 30rem tall even that leaves the crew no room, so Search leaves the rail (it is the drawer's first row, and the palette has its shortcut). ---- */
+   Under 30rem tall even that leaves the crew no room, so Search and Help leave the rail (Search is the drawer's first row and Help is in its foot; the palette and Help have their shortcuts). ---- */
 @media (max-height: 36rem) {
   .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); gap: 0; }
   .rail__places { gap: 0; }
@@ -244,12 +244,20 @@ a.btn { text-decoration: none; }
   .rail__crew { margin-block-start: 0; padding-block-start: var(--cd-space-1); gap: 0; }
 }
 @media (max-height: 30rem) {
-  .rail__search { display: none; }
+  .rail__search, .rail__help { display: none; }
   .side > .rail { padding-block: var(--cd-space-1); }
 }
 .rail__item, .scope--rail { -webkit-touch-callout: none; user-select: none; }
+/* The first time a device shows the compact rail, the icons give way to the names for three seconds, inside the rail's own column (`rail-tags.tsx`, `hinting`). */
+.rail[data-hinting] .rail__item, .rail[data-hinting] .scope--rail { position: relative; }
+.rail[data-hinting] .rail__icon > svg.i, .rail[data-hinting] .scope--rail .sigil, .rail[data-hinting] .rail__mate > .sigil { opacity: 0; }
+.rail[data-hinting] .rail__item .nav-label, .rail[data-hinting] .scope--rail .scope__name { inset: 50% 0 auto; inline-size: auto; block-size: auto; translate: 0 -50%; clip-path: none; overflow: hidden; text-overflow: ellipsis; text-align: center; padding-inline: var(--cd-space-0-5); font-size: var(--cd-text-xs); color: var(--cd-fg-default); }
+.fail-details { margin-block-start: var(--cd-space-1); }
+.fail-details summary { cursor: pointer; display: flex; align-items: center; min-block-size: var(--cd-target-min); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.fail-details code { display: block; overflow-wrap: anywhere; font-size: var(--cd-text-sm); user-select: all; }
 .rail-tag { position: fixed; z-index: var(--cd-z-tooltip); translate: 0 -50%; pointer-events: none; box-shadow: var(--cd-shadow-popover); }
-.mate[data-stale] .mate__text { opacity: 0.7; }
+/* A line that is not news steps back by colour, never by opacity (opacity pulled the 13 px lines under 4.5:1): the name goes to the muted text colour, the line to the subtle one, in italic. */
+.mate[data-stale] .mate__name { color: var(--cd-fg-muted); }
 .mate[data-stale] .mate__line { color: var(--cd-fg-subtle); font-style: italic; }
 .mate[data-stale] .sigil, .rail__crew[data-stale] .sigil { opacity: 0.55; }
 /* A new chat with one agent (Nav.tsx): a + on its crew row, over the row's time in the sidebar and on the sigil's corner in the rail. It shows while the pointer is
