@@ -51,12 +51,15 @@ function ProfileRow({ profile, checked, isDefault, onChoose }: { profile: Profil
   );
 }
 
-/** What the list says while the agents are not read yet: nothing at first, then that it is still reading, then that it failed (with a Retry); the names are on the rows already. */
+/**
+ * What the list says while the agents are not read yet: nothing at first, then that it is still reading, then that it failed (with a Retry); offline, that they load when the
+ * device is back online. The names are on the rows already.
+ */
 function ListStatus({ read }: { read: CrewRead }) {
-  if (read.status === 'slow') {
+  if (read.status === 'slow' || read.status === 'offline') {
     return (
       <p className="plist__note" role="status">
-        {STILL_READING_WORDS}
+        {read.status === 'slow' ? STILL_READING_WORDS : 'You are offline. The agents load when you are back online.'}
       </p>
     );
   }
@@ -81,7 +84,7 @@ function SwitcherBody({ read }: { read: CrewRead }) {
   const { hermes, scope, mode, choose } = useProfileScope();
   const crossProfile = mode === 'cross';
   const rows: ProfileSummary[] = hermes ? hermes.profiles : read.known.map((name) => ({ name, model: null, gatewayRunning: null }));
-  const skeleton = rows.length === 0 && !crossProfile && read.status !== 'failed';
+  const skeleton = rows.length === 0 && !crossProfile && read.status !== 'failed' && read.status !== 'offline';
   return (
     <>
       <p className="plist__note">{crossProfile ? 'Show one agent, or all.' : 'Choose the agent to work with.'}</p>

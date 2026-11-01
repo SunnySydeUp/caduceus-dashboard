@@ -90,6 +90,7 @@ const INITIAL: SessionListState = {
   refreshing: false,
   error: undefined,
   errorDetail: undefined,
+  errorNext: undefined,
   live: {},
   stats: undefined,
   profileTotals: undefined,
@@ -896,17 +897,20 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
         </p>
       )}
       {error && online && (
-        <div className="banner" data-tone="danger" role="alert">
-          <Icon name="alert" />
+        <div className="banner" data-tone={state.errorNext === undefined ? 'danger' : 'info'} role={state.errorNext === undefined ? 'alert' : 'status'}>
+          <Icon name={state.errorNext === undefined ? 'alert' : 'info'} />
           <div className="banner__content">
             <strong>{error}</strong>
-            <p>{loaded ? 'This list may be out of date.' : 'The sessions could not be read.'}</p>
+            <p>{state.errorNext ?? (loaded ? 'This list may be out of date.' : 'The sessions could not be read.')}</p>
             <FailureDetails detail={state.errorDetail} />
           </div>
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void list?.refresh()}>
-            <Icon name="refresh" small />
-            Try again
-          </button>
+          {/* Asking again cannot help a read Hermes has no answer for: the step above takes the place of the button. */}
+          {state.errorNext === undefined && (
+            <button type="button" className="btn btn--secondary btn--sm" onClick={() => void list?.refresh()}>
+              <Icon name="refresh" small />
+              Try again
+            </button>
+          )}
         </div>
       )}
       {state.unreadableProfiles.length > 0 && (

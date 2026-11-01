@@ -54,11 +54,12 @@ describe('what the crew and Needs you know', () => {
     expect(members(ANSWERED)).toEqual([{ profile: 'coder', state: 'idle', line: 'Nothing going on', since: undefined }]);
   });
 
-  test('cannot be checked once a read failed or the ladder gave up', () => {
+  test('cannot be checked once a read failed, the ladder gave up, or the device went offline while a read was on its way', () => {
     expect(knowledge({ ...ANSWERED, ready: 'failed' })).toBe('unread');
     expect(knowledge({ ...ANSWERED, feed: 'offline' })).toBe('unread');
     expect(knowledge({ ...ANSWERED, hermesUp: false })).toBe('unread');
     expect(knowledge({ ...ANSWERED, ready: 'waiting', stage: 'failed' })).toBe('unread');
+    expect(knowledge({ ...ANSWERED, feed: 'connecting', stage: 'offline' })).toBe('unread');
     expect(members({ ...ANSWERED, ready: 'waiting', stage: 'failed' })).toMatchObject([{ line: 'Can’t check', blind: true }]);
   });
 

@@ -31,6 +31,8 @@ export interface SessionListState {
   error: string | undefined;
   /** What Hermes or the browser said before it was made plain (a status code), for a Details disclosure. */
   errorDetail: string | undefined;
+  /** The step in place of a Try again, when asking again cannot help (`failure-words.ts`). */
+  errorNext: string | undefined;
   /** Sessions Hermes is working on now, by stored id. */
   live: Record<string, LiveKind>;
   /** Hermes's session counts and the week's token use; absent until read, and for the cross-profile list. */
@@ -71,9 +73,9 @@ export interface SessionListOptions {
 
 
 /** The list's error fields for a failed read: the cause in plain words, and what was said before it was made plain. */
-const failure = (error: unknown): Pick<SessionListState, 'error' | 'errorDetail'> => {
-  const { message, detail } = plainFailureOf(error);
-  return { error: message, errorDetail: detail };
+const failure = (error: unknown): Pick<SessionListState, 'error' | 'errorDetail' | 'errorNext'> => {
+  const { message, detail, next } = plainFailureOf(error);
+  return { error: message, errorDetail: detail, errorNext: next };
 };
 
 export function createSessionList(options: SessionListOptions): SessionList {
@@ -87,6 +89,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
     refreshing: false,
     error: undefined,
     errorDetail: undefined,
+    errorNext: undefined,
     live: {},
     stats: undefined,
     profileTotals: undefined,
@@ -177,7 +180,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
           read = fresh;
           position = offset;
           total = last.total;
-          publish({ loaded: true, error: undefined, errorDetail: undefined, profileTotals: last.profileTotals, unreadableProfiles: last.errors });
+          publish({ loaded: true, error: undefined, errorDetail: undefined, errorNext: undefined, profileTotals: last.profileTotals, unreadableProfiles: last.errors });
           await fill();
           await readAround();
         } catch (error) {
@@ -214,7 +217,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
       try {
         await readPage(position);
         await fill();
-        publish({ loadingMore: false, error: undefined, errorDetail: undefined });
+        publish({ loadingMore: false, error: undefined, errorDetail: undefined, errorNext: undefined });
       } catch (error) {
         publish({ loadingMore: false, ...failure(error) });
       }
@@ -234,7 +237,7 @@ export function createSessionList(options: SessionListOptions): SessionList {
       read = [];
       position = 0;
       total = 0;
-      publish({ loaded: false, hasMore: false, error: undefined, errorDetail: undefined, profileTotals: undefined, unreadableProfiles: [] });
+      publish({ loaded: false, hasMore: false, error: undefined, errorDetail: undefined, errorNext: undefined, profileTotals: undefined, unreadableProfiles: [] });
       void reload();
     },
     markRead(id) {

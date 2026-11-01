@@ -5,20 +5,23 @@ import { RollingNumber } from './RollingNumber.tsx';
 const never = () => () => {};
 const none = () => 0;
 
+/** The count a module puts on its nav entry, live. An entry that names itself with the count in its own label reads it here. */
+export function useNavBadgeCount(badge: NavBadge | undefined): number {
+  return useSyncExternalStore(badge?.subscribe ?? never, badge?.count ?? none);
+}
+
 /**
- * The count a module puts on its nav entry. Nothing while it is zero; the number is for the eye (it rolls when it changes) and `label` for a screen reader. `part` draws only
- * one of the two, for an entry whose number sits on its icon but whose words must come after its name ("Control, 1 thing needs a look").
+ * The count a module puts on its nav entry. Nothing while it is zero; the number is for the eye (it rolls when it changes) and `label` for a screen reader. `part="count"`
+ * draws only the number, for an entry that says the words in its own name ("Control, 1 thing needs a look").
  */
-export function NavBadgeCount({ badge, part }: { badge: NavBadge | undefined; part?: 'count' | 'words' }) {
-  const count = useSyncExternalStore(badge?.subscribe ?? never, badge?.count ?? none);
+export function NavBadgeCount({ badge, part }: { badge: NavBadge | undefined; part?: 'count' }) {
+  const count = useNavBadgeCount(badge);
   if (!badge || count === 0) return null;
   return (
     <>
-      {part !== 'words' && (
-        <span className="count" aria-hidden="true">
-          <RollingNumber value={count} ceiling={99} />
-        </span>
-      )}
+      <span className="count" aria-hidden="true">
+        <RollingNumber value={count} ceiling={99} />
+      </span>
       {part !== 'count' && <span className="sr-only">{badge.label(count)}</span>}
     </>
   );

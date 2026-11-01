@@ -2,10 +2,14 @@
 // names the party that did not answer (this device, Caduceus on the Mac, or Hermes) and never a status code; the code and the raw words stay available as the detail (a Details
 // disclosure, or text the owner can copy). Pure; `useBlock` is where a block's failure becomes words, and the other surfaces call `plainFailure` the same way.
 
-/** A failure as a screen shows it: `message` is the cause in plain words; `detail` is what was said before it was made plain, when that differs. */
+/**
+ * A failure as a screen shows it: `message` is the cause in plain words; `detail` is what was said before it was made plain, when that differs. `next` is the step the owner
+ * takes when asking again cannot help (the answer will be the same until something changes), so the screen shows it in place of a Retry.
+ */
 export interface PlainFailure {
   message: string;
   detail?: string;
+  next?: string;
 }
 
 /** The causes, by the party that did not answer. */
@@ -22,6 +26,9 @@ export const CAUSE = {
 
 /** What the owner can check when Caduceus does not answer: the Mac is the thing that stopped. */
 export const MAC_CHECK = 'Check that the Mac is awake and switched on, and that it is on your tailnet.';
+
+/** What the owner does when Hermes has no answer for a read: a later Hermes may have it, and asking this one again will not. */
+export const UPDATE_HERMES = 'Update Hermes to get it.';
 
 /** What a browser says when `fetch` never got an answer. */
 const NETWORK_FAILURE = /^(?:failed to fetch|load failed|fetch failed|network request failed|networkerror when attempting to fetch resource\.?|the network connection was lost\.?|the internet connection appears to be offline\.?)$/i;
@@ -67,10 +74,11 @@ export function plainFailure(raw: string, online: boolean = typeof navigator ===
   if (NETWORK_FAILURE.test(text)) return { message: online ? CAUSE.mac : CAUSE.offline, detail: unsaid };
   if (/^Hermes did not answer$/i.test(unsaid)) return { message: CAUSE.hermesSilent };
   const sentence = STATUS_SENTENCE.exec(text);
-  if (sentence) return { message: causeOf(Number(sentence[2] ?? sentence[3]), sentence[1] ?? 'Hermes'), detail: unsaid };
-  const status = PHRASE_STATUS[unsaid.toLowerCase()];
-  if (status !== undefined) return { message: causeOf(status, 'Hermes'), detail: unsaid };
-  return { message: raw };
+  const status = sentence ? Number(sentence[2] ?? sentence[3]) : PHRASE_STATUS[unsaid.toLowerCase()];
+  if (status === undefined) return { message: raw };
+  const message = causeOf(status, sentence?.[1] ?? 'Hermes');
+  // Asking again cannot help a read Hermes has no answer for: the step in its place is a later Hermes.
+  return message === CAUSE.notOffered ? { message, detail: unsaid, next: UPDATE_HERMES } : { message, detail: unsaid };
 }
 
 /** The same for anything a promise rejected with. */

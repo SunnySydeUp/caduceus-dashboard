@@ -5,8 +5,11 @@ import { BlockAsks } from './block-asks.ts';
 import { plainFailure } from './failure-words.ts';
 import { useGatewayEvent, useLiveLoad } from './gateway.ts';
 
-/** An error says its cause in plain words (`message`); `detail` is what was said before it was made plain (a status code), for a Details disclosure. */
-export type BlockState<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string; detail?: string };
+/**
+ * An error says its cause in plain words (`message`); `detail` is what was said before it was made plain (a status code), for a Details disclosure; `next` is the step that
+ * takes the place of a Retry when asking again cannot help.
+ */
+export type BlockState<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string; detail?: string; next?: string };
 
 export interface Block<T> {
   state: BlockState<T>;

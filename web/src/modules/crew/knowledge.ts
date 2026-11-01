@@ -11,7 +11,7 @@ export type ReadyAnswer = 'waiting' | 'answered' | 'failed';
 
 /**
  * What is known of what the crew and Needs you are made of: `known` (every read has answered, so a quiet answer is true), `reading` and `still-reading` (a read is on its way: no
- * claim of any kind, a skeleton, then "Still reading Hermes…"), or `unread` (a read failed or the ladder gave up: it cannot be checked).
+ * claim of any kind, a skeleton, then "Still reading Hermes…"), or `unread` (a read failed, the ladder gave up, or the device is offline: it cannot be checked).
  */
 export type Knowledge = 'known' | 'reading' | 'still-reading' | 'unread';
 
@@ -27,7 +27,7 @@ export interface KnowledgeInput {
 export function knowledge({ feed, hermesUp, ready, stage }: KnowledgeInput): Knowledge {
   if (feed === 'offline' || ready === 'failed') return 'unread';
   if (feed === 'live' && !hermesUp) return 'unread';
-  if (feed === 'connecting' || ready === 'waiting') return stage === 'failed' ? 'unread' : stage;
+  if (feed === 'connecting' || ready === 'waiting') return stage === 'failed' || stage === 'offline' ? 'unread' : stage;
   return 'known';
 }
 

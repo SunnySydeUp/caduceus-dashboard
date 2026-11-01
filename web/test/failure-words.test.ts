@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { plainFailure, plainFailureOf } from '../src/failure-words.ts';
 
 describe('a failure in plain words', () => {
-  it('says what a missing route means, and keeps the code as the detail', () => {
-    expect(plainFailure('Hermes answered HTTP 404')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered HTTP 404' });
-    expect(plainFailure('Hermes answered HTTP 405.')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered HTTP 405' });
+  it('says what a missing route means, keeps the code as the detail, and gives updating Hermes as the step in place of asking again', () => {
+    expect(plainFailure('Hermes answered HTTP 404')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered HTTP 404', next: 'Update Hermes to get it.' });
+    expect(plainFailure('Hermes answered HTTP 405.')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered HTTP 405', next: 'Update Hermes to get it.' });
+    // Only Hermes's own missing route is fixed by a later Hermes; every other cause is one asking again can help.
+    expect(plainFailure('Caduceus answered HTTP 404.').next).toBeUndefined();
+    expect(plainFailure('Hermes answered HTTP 503').next).toBeUndefined();
   });
 
   it('says Hermes had a problem for a server error, and that it is not answering when Caduceus could not get an answer from it', () => {
@@ -14,7 +17,7 @@ describe('a failure in plain words', () => {
   });
 
   it('reads the status Talk’s reads put in a sentence', () => {
-    expect(plainFailure('Hermes answered 404 to /api/sessions')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered 404 to /api/sessions' });
+    expect(plainFailure('Hermes answered 404 to /api/sessions')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Hermes answered 404 to /api/sessions', next: 'Update Hermes to get it.' });
   });
 
   it('tells a missing network from the Mac not answering, and never shows the browser’s words as the cause', () => {
@@ -30,7 +33,7 @@ describe('a failure in plain words', () => {
 
   it('reads a proxied request failure and a bare reason phrase the same way', () => {
     expect(plainFailure('GET /api/profiles: HTTP 404').message).toBe('Hermes doesn’t offer this yet');
-    expect(plainFailure('Not Found')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Not Found' });
+    expect(plainFailure('Not Found')).toEqual({ message: 'Hermes doesn’t offer this yet', detail: 'Not Found', next: 'Update Hermes to get it.' });
   });
 
   it('tells a slow answer, a refusal and a busy Hermes apart from a broken one', () => {

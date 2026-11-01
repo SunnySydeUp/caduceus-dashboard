@@ -6,6 +6,9 @@ import { useReadLadder } from '../use-read-ladder.ts';
 /** How long a load may take before the screen says it is taking longer than usual. */
 export const LOADING_PATIENCE_MS = 5000;
 
+/** What a load says while the device is offline: why it waits, and that it needs nothing from the owner. */
+const LOADS_WHEN_ONLINE = 'You are offline. This loads when you are back online.';
+
 /** Whether `active` has been true for `ms` without a break: the "taking longer than usual" state of a load. It resets when the load ends. */
 export function useTakingLonger(active: boolean, ms = LOADING_PATIENCE_MS): boolean {
   const [late, setLate] = useState(false);
@@ -23,15 +26,15 @@ export function useTakingLonger(active: boolean, ms = LOADING_PATIENCE_MS): bool
 /**
  * The one loading state for a block that waits on Hermes, on the read ladder (`read-ladder.ts`). It holds the room of about `lines` rows as a skeleton (so the page does not
  * jump when the answer arrives) and says `label` to a screen reader. After about eight seconds it says "Still reading Hermes…", with nothing to press; only when the read has
- * failed (`failed`) or has passed the longer bound does it say it could not be read, with a Retry when the screen gives `onRetry`. Render it only while the load is running;
- * when the load fails, show the screen's own error, not this.
+ * failed (`failed`) or has passed the longer bound does it say it could not be read, with a Retry when the screen gives `onRetry`. While the device is offline it says so at
+ * once, and offers nothing to press. Render it only while the load is running; when the load fails, show the screen's own error, not this.
  */
 export function Loading({ label = 'Loading…', lines = 3, failed = false, onRetry }: { label?: string; lines?: number; failed?: boolean; onRetry?: () => void }) {
   const [tries, setTries] = useState(0);
   const stage = useReadLadder(true, failed, tries);
   return (
-    <div className="loading" role="status" aria-busy="true">
-      <span className="sr-only">{stage === 'still-reading' ? `${label} ${STILL_READING_WORDS}` : label}</span>
+    <div className="loading" role="status" aria-busy={stage !== 'offline'}>
+      <span className="sr-only">{stage === 'still-reading' ? `${label} ${STILL_READING_WORDS}` : stage === 'offline' ? LOADS_WHEN_ONLINE : label}</span>
       <div className="loading__lines" aria-hidden="true">
         {Array.from({ length: lines }, (_, index) => (
           <span key={index} className="skel loading__line" />
@@ -40,6 +43,11 @@ export function Loading({ label = 'Loading…', lines = 3, failed = false, onRet
       {stage === 'still-reading' && (
         <p className="loading__late" aria-hidden="true">
           <span className="muted">{STILL_READING_WORDS}</span>
+        </p>
+      )}
+      {stage === 'offline' && (
+        <p className="loading__late" aria-hidden="true">
+          <span className="muted">{LOADS_WHEN_ONLINE}</span>
         </p>
       )}
       {stage === 'failed' && (

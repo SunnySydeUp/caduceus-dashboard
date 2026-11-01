@@ -64,7 +64,8 @@ a.btn { text-decoration: none; }
 .appbar__title { flex: 1; min-inline-size: 0; display: flex; align-items: center; font-weight: var(--cd-weight-semibold); }
 .appbar__title-text { font-size: var(--cd-text-lg); opacity: 0; transition: opacity var(--cd-dur-base) var(--cd-ease-standard); }
 .appbar.is-scrolled .appbar__title-text { opacity: 1; }
-.appbar__profile { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 9rem; }
+/* A finger gets the full target: 44 px on a coarse pointer and on a phone (`--cd-target-min`), the usual 36 px chip with a mouse. */
+.appbar__profile { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 9rem; block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); }
 /* Once the title has taken the app bar (the heading scrolled away) the chip is only its sigil, so the title is not cut to a letter or two. */
 .appbar.is-scrolled .appbar__profile > .truncate, .appbar.is-scrolled .appbar__profile > svg:last-child { display: none; }
 .appbar__profile[data-cross] { border-style: dashed; }
@@ -297,7 +298,7 @@ a.btn { text-decoration: none; }
    `main`, so they line up with the page's content and glide with it), above the page header, with no band, surface or border of their own. ---- */
 .subnav { border-block-end: 1px solid var(--cd-border-subtle); background: var(--cd-bg-surface); }
 .subnav__inner { display: flex; gap: var(--cd-space-2); overflow-x: auto; scrollbar-width: none; padding: var(--cd-space-2) var(--cd-page-px); max-inline-size: var(--cd-page-max); margin-inline: auto; }
-.subnav .chip { text-decoration: none; flex: none; }
+.subnav .chip { text-decoration: none; flex: none; block-size: max(var(--cd-control-h-sm), var(--cd-target-min)); }
 .subnav .chip[aria-current="page"] { background: var(--cd-accent-soft); border-color: var(--cd-accent-border); color: var(--cd-accent-fg); }
 .app:not([data-size="compact"]) .subnav { margin-block-end: var(--cd-space-3); border: 0; background: none; }
 .app:not([data-size="compact"]) .subnav__inner { padding: 0; max-inline-size: none; margin: 0; }

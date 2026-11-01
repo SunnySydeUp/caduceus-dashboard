@@ -21,6 +21,12 @@ describe('the read ladder', () => {
     expect(readStage({ failed: true, waitedMs: STILL_READING_MS })).toBe('failed');
   });
 
+  it('does not climb at all while the device is offline: a read on its way and one that failed are both offline, however long the wait', () => {
+    expect(readStage({ failed: false, waitedMs: 0, online: false })).toBe('offline');
+    expect(readStage({ failed: false, waitedMs: GIVE_UP_MS, online: false })).toBe('offline');
+    expect(readStage({ failed: true, waitedMs: 0, online: false })).toBe('offline');
+  });
+
   it('gives the clock the moments at which the step can change, in order', () => {
     expect(READ_STAGE_STEPS_MS).toEqual([STILL_READING_MS, GIVE_UP_MS]);
     expect(STILL_READING_MS).toBeLessThan(GIVE_UP_MS);

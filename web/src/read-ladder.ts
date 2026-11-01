@@ -1,14 +1,15 @@
 // How a read that is on its way is told to the owner, everywhere the same (the crew, Today's blocks, Talk's skeleton, the agent switcher's list): a skeleton with no words,
 // then, once the wait is long, "Still reading Hermes…" (not an alarm, nothing to press yet), and "Couldn't be read" with a Retry only when the read has failed for real or has
-// passed the longer bound. A slow read must never say "couldn't be read" and then heal. Pure: `use-read-ladder.ts` keeps the clock.
+// passed the longer bound. A slow read must never say "couldn't be read" and then heal. While the device has no network the ladder is not climbed at all: the device already
+// knows the read cannot answer, so the screen says it is offline at once, with nothing that needs the network to press. Pure: `use-read-ladder.ts` keeps the clock.
 
 /** How long a read may take before the screen says it is still reading. */
 export const STILL_READING_MS = 8_000;
 /** How long a read may take before the screen gives it up as one that could not be read, and offers a Retry. */
 export const GIVE_UP_MS = 30_000;
 
-/** The ladder's steps, in the order a wait climbs them. */
-export type ReadStage = 'reading' | 'still-reading' | 'failed';
+/** The ladder's steps, in the order a wait climbs them, and `offline`, which a read on its way or one that failed stands at while the device has no network. */
+export type ReadStage = 'reading' | 'still-reading' | 'failed' | 'offline';
 
 /** What the screen says on the middle step. The last step names what could not be read ("Crew couldn’t be read"), so each screen words it for itself. */
 export const STILL_READING_WORDS = 'Still reading Hermes…';
@@ -16,8 +17,12 @@ export const STILL_READING_WORDS = 'Still reading Hermes…';
 /** The moments, after a read starts, at which its stage can change: where the clock sets its timers. */
 export const READ_STAGE_STEPS_MS: readonly number[] = [STILL_READING_MS, GIVE_UP_MS];
 
-/** The stage of a read that has waited `waitedMs`. A read that has failed is at the last stage at once, however little it waited. */
-export function readStage({ failed, waitedMs }: { failed: boolean; waitedMs: number }): ReadStage {
+/**
+ * The stage of a read that has waited `waitedMs`. A read that has failed is at the last stage at once, however little it waited. While the device is offline (`online` false) a
+ * read is offline, whether it is on its way or failed: no wait to time, no failure to blame on anyone.
+ */
+export function readStage({ failed, waitedMs, online = true }: { failed: boolean; waitedMs: number; online?: boolean }): ReadStage {
+  if (!online) return 'offline';
   if (failed || waitedMs >= GIVE_UP_MS) return 'failed';
   return waitedMs >= STILL_READING_MS ? 'still-reading' : 'reading';
 }

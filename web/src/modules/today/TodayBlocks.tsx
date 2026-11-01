@@ -180,23 +180,42 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
               <HeldAnswer which={held} />
             </div>
           )}
-          <div className="banner" data-tone="danger" role="alert">
-            <Icon name="failed" />
-            <span className="banner__content">
-              <span className="banner__title">{title} couldn’t be read</span>
-              <span className="banner__body">{state.status === 'error' ? state.message : 'Hermes hasn’t answered yet.'}</span>
-              {state.status === 'error' && state.detail !== undefined && (
-                <details className="today-block__details">
-                  <summary>Details</summary>
-                  <code>{state.detail}</code>
-                </details>
-              )}
-            </span>
-            <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
-              <Icon name="refresh" small />
-              {retrying ? 'Retrying…' : 'Retry'}
-            </button>
-          </div>
+          {/* A failure asking again cannot help is not an alarm: it says the step in place of a Retry, in the quiet tone (Hermes has no answer for this read yet). */}
+          {state.status === 'error' && state.next !== undefined ? (
+            <div className="banner" data-tone="info" role="status">
+              <Icon name="info" />
+              <span className="banner__content">
+                <span className="banner__title">{title} isn’t available</span>
+                <span className="banner__body">
+                  {state.message}. {state.next}
+                </span>
+                {state.detail !== undefined && (
+                  <details className="today-block__details">
+                    <summary>Details</summary>
+                    <code>{state.detail}</code>
+                  </details>
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="banner" data-tone="danger" role="alert">
+              <Icon name="failed" />
+              <span className="banner__content">
+                <span className="banner__title">{title} couldn’t be read</span>
+                <span className="banner__body">{state.status === 'error' ? state.message : 'Hermes hasn’t answered yet.'}</span>
+                {state.status === 'error' && state.detail !== undefined && (
+                  <details className="today-block__details">
+                    <summary>Details</summary>
+                    <code>{state.detail}</code>
+                  </details>
+                )}
+              </span>
+              <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
+                <Icon name="refresh" small />
+                {retrying ? 'Retrying…' : 'Retry'}
+              </button>
+            </div>
+          )}
         </div>
       )}
       {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure} /> : children(state.data))}

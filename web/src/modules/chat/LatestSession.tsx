@@ -69,7 +69,7 @@ export function LatestSession({ profile }: { profile: string }) {
               <Icon name="alert" />
             </span>
             <h3>{failure.message}</h3>
-            <p>{profile}’s sessions could not be read.</p>
+            <p>{failure.next ?? `${profile}’s sessions could not be read.`}</p>
             <FailureDetails detail={failure.detail} />
             <AppLink className="btn btn--primary" to="/chat/new">
               <Icon name="plus" />

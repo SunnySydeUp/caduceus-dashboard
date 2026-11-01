@@ -166,7 +166,7 @@ export function controlBadge<Screen>({ control }: Pick<DeskNavigation<Screen>, '
       return () => stops.forEach((stop) => stop());
     },
     count: () => badges.reduce((total, badge) => total + badge.count(), 0),
-    label: (count) => `, ${count} ${count === 1 ? 'thing needs' : 'things need'} a look`,
+    label: (count) => `${count} ${count === 1 ? 'thing needs' : 'things need'} a look`,
   };
 }
 

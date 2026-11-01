@@ -6,7 +6,7 @@ import { Layer } from '../overlays/Layer.tsx';
 import { useCrew } from '../modules/crew/use-crew.ts';
 import { HELP_OPEN, PALETTE_OPEN } from '../shortcuts.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
-import { NavBadgeCount } from './NavBadgeCount.tsx';
+import { NavBadgeCount, useNavBadgeCount } from './NavBadgeCount.tsx';
 import { Keycaps, useKeyboard } from './keyboard-context.tsx';
 import { useHelp } from './help-context.tsx';
 import { useProfileScope } from './profile-context.tsx';
@@ -91,19 +91,19 @@ function NavPill({ list, glides = true }: { list: 'tabs' | 'side' | 'crew'; glid
 }
 
 /**
- * One place in the phone's dock. Only the current one shows its words; the others are an icon, and their words stay for a screen reader (with the count a
- * badge carries, which a label on the link would hide).
+ * One place in the phone's dock. Only the current one shows its words; the others are an icon, and their words stay for a screen reader, with the count a badge carries said
+ * after the name as one phrase ("More, 1 thing needs a look").
  */
 function TabLink({ name, to, icon, title, current, badge }: { name: string; to: string; icon: IconName; title: string; current: boolean; badge: NavBadge | undefined }) {
+  const count = useNavBadgeCount(badge);
   return (
-    <AppLink preload className="tab" to={to} style={named(name)} aria-current={current ? 'page' : undefined}>
+    <AppLink preload className="tab" to={to} style={named(name)} aria-current={current ? 'page' : undefined} aria-label={badge && count > 0 ? `${title}, ${badge.label(count)}` : undefined}>
       {current && <NavPill list="tabs" />}
       <span className="tab__icon">
         <Icon name={icon} />
         <NavBadgeCount badge={badge} part="count" />
       </span>
       <span className={current ? 'tab__label' : 'tab__label sr-only'}>{title}</span>
-      <NavBadgeCount badge={badge} part="words" />
     </AppLink>
   );
 }
@@ -159,8 +159,10 @@ function HelpButton({ compact, glides }: { compact: boolean; glides: boolean }) 
 function ControlLink({ compact, glides }: { compact: boolean; glides: boolean }) {
   const current = useCurrentPlacement() === 'control';
   const badge = useControlBadge();
+  const count = useNavBadgeCount(badge);
+  // One name, said as one phrase ("Control, 1 thing needs a look"): words in a hidden element of their own would be read with a pause before the comma.
   return (
-    <AppLink preload className={`nav-item${compact ? ' rail__item' : ''}`} to={CONTROL_PATH} style={named('nav-control', glides)} aria-current={current ? 'page' : undefined}>
+    <AppLink preload className={`nav-item${compact ? ' rail__item' : ''}`} to={CONTROL_PATH} style={named('nav-control', glides)} aria-current={current ? 'page' : undefined} aria-label={badge && count > 0 ? `Control, ${badge.label(count)}` : undefined}>
       {compact ? (
         <span className="rail__icon">
           {current && <NavPill list="side" glides={glides} />}
@@ -174,7 +176,7 @@ function ControlLink({ compact, glides }: { compact: boolean; glides: boolean })
         </>
       )}
       <span className="nav-label">Control</span>
-      {compact ? <NavBadgeCount badge={badge} part="words" /> : <NavBadgeCount badge={badge} />}
+      {!compact && <NavBadgeCount badge={badge} part="count" />}
     </AppLink>
   );
 }
@@ -196,6 +198,7 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   const crewScroller = useRef<HTMLDivElement>(null);
   useCurrentInView(crewScroller);
   const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
+  const skeletal = crew.length === 0 && (read.status === 'loading' || read.status === 'slow' || read.status === 'offline');
   return (
     <div className="rail" ref={railTags.rail} data-hinting={railTags.hinting ? '' : undefined} {...railTags.handlers}>
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
@@ -230,7 +233,8 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
           </AppLink>
         ))}
       </div>
-      <div className="rail__scroll" ref={crewScroller} onScroll={railTags.hide}>
+      {/* While the crew is only a skeleton nothing in it takes focus, so the scroller does: a keyboard can still scroll what it cannot reach. */}
+      <div className="rail__scroll" ref={crewScroller} onScroll={railTags.hide} tabIndex={skeletal ? 0 : undefined} role={skeletal ? 'group' : undefined} aria-label={skeletal ? 'Crew' : undefined}>
         {crew.length > 0 ? (
           <ul className="rail__crew" aria-label={asOf === undefined ? 'Crew' : `Crew. ${asOf}`} data-stale={asOf === undefined ? undefined : ''}>
             {asOf !== undefined && (
