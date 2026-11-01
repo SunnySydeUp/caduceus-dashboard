@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import type { LiveRun, InboxApproval, InboxClarify, InboxNotice } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
-import { crewStateLabel, deriveCrew, type CrewInput, type CrewMember } from '../src/modules/crew/crew-state.ts';
+import { crewStateLabel, crewStateWords, deriveCrew, type CrewInput, type CrewMember } from '../src/modules/crew/crew-state.ts';
 
 // What each agent of the crew is doing, from what Hermes and Caduceus already say. Pure: nothing is read or stored here.
 const approval = (profile: string | undefined, command: string, at: number): InboxApproval => ({
@@ -68,6 +68,31 @@ describe('an idle crew', () => {
 
   test('is empty with no profiles', () => {
     expect(deriveCrew(NOTHING)).toEqual([]);
+  });
+});
+
+describe('a crew read that failed', () => {
+  test('says nothing can be checked for an agent it knows nothing of, instead of "Nothing going on"', () => {
+    const members = crew({ unread: true });
+
+    expect(members).toEqual([
+      { profile: 'coder', state: 'idle', line: 'Can’t check', since: undefined, blind: true },
+      { profile: 'general', state: 'idle', line: 'Can’t check', since: undefined, blind: true },
+    ]);
+    expect(members.map(crewStateWords)).toEqual(['State unknown', 'State unknown']);
+  });
+
+  test('keeps what is known true: a request or a run still shows, and only the rest is blind', () => {
+    const members = crew({ unread: true, items: [approval('coder', 'make deploy', 1)] });
+
+    expect(of(members, 'coder')).toMatchObject({ state: 'waiting' });
+    expect(of(members, 'coder')).not.toHaveProperty('blind');
+    expect(crewStateWords(of(members, 'coder'))).toBe(crewStateLabel.waiting);
+    expect(of(members, 'general')).toMatchObject({ state: 'idle', blind: true });
+  });
+
+  test('is a quiet crew when every read worked', () => {
+    expect(crewStateWords(of(crew({}), 'coder'))).toBe(crewStateLabel.idle);
   });
 });
 

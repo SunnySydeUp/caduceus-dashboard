@@ -1,5 +1,5 @@
-import { useMemo, useState, type CSSProperties, type SyntheticEvent } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useMemo, useRef, type CSSProperties, type RefObject } from 'react';
+import { useRailTags } from './rail-tags.tsx';
 import { controlBadge, crewAge, deskNavigation, placementOfPage, type CrewRow } from './nav-order.ts';
 import { Icon, type IconName } from '../icons.tsx';
 import { Layer } from '../overlays/Layer.tsx';
@@ -18,8 +18,8 @@ import { useShellActions } from './ShellActions.tsx';
 import { useNow } from './use-now.ts';
 import { useLinkHealth } from './connection.ts';
 import { asOfWords } from './link-memory.ts';
-import { skeletonRows } from '../modules/crew/crew-memory.ts';
-import { useCrewRead, type CrewRead } from '../modules/crew/use-crew-read.ts';
+import { CrewPending } from '../modules/crew/CrewPending.tsx';
+import { useCrewRead } from '../modules/crew/use-crew-read.ts';
 import { morph } from '../motion.ts';
 import type { DeskPlacement, NavBadge } from '../module-registry.ts';
 import type { SizeClass } from '../size-class.ts';
@@ -177,44 +177,10 @@ function ControlLink({ compact, glides }: { compact: boolean; glides: boolean })
   );
 }
 
-/** Under this window height the rail draws icons only (`shell.css`, "A rail on a short window"); keep the two in step. */
-const SHORT_WINDOW_QUERY = '(max-height: 30rem)';
-
-/** The gap between a rail item and the label tag beside it. */
-const RAIL_TAG_GAP_PX = 8;
-
-interface RailTagAt {
-  text: string;
-  top: number;
-  start: number;
-}
-
 /**
- * The label of a rail item as a visible tag beside it, for a window short enough that the rail draws icons only: on a hover (with a mouse) and while the keyboard is on
- * the item. The label stays the item's name for a screen reader. The tag is drawn in the overlay root, because the rail scrolls and would cut it off.
- */
-function useRailTag() {
-  const [tag, setTag] = useState<RailTagAt>();
-  const hide = () => setTag(undefined);
-  const show = (event: SyntheticEvent<HTMLElement>) => {
-    if (!(event.target instanceof Element) || !matchMedia(SHORT_WINDOW_QUERY).matches) return;
-    const item = event.target.closest<HTMLElement>('.rail__item, .scope--rail');
-    const text = item?.querySelector('.nav-label, .scope__name')?.textContent;
-    if (!item || !text) return;
-    // A hover that a touch screen makes up after a tap would stay on the screen; the keyboard's focus is always worth showing.
-    const keyboard = event.type === 'focus' && item.matches(':focus-visible');
-    if (!keyboard && !(event.type === 'mouseover' && matchMedia('(hover: hover)').matches)) return;
-    const box = item.getBoundingClientRect();
-    const rtl = getComputedStyle(item).direction === 'rtl';
-    setTag({ text, top: box.top + box.height / 2, start: rtl ? document.documentElement.clientWidth - box.left + RAIL_TAG_GAP_PX : box.right + RAIL_TAG_GAP_PX });
-  };
-  const label = tag && createPortal(<span className="tooltip rail-tag" aria-hidden="true" style={{ insetBlockStart: tag.top, insetInlineStart: tag.start }}>{tag.text}</span>, document.getElementById('overlays')!);
-  return { handlers: { onMouseOver: show, onFocus: show, onMouseOut: hide, onBlur: hide, onClick: hide }, hide, label };
-}
-
-/**
- * Medium windows (and the collapsed large sidebar): the navigation rail. The fold toggle, the scope (a sigil button), Search, Today, Talk and Work, a sigil for each
- * agent (the only part that scrolls), and the foot that stays: Help and Control.
+ * Medium windows (and the collapsed large sidebar): the navigation rail. The head (fold toggle, the scope as a sigil button, Search) and the places (Today, Talk, Work) and
+ * the foot (Help, Control) stay put; the crew, a sigil for each agent, is the only part that scrolls. On a short window the rail draws icons only (`rail-tags.tsx`).
+ * While the link is down the crew says "As of 11:58" once, at its top, and its rows dim.
  */
 export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact'>; onOpenDrawer(): void }) {
   const { destinations, crew } = useDesk();
@@ -224,9 +190,12 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   const { openPalette } = useShellActions();
   const read = useCrewRead();
   const link = useLinkHealth();
-  const railTag = useRailTag();
+  const railTags = useRailTags();
+  const crewScroller = useRef<HTMLDivElement>(null);
+  useCurrentInView(crewScroller);
+  const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
   return (
-    <div className="rail" {...railTag.handlers}>
+    <div className="rail" ref={railTags.rail} {...railTags.handlers}>
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
       <button
         type="button"
@@ -240,14 +209,14 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
         <Icon name={medium ? 'menu' : 'sidebar-expand'} />
       </button>
       <ScopeButton placement="rail" />
-      <button type="button" className="nav-item nav-item--button rail__item" aria-haspopup="dialog" onClick={openPalette}>
+      {/* On a window under 30rem tall the rail has no room for Search as well: it is the drawer's first row, and the palette's shortcut stays. */}
+      <button type="button" className="nav-item nav-item--button rail__item rail__search" aria-haspopup="dialog" onClick={openPalette}>
         <span className="rail__icon">
           <Icon name="search" />
         </span>
         <span className="nav-label">Search</span>
       </button>
-      {/* Places and crew scroll together between the head (fold toggle, scope, search) and the foot (Help, Control), which stay put; on a short window the rail draws icons only. */}
-      <div className="rail__scroll" onScroll={railTag.hide}>
+      <div className="rail__places">
         {destinations.map((destination) => (
           <AppLink preload key={destination.id} className="nav-item rail__item" to={destination.path} style={named(`nav-${destination.id}`)} aria-current={current === destination.id ? 'page' : undefined}>
             <span className="rail__icon">
@@ -258,8 +227,15 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
             <span className="nav-label">{destination.title}</span>
           </AppLink>
         ))}
+      </div>
+      <div className="rail__scroll" ref={crewScroller} onScroll={railTags.hide}>
         {crew.length > 0 ? (
-          <ul className="rail__crew" aria-label="Crew" data-stale={link.healthy ? undefined : ''}>
+          <ul className="rail__crew" aria-label={asOf === undefined ? 'Crew' : `Crew. ${asOf}`} data-stale={asOf === undefined ? undefined : ''}>
+            {asOf !== undefined && (
+              <li className="rail__asof" aria-hidden="true">
+                {asOf}
+              </li>
+            )}
             {crew.map((row, index) => {
               const isCurrent = isCurrentAgent(row);
               return (
@@ -268,7 +244,7 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
                     {isCurrent && <NavPill list="crew" />}
                     <Sigil name={row.profile} size="sm" state={row.state} />
                     <span className="nav-label">{row.profile}</span>
-                    <span className="sr-only">{link.healthy ? row.stateLabel : `${row.stateLabel}. ${asOfWords(link.lastHealthyAt, Date.now())}`}</span>
+                    <span className="sr-only">{row.stateLabel}</span>
                   </AppLink>
                   <NewChatWith row={row} />
                 </li>
@@ -283,62 +259,8 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
         <HelpButton compact glides />
         <ControlLink compact glides />
       </div>
-      {railTag.label}
+      {railTags.label}
     </div>
-  );
-}
-
-/**
- * The crew's place before there is a crew to draw: while the first read is on its way, one skeleton row for each agent known from the last load (with its name and
- * sigil, which a name alone draws) or three nameless ones; when the read failed or is taking too long, what happened and a Retry.
- */
-function CrewPending({ read, variant }: { read: CrewRead; variant: 'list' | 'rail' }) {
-  const rail = variant === 'rail';
-  const retry = (
-    <button type="button" className="btn btn--secondary btn--sm" onClick={read.retry}>
-      <Icon name="refresh" small />
-      Retry
-    </button>
-  );
-  const body =
-    read.status === 'failed' ? (
-      <div className="crew-failed" role="status">
-        <p>Crew couldn’t be read</p>
-        {retry}
-      </div>
-    ) : (
-      <ul className={rail ? 'rail__crew' : 'crewlist__scroll'} aria-label="Crew" aria-busy="true">
-        {skeletonRows(read.known).map((name, index) => (
-          <li key={name ?? index} className="crew__slot">
-            {rail ? (
-              <span className="nav-item rail__item rail__mate mate--pending" aria-hidden="true">
-                {name ? <Sigil name={name} size="sm" /> : <span className="skel mate__skel-sigil" />}
-                {name ? <span className="nav-label">{name}</span> : <span className="skel mate__skel-line" />}
-              </span>
-            ) : (
-              <span className="mate mate--pending" aria-hidden="true">
-                {name ? <Sigil name={name} size="md" /> : <span className="skel mate__skel-sigil" />}
-                <span className="mate__text">
-                  {name ? <span className="mate__name">{name}</span> : <span className="skel mate__skel-line" />}
-                  <span className="skel mate__skel-line mate__skel-line--short" />
-                </span>
-              </span>
-            )}
-          </li>
-        ))}
-        <li className="sr-only" role="status">
-          Loading the crew…
-        </li>
-      </ul>
-    );
-  if (rail) return read.status === 'failed' ? <div className="rail__crew rail__crew--failed">{body}</div> : body;
-  return (
-    <section className="crewlist" aria-labelledby="crewlist-title">
-      <h2 className="nav-heading" id="crewlist-title">
-        Crew {read.status === 'loading' && read.known.length > 0 && <span>{read.known.length}</span>}
-      </h2>
-      {body}
-    </section>
   );
 }
 
@@ -359,39 +281,52 @@ function NewChatWith({ row }: { row: CrewRow }) {
  * One agent of the crew in the sidebar: its sigil with the live state, its name, what it is doing and since when. It opens that agent's thread, and its sigil and
  * name fly to that thread's header (`useAppNavigate`).
  */
-function CrewMate({ row, now, current, index, glides, staleLine }: { row: CrewRow; now: number; current: boolean; index: number; glides: boolean; staleLine: string | undefined }) {
+function CrewMate({ row, now, current, index, glides, stale }: { row: CrewRow; now: number; current: boolean; index: number; glides: boolean; stale: boolean }) {
   return (
     <>
-      <AppLink preload className="mate" data-stale={staleLine === undefined ? undefined : ''} to={row.path} flight style={named(`mate-${index}`, glides)} aria-current={current ? 'page' : undefined}>
+      <AppLink preload className="mate" data-stale={stale ? '' : undefined} to={row.path} flight style={named(`mate-${index}`, glides)} aria-current={current ? 'page' : undefined}>
         {current && <NavPill list="crew" glides={glides} />}
         <Sigil name={row.profile} size="md" state={row.state} />
         <span className="mate__text">
           <span className="mate__name">{row.profile}</span>
           <span className="sr-only">: {row.stateLabel}. </span>
-          <small className="mate__line">{staleLine ?? row.line}</small>
+          <small className="mate__line">{row.line}</small>
         </span>
-        {staleLine === undefined && <span className="mate__time">{crewAge(row.since, now)}</span>}
+        {!stale && <span className="mate__time">{crewAge(row.since, now)}</span>}
       </AppLink>
       <NewChatWith row={row} />
     </>
   );
 }
 
+/** Brings the current item of a list into view inside its scroller, on mount and when the page or the agent changes. Never smooth: the list is already where the eye is. */
+function useCurrentInView(list: RefObject<HTMLElement | null>) {
+  const { pathname } = useRouteInfo();
+  const { effective } = useProfileScope();
+  useEffect(() => {
+    const marked = list.current?.querySelectorAll('[aria-current="page"]');
+    marked?.item(marked.length - 1)?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+  }, [list, pathname, effective?.name]);
+}
+
 /**
- * The Desk's sidebar content under the card's head: the one Search field, Today, Talk and Work, the crew (the only part that scrolls, with a fade where it is cut), then
- * the foot that never scrolls away: Help and Control. The sidebar and the medium drawer both show it; `glides` is false in the drawer, which opens next to the rail and so
- * must not name anything the rail names.
+ * The Desk's sidebar content under the card's head: the one Search field, Today, Talk and Work, the crew, then the foot that never scrolls away: Help and Control.
+ * In the sidebar the crew is the one scroller, with a fade where it is cut. The medium drawer shows the same Desk with ONE scroller (Search, the places and the crew between
+ * the head and the foot), and it opens next to the rail, so it must not name anything the rail names.
+ * While the link is down the crew says "As of 11:58" once, in its heading; its rows dim and lose their own times.
  */
-function DeskNav({ glides }: { glides: boolean }) {
+function DeskNav({ variant }: { variant: 'sidebar' | 'drawer' }) {
+  const glides = variant === 'sidebar';
   const { destinations, crew } = useDesk();
   const current = useCurrentPlacement();
   const isCurrentAgent = useIsCurrentAgent();
   const now = useNow(crew.some((row) => row.since !== undefined), CREW_CLOCK_MS);
   const read = useCrewRead();
   const link = useLinkHealth();
-  // While the link is down every live line is as old as the link: it says when it was last true instead of what it said.
-  const staleLine = link.healthy ? undefined : asOfWords(link.lastHealthyAt, now);
-  return (
+  const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, now);
+  const scroller = useRef<HTMLDivElement>(null);
+  useCurrentInView(scroller);
+  const middle = (
     <>
       <SearchField />
       <div className="nav-list">
@@ -407,18 +342,26 @@ function DeskNav({ glides }: { glides: boolean }) {
       {crew.length === 0 && read.status !== 'ready' && <CrewPending read={read} variant="list" />}
       {crew.length > 0 && (
         <section className="crewlist" aria-labelledby="crewlist-title">
-          <h2 className="nav-heading" id="crewlist-title">
-            Crew <span>{crew.length}</span>
-          </h2>
-          <ul className="crewlist__scroll">
+          <div className="crewlist__head">
+            <h2 className="nav-heading" id="crewlist-title">
+              Crew <span>{crew.length}</span>
+            </h2>
+            {asOf !== undefined && <span className="crewlist__asof">{asOf}</span>}
+          </div>
+          <ul className="crewlist__scroll" ref={glides ? (scroller as RefObject<HTMLUListElement | null>) : undefined}>
             {crew.map((row, index) => (
               <li key={row.profile} className="crew__slot">
-                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} staleLine={staleLine} />
+                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} stale={asOf !== undefined} />
               </li>
             ))}
           </ul>
         </section>
       )}
+    </>
+  );
+  return (
+    <>
+      {glides ? middle : <div className="sidebar__scroll" ref={scroller}>{middle}</div>}
       <div className="nav-foot">
         <HelpButton compact={false} glides={glides} />
         <ControlLink compact={false} glides={glides} />
@@ -437,7 +380,7 @@ export function Sidebar() {
           <Icon name="sidebar-collapse" />
         </button>
       </div>
-      <DeskNav glides />
+      <DeskNav variant="sidebar" />
     </div>
   );
 }
@@ -454,7 +397,7 @@ export function NavDrawer({ onClose }: { onClose(): void }) {
               <Icon name="x" />
             </button>
           </div>
-          <DeskNav glides={false} />
+          <DeskNav variant="drawer" />
         </div>
       </div>
     </Layer>

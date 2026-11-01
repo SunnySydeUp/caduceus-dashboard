@@ -35,12 +35,13 @@ export function scopeMode(module: { allProfiles?: boolean; crossProfile?: boolea
 
 /**
  * The scope a screen shows: always `all` on a screen locked to All profiles (Today), whatever the tab's profile; `all` on a cross-profile screen (Notices, Board,
- * Schedules, Insights) until the URL names a profile; otherwise the effective profile, `undefined` while it is not known yet.
+ * Schedules, Insights) until the URL names a profile, also before Hermes has said which profile is the default (only a URL names one, so nothing Hermes says can change
+ * that); otherwise the effective profile, `undefined` while it is not known yet.
  */
 export function profileScope(effective: { name: string; source: ProfileSource } | undefined, mode: ScopeMode): string | undefined {
   if (mode === 'all') return 'all';
-  if (effective === undefined) return undefined;
-  return mode === 'cross' && effective.source !== 'url' ? 'all' : effective.name;
+  if (mode === 'cross') return effective?.source === 'url' ? effective.name : 'all';
+  return effective?.name;
 }
 
 /** The browser's `localStorage`, as far as profile scope needs it. */

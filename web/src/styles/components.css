@@ -154,6 +154,9 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 .banner__title { overflow-wrap: anywhere; font-weight: var(--cd-weight-semibold); }
 .banner__body { overflow-wrap: anywhere; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
 .banner__actions { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
+/* Offline is the ladder's neutral with a dashed outline (design-system §4.2): on its own surface, with an edge and an icon that read against the page in both themes, not grey on grey. */
+.banner[data-banner="connection"][data-tone="neutral"] { background: var(--cd-bg-surface); border: 2px dashed var(--cd-border-strong); }
+.banner[data-banner="connection"][data-tone="neutral"] > svg.i { color: var(--cd-fg-default); }
 .toast { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cd-space-3); align-items: center; padding: var(--cd-space-3); padding-inline-end: var(--cd-space-2); border-radius: var(--cd-radius-lg); background: var(--cd-bg-overlay); box-shadow: var(--cd-shadow-popover); max-inline-size: 26rem; }
 .toast > svg.i { color: var(--t-solid); stroke-width: 2; }
 .toast__text { display: grid; gap: 2px; min-inline-size: 0; }
@@ -230,9 +233,11 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 .lane__head { display: flex; align-items: center; gap: var(--cd-space-2); padding: var(--cd-space-1) var(--cd-space-1); }
 .lane__head .overline { flex: 1; }
 .kcard { background: var(--cd-bg-surface); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-lg); padding: var(--cd-space-3); display: grid; gap: var(--cd-space-2); }
+/* Needs you: the status ladder's Waiting for you (design-system §4.2): a steady warning ring round the whole card and a semibold title. Never a stripe on one edge; selection and the lift come after it and win. */
+.kcard.is-attn { border-color: var(--cd-status-waiting); box-shadow: 0 0 0 1px var(--cd-status-waiting); }
+.kcard.is-attn .kcard__title { font-weight: var(--cd-weight-semibold); }
 .kcard.is-selected { border-color: var(--cd-accent); box-shadow: 0 0 0 1px var(--cd-accent); }
 .kcard.is-dragging { box-shadow: var(--cd-shadow-popover); rotate: -1.5deg; }
-.kcard.is-attn { border-inline-start: 3px solid var(--cd-tone-warning-solid); }
 .kcard__top { display: flex; align-items: center; gap: var(--cd-space-2); }
 .kcard__title { font-weight: var(--cd-weight-medium); }
 .kcard__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2) var(--cd-space-3); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); }

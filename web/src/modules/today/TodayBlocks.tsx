@@ -6,11 +6,12 @@ import type { InboxItem } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
 import { useLinkHealth } from '../../shell/connection.ts';
 import { asOfWords, cannotCheckWords } from '../../shell/link-memory.ts';
-import { useTakingLonger } from '../../shell/Loading.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import type { CrewRow } from '../../shell/nav-order.ts';
+import { STILL_READING_WORDS } from '../../read-ladder.ts';
 import type { Block } from '../../use-block.ts';
+import { useReadLadder } from '../../use-read-ladder.ts';
 import { ageWords } from '../inbox/inbox-model.ts';
 import { DecisionCard, Mark } from './DecisionCard.tsx';
 import { fold } from './fold.ts';
@@ -26,8 +27,11 @@ function useAsOf(): string | undefined {
   return link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
 }
 
-/** A block's title row: the title, the count beside it, and (while the link is down) when the block's data was last true, on the same line so that nothing moves. */
-function BlockHead({ id, title, count, asOf }: { id: string; title: string; count?: number; asOf?: string }) {
+/**
+ * A block's title row: the title, the count beside it, and on the same line, so that nothing moves, one quiet note: when the block's data was last true while the link is down, or
+ * that Hermes is still being read when a read is slow. It is the top of the block, where the eye already is, not under the room the answer will fill.
+ */
+export function BlockHead({ id, title, count, asOf, slow }: { id: string; title: string; count?: number; asOf?: string; slow?: boolean }) {
   return (
     <div className="today-block__head">
       <h2 className="today-block__title" id={id}>
@@ -35,17 +39,24 @@ function BlockHead({ id, title, count, asOf }: { id: string; title: string; coun
         {count !== undefined && count > 0 && <span className="muted today-block__count">{count}</span>}
       </h2>
       {asOf !== undefined && <span className="today-block__asof">{asOf}</span>}
+      {slow && (
+        <span className="today-block__slow" role="status">
+          {STILL_READING_WORDS}
+        </span>
+      )}
     </div>
   );
 }
 
-function EmptyState({ which, to, note }: { which: EmptyBlock; to: EmptyTarget; note?: string }) {
+function EmptyState({ which, to, note, unsure }: { which: EmptyBlock; to: EmptyTarget; note?: string; unsure?: boolean }) {
   const { text, action } = EMPTY[which];
-  // While the link is down an empty block cannot tell "nothing is waiting" from "I cannot look": it says it cannot check, and since when.
+  // While the link is down, or a read that bears on this block has failed, an empty block cannot tell "nothing is waiting" from "I cannot look": it says it cannot check (and, for
+  // the link, since when).
   const link = useLinkHealth();
+  const blind = !link.healthy || unsure;
   return (
-    <div className="today-empty panel" data-stale={link.healthy ? undefined : ''}>
-      <p className="subtle">{link.healthy ? (note ?? text) : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
+    <div className="today-empty panel" data-stale={blind ? '' : undefined}>
+      <p className="subtle">{link.healthy ? (unsure ? 'Can’t check right now.' : (note ?? text)) : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
       <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
         {action.label}
       </AppLink>
@@ -69,6 +80,8 @@ interface BlockProps<T> {
   room?: string;
   to: EmptyTarget;
   className?: string;
+  /** A read beside this block failed, one its quiet answer depends on: an empty block says it cannot check, not that there is nothing. */
+  unsure?: boolean;
   /** The block's rows each say when they were last true while the link is down (the crew's lines), so its title does not say it again. */
   ownLines?: boolean;
   children(data: T): ReactNode;
@@ -89,40 +102,38 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
 }
 
 /** One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its usual answer takes. */
-export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, children }: BlockProps<T>) {
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, unsure, children }: BlockProps<T>) {
   const { state } = block;
   const which = state.status === 'ready' ? empty(state.data) : undefined;
   // What it shows (its rows, or its error) is from before the link dropped: it is marked, never hidden. A block still loading shows nothing of the kind, an empty one already says
   // it cannot check (`EmptyState`), and the crew says it on each of its own lines.
   const asOf = useAsOf();
   const stale = state.status !== 'loading' && !which && asOf !== undefined;
-  // A wait that goes on says so, with the way out; and a Retry that is on its way says so on the button, so a press is never met with silence.
-  const late = useTakingLonger(state.status === 'loading');
+  // A read on its way climbs the one ladder (`read-ladder.ts`): a skeleton; "Still reading Hermes…" at the top of the block once the wait is long; and only once it has
+  // passed the longer bound does the block say it could not be read, with a Retry. A read that really failed says so at once. A Retry that is on its way says so on the button,
+  // so a press is never met with silence.
   const [retrying, setRetrying] = useState(false);
+  const [tries, setTries] = useState(0);
+  // The wait starts when the block has asked, not when it was drawn: a block below the first screen asks only after the first paint, and must not call that a slow read.
+  const stage = useReadLadder(state.status === 'loading' && block.asked !== false, state.status === 'error', tries);
   const retry = () => {
     setRetrying(true);
+    setTries((count) => count + 1);
     void Promise.resolve(block.reload()).finally(() => setRetrying(false));
   };
+  const slow = state.status === 'loading' && stage === 'still-reading';
+  const failed = state.status === 'error' || stage === 'failed';
   return (
     <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={state.status === 'loading'} data-stale={stale ? '' : undefined}>
-      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} />
-      {state.status === 'loading' && (
+      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow} />
+      {state.status === 'loading' && !failed && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
-          <span className="sr-only">{late ? `Loading ${title.toLowerCase()} is taking longer than usual.` : `Loading ${title.toLowerCase()}…`}</span>
+          <span className="sr-only">Loading {title.toLowerCase()}…</span>
           {held && <HeldAnswer which={held} />}
-          {late && (
-            <p className="today-empty__late">
-              <span className="muted">Taking longer than usual.</span>
-              <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
-                <Icon name="refresh" small />
-                {retrying ? 'Retrying…' : 'Retry'}
-              </button>
-            </p>
-          )}
         </div>
       )}
-      {state.status === 'error' && (
+      {failed && (
         // A refresh that fails (Hermes restarting, a session that ended) must not move what is below the block: the error sits over the room of the usual answer.
         <div className="today-room" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           {held && (
@@ -130,20 +141,26 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
               <HeldAnswer which={held} />
             </div>
           )}
-          <p className="banner" data-tone="danger" role="alert">
+          <div className="banner" data-tone="danger" role="alert">
             <Icon name="failed" />
             <span className="banner__content">
-              <span className="banner__title">{title} could not be loaded</span>
-              <span className="banner__body">{state.message}</span>
+              <span className="banner__title">{title} couldn’t be read</span>
+              <span className="banner__body">{state.status === 'error' ? state.message : 'Hermes hasn’t answered yet.'}</span>
+              {state.status === 'error' && state.detail !== undefined && (
+                <details className="today-block__details">
+                  <summary>Details</summary>
+                  <code>{state.detail}</code>
+                </details>
+              )}
             </span>
             <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
               <Icon name="refresh" small />
               {retrying ? 'Retrying…' : 'Retry'}
             </button>
-          </p>
+          </div>
         </div>
       )}
-      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} /> : children(state.data))}
+      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure} /> : children(state.data))}
     </section>
   );
 }
@@ -151,16 +168,16 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
 /**
  * Needs you. `block` is the decisions to draw (`useVisibleDecisions`: the stream's list with the cards that are answering kept in place and the folded ones left out), which Today
  * also counts in its pill. A card whose answer is on its way stays where it stands; once it has folded into its agent it stays gone. An answer cannot be undone, so a folded card has
- * nothing to come back for.
+ * nothing to come back for. `unsure`: a read that bears on what needs the owner has failed (what is ready for review), so an empty list says it cannot check rather than that nothing needs them.
  */
-export function NeedsYouBlock({ block, now, to }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget }) {
+export function NeedsYouBlock({ block, now, to, unsure }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget; unsure: boolean }) {
   const answered = async (item: InboxItem, card: HTMLElement | null) => {
     // A card that left the page while its answer was on its way has nothing to fold.
     if (card) await fold(card, item.profile, () => foldAway(item.id));
     else foldAway(item.id);
   };
   return (
-    <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to}>
+    <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to} unsure={unsure}>
       {(items) => (
         <ul className="today-cards">
           {items.map((item, at) => (

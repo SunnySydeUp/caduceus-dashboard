@@ -14,10 +14,8 @@
 .today-empty { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-3); padding: var(--cd-card-p); }
 .today-empty p { margin: 0; max-inline-size: 60ch; }
 .today-empty--pending { position: relative; min-block-size: var(--room, 0); }
-.today-empty--pending > :not(.today-empty__shimmer, .sr-only, .today-empty__late) { visibility: hidden; }
+.today-empty--pending > :not(.today-empty__shimmer, .sr-only) { visibility: hidden; }
 .today-empty__shimmer { position: absolute; inset: 0; border-radius: inherit; }
-/* A wait that goes on says so, above the shimmer, with a Retry. */
-.today-empty__late { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--cd-space-2); margin: 0; }
 /* A block that could not load holds the same room, with the error over it: a refresh that fails must not move what is below. */
 .today-room { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: var(--room, 0); }
 .today-room > * { grid-area: 1 / 1; min-inline-size: 0; }
@@ -84,6 +82,11 @@
    lines turn quiet and italic. It is marked, never hidden; its text keeps its colour. */
 .today-block__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--cd-space-1) var(--cd-space-3); min-inline-size: 0; }
 .today-block__asof { color: var(--cd-fg-subtle); font-size: var(--cd-text-sm); font-style: italic; }
+/* A read that is slow says so on the title row, in the same quiet voice and place as "As of": it is not an alarm. A failed read's cause has its code behind Details. */
+.today-block__slow { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.today-block__details { margin-block-start: var(--cd-space-1); }
+.today-block__details summary { cursor: pointer; display: flex; align-items: center; min-block-size: var(--cd-target-min); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.today-block__details code { display: block; overflow-wrap: anywhere; font-size: var(--cd-text-sm); user-select: all; }
 .today-block[data-stale] .sigil { opacity: 0.55; }
 .today-block[data-stale] .today-row__text small, .today-block[data-stale] .today-when__t small, .today-block[data-stale] .banner__body { font-style: italic; }
 .today-block[data-stale] .banner > svg.i { opacity: 0.55; }

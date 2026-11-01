@@ -7,6 +7,8 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import type { Reminder } from '@caduceus/contracts/today';
 import { Icon } from '../../icons.tsx';
 import { morph } from '../../motion.ts';
+import { useLinkHealth } from '../../shell/connection.ts';
+import { cannotCheckWords } from '../../shell/link-memory.ts';
 import { useBlock } from '../../use-block.ts';
 import { TodayBlock } from './TodayBlocks.tsx';
 import { agenda, dateKey, type DayCell, dayKey, monthCells, monthOf, overdueBefore, remindersOn, shiftDay, shiftMonth, timeWords, weekOf } from './reminders-model.ts';
@@ -215,8 +217,12 @@ function useHiddenTrouble(): [boolean, (hidden: boolean) => void] {
   return [hidden, change];
 }
 
-/** Reminders are optional, so when they cannot be read the block is one calm line: what is wrong is behind Details, Retry says it is trying, and Hide puts the line away on this device. */
+/**
+ * Reminders are optional, so when they cannot be read the block is one calm line: what is wrong is behind Details, Retry says it is trying, and Hide puts the line away on this
+ * device. While the link is down it speaks in the voice of the blocks beside it, which cannot tell "nothing is due" from "I cannot look": it can't check, and since when.
+ */
 function RemindersTrouble({ message, reload, onHide }: { message: string; reload(): void | Promise<void>; onHide(): void }) {
+  const link = useLinkHealth();
   const [retrying, setRetrying] = useState(false);
   const retry = () => {
     setRetrying(true);
@@ -227,8 +233,8 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
       <h2 className="today-block__title" id="today-reminders">
         Reminders
       </h2>
-      <div className="today-quiet panel">
-        <p className="subtle">Reminders are not available right now. Everything else on Today works.</p>
+      <div className="today-quiet panel" data-stale={link.healthy ? undefined : ''}>
+        <p className="subtle">{link.healthy ? 'Reminders are not available right now. Everything else on Today works.' : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
         <div className="today-quiet__acts">
           <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
             <Icon name="refresh" small />

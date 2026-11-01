@@ -2,6 +2,7 @@ import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import { Icon } from '../icons.tsx';
 import { backAction } from '../back-target.ts';
 import type { ConnectionState } from '../gateway-connection.ts';
+import { useStripShown } from './banners.ts';
 import { useConnection } from './connection.ts';
 import { useHeadingScrolledAway } from './heading-visibility.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
@@ -17,21 +18,25 @@ const CONNECTION: Record<ConnectionState, { label: string; tone: 'success' | 'wa
   offline: { label: 'Offline', tone: 'neutral' },
 };
 
-/** The realtime dot: connected, reconnecting with the attempt count, or offline, with the plain reason a screen reader and a hover can read. */
+/**
+ * The realtime dot: connected, reconnecting with the attempt count, or offline, with the plain reason a screen reader can read. While the phone's connection strip is on screen the
+ * strip says the state in words, so the dot is only a picture and a screen reader skips it: the state is said once.
+ */
 function ConnectionDot() {
   const { state, attempt, reason } = useConnection();
+  const stripShown = useStripShown();
   const { label, tone } = CONNECTION[state];
   const counted = state === 'reconnecting' && attempt > 0;
-  const spoken = `Connection: ${label}${counted ? `, attempt ${attempt}` : ''}${reason ? `. ${reason}` : ''}`;
+  const words = `Connection: ${label}${counted ? `, attempt ${attempt}` : ''}${reason ? `. ${reason}` : ''}`;
   return (
-    <span className="appbar__conn" role="status" title={reason}>
+    <span className="appbar__conn" role="status" aria-hidden={stripShown ? true : undefined}>
       <span className={`dot${state === 'offline' ? ' dot--dashed' : ''}${state === 'reconnecting' ? ' pulse' : ''}`} data-tone={tone} aria-hidden="true" />
       {counted && (
         <span className="appbar__conn-count" aria-hidden="true">
           Retry {attempt}
         </span>
       )}
-      <span className="sr-only">{spoken}</span>
+      <span className="sr-only">{words}</span>
     </span>
   );
 }

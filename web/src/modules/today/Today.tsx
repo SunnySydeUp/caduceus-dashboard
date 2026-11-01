@@ -113,7 +113,7 @@ export function Today() {
       />
       <div className="today__grid">
         <div className="today__col">
-          <NeedsYouBlock block={visible} now={now} to={to} />
+          <NeedsYouBlock block={visible} now={now} to={to} unsure={ready.state.status === 'error'} />
           {needs.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
           <ReadyBlock block={readyBlock} now={now} to={to} onOpen={(row) => void markOpened(row)} />
           <CrewBlock block={crewBlock} to={to} />

@@ -68,8 +68,8 @@ a.btn { text-decoration: none; }
 /* Once the title has taken the app bar (the heading scrolled away) the chip is only its sigil, so the title is not cut to a letter or two. */
 .appbar.is-scrolled .appbar__profile > .truncate, .appbar.is-scrolled .appbar__profile > svg:last-child { display: none; }
 .appbar__profile[data-cross] { border-style: dashed; }
-/* On a screen locked to All agents the chip is text, not a control: no pill to press. */
-span.appbar__profile { background: transparent; border-color: transparent; }
+/* On a screen locked to All agents the scope is a label, not a control: no fill, no edge, no pill, and no tile behind its sigil (`scope-switcher.css`). */
+.appbar__profile--text { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); padding-inline: var(--cd-space-1); color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); white-space: nowrap; }
 .appbar__conn { display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-1); min-inline-size: var(--cd-space-6); block-size: var(--cd-space-6); }
 .appbar__conn .dot { inline-size: 10px; block-size: 10px; }
 .appbar__conn-count { font: var(--cd-text-xs)/1 var(--cd-font-mono); font-variant-numeric: tabular-nums; color: var(--cd-fg-muted); }
@@ -124,9 +124,10 @@ span.appbar__profile { background: transparent; border-color: transparent; }
 .side > .rail { flex: 0 1 auto; min-block-size: 0; }
 /* One column as wide as the rail: a long agent name is cut with an ellipsis, it never widens the column (which would push every item off centre). */
 .rail { display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-3) var(--cd-space-1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
-/* The places and the crew scroll together between the head (fold toggle, scope, search) and the foot (Help, Control), which stay put while they fit. The scroller keeps room
-   for two items; when the head and the foot leave less than that (a window a few hundred px tall) the rail draws itself compact: see "A rail on a short window". */
-.rail__scroll { flex: 1 1 auto; min-block-size: calc(3.5rem * 2 + var(--cd-space-1)); display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-1); margin: calc(var(--cd-space-1) * -1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+/* The crew scrolls between the places (fixed under the head) and the foot (Help, Control), which stay put while they fit. The scroller keeps room for one row; when the head,
+   the places and the foot leave less than that (a window a few hundred px tall) the rail draws itself compact: see "A rail on a short window". */
+.rail__places { flex: none; display: flex; flex-direction: column; gap: var(--cd-space-1); }
+.rail__scroll { flex: 1 1 auto; min-block-size: 3.5rem; display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-1); margin: calc(var(--cd-space-1) * -1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
   mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
 .rail > * { min-inline-size: 0; }
@@ -141,9 +142,15 @@ span.appbar__profile { background: transparent; border-color: transparent; }
 .rail__icon .count { position: absolute; inset-block-start: -4px; inset-inline-end: 2px; }
 .sidebar { display: flex; flex-direction: column; gap: var(--cd-space-3); padding: var(--cd-space-2) var(--cd-space-2) var(--cd-space-3); }
 .sidebar__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-1); min-block-size: 3rem; }
-.sidebar--drawer { block-size: 100%; }
-/* The drawer's crew keeps two rows however short the window is; what does not fit scrolls with the drawer's body. */
-.sidebar--drawer .crewlist { min-block-size: calc(3.5rem * 2 + var(--cd-space-8)); }
+.sidebar--drawer { flex: 1 1 auto; min-block-size: 0; }
+/* The drawer has ONE scroller: Search, the places and the crew between its head and its foot (Help, Control), which stay put; it fades where it is cut. Its crew list does
+   not scroll by itself, and the drawer's body does not either. */
+.drawer--start .drawer__body { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.sidebar__scroll { flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; gap: var(--cd-space-3); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
+.sidebar__scroll .crewlist { flex: none; }
+.sidebar__scroll .crewlist__scroll { overflow: visible; -webkit-mask-image: none; mask-image: none; animation: none; padding: 0; margin: 0; }
 .nav-list { flex: none; display: grid; gap: 1px; }
 .sidebar .nav-item, .sidebar .mate { position: relative; isolation: isolate; }
 .sidebar .nav-item[aria-current="page"] { background: transparent; }
@@ -193,7 +200,7 @@ span.appbar__profile { background: transparent; border-color: transparent; }
 @keyframes hc-fade-start { to { --fade-start: var(--cd-space-6); } }
 @keyframes hc-fade-end { from { --fade-end: var(--cd-space-6); } }
 @supports (animation-timeline: scroll()) {
-  .crewlist__scroll, .rail__scroll { animation: hc-fade-start linear both, hc-fade-end linear both; animation-timeline: scroll(self), scroll(self); animation-range: 0 var(--cd-space-6), calc(100% - var(--cd-space-6)) 100%; }
+  .crewlist__scroll, .rail__scroll, .sidebar__scroll { animation: hc-fade-start linear both, hc-fade-end linear both; animation-timeline: scroll(self), scroll(self); animation-range: 0 var(--cd-space-6), calc(100% - var(--cd-space-6)) 100%; }
 }
 .nav-heading { display: flex; align-items: center; justify-content: space-between; margin: 0; padding-inline: var(--cd-space-2); font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); letter-spacing: 0; color: var(--cd-fg-subtle); }
 .mate { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cd-space-3); min-block-size: max(3.5rem, var(--cd-target-min)); padding: var(--cd-space-2); border-radius: var(--cd-radius-lg); color: inherit; text-decoration: none; }
@@ -215,21 +222,34 @@ span.appbar__profile { background: transparent; border-color: transparent; }
 .rail__mate.mate--pending > .mate__skel-line { inline-size: 3rem; }
 .crew-failed { display: grid; justify-items: start; gap: var(--cd-space-2); padding: var(--cd-space-2); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
 .crew-failed p { margin: 0; }
-.rail__crew--failed { justify-items: center; text-align: center; }
-.rail__crew--failed .crew-failed { justify-items: center; font-size: var(--cd-text-xs); padding-inline: var(--cd-space-1); }
-/* ---- A rail on a short window. Under 480 px tall (a phone on its side; the nav mode still follows the width only) the rail draws icons only, 44 px tall: a label is a visible
-   tag beside the item on a hover and on the keyboard's focus (`useRailTag` in Nav.tsx, which uses the same height), and it stays the item's name for a screen reader. The
-   head and the foot (Help and Control with its badge) stay put; only the places and the crew between them scroll, with the same edge fades. ---- */
-@media (max-height: 30rem) {
-  .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); }
-  .rail__scroll { min-block-size: 0; }
+/* The rail's failed crew is one Retry item in the rail's own shape: an icon (its words are the tag and the accessible name). */
+.rail__crew--failed { padding-block-start: var(--cd-space-1); }
+/* While the link is down the crew says when it was last true once, in the rail's crew above its rows. */
+.rail__asof { list-style: none; padding: 0 var(--cd-space-1) var(--cd-space-1); font-size: var(--cd-text-xs); line-height: var(--cd-leading-xs); font-style: italic; color: var(--cd-fg-subtle); text-align: center; }
+.crewlist__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cd-space-2); }
+.crewlist__head .nav-heading { flex: 1; min-inline-size: 0; }
+.crewlist__asof { padding-inline-end: var(--cd-space-2); font-size: var(--cd-text-xs); font-style: italic; color: var(--cd-fg-subtle); white-space: nowrap; }
+/* ---- A rail on a short window. Under 36rem tall (a phone on its side, a short laptop window; the nav mode still follows the width only) the rail draws icons only, 44 px
+   tall: a label is a visible tag beside the item (`rail-tags.tsx`, which uses the same height), and it stays the item's name for a screen reader. The head (fold toggle, scope,
+   Search), the places (Today, Talk, Work) and the foot (Help and Control with its badge) are fixed; only the crew between them scrolls, with the same edge fades.
+   Under 30rem tall even that leaves the crew no room, so Search leaves the rail (it is the drawer's first row, and the palette has its shortcut). ---- */
+@media (max-height: 36rem) {
+  .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); gap: 0; }
+  .rail__places { gap: 0; }
+  .rail__scroll { min-block-size: 0; padding: 0; margin: 0; }
   .rail__toggle { margin-block-end: 0; }
-  .rail__item, .scope--rail { flex-direction: row; min-block-size: 2.75rem; padding-block: 0; }
+  .rail__item, .scope--rail { flex-direction: row; min-block-size: max(2.75rem, var(--cd-target-min)); padding-block: 0; }
   .rail__icon { block-size: 2.25rem; }
   .rail__item .nav-label, .scope--rail .scope__name { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .rail__crew { margin-block-start: 0; padding-block-start: var(--cd-space-1); }
+  .rail__crew { margin-block-start: 0; padding-block-start: var(--cd-space-1); gap: 0; }
 }
+@media (max-height: 30rem) {
+  .rail__search { display: none; }
+  .side > .rail { padding-block: var(--cd-space-1); }
+}
+.rail__item, .scope--rail { -webkit-touch-callout: none; user-select: none; }
 .rail-tag { position: fixed; z-index: var(--cd-z-tooltip); translate: 0 -50%; pointer-events: none; box-shadow: var(--cd-shadow-popover); }
+.mate[data-stale] .mate__text { opacity: 0.7; }
 .mate[data-stale] .mate__line { color: var(--cd-fg-subtle); font-style: italic; }
 .mate[data-stale] .sigil, .rail__crew[data-stale] .sigil { opacity: 0.55; }
 /* A new chat with one agent (Nav.tsx): a + on its crew row, over the row's time in the sidebar and on the sigil's corner in the rail. It shows while the pointer is
@@ -244,8 +264,14 @@ span.appbar__profile { background: transparent; border-color: transparent; }
   .crew__slot:hover .mate__time { visibility: hidden; }
 }
 .rail__crew .crew__new { inset-block-start: 0; inset-inline-end: 0; translate: none; inline-size: 1.5rem; block-size: 1.5rem; min-block-size: 0; min-inline-size: 0; padding: 0; border-radius: var(--cd-radius-full); }
-/* A finger (shown to a keyboard on a touch screen) gets the full target in the sidebar and the rail. */
-@media (pointer: coarse) { .crew__slot .crew__new { inline-size: var(--cd-target-min); block-size: var(--cd-target-min); } }
+/* A finger gets the full target. There is no hover to show the + on a touch screen, so it shows on the selected row (and under the keyboard's focus); in the rail it sits
+   under the row's sigil, in the flow, because a 44 px corner button would cover the whole row. */
+@media (pointer: coarse) {
+  .crew__slot .crew__new { inline-size: var(--cd-target-min); block-size: var(--cd-target-min); }
+  .crew__slot:has([aria-current="page"]) .crew__new { opacity: 1; pointer-events: auto; }
+  .crew__slot:has([aria-current="page"]) .mate__time { visibility: hidden; }
+  .rail__crew .crew__slot:is(:has([aria-current="page"]), :has(:focus-visible)) .crew__new { position: static; translate: none; display: flex; margin-inline: auto; }
+}
 @media (prefers-reduced-motion: reduce) { .crew__new { transition: none; } }
 
 /* ---- Talk on a phone: the bridge, a row of the crew's sigils to switch agent ---- */
@@ -289,14 +315,18 @@ span.appbar__profile { background: transparent; border-color: transparent; }
 .app:not([data-size="compact"]) .banners__list { padding-block: 0 var(--cd-space-3); }
 .app:not([data-size="compact"]) .banners[data-sticky] { position: sticky; inset-block-start: 0; z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
-/* On a phone the connection banner is a one-line strip: sticky under the app bar, as tall as a target, and it stays sticky while open. It says a short title and the time
-   since the link was last good; the title gives way (an ellipsis) before the time does. A tap opens the full banner under it, which scrolls under the pinned strip. */
-.banner-strip { align-items: center; inline-size: 100%; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); column-gap: var(--cd-space-2); font: inherit; font-size: var(--cd-text-sm); text-align: start; cursor: pointer; }
+/* On a phone the connection banner is a one-line strip: sticky under the app bar, 40 px tall (a press reaches the 44 px target through `::after`, as a chip's does). It says a short
+   title and since when the link was last good ("Offline since 11:58"); the title gives way (an ellipsis) before the time does. A tap opens the full words in a bottom sheet. */
+.banner-strip { position: relative; align-items: center; inline-size: 100%; min-block-size: var(--cd-space-10); padding-block: var(--cd-space-1); column-gap: var(--cd-space-2); font: inherit; font-size: var(--cd-text-sm); text-align: start; cursor: pointer; }
+.banner-strip::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: 0; }
 .banner-strip > svg.i { margin-block-start: 0; }
-.banner-strip__text { min-inline-size: 0; display: flex; align-items: baseline; gap: var(--cd-space-1); white-space: nowrap; }
+.banner-strip > svg.i:last-child { color: var(--cd-fg-subtle); }
+.banner-strip__text { min-inline-size: 0; display: flex; align-items: baseline; gap: var(--cd-space-1-5); white-space: nowrap; }
 .banner-strip__text > b { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
-.banner-strip__time { flex: none; }
+.banner-strip__time { flex: none; color: var(--cd-fg-muted); }
 .banner-strip__pin { position: sticky; inset-block-start: 0; z-index: 1; padding-block: var(--cd-space-1); background: var(--cd-bg-canvas); }
+.banner-details { display: grid; gap: var(--cd-space-3); padding-block-end: var(--cd-space-2); }
+.banner-details__body { margin: 0; color: var(--cd-fg-muted); }
 .app[data-size="compact"] .banners[data-strip] .banners__list { padding-block: 0 var(--cd-space-1); }
 .app[data-size="compact"] .banners[data-sticky] { position: sticky; inset-block-start: calc(var(--cd-appbar-h) + var(--cd-safe-top)); z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
@@ -494,11 +524,12 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .help-section { border-block-start: 1px solid var(--cd-border-subtle); }
 .help-section > summary { display: flex; align-items: center; min-block-size: var(--cd-target-min); font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); cursor: pointer; }
 .help-section__body { display: grid; gap: var(--cd-space-3); padding-block-end: var(--cd-space-3); }
-.help-hit { padding: var(--cd-space-2) var(--cd-space-3); border-inline-start: 3px solid var(--cd-accent); border-radius: var(--cd-radius-md); background: var(--cd-accent-soft); }
+.help-hit { padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-accent-soft); }
 .help-hit > * { margin: 0; }
 
 /* ---- Toast region ---- */
-.toasts { position: fixed; z-index: var(--cd-z-toast); inset-inline: 0; inset-block-end: max(calc(var(--shell-bottom) + var(--kb-inset) + var(--cd-space-3)), var(--toast-floor, 0px)); display: grid; justify-items: center; gap: var(--cd-space-2); padding-inline: calc(var(--cd-space-3) + var(--cd-safe-left)) calc(var(--cd-space-3) + var(--cd-safe-right)); pointer-events: none; }
+/* The toasts are centred on the page column, not the window: from 600 px they stand clear of the side nav (`--shell-start`, as the page does). */
+.toasts { position: fixed; z-index: var(--cd-z-toast); inset-inline: max(var(--shell-start), var(--cd-safe-left)) var(--cd-safe-right); inset-block-end: max(calc(var(--shell-bottom) + var(--kb-inset) + var(--cd-space-3)), var(--toast-floor, 0px)); display: grid; justify-items: center; gap: var(--cd-space-2); padding-inline: var(--cd-space-3); pointer-events: none; }
 /* While a sheet or dialog is open its footer owns the bottom edge: toasts move to the top, under the app bar's place so they never sit on it. A palette owns the top (its search field), so there they stay at the bottom, above the keyboard. */
 html.has-overlay .toasts { inset-block-end: auto; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); }
 html.has-overlay:has(.layer--palette) .toasts { inset-block-start: auto; inset-block-end: calc(var(--kb-inset) + var(--cd-space-3) + var(--cd-safe-bottom)); }

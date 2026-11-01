@@ -2,14 +2,21 @@
 // Nothing is kept beyond what is on screen (D1); a block reads again when Hermes says its data moved, never on a timer.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockAsks } from './block-asks.ts';
+import { plainFailure } from './failure-words.ts';
 import { useGatewayEvent, useLiveLoad } from './gateway.ts';
 
-export type BlockState<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string };
+/** An error says its cause in plain words (`message`); `detail` is what was said before it was made plain (a status code), for a Details disclosure. */
+export type BlockState<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string; detail?: string };
 
 export interface Block<T> {
   state: BlockState<T>;
   /** Reads again; what is shown stays until the new answer is in. A block that can say when the new answer is in returns a promise that settles then. */
   reload(): void | Promise<void>;
+  /**
+   * False while the block is not allowed to ask yet (Hermes is not ready, or the block waits for the first paint): its `loading` is then waiting, not reading, so nothing
+   * may say the read is slow. A block that does not say is taken to have asked.
+   */
+  asked?: boolean;
 }
 
 /**
@@ -27,7 +34,7 @@ export function useBlock<T>(load: () => Promise<T>, key: string, enabled: boolea
     const ask = asks.ask();
     return loadNow.current().then(
       (data) => void (asks.accepts(ask, false) && setState({ status: 'ready', data })),
-      (failure: unknown) => void (asks.accepts(ask, true) && setState({ status: 'error', message: failure instanceof Error ? failure.message : 'Hermes did not answer.' })),
+      (failure: unknown) => void (asks.accepts(ask, true) && setState({ status: 'error', ...plainFailure(failure instanceof Error ? failure.message : 'Hermes did not answer.') })),
     );
   }, [asks]);
 
@@ -48,7 +55,7 @@ export function useBlock<T>(load: () => Promise<T>, key: string, enabled: boolea
   // Change broadcasts are not replayed: after a reconnect or a Hermes restart anything may have moved while the page was away.
   useLiveLoad((ready) => ready !== undefined && enabled && reload());
 
-  return { state, reload };
+  return { state, reload, asked: enabled };
 }
 
 /** What a block made of the Inbox's stream (Needs you, the crew's states, Work's running rows) shows while that stream is not up: the stream's own state, as a block's. */

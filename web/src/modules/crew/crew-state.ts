@@ -15,12 +15,22 @@ export const crewStateLabel: Record<CrewStateName, string> = {
   idle: 'Idle',
 };
 
+/** What a screen says in place of "Nothing going on" when a read the crew is made of has failed: the agent may well be busy, and nothing here can tell. */
+export const CANNOT_CHECK = 'Can’t check';
+
 /** One agent of the crew: how it stands, one short sentence of what it is doing or asking, and since when (ms since the epoch; `undefined` when idle). */
 export interface CrewMember {
   profile: string;
   state: CrewStateName;
   line: string;
   since: number | undefined;
+  /** Nothing is known of this agent because a read the crew is made of failed: it is drawn at rest, but neither its words nor its line claim that it is. */
+  blind?: true;
+}
+
+/** The words that stand beside a member's sigil: its state's, or that its state is not known (its line says why: it cannot be checked). */
+export function crewStateWords({ state, blind }: Pick<CrewMember, 'state' | 'blind'>): string {
+  return blind ? 'State unknown' : crewStateLabel[state];
 }
 
 /** What the crew is read from. All of it is already on the page (the Inbox's feed and the ready list); none of it is kept here. */
@@ -33,6 +43,8 @@ export interface CrewInput {
   running: readonly LiveRun[];
   /** What is ready for review (finished and not opened since), newest first: Today's list. Opening an item anywhere takes it off, and with it the agent's Finished state. */
   ready: readonly ReadyItem[];
+  /** A read the lists above come from has failed (the Inbox cannot be read or cannot reach Hermes, or the ready list cannot be read): what they hold may be out of date or missing. */
+  unread?: boolean;
 }
 
 /** A line is one short sentence: longer text is cut with an ellipsis. */
@@ -59,9 +71,10 @@ const withOthers = (line: string, others: number, word: string): string => (othe
 
 /**
  * One member for each profile. Precedence, when more than one is true of a profile: waiting, working, blocked, done, idle.
- * Waiting and working report what has gone on longest (the oldest request, the oldest run); blocked and done report the newest failure and the newest finished work.
+ * Waiting and working report what has gone on longest (the oldest request, the oldest run); blocked and done report the newest failure and the newest finished work. When
+ * `unread` an agent the lists say nothing about is `blind`, not idle: what is known (a request, a run) stays true, and nothing is claimed beyond it.
  */
-export function deriveCrew({ profiles, items, running, ready }: CrewInput): CrewMember[] {
+export function deriveCrew({ profiles, items, running, ready, unread = false }: CrewInput): CrewMember[] {
   return profiles.map((profile): CrewMember => {
     const mine = items.filter((item) => item.profile === profile);
     const waits: Waiting[] = [
@@ -81,6 +94,7 @@ export function deriveCrew({ profiles, items, running, ready }: CrewInput): Crew
     const [newest] = finished;
     if (newest) return { profile, state: 'done', line: withOthers(shorten(`Finished “${newest.title}”`), finished.length - 1, 'finished'), since: newest.at };
 
-    return { profile, state: 'idle', line: 'Nothing going on', since: undefined };
+    // An agent the lists say nothing about is idle only if the lists could be read: otherwise nothing is known of it.
+    return unread ? { profile, state: 'idle', line: CANNOT_CHECK, since: undefined, blind: true } : { profile, state: 'idle', line: 'Nothing going on', since: undefined };
   });
 }

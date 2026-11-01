@@ -1,10 +1,31 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Icon } from '../icons.tsx';
-import { dismissBanner, isAlert, quietIds, shownBanners, useBanners, type Banner } from './banners.ts';
+import { Sheet } from '../overlays/Sheet.tsx';
+import { dismissBanner, isAlert, quietIds, setStripShown, shownBanners, useBanners, type Banner } from './banners.ts';
 import { useLinkHealth } from './connection.ts';
 import { clockWords } from './link-memory.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
 import { useSizeClass } from './use-size-class.ts';
+
+/** A banner's buttons and links (it may have none). */
+function BannerActions({ banner }: { banner: Banner }) {
+  if (!banner.actions) return null;
+  return (
+    <div className="banner__actions">
+      {banner.actions.map((action) =>
+        action.to ? (
+          <AppLink key={action.label} className="btn btn--secondary btn--sm" to={action.to}>
+            {action.label}
+          </AppLink>
+        ) : (
+          <button key={action.label} type="button" className="btn btn--secondary btn--sm" onClick={action.onClick}>
+            {action.label}
+          </button>
+        ),
+      )}
+    </div>
+  );
+}
 
 /**
  * Whether the stack is drawn, and whether it is open: a stack that has something to say glides open (its height runs from nothing to its own, `.banners__glide`), and
@@ -36,8 +57,8 @@ function useGlide(present: boolean, glide: RefObject<HTMLElement | null>): { dra
  * From 600 px, while the connection banner is the one showing, the stack is sticky at the top of the page column: Hermes
  * being unreachable is said in words that stay in view while the page scrolls (healthy shows nothing). Its height goes to `--banner-h`,
  * which `--shell-top` reads, so the page's other sticky parts (Talk's header, a table's head) stand under it. On a phone the connection banner is a one-line strip
- * under the app bar (the title and since when, sticky); a tap opens the full banner under it, and a tap on the strip folds it again. The stack stays sticky while it is
- * open, with the strip pinned at its top and the full banner scrolling under it if the window is short.
+ * under the app bar ("Offline since 11:58", sticky): a tap opens the full words in a bottom sheet, so an open banner never pins a card in the page for the length of an outage.
+ * The strip is the one alert; the sheet is a dialog, and the app bar's connection dot is silent while the strip shows (`setStripShown`), so the state is said once.
  */
 export function BannerStack() {
   const all = useBanners();
@@ -47,7 +68,7 @@ export function BannerStack() {
   const glide = useRef<HTMLDivElement>(null);
   const phone = useSizeClass() === 'compact';
   const link = useLinkHealth();
-  const [stripOpen, setStripOpen] = useState(false);
+  const [details, setDetails] = useState(false);
   // A quiet banner waits for the next page (`Banner.quiet`): the ones waiting when the page changes are let in with it, so they arrive with the new
   // page and move nothing. Set during this render, so that the banner and the new page are in the same paint.
   const [letIn, setLetIn] = useState<{ pathname: string; ids: readonly string[] }>({ pathname, ids: [] });
@@ -65,8 +86,12 @@ export function BannerStack() {
   const sticky = drawn && !open && first?.id === 'connection';
   const since = !link.healthy && link.lastHealthyAt !== undefined ? clockWords(link.lastHealthyAt, Date.now()) : undefined;
   useEffect(() => {
-    if (!strip) setStripOpen(false);
-  }, [strip]);
+    if (!strip || leaving) setDetails(false);
+  }, [strip, leaving]);
+  useEffect(() => {
+    setStripShown(strip && !leaving);
+    return () => setStripShown(false);
+  }, [strip, leaving]);
   useLayoutEffect(() => {
     const element = stack.current;
     if (!sticky || !element) return;
@@ -89,46 +114,24 @@ export function BannerStack() {
             {/* The strip's own words are the announcement (a warning or a danger is an alert, as the full banner is): no hidden copy, so they are said once. */}
             {strip && first && (
               <div className="banner-strip__pin" role={!leaving && isAlert(first) ? 'alert' : undefined}>
-                <button type="button" className="banner banner-strip" data-tone={first.tone} aria-expanded={stripOpen} onClick={() => setStripOpen(!stripOpen)}>
+                <button type="button" className="banner banner-strip" data-tone={first.tone} data-banner={first.id} aria-haspopup="dialog" onClick={() => setDetails(true)}>
                   <Icon name={first.icon} />
                   <span className="banner-strip__text">
                     <b>{first.stripTitle ?? first.title}</b>
-                    {since !== undefined && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span className="banner-strip__time">
-                          <span className="sr-only">since </span>
-                          {since}
-                        </span>
-                      </>
-                    )}
+                    {/* A real space, so the strip is said "Offline since 11:58" (flex items are not always spaced in the accessible name). */}
+                    {since !== undefined && <span className="banner-strip__time">{' '}since {since}</span>}
                   </span>
-                  <Icon name={stripOpen ? 'chev-u' : 'chev-d'} small />
+                  <Icon name="chev-r" small />
                 </button>
               </div>
             )}
-            {(strip ? (stripOpen ? shown : shown.slice(1)) : shown).map((banner) => (
-              // The strip already announced its own banner: opened under it, that banner's full text is not a second alert.
-              <div key={banner.id} className="banner" data-tone={banner.tone} role={!leaving && isAlert(banner) && !(strip && banner === first) ? 'alert' : undefined}>
+            {(strip ? shown.slice(1) : shown).map((banner) => (
+              <div key={banner.id} className="banner" data-tone={banner.tone} data-banner={banner.id} role={!leaving && isAlert(banner) ? 'alert' : undefined}>
                 <Icon name={banner.icon} />
                 <div className="banner__content">
                   <div className="banner__title">{banner.title}</div>
                   {banner.body && <div className="banner__body">{banner.body}</div>}
-                  {banner.actions && (
-                    <div className="banner__actions">
-                      {banner.actions.map((action) =>
-                        action.to ? (
-                          <AppLink key={action.label} className="btn btn--secondary btn--sm" to={action.to}>
-                            {action.label}
-                          </AppLink>
-                        ) : (
-                          <button key={action.label} type="button" className="btn btn--secondary btn--sm" onClick={action.onClick}>
-                            {action.label}
-                          </button>
-                        ),
-                      )}
-                    </div>
-                  )}
+                  <BannerActions banner={banner} />
                 </div>
                 {banner.dismissible ? (
                   <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Dismiss: ${banner.title}`} onClick={() => dismissBanner(banner.id)}>
@@ -145,6 +148,14 @@ export function BannerStack() {
               </button>
             )}
           </div>
+          {details && strip && first && (
+            <Sheet title={first.title} onClose={() => setDetails(false)}>
+              <div className="banner-details">
+                {first.body && <p className="banner-details__body">{first.body}</p>}
+                <BannerActions banner={first} />
+              </div>
+            </Sheet>
+          )}
         </div>
       </div>
     </section>

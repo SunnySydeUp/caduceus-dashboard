@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../icons.tsx';
+import { STILL_READING_WORDS } from '../read-ladder.ts';
+import { useReadLadder } from '../use-read-ladder.ts';
 
 /** How long a load may take before the screen says it is taking longer than usual. */
 export const LOADING_PATIENCE_MS = 5000;
@@ -19,25 +21,39 @@ export function useTakingLonger(active: boolean, ms = LOADING_PATIENCE_MS): bool
 }
 
 /**
- * The one loading state for a block that waits on Hermes. It holds the room of about `lines` rows as a skeleton (so the page does not jump when the
- * answer arrives), says `label` to a screen reader, and after about five seconds says it is taking longer than usual, with a Retry button when the
- * screen gives `onRetry`. Render it only while the load is running; when the load fails, show the screen's own error, not this.
+ * The one loading state for a block that waits on Hermes, on the read ladder (`read-ladder.ts`). It holds the room of about `lines` rows as a skeleton (so the page does not
+ * jump when the answer arrives) and says `label` to a screen reader. After about eight seconds it says "Still reading Hermes…", with nothing to press; only when the read has
+ * failed (`failed`) or has passed the longer bound does it say it could not be read, with a Retry when the screen gives `onRetry`. Render it only while the load is running;
+ * when the load fails, show the screen's own error, not this.
  */
-export function Loading({ label = 'Loading…', lines = 3, onRetry }: { label?: string; lines?: number; onRetry?: () => void }) {
-  const late = useTakingLonger(true);
+export function Loading({ label = 'Loading…', lines = 3, failed = false, onRetry }: { label?: string; lines?: number; failed?: boolean; onRetry?: () => void }) {
+  const [tries, setTries] = useState(0);
+  const stage = useReadLadder(true, failed, tries);
   return (
     <div className="loading" role="status" aria-busy="true">
-      <span className="sr-only">{late ? `${label} This is taking longer than usual.` : label}</span>
+      <span className="sr-only">{stage === 'still-reading' ? `${label} ${STILL_READING_WORDS}` : label}</span>
       <div className="loading__lines" aria-hidden="true">
         {Array.from({ length: lines }, (_, index) => (
           <span key={index} className="skel loading__line" />
         ))}
       </div>
-      {late && (
+      {stage === 'still-reading' && (
+        <p className="loading__late" aria-hidden="true">
+          <span className="muted">{STILL_READING_WORDS}</span>
+        </p>
+      )}
+      {stage === 'failed' && (
         <p className="loading__late">
-          <span className="muted">Taking longer than usual.</span>
+          <span className="muted">Couldn’t be read</span>
           {onRetry && (
-            <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm"
+              onClick={() => {
+                setTries((count) => count + 1);
+                onRetry();
+              }}
+            >
               <Icon name="refresh" />
               <span>Retry</span>
             </button>

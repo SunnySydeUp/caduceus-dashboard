@@ -6,3 +6,14 @@
 .swpop__title { margin: var(--cd-space-1-5) var(--cd-space-2) 0; font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-muted); }
 .swpop__body { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
 .swpop .plist__note { padding-inline: var(--cd-space-2); }
+
+/* Where the scope is a label and not a control (a screen that is Hermes-wide, Today: the card head, the rail and the phone's app bar), it has no tile behind its sigil, so it reads as
+   words with a mark and not as a button. The heartbeat ring around it stays (`.scope__mark`). Where it is a control it keeps its look. */
+.scope:not(.scope--button) .sigil, .appbar__profile--text .sigil { background: transparent; box-shadow: none; }
+/* Offline is a dashed ring (design-system §4.2). A 1.5 px dash draws as one device pixel and goes thin against a light card, so it is 2 px, in the strong edge colour (5.7:1 on the white
+   card in light, 5.9:1 on the dark card): clear in both themes without a fill or a colour of its own. */
+.scope .scope__mark[data-link="offline"]::after { border: 2px dashed var(--cd-border-strong); }
+/* While Hermes has not yet confirmed the remembered agent, the scope steps back, as a stale crew sigil does. */
+.scope[data-pending] .scope__mark .sigil, .chip--profile[data-pending] .sigil { opacity: 0.55; }
+/* The switcher's failed line: the words and their Retry. */
+.plist__failed { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }

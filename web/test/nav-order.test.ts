@@ -96,6 +96,11 @@ describe('the crew rows', () => {
     });
   });
 
+  test('say an agent with no known state has an unknown state and cannot be checked, not that it is idle', () => {
+    const [row] = deskNavigation(registry, [{ profile: 'coder', state: 'idle', line: 'Can’t check', since: undefined, blind: true }]).crew;
+    expect(row).toMatchObject({ state: 'idle', stateLabel: 'State unknown', line: 'Can’t check' });
+  });
+
   test('offer no new chat when no module is placed in Talk', () => {
     const [row] = deskNavigation(registryOf(testModule('home', 'today')), [member('coder', 'idle')]).crew;
     expect(row).not.toHaveProperty('newChat');

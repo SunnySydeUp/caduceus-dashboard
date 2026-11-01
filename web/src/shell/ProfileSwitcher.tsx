@@ -1,6 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Icon } from '../icons.tsx';
 import type { ProfileSummary } from '../profile-scope.ts';
+import { skeletonRows } from '../modules/crew/crew-memory.ts';
+import { useCrewRead, type CrewRead } from '../modules/crew/use-crew-read.ts';
+import { STILL_READING_WORDS } from '../read-ladder.ts';
 import { placePopover } from '../popover-placement.ts';
 import { Layer } from '../overlays/Layer.tsx';
 import { Sheet } from '../overlays/Sheet.tsx';
@@ -48,20 +51,49 @@ function ProfileRow({ profile, checked, isDefault, onChoose }: { profile: Profil
   );
 }
 
-/** The agent switcher's content (information architecture §6): choosing scopes this tab; Hermes's default is never touched. The longer words are in the glossary term. */
-function SwitcherBody() {
-  const { hermes, unavailable, scope, mode, choose } = useProfileScope();
+/** What the list says while the agents are not read yet: nothing at first, then that it is still reading, then that it failed (with a Retry); the names are on the rows already. */
+function ListStatus({ read }: { read: CrewRead }) {
+  if (read.status === 'slow') {
+    return (
+      <p className="plist__note" role="status">
+        {STILL_READING_WORDS}
+      </p>
+    );
+  }
+  if (read.status !== 'failed') return null;
+  return (
+    <div className="plist__note plist__failed" role="status">
+      <span>Couldn’t read the agents</span>
+      <button type="button" className="btn btn--secondary btn--sm" onClick={read.retry}>
+        <Icon name="refresh" small />
+        Retry
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The agent switcher's content (information architecture §6): choosing scopes this tab; Hermes's default is never touched. It opens at once from what is known: Hermes's
+ * list when it has answered, else the agents of the last load (kept on this device), else a skeleton with no words. While Hermes has not answered, the read's own words come
+ * under the list (`ListStatus`). The longer words are in the glossary term.
+ */
+function SwitcherBody({ read }: { read: CrewRead }) {
+  const { hermes, scope, mode, choose } = useProfileScope();
   const crossProfile = mode === 'cross';
+  const rows: ProfileSummary[] = hermes ? hermes.profiles : read.known.map((name) => ({ name, model: null, gatewayRunning: null }));
+  const skeleton = rows.length === 0 && !crossProfile && read.status !== 'failed';
   return (
     <>
       <p className="plist__note">{crossProfile ? 'Show one agent, or all.' : 'Choose the agent to work with.'}</p>
-      {!hermes && (
-        <p className="plist__note" role="status">
-          {unavailable ? 'Hermes is not answering, so its agents cannot be listed yet.' : 'Loading agents…'}
-        </p>
+      {skeleton && (
+        <div className="loading__lines" aria-hidden="true">
+          {skeletonRows([]).map((_, index) => (
+            <span key={index} className="skel loading__line" />
+          ))}
+        </div>
       )}
-      {hermes && (
-        <div className="plist" role="radiogroup" aria-label="Agent scope" onKeyDown={moveFocus}>
+      {!skeleton && (rows.length > 0 || crossProfile) && (
+        <div className="plist" role="radiogroup" aria-label="Agent scope" aria-busy={hermes ? undefined : true} onKeyDown={moveFocus}>
           {crossProfile && (
             <button type="button" className="plist__row" role="radio" aria-checked={scope === 'all'} onClick={() => void choose('all')}>
               <Sigil name="all" size="sm" />
@@ -72,11 +104,12 @@ function SwitcherBody() {
               <span className="plist__check">{scope === 'all' && <Icon name="check" />}</span>
             </button>
           )}
-          {hermes.profiles.map((profile) => (
-            <ProfileRow key={profile.name} profile={profile} checked={scope === profile.name} isDefault={profile.name === hermes.hermesDefault} onChoose={() => void choose(profile.name)} />
+          {rows.map((profile) => (
+            <ProfileRow key={profile.name} profile={profile} checked={scope === profile.name} isDefault={hermes?.hermesDefault === profile.name} onChoose={() => void choose(profile.name)} />
           ))}
         </div>
       )}
+      {!hermes && <ListStatus read={read} />}
       <p className="plist__note">
         <Term id="profile-scope">What is agent scope?</Term>
       </p>
@@ -130,38 +163,45 @@ function AnchoredSwitcher({ anchor, initialFocus, onClose, children }: { anchor:
 /** The agent switcher: a popover anchored to where it was opened from on a window of 600 px or more, a bottom sheet on a phone. */
 function ProfileSwitcher({ onClose, anchor }: { onClose(): void; anchor?: SwitcherAnchor }) {
   const compact = useSizeClass() === 'compact';
-  const { hermes } = useProfileScope();
-  // Focus starts on the current choice, or on the title while there is no list yet: never on the glossary link.
-  const initialFocus = hermes ? '[aria-checked="true"]' : 'h2';
+  const { hermes, mode } = useProfileScope();
+  const read = useCrewRead();
+  // Focus starts on the current choice when there is a list to choose from (Hermes's, or the last known), else on the title: never on the glossary link.
+  const initialFocus = hermes || read.known.length > 0 || mode === 'cross' ? '[aria-checked="true"]' : 'h2';
   if (compact || !anchor) {
     return (
       <Sheet title={SWITCHER_TITLE} detents={['auto', 'full']} initialFocus={initialFocus} onClose={onClose}>
-        <SwitcherBody />
+        <SwitcherBody read={read} />
       </Sheet>
     );
   }
   return (
     <AnchoredSwitcher anchor={anchor} initialFocus={initialFocus} onClose={onClose}>
-      <SwitcherBody />
+      <SwitcherBody read={read} />
     </AnchoredSwitcher>
   );
 }
 
-/** What the scope says on this screen: its name and sigil, whether the screen is cross-agent, and whether it is locked to All agents (Today), where there is nothing to switch. */
+/**
+ * What the scope says on this screen: its name and sigil, whether the screen is cross-agent, whether it is locked to All agents (Today), where there is nothing to switch,
+ * and whether the name is only a guess. A cross-agent screen is on All agents until a URL says otherwise, and a screen locked to All agents always is; the name of any other
+ * scope (the last one this device showed, or one only the tab's URL or this device holds) is pending until Hermes has answered and said the agent exists: it is drawn dimmed
+ * and `words` says so, so the head never names a wrong agent with confidence.
+ */
 function useScopeLook() {
-  const { scope, lastScope, mode } = useProfileScope();
-  if (mode === 'all') return { label: 'All agents', sigil: 'all', cross: false, locked: true };
+  const { scope, lastScope, mode, hermes, unavailable } = useProfileScope();
+  if (mode === 'all') return { label: 'All agents', sigil: 'all', cross: false, locked: true, pending: undefined };
   const named = scope ?? lastScope;
-  return { label: named === 'all' ? 'All agents' : (named ?? 'Agent'), sigil: named ?? '?', cross: mode === 'cross', locked: false };
+  const pending = hermes === undefined && named !== 'all' ? (unavailable ? 'Can’t check right now.' : 'Checking…') : undefined;
+  return { label: named === 'all' ? 'All agents' : (named ?? 'Agent'), sigil: named ?? '?', cross: mode === 'cross', locked: false, pending };
 }
 
 /** The phone's app bar chip: the scope of this tab, opening the switcher. On a screen locked to All agents it is plain text with no button, as the side card's head is: there is nothing to switch. */
 export function ProfileChip() {
-  const { label, sigil, cross, locked } = useScopeLook();
+  const { label, sigil, cross, locked, pending } = useScopeLook();
   const [open, setOpen] = useState(false);
   if (locked) {
     return (
-      <span className="chip chip--profile appbar__profile">
+      <span className="appbar__profile appbar__profile--text">
         <Sigil name={sigil} size="xs" />
         <span className="truncate">{label}</span>
       </span>
@@ -169,9 +209,17 @@ export function ProfileChip() {
   }
   return (
     <>
-      <button type="button" className="chip chip--profile appbar__profile" data-cross={cross ? '' : undefined} aria-haspopup="dialog" aria-label={`Agent scope: ${label}. Switch agent`} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="chip chip--profile appbar__profile"
+        data-cross={cross ? '' : undefined}
+        data-pending={pending ? '' : undefined}
+        aria-haspopup="dialog"
+        aria-label={`Agent scope: ${label}.${pending ? ` ${pending}` : ''} Switch agent`}
+        onClick={() => setOpen(true)}
+      >
         <Sigil name={sigil} size="xs" />
-        <span className="truncate">{label}</span>
+        <span className={pending ? 'truncate muted' : 'truncate'}>{label}</span>
         <Icon name="chev-d" small />
       </button>
       {open && <ProfileSwitcher onClose={() => setOpen(false)} />}
@@ -187,7 +235,7 @@ export function ProfileChip() {
  * it is plain text with no button, because there is nothing to choose.
  */
 export function ScopeButton({ placement }: { placement: 'head' | 'rail' }) {
-  const { label, sigil, cross, locked } = useScopeLook();
+  const { label, sigil, cross, locked, pending } = useScopeLook();
   const status = useConnection();
   const [anchor, setAnchor] = useState<SwitcherAnchor>();
   const button = useRef<HTMLButtonElement>(null);
@@ -206,7 +254,7 @@ export function ScopeButton({ placement }: { placement: 'head' | 'rail' }) {
       <span className="scope__mark" data-link={status.state}>
         <Sigil name={sigil} size="sm" />
       </span>
-      <span className="scope__name">{label}</span>
+      <span className={pending ? 'scope__name muted' : 'scope__name'}>{label}</span>
     </>
   );
   if (locked) {
@@ -224,9 +272,10 @@ export function ScopeButton({ placement }: { placement: 'head' | 'rail' }) {
         type="button"
         className={`scope scope--${placement} scope--button`}
         data-cross={cross ? '' : undefined}
+        data-pending={pending ? '' : undefined}
         aria-haspopup="dialog"
         aria-expanded={anchor !== undefined}
-        aria-label={`Agent scope: ${label}. ${words}.`}
+        aria-label={`Agent scope: ${label}.${pending ? ` ${pending}` : ''} ${words}.`}
         onClick={(event) => {
           const button = event.currentTarget;
           // Safari does not focus a button when it is pressed; the layer gives focus back to what had it, so the button takes it first.

@@ -61,6 +61,15 @@ export function dismissBanner(id: string): void {
   clearBanner(id);
 }
 
+let stripShown = false;
+
+/** The phone's connection strip says the state in words (`BannerStack`), so the app bar's connection dot keeps quiet while it shows. */
+export function setStripShown(shown: boolean): void {
+  if (stripShown === shown) return;
+  stripShown = shown;
+  listeners.forEach((notify) => notify());
+}
+
 const subscribe = (notify: () => void) => {
   listeners.add(notify);
   return () => void listeners.delete(notify);
@@ -90,4 +99,9 @@ export function quietIds(all: readonly Banner[]): string[] {
 /** The banners to show, in priority order. */
 export function useBanners(): Banner[] {
   return useSyncExternalStore(subscribe, () => banners);
+}
+
+/** Whether the phone's connection strip is on screen. */
+export function useStripShown(): boolean {
+  return useSyncExternalStore(subscribe, () => stripShown);
 }

@@ -3,6 +3,7 @@
 // above (the shell's Work sub-navigation). The grouping is `work-desk-model.ts`.
 import { useMemo, useState } from 'react';
 import { Icon } from '../../icons.tsx';
+import { Loading } from '../../shell/Loading.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
@@ -21,6 +22,8 @@ import './work-desk.css';
 
 /** Which sigil mark a group's rows carry: finished work shows it, a schedule that has not started rests, and the others show their state in words. */
 const SIGIL_STATE: Record<WorkGroupId, 'done' | 'idle' | undefined> = { waiting: undefined, running: undefined, review: 'done', scheduled: 'idle' };
+
+const CANNOT_CHECK = 'Can’t check right now';
 
 const ACTION_LABEL: Record<Exclude<WorkAction, 'pause' | 'resume'>, string> = { decide: 'Decide', retry: 'Retry', open: 'Open', review: 'Review' };
 
@@ -92,7 +95,23 @@ export function WorkDesk() {
   };
 
   const unreachable = boards.failed || jobsFailed || review.failed;
-  const summary = loaded ? `${waiting} waiting on you · ${groups.running.length} running · ${groups.review.length} ready for review · ${groups.scheduled.length} scheduled` : 'Reading Hermes';
+  const retry = () => {
+    boards.retry();
+    void reload();
+    void review.reload();
+  };
+  // A read that failed has not counted anything: a zero beside "could not be read" would say there is nothing going on, so each count is a dash and the words say it cannot check.
+  const counts = `${waiting} waiting on you · ${groups.running.length} running · ${groups.review.length} ready for review · ${groups.scheduled.length} scheduled`;
+  const summary = unreachable ? (
+    <>
+      <span aria-hidden="true">— waiting on you · — running · — ready for review · — scheduled</span>
+      <span className="sr-only">{CANNOT_CHECK}</span>
+    </>
+  ) : loaded ? (
+    counts
+  ) : (
+    'Reading Hermes'
+  );
 
   return (
     <div className="bpage wd">
@@ -116,15 +135,7 @@ export function WorkDesk() {
               Caduceus reads the tasks and the schedules from Hermes each time and keeps no copy. Check <AppLink to="/observe/health">Health</AppLink> to see whether the Hermes backend is running. Caduceus tries again by itself.
             </p>
           </div>
-          <button
-            type="button"
-            className="btn btn--secondary btn--sm"
-            onClick={() => {
-              boards.retry();
-              void reload();
-              void review.reload();
-            }}
-          >
+          <button type="button" className="btn btn--secondary btn--sm" onClick={retry}>
             <Icon name="refresh" />
             Try again
           </button>
@@ -132,11 +143,12 @@ export function WorkDesk() {
       )}
 
       <p className="sr-only" role="status">
-        {loaded ? summary : ''}
+        {unreachable ? CANNOT_CHECK : loaded ? counts : ''}
       </p>
-      {!loaded && !unreachable && <p role="status">Reading what is going on…</p>}
+      {!loaded && !unreachable && <Loading label="Reading what is going on…" lines={4} onRetry={retry} />}
 
-      {loaded && shown.length === 0 && (
+      {/* "Nothing is going on" is only said of a list that could be read in full. */}
+      {loaded && !unreachable && shown.length === 0 && (
         <div className="empty">
           <Icon name={agent ? 'filter' : 'work'} />
           <h2>{agent ? `${agent} has nothing here` : 'Nothing is going on'}</h2>

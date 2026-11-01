@@ -17,8 +17,8 @@ export interface ConnectionFacts {
 /**
  * The connection banner the facts call for, or nothing while the link is healthy (connected, or still making the first connection, when nothing has been lost).
  * One voice for being cut off: while the device has no network the banner says "You are offline" and nothing else, for as long as that lasts; the server's own words
- * ("Can’t reach Hermes") come only once the device is online and the server still does not answer. `stripTitle` is what the phone's one-line strip says in front of the
- * time, short enough to leave the time whole at 320 px.
+ * ("Can’t reach Hermes") come only once the device is online and the server still does not answer. `stripTitle` is what the phone's one-line strip says in front of "since" and
+ * the time ("Offline since 11:58"), short enough to leave the time whole at 320 px.
  */
 export function connectionBanner({ online, state, attempt, reason, backendState, unreachable }: ConnectionFacts): Omit<Banner, 'id'> | undefined {
   if (!online) {

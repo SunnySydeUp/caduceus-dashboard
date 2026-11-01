@@ -4,10 +4,12 @@ import { useSyncExternalStore } from 'react';
 export interface ShellPrefs {
   /** The large layout's sidebar is collapsed to the rail. */
   sidebarCollapsed: boolean;
+  /** This device has shown the compact rail's name tags once (they show by themselves the first time). */
+  railTagsSeen: boolean;
 }
 
 const KEY = 'caduceus.shell';
-const DEFAULTS: ShellPrefs = { sidebarCollapsed: false };
+const DEFAULTS: ShellPrefs = { sidebarCollapsed: false, railTagsSeen: false };
 
 function read(): ShellPrefs {
   try {

@@ -10,12 +10,17 @@ import { readReady } from './today-data.ts';
 
 const NONE: readonly ReadyItem[] = [];
 let items = NONE;
+/** The last read of the list failed: what is held is from before, and may miss finished work. */
+let failed = false;
 const listeners = new Set<() => void>();
 let started = false;
 /** Which ask is the latest: an answer that arrives late must not replace a newer one. */
 let asked = 0;
 
-/** Reads the list again. A failed read keeps what was known: the ring is a hint, and Today and Work say themselves when the list cannot be read. */
+/**
+ * Reads the list again. A failed read keeps what was known (the ring is a hint, and Today and Work say themselves when the list cannot be read), and is told to the crew
+ * (`useReadyFailed`), whose idle lines must not claim that nothing is going on while the list cannot be read.
+ */
 export async function refreshReady(): Promise<void> {
   if (!started) return;
   const ask = ++asked;
@@ -23,9 +28,12 @@ export async function refreshReady(): Promise<void> {
     const next = await readReady();
     if (ask !== asked) return;
     items = next;
+    failed = false;
     for (const listener of listeners) listener();
   } catch {
-    // Kept as it was; see above.
+    if (ask !== asked) return;
+    failed = true;
+    for (const listener of listeners) listener();
   }
 }
 
@@ -63,6 +71,11 @@ function subscribe(listener: () => void): () => void {
 /** What is ready for review now, newest first; empty until the first read has answered. */
 export function useReadyItems(): readonly ReadyItem[] {
   return useSyncExternalStore(subscribe, () => items);
+}
+
+/** Whether the last read of the list failed, so that `useReadyItems` may be missing finished work. */
+export function useReadyFailed(): boolean {
+  return useSyncExternalStore(subscribe, () => failed);
 }
 
 /**

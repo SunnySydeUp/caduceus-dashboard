@@ -25,6 +25,8 @@ describe('profile scope of a screen', () => {
     expect(profileScope(effective(undefined), 'cross')).toBe('all');
     expect(profileScope(effective('deleted'), 'cross')).toBe('all');
     expect(profileScope(effective('writer'), 'cross')).toBe('writer');
+    // Before Hermes has answered nothing is known of the profile, and only a URL could have named one: the screen is on All profiles, not on a guess.
+    expect(profileScope(undefined, 'cross')).toBe('all');
 
     expect(profileScope(effective(undefined), 'one')).toBe('coder');
     expect(profileScope(effective('writer'), 'one')).toBe('writer');

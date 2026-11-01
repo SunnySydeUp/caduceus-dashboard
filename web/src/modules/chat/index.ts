@@ -32,7 +32,7 @@ export const chatModule: AppModule = {
   path: '/chat',
   key: 'c',
   order: 2,
-  summary: 'Talk to Hermes and pick up your sessions',
+  summary: 'Talk to an agent and pick up your sessions',
   profileScoped: true,
   routes: [
     { path: '/chat', screen: Chat },

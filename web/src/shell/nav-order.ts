@@ -1,7 +1,7 @@
 // The Desk's navigation, as plain data: what the sidebar, the rail, the phone's tab bar, Control and the palette list. Pure: no React and no DOM,
 // so it runs under test. It reads only the module registry (each module's `desk` placement) and the crew's state; the shell draws what it returns.
 import type { IconName } from '../icons.tsx';
-import { crewStateLabel, type CrewMember, type CrewStateName } from '../modules/crew/crew-state.ts';
+import { crewStateWords, type CrewMember, type CrewStateName } from '../modules/crew/crew-state.ts';
 import { CONTROL_GROUPS, DESK_PLACEMENTS, type DeskPlacement, type ModuleDefinition, type ModuleRegistry, type NavBadge, type NavGroup } from '../module-registry.ts';
 import { withProfile } from '../profile-scope.ts';
 import { plainDuration } from '../plain-duration.ts';
@@ -80,14 +80,14 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
   });
   const talk = destinations.find(({ id }) => id === 'talk');
   const rows = [...crew].sort(byNeed).map(
-    ({ profile, state, line, since }): CrewRow => ({
-      profile,
-      state,
-      stateLabel: crewStateLabel[state],
-      line,
-      since,
-      path: withProfile(talk?.path ?? '/', profile),
-      ...(talk ? { newChat: withProfile(`${talk.path}/new`, profile) } : {}),
+    (member): CrewRow => ({
+      profile: member.profile,
+      state: member.state,
+      stateLabel: crewStateWords(member),
+      line: member.line,
+      since: member.since,
+      path: withProfile(talk?.path ?? '/', member.profile),
+      ...(talk ? { newChat: withProfile(`${talk.path}/new`, member.profile) } : {}),
     }),
   );
   return { destinations, crew: rows, control: registry.controlGroups() };
