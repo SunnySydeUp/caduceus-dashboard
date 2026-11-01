@@ -146,7 +146,7 @@ export function AssignSheet({ title, names, current, onPick, onClose }: { title:
           <UnassignedSigil size="xs" />
           <span className="plist__main">
             <span className="plist__name">Unassigned</span>
-            <span className="subtle bo-hint">No worker takes it until a profile is given.</span>
+            <span className="subtle bo-hint">No worker takes it until an agent is given.</span>
           </span>
           <span />
           <span className="plist__check">{current === null && <Icon name="check" />}</span>

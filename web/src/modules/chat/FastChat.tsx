@@ -85,7 +85,7 @@ function FastBubble({ message, anchor }: { message: FastMessage; anchor: string 
 function modelWords(settings: ComposerSettings, hasSession: boolean): string {
   const model = settings.model;
   if (model === undefined) return 'Hermes has not said which model answers.';
-  return hasSession ? `Answers with ${model}, the model of this chat.` : `Answers with ${model}, the model of the profile ${settings.profile}.`;
+  return hasSession ? `Answers with ${model}, the model of this chat.` : `Answers with ${model}, the model of the agent ${settings.profile}.`;
 }
 
 /** The conversation and message box of Fast mode, in place of the transcript and the usual composer. */

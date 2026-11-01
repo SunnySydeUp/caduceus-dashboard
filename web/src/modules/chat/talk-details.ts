@@ -190,7 +190,7 @@ const money = (dollars: number): string => (dollars > 0 && dollars < 0.01 ? 'Und
 export function aboutOf({ model, cwd, usage, spendToday }: { model: string | undefined; cwd: string | undefined; usage: Usage | undefined; spendToday: number | undefined }): AboutRow[] {
   const { percent } = contextRing(usage);
   return [
-    { label: 'Model', value: model ?? 'The profile’s default' },
+    { label: 'Model', value: model ?? 'The agent’s default' },
     { label: 'Folder', value: cwd ?? 'Not set' },
     { label: 'Cost today', value: spendToday === undefined ? 'Not known yet' : money(spendToday) },
     { label: 'Context', value: percent === undefined ? 'Not known until the first reply' : `${percent}% used` },

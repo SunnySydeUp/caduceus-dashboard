@@ -54,7 +54,7 @@ export function diagnosticsText({ job, runs, scheduler, now }: { job: Job; runs:
     `Made: ${new Date(now).toISOString()}`,
     '',
     `Job: ${job.name} (${job.id})`,
-    `Profile: ${job.profile}`,
+    `Agent: ${job.profile}`,
     `Type: ${JOB_TYPES[job.type].label}`,
     `Schedule: ${job.schedule}${job.scheduleExpression ? ` (${job.scheduleExpression})` : ''}`,
     `State: ${job.state}, ${job.enabled ? 'enabled' : 'paused'}`,

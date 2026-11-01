@@ -18,6 +18,7 @@ import {
 import { useRegistry } from './registry-context.tsx';
 import { useRouteInfo, useUrlProfile } from './navigation.tsx';
 import { toast } from './toasts.ts';
+import { readLastScope, rememberLastScope } from '../modules/crew/crew-memory.ts';
 
 export interface ProfileScopeState {
   /** Hermes's profiles and its default; `undefined` until Hermes has answered. */
@@ -26,6 +27,8 @@ export interface ProfileScopeState {
   unavailable: boolean;
   /** The profile this tab works on; `undefined` while it cannot be known yet. */
   effective: { name: string; source: ProfileSource } | undefined;
+  /** The name the scope had at the last load on this device, for the head to show while Hermes has not answered yet (never used to ask for anything). */
+  lastScope: string | undefined;
   /** What the current screen shows: `all`, or one profile's name. */
   scope: string | undefined;
   /** How the current screen takes the profile: one profile, cross-profile ("All profiles" is offered), or locked to All profiles. */
@@ -49,6 +52,7 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
   const [loadCount, setLoadCount] = useState(0);
   // This device's last choice as it was when the tab loaded: a choice made in another tab later does not move this one.
   const [lastChoice] = useState(() => deviceChoice(localStorage));
+  const [lastScope] = useState(() => readLastScope(localStorage));
   const mode = scopeMode(moduleId === undefined ? undefined : registry.module(moduleId));
 
   useEffect(() => {
@@ -74,6 +78,10 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
   // Until Hermes has answered, only a name the tab already holds is known; the fallback to Hermes's default is not.
   const effective = hermes || knownEffective.source !== 'hermes' ? knownEffective : undefined;
 
+  useEffect(() => {
+    if (hermes && effective) rememberLastScope(localStorage, effective.name);
+  }, [effective, hermes]);
+
   // Opening a link with ?profile= counts as using that profile on this device, once Hermes has said the profile exists (a link to one it does not have is not remembered).
   useEffect(() => {
     if (hermes && effective?.source === 'url') rememberDeviceChoice(localStorage, effective.name);
@@ -84,17 +92,21 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
       hermes,
       unavailable,
       effective,
+      lastScope,
       scope: profileScope(effective, mode),
       mode,
       async choose(name) {
         const search = chooseProfile({ name, search: location.search, store: localStorage });
         await closeAllLayers();
         router.history.push(`${location.pathname}${search}`);
-        toast(name === 'all' ? 'Showing all profiles' : `Switched this tab to ${name}`, { tone: 'info' });
+        toast(name === 'all' ? 'Showing all agents' : `Switched this tab to ${name}`, { tone: 'info' });
       },
-      reload: () => setLoadCount((count) => count + 1),
+      reload: () => {
+        setUnavailable(false);
+        setLoadCount((count) => count + 1);
+      },
     }),
-    [hermes, unavailable, effective, mode, router],
+    [hermes, unavailable, effective, lastScope, mode, router],
   );
   return <ProfileScopeContext value={state}>{children}</ProfileScopeContext>;
 }

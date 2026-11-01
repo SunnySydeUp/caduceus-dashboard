@@ -53,7 +53,7 @@ function ReportSheet({ title, intro, report, tasks, slug, onNudge, onClose }: { 
               {report.wouldStart.map((item) => (
                 <li key={item.taskId}>
                   <AppLink to={taskHref(item.taskId, slug)}>{name(item.taskId)}</AppLink>
-                  <span className="subtle"> · {item.profile || 'no profile'}</span>
+                  <span className="subtle"> · {item.profile || 'no agent'}</span>
                 </li>
               ))}
             </ul>
@@ -211,12 +211,12 @@ function SettingsSheet({ settings, profiles, onSaved, onClose }: { settings: Dis
         <fieldset className="bo-set">
           <legend>How many workers</legend>
           {number('all', 'Workers at once', all, setAll, `Across every board on this Mac. Empty means no limit of your own${settings.maxInProgress === null ? ' (now)' : ''}; Hermes may still hold some back when memory is short.`, 'No limit')}
-          {number('each', 'Workers per profile', each, setEach, 'The most one profile runs at once, so one profile’s model or quota is not swamped. Empty for none.', 'No limit')}
+          {number('each', 'Workers per agent', each, setEach, 'The most one agent runs at once, so one agent’s model or quota is not swamped. Empty for none.', 'No limit')}
         </fieldset>
         <fieldset className="bo-set">
           <legend>Time and failures</legend>
           {number('stale', 'Reclaim a silent worker after (minutes)', stale, setStale, `A running task that sends no sign of life for this long is reclaimed to Ready. 0 switches it off. Now ${settings.staleTimeoutSeconds === 0 ? 'off' : `${minutesOf(settings.staleTimeoutSeconds)} minutes`}.`)}
-          {number('failures', 'Block a task after this many failed attempts', failures, setFailures, 'Starts that fail, crash or run out of time, one after another. Giving the task to another profile starts the count again.')}
+          {number('failures', 'Block a task after this many failed attempts', failures, setFailures, 'Starts that fail, crash or run out of time, one after another. Giving the task to another agent starts the count again.')}
           {number('interval', 'Look for ready tasks every (seconds)', interval, setInterval, 'Lower picks tasks up sooner; higher is gentler on Hermes.')}
         </fieldset>
         <fieldset className="bo-set">
@@ -235,8 +235,8 @@ function SettingsSheet({ settings, profiles, onSaved, onClose }: { settings: Dis
               <small className="subtle">Off, they stay in Todo until you move them.</small>
             </span>
           </label>
-          {select('orchestrator', 'Orchestrator profile', orchestrator, setOrchestrator, `Hermes’s choice (${settings.effectiveOrchestrator || 'the default profile'})`, 'The profile that owns the root task after a split.')}
-          {select('fallback', 'Profile for tasks nobody has', fallback, setFallback, 'None: they wait in Ready', 'A ready task with no profile is given to this one, and its worker starts it.')}
+          {select('orchestrator', 'Orchestrator agent', orchestrator, setOrchestrator, `Hermes’s choice (${settings.effectiveOrchestrator || 'the default agent'})`, 'The agent that owns the root task after a split.')}
+          {select('fallback', 'Agent for tasks nobody has', fallback, setFallback, 'None: they wait in Ready', 'A ready task with no agent is given to this one, and its worker starts it.')}
         </fieldset>
       </form>
     </Sheet>

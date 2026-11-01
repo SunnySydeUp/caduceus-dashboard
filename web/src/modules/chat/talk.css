@@ -94,3 +94,6 @@
 .talk__panel--over { position: fixed; inset-block: var(--shell-top) 0; inset-inline-end: 0; /* the block start is set by DetailsPanel, below the Details button */ z-index: var(--cd-z-banner); inline-size: min(21rem, 100%); max-block-size: none; padding: var(--cd-space-4); background: var(--cd-bg-canvas); border-inline-start: 1px solid var(--cd-border-subtle); box-shadow: var(--cd-shadow-popover); }
 .talk__header h1 { font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); letter-spacing: normal; }
 .talk__header .page-header__sub { font-size: var(--cd-text-md); }
+
+/* The sigil's place in Talk's loading skeleton, until an agent is known. */
+.talk__skel-sigil { flex: none; inline-size: 2.75rem; block-size: 2.75rem; border-radius: 28%; }

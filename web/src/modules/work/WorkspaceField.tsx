@@ -162,7 +162,7 @@ function EditableWorkspace({ profile, workspace, onChange, project, onProjectCha
       )}
       {kind !== 'scratch' && (
         <div className="ws__folder">
-          <Field label={<>{folderLabel} <RemoteBadge remote={remote} /></>} help={remote ? <>{folderHelp} The terminal backend of this profile is {remote.label}: the agent works on that machine, a <Term id="remote-workspace">remote workspace</Term>.</> : folderHelp} error={folderError} name="workspace">
+          <Field label={<>{folderLabel} <RemoteBadge remote={remote} /></>} help={remote ? <>{folderHelp} The terminal backend of this agent is {remote.label}: the agent works on that machine, a <Term id="remote-workspace">remote workspace</Term>.</> : folderHelp} error={folderError} name="workspace">
             {(aria) => (
               <div className="ws__path">
                 <input {...aria} className="input input--mono" value={path} onChange={(event) => changePath(event.target.value)} onBlur={() => touch('workspace')} autoComplete="off" autoCapitalize="none" spellCheck={false} />
@@ -281,7 +281,7 @@ export function FolderPicker({ start, remote, onPick, onClose }: { start: string
         <>
           {remote && (
             <p className="ws-pick__note" role="status">
-              <RemoteBadge remote={remote} /> These are the folders of the Mac that runs Hermes. The agent of this profile works on {remote.label}, so a folder chosen here must exist there too.
+              <RemoteBadge remote={remote} /> These are the folders of the Mac that runs Hermes. This agent works on {remote.label}, so a folder chosen here must exist there too.
             </p>
           )}
           <div className="ws-pick__here">

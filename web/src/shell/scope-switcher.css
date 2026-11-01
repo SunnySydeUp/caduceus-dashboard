@@ -1,0 +1,8 @@
+/* The agent switcher as a popover (600 px and wider; ProfileSwitcher.tsx). It is an overlay layer, so the page behind is inert and Escape or a press outside closes it, but its
+   scrim carries no tint and its panel sits where the script put it: under the side card's head, or beside the rail's scope button. Tokens only; logical properties. */
+.layer.layer--anchored { display: block; padding: 0; }
+.layer.layer--anchored .layer__scrim { background: transparent; animation: none; }
+.swpop { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--cd-space-2); inline-size: min(24rem, calc(100% - var(--cd-space-4))); max-block-size: calc(100% - var(--cd-space-4)); padding: var(--cd-space-2); overflow-y: auto; overscroll-behavior: contain; background: var(--cd-bg-overlay); border: 1px solid var(--cd-border-default); border-radius: var(--cd-radius-lg); box-shadow: var(--cd-shadow-popover); animation: hc-pop-in var(--cd-dur-moderate) var(--cd-ease-enter); }
+.swpop__title { margin: var(--cd-space-1-5) var(--cd-space-2) 0; font: var(--cd-weight-semibold) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); color: var(--cd-fg-muted); }
+.swpop__body { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
+.swpop .plist__note, .swpop .plist__default { padding-inline: var(--cd-space-2); }

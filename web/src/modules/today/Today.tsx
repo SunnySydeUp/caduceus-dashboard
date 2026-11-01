@@ -89,7 +89,7 @@ export function Today() {
             : { status: 'loading' },
   };
   const rows = useMemo(() => deskNavigation(registry, crew).crew, [registry, crew]);
-  const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: 'Hermes did not answer for its profiles.' } : { status: 'loading' } };
+  const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: 'Hermes did not answer for its agents.' } : { status: 'loading' } };
 
   const to = (which: EmptyBlock) => emptyTarget(which, (module) => registry.module(module)?.path);
   // The pill counts what Needs you draws, so that it and the block's title agree while a card folds; the nav badge keeps the stream's count.

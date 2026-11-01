@@ -22,7 +22,7 @@ export const tasksHelp: ModuleHelp = {
         { p: 'The chips above the list are [[saved-filter|saved filters]]. They read the tasks Hermes holds; they never copy them.' },
         {
           ul: [
-            'Mine: the tasks assigned to the profile you are working as.',
+            'Mine: the tasks assigned to the agent you are working as.',
             '[[waiting-for-me|Waiting for me]]: tasks in review, and blocked tasks that asked a question.',
             'Failed: tasks whose latest run failed, or that Hermes gave up on after repeated failures. A task that finishes leaves this list.',
             'By playbook: the tasks that came from one [[playbook-run|playbook run]], listed as the playbook’s name and version. Caduceus finds them from the tag its [[playbook-engine|engine]] puts on each stage’s task, and a task Hermes marks as a playbook’s own is found too. The Playbook column shows each task’s playbook and stage.',
@@ -64,13 +64,13 @@ export const tasksHelp: ModuleHelp = {
         { h: 'The settings' },
         {
           ul: [
-            'Assign to: the profile whose worker does the task. Its model, skills and toolsets are the ones that count.',
-            'Model and reasoning effort: pin the worker to a model from Hermes’s catalogue, and say how hard it thinks. Empty uses the profile’s own.',
+            'Assign to: the agent whose worker does the task. Its model, skills and toolsets are the ones that count.',
+            'Model and reasoning effort: pin the worker to a model from Hermes’s catalogue, and say how hard it thinks. Empty uses the agent’s own.',
             'Skills, time limit and retries: skills the worker loads first, how long a run may take before Hermes stops it and queues the task again, and how many failures in a row block it.',
             'Workspace: a fresh scratch folder, a folder on this Mac (pick it with Browse; Hermes checks that it exists), or a git worktree with an optional branch from the repository’s own branches and an optional project. Your [[workspace|workspaces]] from Work › Projects are offered above the folder: tap one to fill it in.',
             'Done when: [[goal-mode|goal mode]] keeps the worker going until a judge agrees the task is done, and a [[completion-contract|completion contract]] makes a pull request and its checks the finish line.',
             'Attachments: files you choose are attached once the task exists. Waits for tasks lists tasks that must be done first.',
-            'Tools: Hermes keeps toolsets per profile and cannot set them per task, so the page shows the assignee’s, read only, with a link to edit them on the profile.',
+            'Tools: Hermes keeps toolsets per agent and cannot set them per task, so the page shows the assignee’s, read only, with a link to edit them on the agent.',
           ],
         },
         { h: 'How it starts' },

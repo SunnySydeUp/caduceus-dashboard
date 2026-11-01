@@ -37,7 +37,7 @@ describe('what is wrong with a job, before it is sent', () => {
     expect(jobProblems(agent({ name: '  ', prompt: '', profile: 'ghost' }), context())).toEqual({
       name: 'Give the schedule a name.',
       prompt: 'Write the prompt the agent answers.',
-      profile: 'There is no profile called “ghost”.',
+      profile: 'There is no agent called “ghost”.',
     });
   });
 
@@ -51,7 +51,7 @@ describe('what is wrong with a job, before it is sent', () => {
 
     expect(jobProblems(draft, context())).toEqual({
       title: 'Give the task a title.',
-      assignee: 'There is no profile called “ghost”.',
+      assignee: 'There is no agent called “ghost”.',
       priority: 'Priority is a whole number.',
       maxRuntime: 'Use seconds (300) or a duration such as 90s, 30m, 2h or 1d.',
       maxRetries: 'Retries is a whole number from 1.',

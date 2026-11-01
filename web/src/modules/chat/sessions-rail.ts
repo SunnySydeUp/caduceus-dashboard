@@ -39,7 +39,7 @@ export function filterItems(view: SessionsView, scope: ListScope): FilterItem[] 
   return [
     { id: 'failed', label: 'Failed only', icon: 'failed', on: view.failed },
     { id: 'quiet', label: 'Hide API noise', icon: 'server', on: view.quiet },
-    { id: 'all', label: 'All profiles', icon: 'users', on: view.all !== defaultAll(scope) },
+    { id: 'all', label: 'All agents', icon: 'users', on: view.all !== defaultAll(scope) },
     { id: 'archived', label: 'Archived', icon: 'archive', on: view.archived === true },
     { id: 'source', label: 'Source', icon: 'filter', on: view.source !== undefined, value: view.source === undefined ? 'Any' : sourceLabel(view.source) },
     {
@@ -47,7 +47,7 @@ export function filterItems(view: SessionsView, scope: ListScope): FilterItem[] 
       label: 'By project',
       icon: 'folder',
       on: grouped,
-      ...(view.all ? { disabled: 'Projects belong to one profile: switch off All profiles to group by project.' } : {}),
+      ...(view.all ? { disabled: 'Projects belong to one agent: switch off All agents to group by project.' } : {}),
     },
     ...(grouped ? [{ id: 'new-project' as const, label: 'New project', icon: 'plus' as const, on: false }] : []),
   ];
@@ -119,6 +119,6 @@ const plural = (n: number, noun: string): string => `${n.toLocaleString('en-US')
 
 /** The quiet line under the list: how many sessions, and across how many profiles when the list is across them. Nothing until Hermes has answered. */
 export function footerLine({ view, stats, total, loaded, profiles }: { view: SessionsView; stats: SessionStats | undefined; total: number; loaded: boolean; profiles: number }): string {
-  if (view.all) return loaded ? `${plural(total, 'session')} across ${plural(profiles, 'profile')}` : '';
+  if (view.all) return loaded ? `${plural(total, 'session')} across ${plural(profiles, 'agent')}` : '';
   return stats ? plural(stats.sessions, 'session') : '';
 }

@@ -107,12 +107,13 @@ describe('filtering and ordering the list', () => {
     expect(names(sortJobs(listed))).toEqual(['Bravo', 'Echo', 'Alpha', 'Charlie', 'Delta']);
   });
 
-  test('the filter is in the address and reads back; a damaged address is no filter', () => {
-    const view = { profile: 'coder', type: 'task', status: 'failed' } as const;
-    expect(schedulesSearch(view)).toEqual({ for: 'coder', type: 'task', status: 'failed' });
+  test('the type and the status are in the address and read back; the agent is the tab’s scope, never in it; a damaged address is no filter', () => {
+    const view = { type: 'task', status: 'failed' } as const;
+    expect(schedulesSearch({ profile: 'coder', ...view })).toEqual({ type: 'task', status: 'failed' });
     expect(readSchedulesView(schedulesSearch(view))).toEqual(view);
     expect(schedulesSearch({})).toEqual({});
-    expect(readSchedulesView({ for: ['a', 'b'], type: 'cake', status: 'busy' })).toEqual({});
+    expect(readSchedulesView({ for: 'coder', profile: 'coder' })).toEqual({});
+    expect(readSchedulesView({ type: 'cake', status: 'busy' })).toEqual({});
   });
 });
 

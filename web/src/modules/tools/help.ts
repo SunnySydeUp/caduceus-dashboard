@@ -9,7 +9,7 @@ export const toolsHelp: ModuleHelp = {
       route: '/agents/tools',
       keywords: 'tools toolsets toolset web browser terminal image video generation vision tts provider model keys api key setup post-setup switch enable disable configure needs keys ready',
       body: [
-        { p: 'Tools & MCP works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]), named under the title. Everything on the screen is read from [[hermes]] for that profile each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
+        { p: 'Tools & MCP works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|agent scope]]), named under the title. Everything on the screen is read from [[hermes]] for that profile each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
         { h: 'The grid' },
         { p: 'A [[toolset]] is a group of tools an agent can call, such as web search, the terminal or image generation. The grid lists every toolset Hermes reports for the profile. A phone shows the same toolsets as a list.' },
         {

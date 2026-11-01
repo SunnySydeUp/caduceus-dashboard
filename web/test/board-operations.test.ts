@@ -87,12 +87,12 @@ describe('the dispatcher’s mode', () => {
     expect(dispatcherMode(settings({ dispatchInGateway: false }), false).state).toBe('stopped');
   });
 
-  test('says its limits: none set, one for all, one for each profile', () => {
+  test('says its limits: none set, one for all, one for each agent', () => {
     expect(dispatcherMode(settings(), true).limits).toBe('No limit of your own on workers running at once.');
     expect(dispatcherMode(settings({ maxInProgress: 3 }), true).limits).toBe('Up to 3 workers at once.');
     expect(dispatcherMode(settings({ maxInProgress: 1 }), true).limits).toBe('Up to 1 worker at once.');
-    expect(dispatcherMode(settings({ maxInProgress: 4, maxInProgressPerProfile: 2 }), true).limits).toBe('Up to 4 workers at once, 2 for each profile.');
-    expect(dispatcherMode(settings({ maxInProgressPerProfile: 1 }), true).limits).toBe('Up to 1 worker for each profile at once.');
+    expect(dispatcherMode(settings({ maxInProgress: 4, maxInProgressPerProfile: 2 }), true).limits).toBe('Up to 4 workers at once, 2 for each agent.');
+    expect(dispatcherMode(settings({ maxInProgressPerProfile: 1 }), true).limits).toBe('Up to 1 worker for each agent at once.');
   });
 });
 

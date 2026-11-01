@@ -336,7 +336,7 @@ export function MoveSheet({ items, actions, profile, onPick, onNewProject, onMov
         </p>
       )}
       {projects === undefined && !problem && <p className="subtle">Loading projects…</p>}
-      {projects !== undefined && projects.length === 0 && <p className="subtle">This profile has no projects yet.</p>}
+      {projects !== undefined && projects.length === 0 && <p className="subtle">This agent has no projects yet.</p>}
       <ul className="sl-acts">
         {(projects ?? []).map((project) => (
           <li key={project.id}>

@@ -225,7 +225,7 @@ describe('deleting many sessions', () => {
     expect(left.filter((id) => ['x-a', 'x-b', 'x-c'].includes(id))).toEqual([]);
   });
 
-  test('works on one profile at a time and never on more sessions than Hermes takes in one call', async () => {
+  test('works on one agent at a time and never on more sessions than Hermes takes in one call', async () => {
     await seedSessions(hermes.home, [{ id: 'y-1', title: 'Default one' }]);
     await seedSessions(path.join(hermes.home, 'profiles', 'work'), [{ id: 'y-2', title: 'Work one' }]);
     const owner = await openOwner({ view: { ...CHATS, all: true } });
@@ -233,7 +233,7 @@ describe('deleting many sessions', () => {
     const mixed = await owner.actions.removeMany(many(owner, 'y-1', 'y-2'));
     const tooMany = await owner.actions.removeMany(Array.from({ length: 501 }, (_, n) => ({ ...item(owner, 'y-1'), id: `fake-${n}` })));
 
-    expect(mixed).toEqual({ kind: 'failed', message: 'Delete sessions of one profile at a time: this selection has sessions of default and work.' });
+    expect(mixed).toEqual({ kind: 'failed', message: 'Delete sessions of one agent at a time: this selection has sessions of default and work.' });
     expect(tooMany).toEqual({ kind: 'failed', message: 'Hermes deletes at most 500 sessions at once: select fewer.' });
     expect(owner.dialogs).toEqual([]);
     expect(await owner.ids('default')).toContain('y-1');

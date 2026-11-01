@@ -246,10 +246,6 @@ describe('the agent filter', () => {
     expect(Object.values(all).flat()).toContain('task:b/nobody');
     expect(Object.values(all).flat()).toContain('run:anon');
   });
-
-  test('the agents are everyone who has a row, whatever the filter, sorted', () => {
-    expect(groupWork({ ...none, ...everything }, 'coder').agents).toEqual(['coder', 'general', 'librarian']);
-  });
 });
 
 describe('a row’s time in words', () => {

@@ -33,7 +33,7 @@ export function folderProblem(listing: Listing, remote?: { label: string }): str
       return undefined;
     case 'missing':
       return remote
-        ? `Hermes does not find this folder on the Mac that runs it. The terminal backend of this profile is ${remote.label}, so the agent works on another machine, but Hermes can only check folders on its own Mac: a folder that exists only there is refused here.`
+        ? `Hermes does not find this folder on the Mac that runs it. The terminal backend of this agent is ${remote.label}, so the agent works on another machine, but Hermes can only check folders on its own Mac: a folder that exists only there is refused here.`
         : 'Hermes does not find this folder on the Mac that runs it.';
     case 'not-a-folder':
       return 'This path is a file, not a folder.';

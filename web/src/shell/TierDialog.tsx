@@ -129,10 +129,10 @@ function TierSheet({ request, finish }: { request: ConfirmRequest; finish(answer
       )}
       {profile && (
         <div className="confirm__scope">
-          <span className="subtle">Profile</span>
+          <span className="subtle">Agent</span>
           <span className="ptag">
             <Sigil name={profile} size="xs" />
-            <span className="ptag__name">{profile === 'all' ? 'All profiles' : profile}</span>
+            <span className="ptag__name">{profile === 'all' ? 'All agents' : profile}</span>
           </span>
         </div>
       )}

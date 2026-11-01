@@ -238,11 +238,11 @@ function BuilderForm({ data, initial, job, script, texts }: FormProps) {
       {shows('what') && (
         <section className="sb__section" aria-labelledby="sb-what">
           <h2 id="sb-what">{editing ? 'Settings' : draft.type === 'blueprint' ? 'Inputs' : 'What it does'}</h2>
-          {data.status === 'loading' && <p role="status">Loading Hermes’s profiles and blueprints…</p>}
+          {data.status === 'loading' && <p role="status">Loading Hermes’s agents and blueprints…</p>}
           {data.status === 'failed' && (
             <div className="banner" data-tone="danger" role="alert">
               <Icon name="alert" />
-              <span className="banner__content">Hermes did not answer, so the profiles are not known yet.</span>
+              <span className="banner__content">Hermes did not answer, so the agents are not known yet.</span>
               <button type="button" className="btn btn--secondary btn--sm" onClick={data.reload}>
                 Try again
               </button>
@@ -283,7 +283,7 @@ function BuilderForm({ data, initial, job, script, texts }: FormProps) {
             <dd>{typeLabel}</dd>
             <dt>Name</dt>
             <dd>{draft.type === 'blueprint' && !editing ? (data.blueprints.find((candidate) => candidate.key === draft.blueprint.key)?.title ?? '—') : draft.name}</dd>
-            <dt>Profile</dt>
+            <dt>Agent</dt>
             <dd>{draft.profile}</dd>
             <dt>Schedule</dt>
             <dd className="mono">{spec ?? '—'}</dd>
@@ -364,7 +364,7 @@ export function ScheduleBuilder() {
     return (
       <div className="bpage sb">
         <PageHeader overline="Work › Schedules" title="New schedule" />
-        <p role="status">Loading Hermes’s profiles and blueprints…</p>
+        <p role="status">Loading Hermes’s agents and blueprints…</p>
       </div>
     );
   }

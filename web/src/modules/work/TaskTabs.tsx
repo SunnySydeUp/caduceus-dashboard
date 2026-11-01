@@ -81,7 +81,7 @@ export function RunsPanel({ detail, slug, nowSeconds }: PanelProps & { nowSecond
           </div>
           <dl className="td-facts td-facts--inline">
             <div>
-              <dt>Profile</dt>
+              <dt>Agent</dt>
               <dd>{row.profile ?? '—'}</dd>
             </div>
             <div>
@@ -367,9 +367,9 @@ export function SettingsPanel({ detail, slug }: PanelProps) {
             <span className="mono">{task.branchName}</span>
           </Fact>
         )}
-        <Fact label="Skills">{task.skills === null ? <span className="subtle">The profile’s defaults</span> : task.skills.length === 0 ? <span className="subtle">None</span> : task.skills.join(', ')}</Fact>
-        <Fact label="Model">{task.modelOverride ? `${task.modelOverride}${task.providerOverride ? ` (${task.providerOverride})` : ''}` : <span className="subtle">The profile’s model</span>}</Fact>
-        <Fact label="Reasoning effort">{task.reasoningEffort ?? <span className="subtle">The profile’s level</span>}</Fact>
+        <Fact label="Skills">{task.skills === null ? <span className="subtle">The agent’s defaults</span> : task.skills.length === 0 ? <span className="subtle">None</span> : task.skills.join(', ')}</Fact>
+        <Fact label="Model">{task.modelOverride ? `${task.modelOverride}${task.providerOverride ? ` (${task.providerOverride})` : ''}` : <span className="subtle">The agent’s model</span>}</Fact>
+        <Fact label="Reasoning effort">{task.reasoningEffort ?? <span className="subtle">The agent’s level</span>}</Fact>
         <Fact label="Time limit">{task.maxRuntimeSeconds === null ? <span className="subtle">No limit</span> : plainDuration(task.maxRuntimeSeconds)}</Fact>
         <Fact label="Retries">{task.maxRetries === null ? <span className="subtle">The dispatcher’s limit</span> : `Blocked after ${task.maxRetries} ${task.maxRetries === 1 ? 'failure' : 'failures'} in a row`}</Fact>
         <Fact label="Goal mode">{task.goalMode ? `On${task.goalMaxTurns ? `, up to ${task.goalMaxTurns} turns` : ''}` : 'Off'}</Fact>
@@ -377,7 +377,7 @@ export function SettingsPanel({ detail, slug }: PanelProps) {
         <Fact label="Toolsets">
           {task.assignee ? (
             <>
-              The toolsets of {task.assignee}, <AppLink to={`/agents/profiles/${encodeURIComponent(task.assignee)}/tools`}>which you edit on the profile</AppLink>
+              The toolsets of {task.assignee}, <AppLink to={`/agents/profiles/${encodeURIComponent(task.assignee)}/tools`}>which you edit on the agent</AppLink>
             </>
           ) : (
             <span className="subtle">The assignee’s, once the task has one</span>
@@ -405,7 +405,7 @@ export function SettingsPanel({ detail, slug }: PanelProps) {
           <Icon name="copy" />
           Duplicate with changes
         </AppLink>
-        <p className="subtle">Edit changes the title, brief, profile, priority, model and reasoning effort. Hermes cannot change the rest after the task is made: duplicate it with the changes instead.</p>
+        <p className="subtle">Edit changes the title, brief, agent, priority, model and reasoning effort. Hermes cannot change the rest after the task is made: duplicate it with the changes instead.</p>
       </div>
     </div>
   );

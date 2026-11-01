@@ -66,7 +66,7 @@ function ReassignSheet({ task, choices, slug, onClose, onDone }: { task: TaskFul
     >
       <div className="field">
         <label className="field__label" htmlFor="td-assignee">
-          Profile
+          Agent
         </label>
         <select id="td-assignee" className="input" value={profile} onChange={(event) => setProfile(event.target.value)}>
           <option value="">Unassigned</option>
@@ -76,7 +76,7 @@ function ReassignSheet({ task, choices, slug, onClose, onDone }: { task: TaskFul
             </option>
           ))}
         </select>
-        <p className="field__help">The next worker to take the task is of this profile.{task.status === 'running' && ' A worker has it now, so Hermes reclaims it first and stops that worker.'}</p>
+        <p className="field__help">The next worker to take the task is of this agent.{task.status === 'running' && ' A worker has it now, so Hermes reclaims it first and stops that worker.'}</p>
       </div>
     </Sheet>
   );
@@ -208,7 +208,7 @@ export function Task() {
     try {
       switch (action) {
         case 'run-now':
-          if (report(await runNow(task, slug), task.assignee ? 'Run requested' : 'In Ready. No worker starts until you assign a profile.')) reload();
+          if (report(await runNow(task, slug), task.assignee ? 'Run requested' : 'In Ready. No worker starts until you assign an agent.')) reload();
           break;
         case 'retry':
           if (report(await retry(task, slug), 'Back to Ready')) reload();

@@ -13,7 +13,7 @@ export interface NewChatLink {
 }
 
 /** The sentence that says the link's profile was not used. */
-export const UNKNOWN_PROFILE_NOTICE = (profile: string): string => `There is no profile “${profile}”, so this chat uses your current profile.`;
+export const UNKNOWN_PROFILE_NOTICE = (profile: string): string => `There is no agent “${profile}”, so this chat uses your current agent.`;
 
 /** Reads the query string of a `/chat/new` address against the profiles Hermes has. A parameter given twice counts as its last value. */
 export function resolveNewChatLink(search: string, profiles: readonly string[]): NewChatLink {

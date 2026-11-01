@@ -47,7 +47,7 @@ export function SessionGone({ profile, storedId }: { profile: string; storedId: 
           <Icon name="alert" />
         </span>
         <h3>That conversation no longer exists.</h3>
-        <p>{home.kind === 'unknown' ? 'It is not in this profile, and Hermes did not answer for every other profile, so it may still be in one of them.' : 'It may have been deleted, or the link may be for another Hermes.'}</p>
+        <p>{home.kind === 'unknown' ? 'It is not in this agent, and Hermes did not answer for every other agent, so it may still be in one of them.' : 'It may have been deleted, or the link may be for another Hermes.'}</p>
         <div className="empty__actions">
           <button type="button" className="btn btn--primary" onClick={() => void navigate(`/chat?profile=${encodeURIComponent(profile)}`, { replace: true })}>
             Open the latest chat

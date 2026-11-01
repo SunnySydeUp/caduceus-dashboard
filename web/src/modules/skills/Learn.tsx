@@ -64,7 +64,7 @@ export function Learn() {
   return (
     <SkillsFrame title="Learn a skill">
       <p className="help-text">
-        <Term id="learn-a-skill">Learn a skill</Term> asks the agent to study something you name and write what it learns as a new skill. The work happens in Chat.
+        <Term id="learn-a-skill">Learn a skill</Term> asks the agent to study something you name and write what it learns as a new skill. The work happens in Talk.
       </p>
       {effective ? <LearnForm key={effective.name} profile={effective.name} /> : <p role="status">Loading…</p>}
     </SkillsFrame>

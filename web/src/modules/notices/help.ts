@@ -16,7 +16,7 @@ export const noticesHelp: ModuleHelp = {
             'Failed: a scheduled job whose last run failed or that is overdue, a gateway that is down, a missing provider key, resource pressure, a budget that was reached, a playbook run that stopped, and a task that [[gave-up|gave up]]. A task that gave up has Retry, which sends it back to Ready, and Reassign, which hands it to another profile.',
             'FYI: a Hermes update that is waiting, and other news that needs no answer.',
             'Each card has the one or two things you can do at once, such as Run now or Pause a job, or Restart a stuck gateway. They name the job or profile in their confirmation. Details shows the whole notice and where to look next.',
-            'The category chips and the profile chip filter the list. The category stays in the address, so a filtered view can be bookmarked.',
+            'The category chips and the agent scope at the top filter the list. The category stays in the address, so a filtered view can be bookmarked.',
           ],
         },
         { h: 'Putting a notice aside' },

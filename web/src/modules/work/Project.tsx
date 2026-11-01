@@ -83,7 +83,7 @@ export function Project() {
         <div className="empty">
           <Icon name="folder" />
           <h2>Hermes has no project with this address</h2>
-          <p>It may belong to a profile Hermes could not read, or it was deleted.</p>
+          <p>It may belong to an agent Hermes could not read, or it was deleted.</p>
           <AppLink className="btn btn--primary" to="/work/projects">
             Back to projects
           </AppLink>

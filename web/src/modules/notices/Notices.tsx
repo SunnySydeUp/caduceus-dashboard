@@ -129,7 +129,7 @@ function ItemCard({ item, selected, wide, now, onOpen }: { item: InboxNotice; se
         </span>
         <span className="nt-card__title">{item.title}</span>
         {previewOf(item) !== item.title && <span className="nt-card__preview mono">{previewOf(item)}</span>}
-        <span className="nt-card__meta subtle">{item.profile ?? 'all profiles'}</span>
+        <span className="nt-card__meta subtle">{item.profile ?? 'all agents'}</span>
       </button>
       <div className="nt-card__acts">
         {lead && (

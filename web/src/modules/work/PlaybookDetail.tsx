@@ -74,7 +74,7 @@ function StageInspector({ playbook, stage, warnings, onSelect }: { playbook: Pla
       <section aria-label="Settings">
         <dl className="pb__dl">
           <Row name="Assignee">{stage.assignee ?? <span className="subtle">Not set: chosen when it runs</span>}</Row>
-          <Row name="Model">{stage.model ? `${stage.model}${stage.provider ? ` (${stage.provider})` : ''}` : <span className="subtle">The profile’s model</span>}</Row>
+          <Row name="Model">{stage.model ? `${stage.model}${stage.provider ? ` (${stage.provider})` : ''}` : <span className="subtle">The agent’s model</span>}</Row>
           {stage.reasoning_effort && <Row name="Reasoning effort">{stage.reasoning_effort}</Row>}
           <Row name="Skills">{stage.skills && stage.skills.length > 0 ? stage.skills.join(', ') : <span className="subtle">None</span>}</Row>
           <Row name="Deliverable">{stage.deliverable ? <>Files attached to its task are kept in <AppLink to="/workspace/artifacts">Artifacts</AppLink></> : <span className="subtle">No</span>}</Row>

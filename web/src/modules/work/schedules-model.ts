@@ -209,7 +209,7 @@ export const JOB_STATUSES = {
 } as const;
 export type JobStatusFilter = keyof typeof JOB_STATUSES;
 
-/** The list's filters: each is one condition, and every one that is set must hold. */
+/** The list's filters: each is one condition, and every one that is set must hold. `profile` is the agent in scope: the screen sets it from the tab's agent scope, the address never holds it. */
 export interface SchedulesView {
   profile?: string;
   type?: JobType;
@@ -234,19 +234,15 @@ export function sortJobs(jobs: readonly Job[]): Job[] {
   return [...jobs].sort((a, b) => (a.nextRunAt ?? Number.POSITIVE_INFINITY) - (b.nextRunAt ?? Number.POSITIVE_INFINITY) || a.name.localeCompare(b.name));
 }
 
-/**
- * The filter as the address holds it. `profile` is the shell's own query parameter (the tab's profile), so the profile a job belongs to
- * is `for`.
- */
+/** The filter as the address holds it: the type and the status. The agent is the tab's scope (`?profile=`, the shell's own query parameter), not a filter of this list. */
 export function schedulesSearch(view: SchedulesView): Record<string, string> {
-  return { ...(view.profile ? { for: view.profile } : {}), ...(view.type ? { type: view.type } : {}), ...(view.status ? { status: view.status } : {}) };
+  return { ...(view.type ? { type: view.type } : {}), ...(view.status ? { status: view.status } : {}) };
 }
 
 /** The filter in an address; a value that is not one is left out. */
 export function readSchedulesView(search: Record<string, unknown>): SchedulesView {
-  const { for: profile, type, status } = search;
+  const { type, status } = search;
   return {
-    ...(typeof profile === 'string' && profile.trim() !== '' ? { profile } : {}),
     ...(typeof type === 'string' && type in JOB_TYPES ? { type: type as JobType } : {}),
     ...(typeof status === 'string' && status in JOB_STATUSES ? { status: status as JobStatusFilter } : {}),
   };

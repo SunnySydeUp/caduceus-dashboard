@@ -84,7 +84,7 @@ export function createProjectActions({ connection, confirm, readOnly }: ProjectA
     const answer = await gateway<{ project?: { id?: unknown } | null }>(
       'projects.create',
       { profile, name: title, folders: [folderOf(folder)], primary_path: folderOf(folder) },
-      asks('projects.create', profile, { label: `Create the project “${title}”?`, text: `Hermes keeps the project, with the folder ${folderOf(folder)}, in the profile ${profile}.`, object: title, confirmLabel: 'Create project' }),
+      asks('projects.create', profile, { label: `Create the project “${title}”?`, text: `Hermes keeps the project, with the folder ${folderOf(folder)}, in the agent ${profile}.`, object: title, confirmLabel: 'Create project' }),
     );
     if (answer.kind !== 'ok') return answer;
     const id = answer.result.project?.id;
@@ -100,8 +100,8 @@ export function createProjectActions({ connection, confirm, readOnly }: ProjectA
 
   async function activate(profile: string, project: { id: string; name: string } | undefined): Promise<ActionResult> {
     const ask = project
-      ? asks('projects.set_active', profile, { label: `Make “${project.name}” the active project?`, text: `Hermes uses it as the profile ${profile}’s active project: new sessions there start in its folder.`, object: project.name, confirmLabel: 'Make active' })
-      : asks('projects.set_active', profile, { label: 'Stop using an active project?', text: `The profile ${profile} goes back to having no active project.`, object: profile, confirmLabel: 'Clear active project' });
+      ? asks('projects.set_active', profile, { label: `Make “${project.name}” the active project?`, text: `Hermes uses it as the agent ${profile}’s active project: new sessions there start in its folder.`, object: project.name, confirmLabel: 'Make active' })
+      : asks('projects.set_active', profile, { label: 'Stop using an active project?', text: `The agent ${profile} goes back to having no active project.`, object: profile, confirmLabel: 'Clear active project' });
     const answer = await gateway('projects.set_active', { profile, ...(project ? { id: project.id } : {}) }, ask);
     return answer.kind === 'ok' ? { kind: 'done' } : answer;
   }
@@ -115,7 +115,7 @@ export function createProjectActions({ connection, confirm, readOnly }: ProjectA
     if (repos.length === 0) return { kind: 'failed' as const, message: 'Choose at least one repository.' };
     if (readOnly()) return { kind: 'failed' as const, message: READ_ONLY_MESSAGE };
     const named = repos.length === 1 ? `“${repos[0]!.label}”` : `${repos.length} repositories`;
-    const ask = asks('projects.create', profile, { label: `Add ${named} as ${repos.length === 1 ? 'a project' : 'projects'}?`, text: `Hermes keeps a project for each, named after its folder, in the profile ${profile}. The folders are not changed.`, object: repos.length === 1 ? repos[0]!.label : `${repos.length} repositories`, confirmLabel: repos.length === 1 ? 'Add project' : 'Add projects' });
+    const ask = asks('projects.create', profile, { label: `Add ${named} as ${repos.length === 1 ? 'a project' : 'projects'}?`, text: `Hermes keeps a project for each, named after its folder, in the agent ${profile}. The folders are not changed.`, object: repos.length === 1 ? repos[0]!.label : `${repos.length} repositories`, confirmLabel: repos.length === 1 ? 'Add project' : 'Add projects' });
     if (!(await confirm(ask))) return { kind: 'cancelled' as const };
     let made = 0;
     const failed: string[] = [];

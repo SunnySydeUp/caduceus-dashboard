@@ -18,10 +18,10 @@ export interface FieldsProps {
 
 export function ProfileField({ draft, change, errors, touch, profiles, locked }: FieldsProps) {
   return (
-    <Field label="Profile" help={locked ? 'A job belongs to the profile it was made in.' : 'The profile whose settings, memory and model the job uses.'} error={errors.profile} name="profile">
+    <Field label="Agent" help={locked ? 'A job belongs to the agent it was made in.' : 'The agent whose settings, memory and model the job uses.'} error={errors.profile} name="profile">
       {(aria) => (
         <select {...aria} className="input" value={draft.profile} disabled={locked} onChange={(event) => change({ profile: event.target.value })} onBlur={() => touch('profile')}>
-          {!profiles.includes(draft.profile) && <option value={draft.profile}>{draft.profile || 'Choose a profile'}</option>}
+          {!profiles.includes(draft.profile) && <option value={draft.profile}>{draft.profile || 'Choose an agent'}</option>}
           {profiles.map((profile) => (
             <option key={profile} value={profile}>
               {profile}
@@ -47,7 +47,7 @@ export function AgentFields({ draft, change, errors, touch, skillNames }: Fields
       <Field label="Prompt" help="What the agent is asked each time the schedule fires." error={errors.prompt} name="prompt">
         {(aria) => <textarea {...aria} className="input" rows={6} value={draft.prompt} onChange={(event) => change({ prompt: event.target.value })} onBlur={() => touch('prompt')} />}
       </Field>
-      <Field label="Model" help="Leave empty to use the profile’s model.">
+      <Field label="Model" help="Leave empty to use the agent’s model.">
         {(aria) => <input {...aria} className="input" value={draft.model} onChange={(event) => change({ model: event.target.value })} autoComplete="off" autoCapitalize="none" spellCheck={false} />}
       </Field>
       <Field label="Skills" help="Skills the agent loads first, separated by commas.">
@@ -82,7 +82,7 @@ export function TaskFieldsForm({ draft, change, errors, touch, profiles, skillNa
       <Field label="Brief" help="What the worker is asked to do, in Markdown. It becomes the task’s body." name="brief">
         {(aria) => <textarea {...aria} className="input" rows={7} value={task.brief} readOnly={locked} onChange={(event) => set({ brief: event.target.value })} />}
       </Field>
-      <Field label="Assign to" help="The profile that works the task. Leave it unassigned to pick it up later." error={errors.assignee} name="assignee">
+      <Field label="Assign to" help="The agent that works the task. Leave it unassigned to pick it up later." error={errors.assignee} name="assignee">
         {(aria) => (
           <select {...aria} className="input" value={task.assignee} disabled={locked} onChange={(event) => set({ assignee: event.target.value })} onBlur={() => touch('assignee')}>
             <option value="">Unassigned</option>

@@ -168,7 +168,7 @@ describe('About', () => {
 
   test('says so, in words, for what is not known yet rather than a made-up number', () => {
     expect(aboutOf({ model: undefined, cwd: undefined, usage: undefined, spendToday: undefined })).toEqual([
-      { label: 'Model', value: 'The profile’s default' },
+      { label: 'Model', value: 'The agent’s default' },
       { label: 'Folder', value: 'Not set' },
       { label: 'Cost today', value: 'Not known yet' },
       { label: 'Context', value: 'Not known until the first reply' },

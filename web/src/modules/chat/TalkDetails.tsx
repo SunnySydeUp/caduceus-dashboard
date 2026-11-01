@@ -110,7 +110,7 @@ function Preview({ view, onView, profile, state, chat }: { view: WorkspaceView; 
         (space.browser ? <ActivityGroup items={[space.browser]} mode="worklog" /> : <p className="subtle td__empty">{profile} has not used a browser in this chat.</p>)}
       {view === 'files' && (
         <Suspense fallback={<p className="subtle td__empty" role="status">Loading…</p>}>
-          <ArtifactsTab sessionId={state.storedId} profile={profile} title={state.title ?? 'Chat'} cwd={state.cwd} liveSession={() => chat?.liveSession()} turn={state.running} />
+          <ArtifactsTab sessionId={state.storedId} profile={profile} title={state.title ?? 'Talk'} cwd={state.cwd} liveSession={() => chat?.liveSession()} turn={state.running} />
         </Suspense>
       )}
     </div>

@@ -621,7 +621,7 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
   };
   const moveProfile = (targets: readonly SessionItem[]) => targets[0]?.profile ?? profile;
   const profilesOf = [...new Set(chosenItems.map((item) => item.profile ?? profile))];
-  const bulkBlock = profilesOf.length > 1 ? 'Delete and move work on one profile at a time: this selection has sessions of several.' : undefined;
+  const bulkBlock = profilesOf.length > 1 ? 'Delete and move work on one agent at a time: this selection has sessions of several.' : undefined;
   const deleteBlock = bulkBlock ?? (chosenItems.length > BULK_DELETE_MAX ? `Hermes deletes at most ${BULK_DELETE_MAX} sessions at once.` : undefined);
   const allPinned = chosenItems.length > 0 && chosenItems.every((item) => item.pinned);
 
@@ -896,7 +896,7 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
       {state.unreadableProfiles.length > 0 && (
         <p className="banner" data-tone="warning" role="status">
           <Icon name="alert" />
-          <span className="banner__content">Hermes could not read every profile: {state.unreadableProfiles.join(' · ')}</span>
+          <span className="banner__content">Hermes could not read every agent: {state.unreadableProfiles.join(' · ')}</span>
         </p>
       )}
       <div ref={body} className="sl__body" hidden={searching}>
@@ -927,7 +927,7 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
                       Hermes has no <Term id="automation-sessions">automation sessions</Term> yet.
                     </>
                   ) : (
-                    'No profile has a chat yet.'
+                    'No agent has a chat yet.'
                   )}
                 </p>
                 {narrowed && (
@@ -939,7 +939,7 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
             ) : (
               <>
                 <h3>No chats yet</h3>
-                <p>Start a conversation with Hermes in this profile.</p>
+                <p>Start a conversation with Hermes in this agent.</p>
               </>
             )}
             <AppLink className="btn btn--primary" to="/chat/new">

@@ -15,7 +15,7 @@ export const profilesHelp: ModuleHelp = {
         { h: 'What a card can do' },
         {
           ul: [
-            'Use in this tab makes this browser tab work on that profile ([[profile-scope|profile scope]]). Nothing in Hermes changes.',
+            'Use in this tab makes this browser tab work on that profile ([[profile-scope|agent scope]]). Nothing in Hermes changes.',
             'Make default sets the [[default-profile|default profile]]. It is a Tier 2 action ([[risk-tiers|risk tiers]]): you confirm, then with a [[passkey|passkey]].',
             'Copy CLI command copies the command that starts Hermes on that profile.',
             'Rename changes the profile’s name in Hermes. It needs no confirmation, and the message that follows lets you undo it for a few seconds.',

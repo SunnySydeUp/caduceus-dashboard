@@ -178,7 +178,7 @@ export const EMPTY: Record<EmptyBlock, { text: string; action: EmptyAction }> = 
   schedule: { text: 'No routines run today. A routine you schedule shows here, with when it runs next.', action: { label: 'Schedule a routine', module: 'schedules', suffix: '/new' } },
   'away-first': { text: 'This is your first visit to Today. Runs and routines that finish while you are away show here.', action: { label: 'See the schedule', module: 'schedules' } },
   'away-quiet': { text: 'Nothing happened while you were away.', action: { label: 'Schedule a routine', module: 'schedules', suffix: '/new' } },
-  crew: { text: 'No agents yet. Each Hermes profile is an agent of your crew.', action: { label: 'Add a profile', module: 'profiles' } },
+  crew: { text: 'No agents yet. Every agent is a Hermes profile.', action: { label: 'Add an agent', module: 'profiles' } },
 };
 
 /** Where an empty block's action leads: its module's address, read from the registry by `pathOf`, then the screen the label promises. */

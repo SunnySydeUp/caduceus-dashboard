@@ -33,7 +33,7 @@ const statusWord = (status: CardChange & { kind: 'move' }) => (status.to === 'ar
 /** What a change did, in words: the toast's message. `title` is the card's. */
 export function describeChange(title: string, change: CardChange): string {
   if (change.kind === 'move') return change.to === 'archived' ? `Archived “${title}”.` : `Moved “${title}” to ${statusWord(change)}.`;
-  if (change.kind === 'assign') return change.to === null ? `Took “${title}” off its profile.` : `Gave “${title}” to ${change.to}.`;
+  if (change.kind === 'assign') return change.to === null ? `Took “${title}” off its agent.` : `Gave “${title}” to ${change.to}.`;
   const label = PRIORITY_CHOICES.find((choice) => choice.value === change.to)?.label ?? priorityLabel(change.to) ?? 'Normal';
   return `“${title}” is now ${label.toLowerCase()} priority${change.to === 0 || PRIORITY_CHOICES.some((choice) => choice.value === change.to) ? '' : ` (${change.to})`}.`;
 }
@@ -72,7 +72,7 @@ export async function changeCard(task: BoardTask, change: CardChange, slug?: str
 function bulkWords(change: CardChange, n: number): { title: string; confirmLabel: string } {
   const noun = `${n} ${n === 1 ? 'task' : 'tasks'}`;
   if (change.kind === 'move') return change.to === 'archived' ? { title: `Archive ${noun}?`, confirmLabel: `Archive ${noun}` } : { title: `Move ${noun} to ${statusWord(change)}?`, confirmLabel: `Move ${noun}` };
-  if (change.kind === 'assign') return { title: change.to === null ? `Take ${noun} off their profiles?` : `Give ${noun} to ${change.to}?`, confirmLabel: change.to === null ? 'Unassign' : 'Assign' };
+  if (change.kind === 'assign') return { title: change.to === null ? `Take ${noun} off their agents?` : `Give ${noun} to ${change.to}?`, confirmLabel: change.to === null ? 'Unassign' : 'Assign' };
   return { title: `Change the priority of ${noun}?`, confirmLabel: 'Change priority' };
 }
 

@@ -103,7 +103,7 @@ const WRITE_REFUSALS: Readonly<Record<string, string>> = {
   stale_generation: 'The chat changed while this was being sent. Try again.',
   not_found: 'Hermes no longer has this chat.',
   permission_denied: 'Hermes did not allow this change.',
-  profile_mismatch: 'Hermes does not serve this chat’s profile.',
+  profile_mismatch: 'Hermes does not serve this chat’s agent.',
 };
 
 /** What was wrong, in the words of whoever refused: the policy's `message` (read-only mode, a missing profile), Hermes's string `detail`, or the first message of a validation error. */
@@ -172,7 +172,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
     const answer = await call({
       method: 'DELETE',
       path: `/api/sessions/${encodeURIComponent(item.id)}?profile=${encodeURIComponent(owner)}`,
-      confirm: { title: `Delete “${nameOf(item)}”?`, text: `Hermes deletes this session and its messages from the profile ${owner}. This cannot be undone.`, object: nameOf(item), profile: owner, confirmLabel: 'Delete' },
+      confirm: { title: `Delete “${nameOf(item)}”?`, text: `Hermes deletes this session and its messages from the agent ${owner}. This cannot be undone.`, object: nameOf(item), profile: owner, confirmLabel: 'Delete' },
     });
     return answer.kind === 'sent' ? { kind: 'done', message: `Deleted “${nameOf(item)}”` } : answer;
   }
@@ -180,7 +180,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
   async function removeMany(items: readonly SessionItem[]): Promise<Outcome> {
     if (items.length > BULK_DELETE_MAX) return { kind: 'failed', message: `Hermes deletes at most ${BULK_DELETE_MAX} sessions at once: select fewer.` };
     const owners = [...new Set(items.map((item) => item.profile ?? profile))];
-    if (owners.length > 1) return { kind: 'failed', message: `Delete sessions of one profile at a time: this selection has sessions of ${owners.slice(0, -1).join(', ')} and ${owners.at(-1)}.` };
+    if (owners.length > 1) return { kind: 'failed', message: `Delete sessions of one agent at a time: this selection has sessions of ${owners.slice(0, -1).join(', ')} and ${owners.at(-1)}.` };
     const owner = owners[0] ?? profile;
     const count = `${items.length} session${items.length === 1 ? '' : 's'}`;
     const answer = await call({
@@ -189,7 +189,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
       body: { ids: items.map((item) => item.id), profile: owner },
       confirm: {
         title: `Delete ${count}?`,
-        text: `Hermes deletes these sessions and their messages from the profile ${owner}.`,
+        text: `Hermes deletes these sessions and their messages from the agent ${owner}.`,
         object: count,
         profile: owner,
         confirmLabel: `Delete ${count}`,
@@ -214,7 +214,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
     const answer = await call({
       method: 'DELETE',
       path: `/api/sessions/empty?profile=${encodeURIComponent(owner)}`,
-      confirm: { title: `Delete ${named}?`, text: `Hermes deletes the ${named} of the profile ${owner}: ended chats with no messages. This cannot be undone.`, object: named, profile: owner, confirmLabel: 'Delete' },
+      confirm: { title: `Delete ${named}?`, text: `Hermes deletes the ${named} of the agent ${owner}: ended chats with no messages. This cannot be undone.`, object: named, profile: owner, confirmLabel: 'Delete' },
     });
     if (answer.kind !== 'sent') return answer;
     const { deleted } = (await answer.response.json().catch(() => ({}))) as { deleted?: unknown };
@@ -243,7 +243,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
       body: pruneBody(owner, filter),
       confirm: {
         title: `Prune ${named} ${age}?`,
-        text: `Hermes deletes the ended sessions of the profile ${owner} that were last active more than ${plural(filter.olderThanDays, 'day')} ago${filter.source === undefined ? '' : `, from ${filter.source}`}.`,
+        text: `Hermes deletes the ended sessions of the agent ${owner} that were last active more than ${plural(filter.olderThanDays, 'day')} ago${filter.source === undefined ? '' : `, from ${filter.source}`}.`,
         object: named,
         profile: owner,
         confirmLabel: `Prune ${named}`,
@@ -279,7 +279,7 @@ export function createSessionActions({ send, connection, confirm, readOnly, prof
     const answer = await gateway<{ project?: unknown }>(
       'projects.create',
       { profile: owner, name: title, folders: [folder.trim()], primary_path: folder.trim(), ...(tone === undefined ? {} : { color: tone }) },
-      asks('projects.create', { label: `Create the project “${title}”?`, text: `Hermes keeps the project, with the folder ${folder.trim()}, in the profile ${owner}.`, object: title, confirmLabel: 'Create project' }, owner),
+      asks('projects.create', { label: `Create the project “${title}”?`, text: `Hermes keeps the project, with the folder ${folder.trim()}, in the agent ${owner}.`, object: title, confirmLabel: 'Create project' }, owner),
     );
     if (answer.kind !== 'ok') return answer;
     const [project] = parseProjects({ projects: [answer.result.project] });

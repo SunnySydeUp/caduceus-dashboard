@@ -558,7 +558,7 @@ export function Board() {
                 onChange={(lanes) => setView({ lanes, filters: view.filters })}
                 options={[
                   { value: 'status', label: 'Status' },
-                  { value: 'profile', label: 'Profile' },
+                  { value: 'profile', label: 'Agent' },
                 ]}
               />
               {compact && (

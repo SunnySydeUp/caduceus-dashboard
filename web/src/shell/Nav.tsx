@@ -15,6 +15,10 @@ import { updateShellPrefs } from './shell-prefs.ts';
 import { useRegistry } from './registry-context.tsx';
 import { useShellActions } from './ShellActions.tsx';
 import { useNow } from './use-now.ts';
+import { useLinkHealth } from './connection.ts';
+import { asOfWords } from './link-memory.ts';
+import { skeletonRows } from '../modules/crew/crew-memory.ts';
+import { useCrewRead, type CrewRead } from '../modules/crew/use-crew-read.ts';
 import { morph } from '../motion.ts';
 import type { DeskPlacement, NavBadge } from '../module-registry.ts';
 import type { SizeClass } from '../size-class.ts';
@@ -182,6 +186,8 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   const isCurrentAgent = useIsCurrentAgent();
   const medium = size === 'medium';
   const { openPalette } = useShellActions();
+  const read = useCrewRead();
+  const link = useLinkHealth();
   return (
     <div className="rail">
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
@@ -203,39 +209,98 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
         </span>
         <span className="nav-label">Search</span>
       </button>
-      {destinations.map((destination) => (
-        <AppLink preload key={destination.id} className="nav-item rail__item" to={destination.path} style={named(`nav-${destination.id}`)} aria-current={current === destination.id ? 'page' : undefined}>
-          <span className="rail__icon">
-            {current === destination.id && <NavPill list="side" />}
-            <Icon name={destination.icon} />
-            <NavBadgeCount badge={destination.badge} />
-          </span>
-          <span className="nav-label">{destination.title}</span>
-        </AppLink>
-      ))}
-      {crew.length > 0 && (
-        <ul className="rail__crew crewlist__scroll" aria-label="Crew">
-          {crew.map((row, index) => {
-            const isCurrent = isCurrentAgent(row);
-            return (
-              <li key={row.profile} className="crew__slot">
-                <AppLink preload className="nav-item rail__item rail__mate" to={row.path} flight style={named(`mate-${index}`)} aria-current={isCurrent ? 'page' : undefined}>
-                  {isCurrent && <NavPill list="crew" />}
-                  <Sigil name={row.profile} size="sm" state={row.state} />
-                  <span className="nav-label">{row.profile}</span>
-                  <span className="sr-only">{row.stateLabel}</span>
-                </AppLink>
-                <NewChatWith row={row} />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {/* Places and crew scroll together between the head and the foot (with the sidebar's edge fades); when even the head and foot do not fit a short window, the whole rail scrolls. */}
+      <div className="rail__scroll">
+        {destinations.map((destination) => (
+          <AppLink preload key={destination.id} className="nav-item rail__item" to={destination.path} style={named(`nav-${destination.id}`)} aria-current={current === destination.id ? 'page' : undefined}>
+            <span className="rail__icon">
+              {current === destination.id && <NavPill list="side" />}
+              <Icon name={destination.icon} />
+              <NavBadgeCount badge={destination.badge} />
+            </span>
+            <span className="nav-label">{destination.title}</span>
+          </AppLink>
+        ))}
+        {crew.length > 0 ? (
+          <ul className="rail__crew" aria-label="Crew" data-stale={link.healthy ? undefined : ''}>
+            {crew.map((row, index) => {
+              const isCurrent = isCurrentAgent(row);
+              return (
+                <li key={row.profile} className="crew__slot">
+                  <AppLink preload className="nav-item rail__item rail__mate" to={row.path} flight style={named(`mate-${index}`)} aria-current={isCurrent ? 'page' : undefined}>
+                    {isCurrent && <NavPill list="crew" />}
+                    <Sigil name={row.profile} size="sm" state={row.state} />
+                    <span className="nav-label">{row.profile}</span>
+                    <span className="sr-only">{link.healthy ? row.stateLabel : `${row.stateLabel}. ${asOfWords(link.lastHealthyAt, Date.now())}`}</span>
+                  </AppLink>
+                  <NewChatWith row={row} />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          read.status !== 'ready' && <CrewPending read={read} variant="rail" />
+        )}
+      </div>
       <div className="nav-foot">
         <HelpButton compact glides />
         <ControlLink compact glides />
       </div>
     </div>
+  );
+}
+
+/**
+ * The crew's place before there is a crew to draw: while the first read is on its way, one skeleton row for each agent known from the last load (with its name and
+ * sigil, which a name alone draws) or three nameless ones; when the read failed or is taking too long, what happened and a Retry.
+ */
+function CrewPending({ read, variant }: { read: CrewRead; variant: 'list' | 'rail' }) {
+  const rail = variant === 'rail';
+  const retry = (
+    <button type="button" className="btn btn--secondary btn--sm" onClick={read.retry}>
+      <Icon name="refresh" small />
+      Retry
+    </button>
+  );
+  const body =
+    read.status === 'failed' ? (
+      <div className="crew-failed" role="status">
+        <p>Crew couldn’t be read</p>
+        {retry}
+      </div>
+    ) : (
+      <ul className={rail ? 'rail__crew' : 'crewlist__scroll'} aria-label="Crew" aria-busy="true">
+        {skeletonRows(read.known).map((name, index) => (
+          <li key={name ?? index} className="crew__slot">
+            {rail ? (
+              <span className="nav-item rail__item rail__mate mate--pending" aria-hidden="true">
+                {name ? <Sigil name={name} size="sm" /> : <span className="skel mate__skel-sigil" />}
+                {name ? <span className="nav-label">{name}</span> : <span className="skel mate__skel-line" />}
+              </span>
+            ) : (
+              <span className="mate mate--pending" aria-hidden="true">
+                {name ? <Sigil name={name} size="md" /> : <span className="skel mate__skel-sigil" />}
+                <span className="mate__text">
+                  {name ? <span className="mate__name">{name}</span> : <span className="skel mate__skel-line" />}
+                  <span className="skel mate__skel-line mate__skel-line--short" />
+                </span>
+              </span>
+            )}
+          </li>
+        ))}
+        <li className="sr-only" role="status">
+          Loading the crew…
+        </li>
+      </ul>
+    );
+  if (rail) return read.status === 'failed' ? <div className="rail__crew rail__crew--failed">{body}</div> : body;
+  return (
+    <section className="crewlist" aria-labelledby="crewlist-title">
+      <h2 className="nav-heading" id="crewlist-title">
+        Crew {read.status === 'loading' && read.known.length > 0 && <span>{read.known.length}</span>}
+      </h2>
+      {body}
+    </section>
   );
 }
 
@@ -246,7 +311,7 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
 function NewChatWith({ row }: { row: CrewRow }) {
   if (row.newChat === undefined) return null;
   return (
-    <AppLink className="btn btn--secondary btn--icon btn--sm crew__new" to={row.newChat} aria-label={`New chat with ${row.profile}`} title={`New chat with ${row.profile}`}>
+    <AppLink className="btn btn--secondary btn--icon btn--sm crew__new" to={row.newChat} aria-label={`New chat with ${row.profile}`}>
       <Icon name="plus" small />
     </AppLink>
   );
@@ -256,18 +321,18 @@ function NewChatWith({ row }: { row: CrewRow }) {
  * One agent of the crew in the sidebar: its sigil with the live state, its name, what it is doing and since when. It opens that agent's thread, and its sigil and
  * name fly to that thread's header (`useAppNavigate`).
  */
-function CrewMate({ row, now, current, index, glides }: { row: CrewRow; now: number; current: boolean; index: number; glides: boolean }) {
+function CrewMate({ row, now, current, index, glides, staleLine }: { row: CrewRow; now: number; current: boolean; index: number; glides: boolean; staleLine: string | undefined }) {
   return (
     <>
-      <AppLink preload className="mate" to={row.path} flight style={named(`mate-${index}`, glides)} aria-current={current ? 'page' : undefined}>
+      <AppLink preload className="mate" data-stale={staleLine === undefined ? undefined : ''} to={row.path} flight style={named(`mate-${index}`, glides)} aria-current={current ? 'page' : undefined}>
         {current && <NavPill list="crew" glides={glides} />}
         <Sigil name={row.profile} size="md" state={row.state} />
         <span className="mate__text">
           <span className="mate__name">{row.profile}</span>
           <span className="sr-only">: {row.stateLabel}. </span>
-          <small className="mate__line">{row.line}</small>
+          <small className="mate__line">{staleLine ?? row.line}</small>
         </span>
-        <span className="mate__time">{crewAge(row.since, now)}</span>
+        {staleLine === undefined && <span className="mate__time">{crewAge(row.since, now)}</span>}
       </AppLink>
       <NewChatWith row={row} />
     </>
@@ -284,6 +349,10 @@ function DeskNav({ glides }: { glides: boolean }) {
   const current = useCurrentPlacement();
   const isCurrentAgent = useIsCurrentAgent();
   const now = useNow(crew.some((row) => row.since !== undefined), CREW_CLOCK_MS);
+  const read = useCrewRead();
+  const link = useLinkHealth();
+  // While the link is down every live line is as old as the link: it says when it was last true instead of what it said.
+  const staleLine = link.healthy ? undefined : asOfWords(link.lastHealthyAt, now);
   return (
     <>
       <SearchField />
@@ -297,6 +366,7 @@ function DeskNav({ glides }: { glides: boolean }) {
           </AppLink>
         ))}
       </div>
+      {crew.length === 0 && read.status !== 'ready' && <CrewPending read={read} variant="list" />}
       {crew.length > 0 && (
         <section className="crewlist" aria-labelledby="crewlist-title">
           <h2 className="nav-heading" id="crewlist-title">
@@ -305,7 +375,7 @@ function DeskNav({ glides }: { glides: boolean }) {
           <ul className="crewlist__scroll">
             {crew.map((row, index) => (
               <li key={row.profile} className="crew__slot">
-                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} />
+                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} staleLine={staleLine} />
               </li>
             ))}
           </ul>

@@ -3,6 +3,7 @@ import { useSearch } from '@tanstack/react-router';
 import { Icon } from '../../icons.tsx';
 import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
+import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { JobTable } from './JobTable.tsx';
 import { SchedulerNotice, useNow } from './JobParts.tsx';
@@ -30,7 +31,10 @@ const STATUS_ORDER = Object.keys(JOB_STATUSES) as JobStatusFilter[];
 
 export function Schedules() {
   const search = useSearch({ strict: false }) as Record<string, unknown>;
-  const view = readSchedulesView(search);
+  const { scope, choose } = useProfileScope();
+  // The agent is the tab's scope, the one control for it; the address holds only the type and the status. `all` and a scope not known yet show every job.
+  const agent = scope === undefined || scope === 'all' ? undefined : scope;
+  const view: SchedulesView = { ...readSchedulesView(search), ...(agent === undefined ? {} : { profile: agent }) };
   const navigate = useAppNavigate();
   const now = useNow();
   const { jobs, failed, reload } = useJobs();
@@ -42,8 +46,7 @@ export function Schedules() {
 
   const scheduler = useMemo(() => (jobs ? schedulerStatus(jobs) : undefined), [jobs]);
   const shown = useMemo(() => (jobs ? sortJobs(selectJobs(jobs, view)) : []), [jobs, view.profile, view.type, view.status]); // eslint-disable-line react-hooks/exhaustive-deps
-  const profiles = useMemo(() => [...new Set([...(jobs ?? []).map((job) => job.profile), ...(view.profile ? [view.profile] : [])])].sort(), [jobs, view.profile]);
-  // The number on a status chip is how many jobs it would show with the profile and the type that are chosen.
+  // The number on a status chip is how many jobs it would show with the agent and the type that are chosen.
   const counts = useMemo(() => Object.fromEntries(STATUS_ORDER.map((status) => [status, jobs ? selectJobs(jobs, { ...view, status }).length : 0])) as Record<JobStatusFilter, number>, [jobs, view.profile, view.type]); // eslint-disable-line react-hooks/exhaustive-deps
   const narrowed = view.profile !== undefined || view.type !== undefined || view.status !== undefined;
   const total = jobs ? selectJobs(jobs, { profile: view.profile, type: view.type }).length : 0;
@@ -52,7 +55,7 @@ export function Schedules() {
     <div className="bpage tlist sched">
       <PageHeader overline="Work" title="Schedules" subtitle={jobs ? `${shown.length} ${shown.length === 1 ? 'job' : 'jobs'}${narrowed ? ' match' : ''}` : 'Hermes cron'} actions={jobs && jobs.length > 0 ? <BuilderLinks /> : undefined} />
       <p className="help-text">
-        Every <Term id="schedule">schedule</Term> of every profile, with its <Term id="job-types">type</Term>, when it runs next and how it last went. Hermes runs them; this list only reads them. New schedule makes one.
+        Every <Term id="schedule">schedule</Term> of the agent in scope (All agents shows every one), with its <Term id="job-types">type</Term>, when it runs next and how it last went. Hermes runs them; this list only reads them. New schedule makes one.
       </p>
 
       <SchedulerNotice status={scheduler} />
@@ -87,17 +90,6 @@ export function Schedules() {
             ))}
           </div>
           <div className="sched__menus">
-            <label className="sr-only" htmlFor="sched-profile">
-              Profile
-            </label>
-            <select id="sched-profile" className="input" value={view.profile ?? ''} onChange={(event) => go({ ...view, profile: event.target.value || undefined })}>
-              <option value="">Every profile</option>
-              {profiles.map((profile) => (
-                <option key={profile} value={profile}>
-                  {profile}
-                </option>
-              ))}
-            </select>
             <label className="sr-only" htmlFor="sched-type">
               Type
             </label>
@@ -129,10 +121,19 @@ export function Schedules() {
         <div className="empty">
           <Icon name="filter" />
           <h2>No schedules match</h2>
-          <p>Nothing here fits that filter. Clear it to see every schedule.</p>
-          <button type="button" className="btn btn--primary" onClick={() => go({})}>
-            Clear filter
-          </button>
+          <p>{agent === undefined ? 'Nothing here fits that filter. Clear it to see every schedule.' : 'Nothing here fits that filter for this agent. Clear the filter, or show all agents.'}</p>
+          <div className="row">
+            {(view.type !== undefined || view.status !== undefined) && (
+              <button type="button" className="btn btn--primary" onClick={() => go({})}>
+                Clear filter
+              </button>
+            )}
+            {agent !== undefined && (
+              <button type="button" className={`btn ${view.type !== undefined || view.status !== undefined ? 'btn--secondary' : 'btn--primary'}`} onClick={() => void choose('all')}>
+                Show all agents
+              </button>
+            )}
+          </div>
         </div>
       )}
       {shown.length > 0 && <JobTable jobs={shown} now={now} caption="Schedules, the next to run first" />}

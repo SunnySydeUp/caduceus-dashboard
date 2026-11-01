@@ -87,7 +87,7 @@ function SideBody({ state, slug, now }: { state: SideState; slug: string | undef
                   <AppLink to={taskHref(worker.taskId, slug)}>{worker.title}</AppLink>
                 </p>
                 <p className="subtle bo-fine">
-                  {worker.profile ?? 'No profile'}
+                  {worker.profile ?? 'No agent'}
                   {worker.startedAt !== null && ` · started ${plainDuration(Math.max(0, now - worker.startedAt))} ago`}
                   {worker.lastHeartbeatAt !== null && ` · last sign of life ${plainDuration(Math.max(0, now - worker.lastHeartbeatAt))} ago`}
                 </p>
@@ -116,14 +116,14 @@ function SideBody({ state, slug, now }: { state: SideState; slug: string | undef
           {total === 0 && <li className="subtle">No tasks.</li>}
         </ul>
         {side.oldestReadySeconds !== null && <p className="subtle bo-fine">The oldest ready task has waited {plainDuration(side.oldestReadySeconds)}.</p>}
-        <p className="subtle bo-fine">By profile</p>
-        <ul className="bo-chips" aria-label="Tasks by profile">
+        <p className="subtle bo-fine">By agent</p>
+        <ul className="bo-chips" aria-label="Tasks by agent">
           {side.byAssignee.map((row) => (
             <li key={row.name} className="tag" title={Object.entries(row.counts).map(([status, n]) => `${isStatus(status) ? STATUS_META[status].label : status} ${n}`).join(', ')}>
               <Sigil name={row.name} size="xs" /> {row.name} <span className="mono">{row.total}</span>
             </li>
           ))}
-          {side.byAssignee.length === 0 && <li className="subtle">No task has a profile.</li>}
+          {side.byAssignee.length === 0 && <li className="subtle">No task has an agent.</li>}
         </ul>
       </section>
     </div>

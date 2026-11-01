@@ -216,7 +216,7 @@ export function ImportSheet({ profile, onClose, onImported }: { profile: string;
             </ul>
             <div className="field">
               <label className="field__label" htmlFor={targetId}>
-                Import into profile
+                Import into agent
               </label>
               <select id={targetId} className="input" value={target} onChange={(event) => setTarget(event.target.value)}>
                 {profiles.map((name) => (
@@ -225,7 +225,7 @@ export function ImportSheet({ profile, onClose, onImported }: { profile: string;
                   </option>
                 ))}
               </select>
-              <p className="field__help">A session whose id the profile already has is skipped.</p>
+              <p className="field__help">A session whose id the agent already has is skipped.</p>
             </div>
           </section>
         )}

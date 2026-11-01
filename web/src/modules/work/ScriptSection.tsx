@@ -58,7 +58,7 @@ export function ScriptSection({ job }: { job: Job }) {
       <p className="subtle mono">{file}</p>
       {loaded.phase === 'loading' && <p role="status">Reading the script…</p>}
       {loaded.phase === 'failed' && <p role="alert" className="error-text">Hermes did not give the script.</p>}
-      {loaded.phase === 'missing' && <p className="subtle">Hermes has no file called {file} in this profile’s scripts folder, so the job fails each time it runs. Write it here.</p>}
+      {loaded.phase === 'missing' && <p className="subtle">Hermes has no file called {file} in this agent’s scripts folder, so the job fails each time it runs. Write it here.</p>}
       {(loaded.phase === 'ready' || loaded.phase === 'missing') && (
         <>
           <CodeBox id="jd-script-code" label={compact ? `${file}, read only` : `Code of ${file}`} value={shown} readOnly={compact} onChange={setDraft} />

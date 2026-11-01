@@ -16,7 +16,7 @@ export const onboardingHelp: ModuleHelp = {
           ul: [
             'Hermes answers: Caduceus is connected to [[hermes]].',
             'A provider is set up: Hermes’s own [[provider-check|provider check]]. It says in Hermes’s words what is missing.',
-            'The gateway is running: the messaging gateway that Telegram and other channels need. Chat works without it.',
+            'The gateway is running: the messaging gateway that Telegram and other channels need. Talk works without it.',
             'Reached over HTTPS: browsers install the app and allow notifications only over HTTPS. On the Mac itself, localhost counts.',
             'Installed as an app: whether you are using the installed app on this device.',
             'A passkey is enrolled: a [[passkey|passkey]] confirms the changes that need more than a click.',

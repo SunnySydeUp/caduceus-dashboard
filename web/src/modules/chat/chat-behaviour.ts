@@ -50,7 +50,7 @@ export function playCompletionSound(): void {
 
 /** The words that refuse a pin which would take the pinned sessions past the limit; `undefined` when it fits. */
 export function pinRefusal({ pinned, adding, limit }: { pinned: number; adding: number; limit: number }): string | undefined {
-  return pinned + adding > limit ? `You can pin at most ${limit} sessions. Unpin one first, or raise the limit in Settings › Chat.` : undefined;
+  return pinned + adding > limit ? `You can pin at most ${limit} sessions. Unpin one first, or raise the limit in Settings › Talk.` : undefined;
 }
 
 /** Whether a transcript that grew scrolls to its end: the setting is on and the reader is at the end. */

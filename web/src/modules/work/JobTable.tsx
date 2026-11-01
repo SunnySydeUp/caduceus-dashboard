@@ -19,7 +19,7 @@ export function JobTable({ jobs, now, caption }: { jobs: readonly Job[]; now: nu
             Type
           </th>
           <th scope="col" className="jt__profile">
-            Profile
+            Agent
           </th>
           <th scope="col" className="jt__when">
             Runs

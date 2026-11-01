@@ -28,7 +28,7 @@ describe('the filter count', () => {
     expect(filterCount(readSessionsView({}), 'everyone')).toBe(0);
   });
 
-  test('does not count grouping by project while All profiles makes it impossible', () => {
+  test('does not count grouping by project while All agents makes it impossible', () => {
     expect(filterCount(talkView({ all: '1', group: 'project' }), TALK_SCOPE)).toBe(1);
   });
 });
@@ -65,16 +65,16 @@ describe('what each filter asks of the list', () => {
     expect(filterItems(talkView({ source: 'telegram' }), TALK_SCOPE).find((entry) => entry.id === 'source')?.value).toBe('Telegram');
   });
 
-  test('grouping by project cannot be chosen while All profiles is on, and says why', () => {
+  test('grouping by project cannot be chosen while All agents is on, and says why', () => {
     const project = (view: SessionsView) => filterItems(view, TALK_SCOPE).find((entry) => entry.id === 'project');
     expect(project(talkView())?.disabled).toBeUndefined();
-    expect(project(talkView({ all: '1' }))?.disabled).toMatch(/profile/i);
+    expect(project(talkView({ all: '1' }))?.disabled).toMatch(/agent/i);
   });
 });
 
 describe('every control the toolbars had before is still in a menu', () => {
   // The words of the buttons the pane had before the two menus (an independent list, written out from the old toolbar and filter rows).
-  const BEFORE_FILTERS = ['Chats', 'Automation', 'Failed only', 'Hide API noise', 'All profiles', 'Archived', 'Source', 'By project'];
+  const BEFORE_FILTERS = ['Chats', 'Automation', 'Failed only', 'Hide API noise', 'All agents', 'Archived', 'Source', 'By project'];
   const BEFORE_ACTIONS = ['Refresh', 'Compact', 'Select', 'Import', 'Claude Code & Codex', 'Clean up'];
 
   test('the Filters menu holds the tabs and every filter, and New project while the list is grouped by project', () => {
@@ -124,9 +124,9 @@ describe('the footer', () => {
     expect(footerLine({ view: talkView(), stats: { ...stats, sessions: 1 }, total: 1, loaded: true, profiles: 0 })).toBe('1 session');
   });
 
-  test('says how many profiles it spans when All profiles is on', () => {
-    expect(footerLine({ view: talkView({ all: '1' }), stats, total: 120, loaded: true, profiles: 3 })).toBe('120 sessions across 3 profiles');
-    expect(footerLine({ view: talkView({ all: '1' }), stats, total: 12, loaded: true, profiles: 1 })).toBe('12 sessions across 1 profile');
+  test('says how many agents it spans when All agents is on', () => {
+    expect(footerLine({ view: talkView({ all: '1' }), stats, total: 120, loaded: true, profiles: 3 })).toBe('120 sessions across 3 agents');
+    expect(footerLine({ view: talkView({ all: '1' }), stats, total: 12, loaded: true, profiles: 1 })).toBe('12 sessions across 1 agent');
   });
 
   test('is empty until the list has loaded', () => {

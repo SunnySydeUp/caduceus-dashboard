@@ -9,7 +9,7 @@ export const memoryHelp: ModuleHelp = {
       route: '/agents/memory',
       keywords: 'memory provider providers honcho hindsight mem0 holographic supermemory retaindb byterover openviking api key settings oauth sign in connect setup install built-in',
       body: [
-        { p: 'Memory works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]), named under the title. Everything on the screen is read from [[hermes]] each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
+        { p: 'Memory works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|agent scope]]), named under the title. Everything on the screen is read from [[hermes]] each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same values.' },
         { p: 'A [[memory-provider|memory provider]] remembers things across sessions, besides the built-in [[memory-md|MEMORY.md]] and [[user-md|USER.md]]. Only one provider is active for a profile. The list is Hermes’s, with its own status for each: Ready, Needs settings, or Not installed. Hermes comes with only a few providers (ByteRover and RetainDB). The others, such as Hindsight, Honcho, Mem0 and Holographic, are plugins: install one from the catalogue under System › Plugins, in the profile that will use it, and it appears in this list.' },
         { h: 'Choosing and configuring' },
         {
@@ -114,7 +114,7 @@ export const memoryHelp: ModuleHelp = {
       route: '/agents/memory/hindsight',
       keywords: 'hindsight memory bank memories directives mental models recall reflect retain add facts observations vectorize cloud local external api key budget not connected',
       body: [
-        { p: '[[hindsight|Hindsight]] is a memory service Hermes can use as its [[memory-provider|memory provider]]. This tab is there while Hindsight is the provider of the profile this tab is scoped to ([[profile-scope|profile scope]]). Its address also opens when it is not, and then says how to turn Hindsight on: choose it on the Provider tab and save its settings.' },
+        { p: '[[hindsight|Hindsight]] is a memory service Hermes can use as its [[memory-provider|memory provider]]. This tab is there while Hindsight is the provider of the profile this tab is scoped to ([[profile-scope|agent scope]]). Its address also opens when it is not, and then says how to turn Hindsight on: choose it on the Provider tab and save its settings.' },
         { p: 'Hermes keeps only Hindsight’s settings and its key. Caduceus reads both from Hermes, asks Hindsight itself, and shows what it says. The key is read through Hermes’s audited key reveal, stays in the Caduceus server, and is never sent to the browser. Caduceus keeps nothing of what Hindsight says except the list of banks, which it shows when Hindsight cannot be reached.' },
         { h: 'When it is not connected' },
         { p: 'The tab says so in words instead of failing: Hindsight is not the provider, it runs inside Hermes where only Hermes can reach it (the local_embedded mode), its plugin is not installed in this profile (Hermes names Hindsight but has no code for it: install it from the catalogue under System › Plugins), it did not answer (the address in the settings may be wrong, or the server is stopped), or it refused the key. Try again asks once more; Provider settings opens the form.' },
@@ -144,7 +144,7 @@ export const memoryHelp: ModuleHelp = {
       route: '/agents/memory/notes',
       keywords: 'external notes mcp server source search preview obsidian notion note snippets read-only approve command stdio http',
       body: [
-        { p: '[[external-notes|External notes]] are notes kept in another app that has an [[mcp-server|MCP server]]. The list shows the MCP servers in the profile’s Hermes settings ([[profile-scope|profile scope]]). To use one, mark it with Use for notes. Hermes’s own copy of the settings is never changed by this.' },
+        { p: '[[external-notes|External notes]] are notes kept in another app that has an [[mcp-server|MCP server]]. The list shows the MCP servers in the profile’s Hermes settings ([[profile-scope|agent scope]]). To use one, mark it with Use for notes. Hermes’s own copy of the settings is never changed by this.' },
         { p: 'Caduceus acts as an MCP client for the search and the preview. It only calls tools that read or search: a tool whose name says it creates, changes, deletes or runs something is never called, however the page asks, and a server’s own claim that a tool is read-only does not make one allowed.' },
         {
           ul: [

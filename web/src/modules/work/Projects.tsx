@@ -133,7 +133,7 @@ export function Projects() {
         }
       />
       <p className="help-text">
-        A <Term id="project">project</Term> groups sessions and boards by folder; Hermes keeps it and builds this list from every profile’s sessions. A <Term id="workspace">workspace</Term> is a folder you save below, so the composer and the Brief editor offer it. Use Add as workspace on a project to save its folder.
+        A <Term id="project">project</Term> groups sessions and boards by folder; Hermes keeps it and builds this list from every agent’s sessions. A <Term id="workspace">workspace</Term> is a folder you save below, so the composer and the Brief editor offer it. Use Add as workspace on a project to save its folder.
       </p>
 
       {tree.error && (
@@ -149,7 +149,7 @@ export function Projects() {
         <div className="banner" data-tone="warning" role="status">
           <Icon name="alert" />
           <div className="banner__content">
-            <p>Hermes could not read the sessions of some profiles, so their projects may be missing:</p>
+            <p>Hermes could not read the sessions of some agents, so their projects may be missing:</p>
             <ul>
               {tree.value.errors.map((problem) => (
                 <li key={problem} className="mono">
@@ -181,7 +181,7 @@ export function Projects() {
             </div>
           ) : (
             <>
-              {profile !== undefined && grouped.owned.length > 0 && <p className="subtle">Profile in use: {profile}. Rename and Make active work on the projects of that profile.</p>}
+              {profile !== undefined && grouped.owned.length > 0 && <p className="subtle">Agent in use: {profile}. Rename and Make active work on the projects of that agent.</p>}
               {grouped.owned.length > 0 && (
                 <ul className="pj__list" aria-label="Projects you made">
                   {grouped.owned.map((node) => (

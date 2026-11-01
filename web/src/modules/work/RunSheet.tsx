@@ -52,11 +52,11 @@ export function RunSheet({ playbook, onClose }: { playbook: Playbook; onClose():
           <p>
             <strong>{stages}</strong> of version {playbook.version} will run.
           </p>
-          <p className="subtle">Profiles that will get tasks: {profiles.join(', ')}.</p>
+          <p className="subtle">Agents that will get tasks: {profiles.join(', ')}.</p>
           {unnamed && known.length > 0 && (
             <div className="field">
               <label className="field__label" htmlFor={choice}>
-                Run the stages that name no profile as
+                Run the stages that name no agent as
               </label>
               <select id={choice} className="input" value={runAs} onChange={(event) => setRunAs(event.target.value)}>
                 <option value="">Nobody: leave those tasks unassigned</option>
@@ -66,7 +66,7 @@ export function RunSheet({ playbook, onClose }: { playbook: Playbook; onClose():
                   </option>
                 ))}
               </select>
-              <p className="field__help">A task nobody is assigned to waits on the Board until you give it to a profile.</p>
+              <p className="field__help">A task nobody is assigned to waits on the Board until you give it to an agent.</p>
             </div>
           )}
         </div>

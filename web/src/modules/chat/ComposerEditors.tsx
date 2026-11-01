@@ -26,8 +26,8 @@ export const refusedChange = (title: string) => (error: unknown): void => {
 export function ProfileEditor({ profiles, current, hasSession, onPick }: { profiles: readonly string[]; current: string; hasSession: boolean; onPick(name: string): void }) {
   return (
     <div className="cfg-field">
-      <p className="subtle cfg-help">{hasSession ? 'A conversation stays in the profile it started in. Choosing another profile starts a new chat there.' : 'The profile this chat will start in.'}</p>
-      <ul className="list panel" aria-label="Profiles">
+      <p className="subtle cfg-help">{hasSession ? 'A conversation stays in the agent it started in. Choosing another agent starts a new chat there.' : 'The agent this chat will start in.'}</p>
+      <ul className="list panel" aria-label="Agents">
         {profiles.map((name) => (
           <li key={name}>
             <button type="button" className="list-row hit cfg-row" aria-current={name === current ? 'true' : undefined} onClick={() => onPick(name)}>
@@ -53,7 +53,7 @@ export function ReasoningEditor({ chat, state }: { chat: Chat | undefined; state
       <p id={labelId} className="cfg-label">
         Reasoning effort
       </p>
-      <p className="subtle cfg-help">{value === '' ? 'The profile’s default is in use. ' : ''}A choice here is for this chat only.</p>
+      <p className="subtle cfg-help">{value === '' ? 'The agent’s default is in use. ' : ''}A choice here is for this chat only.</p>
       <RadioGroup
         labelledBy={labelId}
         className="seg cfg-seg"
@@ -97,7 +97,7 @@ export function WorkspaceEditor({ chat, state, fallback, remote }: { chat: Chat 
       </label>
       <p className="subtle cfg-help" id={`${id}-help`}>
         The folder Hermes’s agent works in: its commands and files start there.{fallback && state.cwd === undefined ? ' Until you choose one, Hermes uses its default.' : ''}
-        {remote ? <> The terminal backend of this profile is {remote.label}, so this is a path on that machine, a <Term id="remote-workspace">remote workspace</Term>. {remote.backend === 'ssh' ? 'Hermes does not check it: it takes the path as you type it.' : 'Hermes checks a folder on its own Mac, and refuses one that exists only there with its own message.'}</> : ''}
+        {remote ? <> The terminal backend of this agent is {remote.label}, so this is a path on that machine, a <Term id="remote-workspace">remote workspace</Term>. {remote.backend === 'ssh' ? 'Hermes does not check it: it takes the path as you type it.' : 'Hermes checks a folder on its own Mac, and refuses one that exists only there with its own message.'}</> : ''}
         {state.running ? ' Hermes cannot move a chat while it is writing a reply.' : ''}
       </p>
       <div className="cfg-inline">
@@ -147,7 +147,7 @@ export function ToolsetsEditor({ chat, profile, rows, reload }: { chat: Chat | u
       moduleId: 'chat',
       action: 'chat.toolsets',
       label: `Turn ${row.enabled ? 'off' : 'on'} ${row.name} for ${profile}?`,
-      text: 'Hermes saves this in the profile’s config: it holds for every chat in the profile, and this chat’s agent starts again with the new tools.',
+      text: 'Hermes saves this in the agent’s config: it holds for every chat in the agent, and this chat’s agent starts again with the new tools.',
       object: row.name,
       profile,
       confirmLabel: row.enabled ? 'Turn off' : 'Turn on',
@@ -166,7 +166,7 @@ export function ToolsetsEditor({ chat, profile, rows, reload }: { chat: Chat | u
   return (
     <div className="cfg-field">
       <p className="cfg-label">Toolsets</p>
-      <p className="subtle cfg-help">What the agent can use. Toolsets belong to the profile, not to one chat: a change applies to every chat in {profile}.</p>
+      <p className="subtle cfg-help">What the agent can use. Toolsets belong to the agent, not to one chat: a change applies to every chat in {profile}.</p>
       {rows === undefined ? (
         <p className="subtle" role="status">
           Asking Hermes for its toolsets…

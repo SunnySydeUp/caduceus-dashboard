@@ -27,8 +27,8 @@ function openWork(): void {
 }
 
 /**
- * Work › Overview: the Work destination's landing view. Every task, run and schedule by state (waiting on you, running, ready for review, scheduled), with
- * an agent filter. The Board, Tasks, Playbooks, Schedules and Projects are the other modules placed in Work, one chip each above it.
+ * Work › Overview: the Work destination's landing view. Every task, run and schedule by state (waiting on you, running, ready for review, scheduled), narrowed to
+ * the tab's agent scope. The Board, Tasks, Playbooks, Schedules and Projects are the other modules placed in Work, one chip each above it.
  */
 export const workDeskModule: AppModule = {
   id: 'work-overview',
@@ -39,7 +39,7 @@ export const workDeskModule: AppModule = {
   key: 'w',
   order: 0,
   summary: 'Everything in flight by state: waiting on you, running, ready for review, scheduled',
-  // Boards and schedules are every profile's: the agent filter is the view's own.
+  // Boards and schedules are every agent's: the page shows All agents until the tab's scope names one, and the scope is the only agent control (no filter of the view's own).
   crossProfile: true,
   routes: [{ path: '/work', screen: WorkDesk }],
   paletteCommands: () => [{ id: 'open-work', label: 'Open Work', icon: 'work', sub: 'Everything in flight, by state', run: openWork }],
@@ -98,7 +98,7 @@ export const workModule: AppModule = {
   path: '/work/board',
   key: 'b',
   order: 1,
-  summary: 'Hermes Kanban: every task by status or profile, live',
+  summary: 'Hermes Kanban: every task by status or agent, live',
   // Kanban is shared by every profile (`kanban.db`), so the board is not scoped to the tab's profile.
   crossProfile: true,
   routes: [
@@ -156,7 +156,7 @@ export const schedulesModule: AppModule = {
   path: '/work/schedules',
   key: 's',
   order: 3,
-  summary: 'Hermes cron jobs of every profile: next run, last result, history',
+  summary: 'Hermes cron jobs of every agent: next run, last result, history',
   // Hermes lists the jobs of every profile at once, so the list is not scoped to the tab's profile.
   crossProfile: true,
   routes: [

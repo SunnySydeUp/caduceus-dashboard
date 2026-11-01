@@ -6,7 +6,6 @@ import { Sheet } from '../../overlays/Sheet.tsx';
 import { useReadOnly } from '../../policy-state.ts';
 import { useAssistantName } from '../../profile-preferences.ts';
 import { AppLink, useAppNavigate, useRouteInfo } from '../../shell/navigation.tsx';
-import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Term } from '../../shell/Term.tsx';
 import { toast } from '../../shell/toasts.ts';
@@ -82,6 +81,7 @@ import { HandoffNote, ReadOnlyBar, SegmentsBar, SourceTag } from './SessionNotic
 import { useLineage, useSessionAccess, type SessionAccessState } from './use-session-access.ts';
 import { SessionGone } from './SessionGone.tsx';
 import { Loading } from '../../shell/Loading.tsx';
+import { TalkSkeleton } from './TalkSkeleton.tsx';
 import { generateSummary, summaryRequest } from './handoff-summary.ts';
 import { readHermes } from './read-hermes.ts';
 import { filterItems, ROLES, transcriptText, type CopyFormat } from './transcript-tools.ts';
@@ -881,7 +881,7 @@ function Conversation({ profile, storedId, session }: { profile: string; storedI
         state={chatState({ requests: state.requests.length, running: state.running || (state.turn !== undefined && state.turn.status !== 'failed'), failed: state.turn?.status === 'failed' })}
         subtitle={
           <>
-            {state.title ?? (storedId === undefined ? 'New chat' : 'Chat')}
+            {state.title ?? (storedId === undefined ? 'New chat' : 'Talk')}
             {state.forkedFrom && (
               <>
                 {' · Forked from '}
@@ -1088,12 +1088,7 @@ export function Chat() {
   const terminal = mode === 'terminal' && storedId !== undefined;
 
   if (!profile) {
-    return (
-      <div className="page-stack">
-        <PageHeader title="Chat" />
-        <p className="subtle">Loading…</p>
-      </div>
-    );
+    return <TalkSkeleton />;
   }
   return (
     <>

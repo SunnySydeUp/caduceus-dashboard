@@ -191,7 +191,7 @@ export function ComposerContext({ settings, prompts }: { settings: ComposerSetti
   const values: Record<Exclude<ChatRow, 'fast' | 'yolo' | 'prompts' | 'customise'>, { text: string; mono?: boolean; words: string }> = {
     profile: { text: profile, words: profile },
     model: { text: model ?? 'Choose', mono: true, words: model ?? 'not chosen yet' },
-    reasoning: { text: state.reasoning || 'Default', words: state.reasoning ? `${state.reasoning} effort` : 'the profile’s default' },
+    reasoning: { text: state.reasoning || 'Default', words: state.reasoning ? `${state.reasoning} effort` : 'the agent’s default' },
     workspace: { text: cwd ? folderName(cwd) : 'Default', mono: true, words: `${cwd ?? 'Hermes’s default folder'}${remote ? ` Remote workspace on ${remote.label}` : ''}` },
     toolsets: { text: enabled === undefined ? 'Loading' : `${enabled} on`, words: enabled === undefined ? 'loading' : `${enabled} toolsets on` },
     context: { text: ring.percent === undefined ? '–' : `${ring.percent}%`, words: ringWords },

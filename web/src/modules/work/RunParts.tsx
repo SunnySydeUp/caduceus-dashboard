@@ -35,7 +35,7 @@ export function RunFacts({ summary, process, startedAt, profile }: { summary: Ru
   return (
     <dl className="td-facts td-facts--inline rv-facts">
       <div>
-        <dt>Profile</dt>
+        <dt>Agent</dt>
         <dd>{profile ?? '—'}</dd>
       </div>
       <div>

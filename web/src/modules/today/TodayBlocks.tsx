@@ -4,6 +4,8 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import { Icon } from '../../icons.tsx';
+import { useLinkHealth } from '../../shell/connection.ts';
+import { asOfWords, cannotCheckWords } from '../../shell/link-memory.ts';
 import { useTakingLonger } from '../../shell/Loading.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
@@ -20,9 +22,11 @@ export type EmptyTarget = (empty: EmptyBlock) => string;
 
 function EmptyState({ which, to, note }: { which: EmptyBlock; to: EmptyTarget; note?: string }) {
   const { text, action } = EMPTY[which];
+  // While the link is down an empty block cannot tell "nothing is waiting" from "I cannot look": it says it cannot check, and since when.
+  const link = useLinkHealth();
   return (
-    <div className="today-empty panel">
-      <p className="subtle">{note ?? text}</p>
+    <div className="today-empty panel" data-stale={link.healthy ? undefined : ''}>
+      <p className="subtle">{link.healthy ? (note ?? text) : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
       <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
         {action.label}
       </AppLink>
@@ -206,18 +210,20 @@ export function ReadyBlock({ block, now, to, onOpen }: { block: Block<ReadyRow[]
 
 /** The crew as a swipeable row of tiles, for a phone: each opens that agent's thread. A wider screen has the crew in its sidebar and rail. While it loads it holds the height of one row of tiles (a tile and the strip's padding under it, 9.375 rem), so that the schedule below does not move when the crew arrives. */
 export function CrewBlock({ block, to }: { block: Block<CrewRow[]>; to: EmptyTarget }) {
+  const link = useLinkHealth();
+  const staleLine = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
   return (
     <TodayBlock id="crew" title="Crew" className="today-crew" block={block} empty={(rows) => (rows.length === 0 ? 'crew' : undefined)} room="9.375rem" to={to}>
       {(rows) => (
         <ul className="today-tiles" aria-label="Crew">
           {rows.map((row) => (
             <li key={row.profile}>
-              <AppLink className="today-tile" to={row.path}>
+              <AppLink className="today-tile" to={row.path} data-stale={staleLine === undefined ? undefined : ''}>
                 <Mark profile={row.profile} size="md" state={row.state} />
                 <span className="today-tile__text">
                   <b>{row.profile}</b>
                   <span className="sr-only">: {row.stateLabel}. </span>
-                  <small>{row.line}</small>
+                  <small>{staleLine ?? row.line}</small>
                 </span>
               </AppLink>
             </li>

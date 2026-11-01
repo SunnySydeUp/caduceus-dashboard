@@ -13,7 +13,7 @@ export const workHelp: ModuleHelp = {
         { h: 'What a card shows' },
         {
           ul: [
-            'The title, the task’s id and the profile it is assigned to. A card nobody has is Unassigned.',
+            'The title, the task’s id and the agent it is assigned to. A card nobody has is Unassigned.',
             'A priority tag when the priority is not the normal one. A higher number runs first.',
             'A pulsing dot and “Running” while a worker has the task.',
             'Why a blocked task is blocked ([[block-kinds|block kinds]]). A card that waits for you, in Review or with a question, has a coloured edge.',
@@ -25,10 +25,10 @@ export const workHelp: ModuleHelp = {
           ul: [
             'The ⋮ button on a card, and a long press on a touch screen, open its menu: Move to…, Assign…, Priority…, Select and Open task. Nothing a gesture does is only a gesture.',
             'Move to… lists the columns Hermes lets the card go to from where it is. Done and Blocked ask for an optional note. Archive takes the card off the board and asks you to confirm first.',
-            'Assign… hands the card to a profile, or to nobody. Priority… sets how soon it runs: higher numbers run first.',
+            'Assign… hands the card to an agent, or to nobody. Priority… sets how soon it runs: higher numbers run first.',
             'Each change to one card happens at once. A toast says what changed and holds Undo for six seconds, which puts the old value back in Hermes. A change Hermes cannot take back says so.',
             'A card a worker has cannot be moved or given away: its menu offers [[reclaim|Reclaim]], which stops the worker and returns the card to Ready.',
-            'In a wide window (1024 pixels and up) cards can also be dragged between columns with the mouse, or lifted with a long press on a touch screen. Lanes by Profile: dropping a card on another profile’s lane gives it to that profile. Escape drops a card where it was.',
+            'In a wide window (1024 pixels and up) cards can also be dragged between columns with the mouse, or lifted with a long press on a touch screen. Lanes by Agent: dropping a card on another agent’s lane gives it to that agent. Escape drops a card where it was.',
           ],
         },
         { h: 'Several cards at once' },
@@ -38,11 +38,11 @@ export const workHelp: ModuleHelp = {
         { h: 'The dispatcher' },
         { p: 'The bar under the title shows how the [[dispatcher]] is set: Automatic while Hermes looks for ready tasks by itself, Manual when it does not, Stopped when the gateway that runs it is down. Preview is a [[dry-run|dry run]]: it lists the ready tasks that would start and why each of the others waits, and starts nothing. Nudge dispatches now instead of waiting for the next look, and starts workers, which use the model. Settings edits the [[orchestration-settings|orchestration settings]]: how many workers run at once, how many per profile, and the limits on time and failures.' },
         { h: 'Details' },
-        { p: 'Details opens what Hermes says about the board: diagnostics (tasks that look stuck or keep failing), counts by status and by profile, and the workers running now, with Reclaim for one that is stuck. It updates as the board does.' },
+        { p: 'Details opens what Hermes says about the board: diagnostics (tasks that look stuck or keep failing), counts by status and by agent, and the workers running now, with Reclaim for one that is stuck. It updates as the board does.' },
         { h: 'Lanes and filters' },
         {
           ul: [
-            'Lanes by Status is Hermes’s own columns. Lanes by Profile puts each profile’s tasks in a lane of its own.',
+            'Lanes by Status is Hermes’s own columns. Lanes by Agent puts each agent’s tasks in a lane of its own.',
             'Filters narrow by assignee, priority, project, playbook, tenant and words from the title, the id, the assignee or the tenant. They apply at once. Playbook lists the playbooks that have tasks on this board, as a name and a version; a card from a playbook carries a small “Playbook · stage” tag.',
             'The address carries the board, the lanes and the filters, so a reload, a bookmark or a shared link shows the same view.',
           ],
@@ -80,7 +80,7 @@ export const workHelp: ModuleHelp = {
         {
           ul: [
             'Brief: the task’s Markdown body, drawn like a chat message, and the result a worker handed back.',
-            'Runs: every [[kanban-run|run]] with its profile, status, outcome, duration and cost. Hermes does not record what a run cost, so Cost shows a dash unless the worker reported one. Tap a run’s number to open it: its steps, its worker log and its transcript.',
+            'Runs: every [[kanban-run|run]] with its agent, status, outcome, duration and cost. Hermes does not record what a run cost, so Cost shows a dash unless the worker reported one. Tap a run’s number to open it: its steps, its worker log and its transcript.',
             'Activity: Kanban events and comments in one list. Add a comment at the end. Caduceus puts your name on it; the page never sends who wrote it.',
             'Links: the parents that must finish first and the children that wait. Add a link by task id, or remove one.',
             'Attachments: the files workers can read. Open one for a preview, download it, upload more, or delete it.',
@@ -93,9 +93,9 @@ export const workHelp: ModuleHelp = {
           ul: [
             'Run now moves a Todo task to Ready and tells the [[dispatcher]] to start a worker now instead of waiting for its next turn. It uses the model.',
             'Retry sends a blocked, scheduled, review or failed task back to Ready.',
-            '[[terminate|Terminate run]] stops the worker of the run in progress. The confirmation names the run and its profile.',
+            '[[terminate|Terminate run]] stops the worker of the run in progress. The confirmation names the run and its agent.',
             '[[reclaim|Reclaim]] releases a worker’s claim on a running task without waiting for it to expire.',
-            'Reassign gives the task to another profile, or to nobody. If a worker has it, Hermes reclaims it first.',
+            'Reassign gives the task to another agent, or to nobody. If a worker has it, Hermes reclaims it first.',
             '[[specify|Specify]] (triage tasks) has a model write a full brief. You see it first: Accept keeps it, Reject puts back the old title, brief and column.',
             '[[decompose|Decompose]] (triage tasks) has a model split the task into subtasks. The new subtasks are listed as links.',
             'Estimate asks a model for a rough token count. It changes nothing.',
@@ -108,11 +108,11 @@ export const workHelp: ModuleHelp = {
     {
       id: 'work-task-edit',
       title: 'Edit task',
-      summary: 'Change a task’s title, brief, profile, priority, model and reasoning; copy it for the rest.',
+      summary: 'Change a task’s title, brief, agent, priority, model and reasoning; copy it for the rest.',
       route: '/work/tasks/:taskId/edit',
       keywords: 'edit task brief title assignee priority model reasoning duplicate with changes locked workspace skills retries goal contract',
       body: [
-        { p: 'Edit opens the same editor as [[brief|New task]] over a task that exists. It sends only what you changed: the title, the brief, the profile, the priority, the model and the reasoning effort.' },
+        { p: 'Edit opens the same editor as [[brief|New task]] over a task that exists. It sends only what you changed: the title, the brief, the agent, the priority, the model and the reasoning effort.' },
         { p: 'Hermes cannot change the rest after a task is made: the workspace and project, the skills, the time limit, the retries, goal mode, the completion contract and what the task waits for. They show as they are, and Duplicate with changes makes a copy with the changes you want. The original stays.' },
         { p: 'A brief you did not change is never rewritten. A worker that is running has already read the brief, so a change reaches the next run.' },
       ],
@@ -139,11 +139,11 @@ export const workHelp: ModuleHelp = {
       body: [
         { p: 'A [[kanban-run|run]] is one attempt by a worker at a [[task]]. A task that fails, times out or is reclaimed gets another run when it is tried again. This page follows one run, live: when the worker finishes, or the run is stopped from anywhere, the page changes with it.' },
         { h: 'The header' },
-        { p: 'The status says what the run is doing or how it ended (Running, Completed, Crashed, Timed out, Reclaimed…). Under it are the profile that ran it, when it started, how long it ran, what it cost and how many tokens it used. Hermes keeps a cost and token count for the worker’s session, so Cost and Tokens come from there; they show a dash until the worker’s session exists. While the run goes, the live process of the worker is shown too, as Hermes inspects it.' },
+        { p: 'The status says what the run is doing or how it ended (Running, Completed, Crashed, Timed out, Reclaimed…). Under it are the agent that ran it, when it started, how long it ran, what it cost and how many tokens it used. Hermes keeps a cost and token count for the worker’s session, so Cost and Tokens come from there; they show a dash until the worker’s session exists. While the run goes, the live process of the worker is shown too, as Hermes inspects it.' },
         { h: 'Steps' },
         { p: 'A [[run-step|step]] is one turn of the worker: what the model said, the tools it called and what they returned. Each row gives the step’s outcome (Done, Failed, No result, or Running for the last step while the worker is still going), how long it took, and its tokens. Cost is a dash on a step: Hermes keeps the cost of a whole session, not of a turn.' },
-        { p: 'Tap a step to open its transcript. It is drawn with the same cards as Chat: reasoning, tool calls with their arguments and output, and file changes as diffs. On a phone or a tablet it opens as a sheet; on a window 1024 pixels wide or more it sits beside the run.' },
-        { p: 'Caduceus keeps no link between runs and sessions. Hermes does not record which session belongs to a run, so Caduceus finds the worker’s session in Hermes: the session its profile started with the run, whose first message names the task. If the worker has not started one yet, or it was deleted, the step list says so.' },
+        { p: 'Tap a step to open its transcript. It is drawn with the same cards as Talk: reasoning, tool calls with their arguments and output, and file changes as diffs. On a phone or a tablet it opens as a sheet; on a window 1024 pixels wide or more it sits beside the run.' },
+        { p: 'Caduceus keeps no link between runs and sessions. Hermes does not record which session belongs to a run, so Caduceus finds the worker’s session in Hermes: the session its agent started with the run, whose first message names the task. If the worker has not started one yet, or it was deleted, the step list says so.' },
         { h: 'The worker log' },
         { p: 'The [[worker-log|worker log]] is what the worker printed. While the run goes, Caduceus asks Hermes for the end of the log once, however many tabs watch, and pushes each new line to this page. It stops when the run ends. The log stays at its end while you are there; if you scroll up to read, new lines wait and Jump to latest takes you back. Select lines to copy them. Hermes keeps one log for each task, so it also holds the task’s other runs.' },
         { h: 'Stream, Worklog and Raw' },
@@ -154,14 +154,14 @@ export const workHelp: ModuleHelp = {
             'Raw shows what Hermes holds: the log with its colour codes, and a step as the rows of the session.',
           ],
         },
-        { p: 'This device remembers the choice. Chat has the same Stream and Worklog.' },
+        { p: 'This device remembers the choice. Talk has the same Stream and Worklog.' },
         { h: 'Actions' },
         {
           ul: [
-            '[[terminate|Terminate run]] stops this run’s worker. The confirmation names the run and the profile.',
+            '[[terminate|Terminate run]] stops this run’s worker. The confirmation names the run and the agent.',
             '[[reclaim|Reclaim]] releases the worker’s claim on the task, which stops the worker too.',
             'Retry sends the task back to Ready for another run. It is offered on the newest run of a task that can go back.',
-            'Open in Chat opens the worker’s session as a chat, so you can read it whole or carry on from it.',
+            'Open in Talk opens the worker’s session as a chat, so you can read it whole or carry on from it.',
           ],
         },
         { p: 'Each of the three asks you to confirm first, and each is written to the audit log.' },
@@ -173,7 +173,7 @@ export const workHelp: ModuleHelp = {
     {
       id: 'task',
       term: 'Task',
-      definition: 'The unit of work on Hermes’s Kanban: a title, a brief, an assignee profile and a status. A worker picks it up, runs it and hands it back.',
+      definition: 'The unit of work on Hermes’s Kanban: a title, a brief, an assignee agent and a status. A worker picks it up, runs it and hands it back.',
       page: 'work-board',
     },
     {
@@ -191,7 +191,7 @@ export const workHelp: ModuleHelp = {
     {
       id: 'block-kinds',
       term: 'Block kinds',
-      definition: 'Why a task is blocked: it waits on another task, it needs your input, no profile has the skill, or it failed in a way that may pass and Hermes will retry.',
+      definition: 'Why a task is blocked: it waits on another task, it needs your input, no agent has the skill, or it failed in a way that may pass and Hermes will retry.',
       page: 'work-board',
     },
     {
@@ -227,7 +227,7 @@ export const workHelp: ModuleHelp = {
     {
       id: 'orchestration-settings',
       term: 'Orchestration settings',
-      definition: 'Hermes’s own settings for how Kanban work is handed out: workers at once, workers per profile, how long a silent worker is left alone, how many failures block a task, and what happens to Triage tasks. Caduceus edits them in Hermes’s configuration.',
+      definition: 'Hermes’s own settings for how Kanban work is handed out: workers at once, workers per agent, how long a silent worker is left alone, how many failures block a task, and what happens to Triage tasks. Caduceus edits them in Hermes’s configuration.',
       page: 'work-board',
     },
     {

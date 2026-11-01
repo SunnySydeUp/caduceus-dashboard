@@ -155,7 +155,7 @@ export function createFastChat({ client, profile, model, session, confirm, conse
         body: { profile, sessions: [{ id, source: CADUCEUS_SESSION_SOURCE, started_at: Date.now() / 1000, messages: messages.map((message) => ({ role: message.role, content: message.text })) }] },
         confirm: {
           title: `Continue this conversation as a chat in ${profile}?`,
-          text: 'Hermes saves it as a session in this profile’s history, with the words as they are here, and you carry on with its agent and tools. This quick chat is closed.',
+          text: 'Hermes saves it as a session in this agent’s history, with the words as they are here, and you carry on with its agent and tools. This quick chat is closed.',
           profile,
           confirmLabel: 'Continue as chat',
         },

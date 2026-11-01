@@ -139,7 +139,7 @@ export function ForeignSessions({ profile, initial, onClose, onImported, onReope
       moduleId: 'chat',
       action: 'chat.import-foreign-session',
       label: `Import this ${row.label} session into ${profile}?`,
-      text: `Hermes copies the conversation (${turnsLabel(turns)}) into the profile ${profile} as a new chat. The ${row.label} log is only read, never changed.`,
+      text: `Hermes copies the conversation (${turnsLabel(turns)}) into the agent ${profile} as a new chat. The ${row.label} log is only read, never changed.`,
       object: row.title || row.label,
       profile,
       confirmLabel: `Import into ${profile}`,

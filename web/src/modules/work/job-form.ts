@@ -13,7 +13,7 @@ export type FormJobType = 'agent' | 'script' | 'task' | 'blueprint';
 export const FORM_TYPES: Record<FormJobType, { label: string; detail: string }> = {
   agent: { label: 'Agent prompt', detail: 'An agent answers a prompt on schedule, with the model and skills you choose.' },
   script: { label: 'Script', detail: 'Runs a script you write on schedule. Its output is the result, or it goes to an agent as context for a prompt.' },
-  task: { label: 'Create task', detail: 'Puts a new task on the board on schedule, for a profile to work.' },
+  task: { label: 'Create task', detail: 'Puts a new task on the board on schedule, for an agent to work.' },
   blueprint: { label: 'Blueprint', detail: 'Starts from one of Hermes’s ready-made automations and asks only what it needs.' },
 };
 
@@ -222,7 +222,7 @@ export type FieldErrors = Record<string, string>;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const RUNTIME = /^\d+([smhd])?$/;
 
-const unknownProfile = (name: string) => `There is no profile called “${name}”.`;
+const unknownProfile = (name: string) => `There is no agent called “${name}”.`;
 
 function workspaceProblem(workspace: TaskWorkspace): string | undefined {
   const path = workspace.kind === 'scratch' ? undefined : workspace.path;

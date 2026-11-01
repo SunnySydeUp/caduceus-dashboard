@@ -29,7 +29,7 @@ export function fastChatOf(profile: string): FastChat {
           moduleId: 'chat',
           action: 'chat.fast',
           label: 'Send fast prompts?',
-          text: `A fast chat sends your messages straight to ${model ?? 'the profile’s model'}, with no agent and nothing saved in Hermes. Each prompt is a model call that costs tokens on your provider. You are asked once in this tab.`,
+          text: `A fast chat sends your messages straight to ${model ?? 'the agent’s model'}, with no agent and nothing saved in Hermes. Each prompt is a model call that costs tokens on your provider. You are asked once in this tab.`,
           profile,
           confirmLabel: 'Use fast chat',
         }),

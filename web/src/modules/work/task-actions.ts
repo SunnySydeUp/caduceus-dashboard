@@ -23,7 +23,7 @@ export async function runNow(task: TaskFull, slug?: string): Promise<ActionOutco
     label: `Run “${task.title}” now?`,
     text: task.assignee
       ? `A worker of ${task.assignee} starts it at once and uses the model. Tasks that are ready may start with it.`
-      : 'Nobody is assigned to it, so Hermes has no worker to start: it waits in Ready until you assign a profile. Tasks that are ready may start now.',
+      : 'Nobody is assigned to it, so Hermes has no worker to start: it waits in Ready until you assign an agent. Tasks that are ready may start now.',
     object: task.id,
     profile: task.assignee ?? undefined,
     confirmLabel: 'Run now',
@@ -47,7 +47,7 @@ export function terminate(task: TaskFull, run: TaskRun, slug?: string): Promise<
     ...requests.terminate(run.id, 'Terminated from Caduceus', slug),
     confirm: {
       title: `Terminate run ${run.id}?`,
-      text: `The worker of ${run.profile ?? 'the assigned profile'} is stopped now (SIGTERM, then SIGKILL) and the run ends as reclaimed. Its work so far in the workspace stays.`,
+      text: `The worker of ${run.profile ?? 'the assigned agent'} is stopped now (SIGTERM, then SIGKILL) and the run ends as reclaimed. Its work so far in the workspace stays.`,
       object: `run ${run.id}`,
       profile: run.profile ?? task.assignee ?? undefined,
       confirmLabel: 'Terminate run',
@@ -65,8 +65,8 @@ export const reassign = (task: TaskFull, profile: string | null, slug?: string) 
   send({
     ...requests.reassign(task.id, profile, task.status === 'running', slug),
     confirm: {
-      title: profile ? `Give “${task.title}” to ${profile}?` : `Take “${task.title}” off ${task.assignee ?? 'its profile'}?`,
-      text: task.status === 'running' ? 'A worker has it now: Hermes reclaims it first, which stops that worker.' : 'The next worker to take it is of that profile.',
+      title: profile ? `Give “${task.title}” to ${profile}?` : `Take “${task.title}” off ${task.assignee ?? 'its agent'}?`,
+      text: task.status === 'running' ? 'A worker has it now: Hermes reclaims it first, which stops that worker.' : 'The next worker to take it is of that agent.',
       object: task.id,
       profile: profile ?? task.assignee ?? undefined,
       confirmLabel: profile ? 'Reassign' : 'Unassign',

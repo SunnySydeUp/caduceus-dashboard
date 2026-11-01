@@ -326,7 +326,7 @@ export async function importSessions({ send, profile, sessions }: { send(request
     body: { sessions: sessions.map((session) => session.record), profile },
     confirm: {
       title: `Import ${plural(sessions.length, 'session')} into ${profile}?`,
-      text: `${plural(messages, 'message')} are added to this profile’s history. A session that is already there is skipped.`,
+      text: `${plural(messages, 'message')} are added to this agent’s history. A session that is already there is skipped.`,
       profile,
       confirmLabel: 'Import',
     },

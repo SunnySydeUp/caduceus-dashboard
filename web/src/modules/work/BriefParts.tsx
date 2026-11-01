@@ -58,16 +58,16 @@ export function BriefPreview({ brief }: { brief: BriefText }) {
 export function ModelField({ profile, model, provider, onChange, error, locked }: { profile: string; model: string; provider: string; onChange(model: string, provider: string): void; error?: string; locked?: boolean }) {
   const [picking, setPicking] = useState(false);
   return (
-    <Field label="Model" help="Pins the worker to this model. Leave it on the profile’s to use whatever the profile has set." error={error} name="model">
+    <Field label="Model" help="Pins the worker to this model. Leave it on the agent’s to use whatever the agent has set." error={error} name="model">
       {(aria) => (
         <div className="be__model">
           <button {...aria} type="button" className="btn btn--secondary be__model-pick" disabled={locked} onClick={() => setPicking(true)}>
-            <span className="mono truncate">{model === '' ? 'The profile’s model' : `${model}${provider ? ` · ${provider}` : ''}`}</span>
+            <span className="mono truncate">{model === '' ? 'The agent’s model' : `${model}${provider ? ` · ${provider}` : ''}`}</span>
             <Icon name="chev-r" small />
           </button>
           {model !== '' && !locked && (
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => onChange('', '')}>
-              Use the profile’s
+              Use the agent’s
             </button>
           )}
           {picking && (

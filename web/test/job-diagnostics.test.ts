@@ -79,7 +79,7 @@ describe('the diagnostics bundle', () => {
   test('has the job’s configuration, its latest runs with their output, and the scheduler’s state, as plain text', () => {
     expect(bundle).toContain('Caduceus diagnostics: schedule');
     expect(bundle).toContain('Job: Nightly report (1dabfcf66754)');
-    expect(bundle).toContain('Profile: coder');
+    expect(bundle).toContain('Agent: coder');
     expect(bundle).toContain('Type: Agent prompt');
     expect(bundle).toContain('Schedule: Weekdays at 09:00 (0 9 * * 1-5)');
     expect(bundle).toContain('State: scheduled, enabled');

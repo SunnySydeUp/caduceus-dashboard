@@ -38,7 +38,7 @@ export function TerminalMode({ profile, storedId }: { profile: string; storedId:
   return (
     <section className="chat__conversation tm" aria-label="Conversation in terminal mode">
       <PageHeader
-        overline="Chat"
+        overline="Talk"
         title="Terminal"
         subtitle={<>Hermes’s own <Term id="terminal-mode">terminal</Term> on this chat’s session.</>}
         actions={

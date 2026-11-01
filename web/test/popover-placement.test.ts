@@ -49,4 +49,12 @@ describe('placing a glossary pop-up beside its term', () => {
   test('a pop-up taller than the viewport starts at the margin and runs off the far edge', () => {
     expect(placePopover({ anchor: term(40, 100), size: { width: 200, height: 600 }, viewport: phone, rtl: false }).blockStart).toBe(8);
   });
+
+  test('beside an anchor in a column down the side it opens past the anchor’s end edge, level with its top, and is pulled up to fit', () => {
+    const rail = { left: 8, right: 76, top: 40, bottom: 96 };
+    expect(placePopover({ anchor: rail, size: popup, viewport: phone, rtl: false, beside: true })).toEqual({ inlineStart: 84, blockStart: 40 });
+    expect(placePopover({ anchor: { ...rail, top: 500, bottom: 556 }, size: popup, viewport: phone, rtl: false, beside: true }).blockStart).toBe(460);
+    // Right-to-left: the anchor's end edge is its left edge, 76 from the right edge of the viewport, so the pop-up starts one gap further: 84.
+    expect(placePopover({ anchor: { left: 244, right: 312, top: 40, bottom: 96 }, size: popup, viewport: phone, rtl: true, beside: true })).toEqual({ inlineStart: 84, blockStart: 40 });
+  });
 });

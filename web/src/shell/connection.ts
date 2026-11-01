@@ -3,6 +3,29 @@ import { useBackend, useGatewayStatus } from '../gateway.ts';
 import type { GatewayStatus } from '../gateway-connection.ts';
 import type { Reach } from '../offline.ts';
 import { clearBanner, setBanner } from './banners.ts';
+import { FIRST_LINK, nextLinkMemory, type LinkMemory } from './link-memory.ts';
+import { toast } from './toasts.ts';
+
+let link: LinkMemory = FIRST_LINK;
+const linkListeners = new Set<() => void>();
+const subscribeLink = (notify: () => void) => {
+  linkListeners.add(notify);
+  return () => void linkListeners.delete(notify);
+};
+
+/** Whether the link to Hermes is healthy and, once it has dropped, when it last was: what screens that say "nothing is going on" check before they say it. */
+export function useLinkHealth(): LinkMemory {
+  return useSyncExternalStore(subscribeLink, () => link);
+}
+
+/** Records how the link reads now. A recovery is announced once, politely, with no action. */
+function reportLink(healthy: boolean): void {
+  const { memory, recovered } = nextLinkMemory(link, healthy, Date.now());
+  if (memory === link) return;
+  link = memory;
+  linkListeners.forEach((notify) => notify());
+  if (recovered) toast('Back online', { tone: 'success', timeout: 3_000 });
+}
 
 const subscribeOnline = (notify: () => void) => {
   window.addEventListener('online', notify);
@@ -36,12 +59,16 @@ export function useConnection(): GatewayStatus {
   return online ? status : { state: 'offline', attempt: status.attempt, reason: 'This device has no network connection.' };
 }
 
-/** Raises and clears the connection banners while the shell is mounted. */
+/** Raises and clears the connection banners while the shell is mounted, and keeps the link's memory (`useLinkHealth`). */
 export function useConnectionBanners(): void {
   const online = useOnline();
   const { state, attempt, reason } = useGatewayStatus();
   const { status, unreachable } = useBackend();
   const backendState = status?.state;
+  // Healthy is the banner's own test: connected, or still making the first connection (nothing has been lost yet).
+  const healthy = online && (state === 'connected' || (state === 'reconnecting' && attempt === 0));
+
+  useEffect(() => reportLink(healthy), [healthy]);
 
   useEffect(() => {
     if (!online) {

@@ -326,7 +326,7 @@ export function briefExcerpt(brief: string, max: number): { text: string; cut: b
 export const BLOCK_META: Record<BlockKind, { label: string; hint: string }> = {
   dependency: { label: 'Waiting on a task', hint: 'Another task has to finish first.' },
   needs_input: { label: 'Needs your input', hint: 'The worker asked a question and is waiting for an answer.' },
-  capability: { label: 'No worker can take it', hint: 'No profile has the skills this task needs.' },
+  capability: { label: 'No worker can take it', hint: 'No agent has the skills this task needs.' },
   transient: { label: 'Will retry', hint: 'It failed in a way that may pass, so Hermes will try again.' },
 };
 

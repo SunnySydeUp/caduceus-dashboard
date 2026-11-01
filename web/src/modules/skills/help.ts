@@ -9,7 +9,7 @@ export const skillsHelp: ModuleHelp = {
       route: '/agents/skills',
       keywords: 'skills installed search category enabled disabled switch toggle usage count uninstall delete hub bundled local SKILL.md linked files',
       body: [
-        { p: 'Skills works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]), named under the title. The list is what [[hermes]] says that profile has, each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same list. The Skills tab of a profile shows the same list.' },
+        { p: 'Skills works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|agent scope]]), named under the title. The list is what [[hermes]] says that profile has, each time you look. Caduceus keeps no copy, so a reload, or the command line, shows the same list. The Skills tab of a profile shows the same list.' },
         { p: 'A [[skill|skill]] is a written procedure the agent loads when a task needs it. Each one is a [[skill-md|SKILL.md]] file in the profile’s skills folder. Do not confuse it with a [[toolset-vs-skill|toolset]], which gives the agent tools to call.' },
         { h: 'Finding a skill' },
         {
@@ -68,7 +68,7 @@ export const skillsHelp: ModuleHelp = {
       route: '/agents/skills/new',
       keywords: 'create new skill name category description 60 characters frontmatter extra keys instructions preview',
       body: [
-        { p: 'A new [[skill|skill]] is a [[skill-md|SKILL.md]] in the folder of the profile this tab is scoped to ([[profile-scope|profile scope]]). Hermes writes it, and the agent can use it from the next session.' },
+        { p: 'A new [[skill|skill]] is a [[skill-md|SKILL.md]] in the folder of the profile this tab is scoped to ([[profile-scope|agent scope]]). Hermes writes it, and the agent can use it from the next session.' },
         { h: 'The fields' },
         {
           ul: [
@@ -90,7 +90,7 @@ export const skillsHelp: ModuleHelp = {
       route: '/agents/skills/hub',
       keywords: 'skills hub search source official featured install update all security scan verdict install anyway override github skills.sh clawhub lobehub well-known browse.sh log pages',
       body: [
-        { p: 'The [[skills-hub|skills hub]] is how [[hermes]] finds skills that are not on your machine yet. It works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|profile scope]]). Everything on the page comes from Hermes each time you look, and Caduceus keeps no copy.' },
+        { p: 'The [[skills-hub|skills hub]] is how [[hermes]] finds skills that are not on your machine yet. It works on one [[profile|profile]]: the one this tab is scoped to ([[profile-scope|agent scope]]). Everything on the page comes from Hermes each time you look, and Caduceus keeps no copy.' },
         { h: 'Finding a skill' },
         {
           ul: [
@@ -119,7 +119,7 @@ export const skillsHelp: ModuleHelp = {
     {
       id: 'skills-learn',
       title: 'Skills: learn a skill',
-      summary: 'Ask the agent to study something and write what it learns as a skill, in Chat.',
+      summary: 'Ask the agent to study something and write what it learns as a skill, in Talk.',
       route: '/agents/skills/learn',
       keywords: 'learn skill learn-a-skill /learn topic chat passkey new chat folders links notes',
       body: [
@@ -128,9 +128,9 @@ export const skillsHelp: ModuleHelp = {
         {
           ol: [
             'You write the topic and press Start learning in a new chat.',
-            'Caduceus opens a new chat in the profile this tab is scoped to ([[profile-scope|profile scope]]).',
+            'Caduceus opens a new chat in the profile this tab is scoped to ([[profile-scope|agent scope]]).',
             'The chat asks Hermes to run /learn with your topic. This is a Tier 2 action (see [[risk-tiers|risk tiers]]): it asks for a passkey, because the agent then reads files and links on its own. It is not allowed in [[read-only-mode|read-only mode]].',
-            'Hermes answers with the prompt it built, and the chat sends it as the first message. You watch the agent work in Chat, and the new skill appears in the Installed list when it is saved.',
+            'Hermes answers with the prompt it built, and the chat sends it as the first message. You watch the agent work in Talk, and the new skill appears in the Installed list when it is saved.',
           ],
         },
         { p: 'The topic goes to the chat from memory. It is not put in the address or kept anywhere, so pasted notes stay out of your history.' },
@@ -146,7 +146,7 @@ export const skillsHelp: ModuleHelp = {
       body: [
         { p: 'The [[curator|curator]] is how [[hermes]] keeps a profile’s skills tidy. When the agent has been idle and the last review is older than the interval, it reviews the skills it manages: a skill that goes unused is marked stale, then archived. It never deletes one, and pinned skills are left alone. An archived skill comes back with hermes curator restore.' },
         { h: 'The status' },
-        { p: 'The page shows what Hermes says for the profile this tab is scoped to ([[profile-scope|profile scope]]): whether the curator is on in the config, whether it is paused, when it last ran, how often it reviews, and the days after which a skill goes stale and is archived. After each action the page reads Hermes again, so it shows Hermes’s state and not a guess.' },
+        { p: 'The page shows what Hermes says for the profile this tab is scoped to ([[profile-scope|agent scope]]): whether the curator is on in the config, whether it is paused, when it last ran, how often it reviews, and the days after which a skill goes stale and is archived. After each action the page reads Hermes again, so it shows Hermes’s state and not a guess.' },
         {
           ul: [
             'Pause and Resume are Tier 1 (see [[risk-tiers|risk tiers]]): you confirm. A paused curator starts no reviews by itself; Run now still works.',

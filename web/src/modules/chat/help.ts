@@ -5,7 +5,7 @@ export const chatHelp: ModuleHelp = {
   pages: [
     {
       id: 'chat',
-      title: 'Chat',
+      title: 'Talk',
       summary: 'Talk to Hermes, watch the reply arrive, and come back to a conversation.',
       route: '/chat',
       keywords: 'talk agent details right now workspace take over terminal files browser work about handoff helper search find full text snippet palette conversation sessions list messages new chat history resume reload phone filter source tab automation failed api noise unread live pinned compact density refresh pull profiles all keyboard j k stats strip date groups organise pin archive rename delete bulk select prune empty project swipe long press undo menu',
@@ -14,11 +14,11 @@ export const chatHelp: ModuleHelp = {
         { h: 'The sessions list' },
         {
           ul: [
-            'It shows the [[session|sessions]] of the profile this tab is working on, your chats and its [[automation-sessions|automation sessions]] together in one list: a title and a time for each, nothing more. An automation session (a scheduled job, a Kanban worker, a webhook, the API server) has the icon of where it came from before its title. Pinned sessions are on top; the rest are grouped Yesterday, This week and Older by the day of their last message, in your time zone. A session you have not read has its title in bold.',
+            'It shows the [[session|sessions]] of the agent this tab is working on, your chats and its [[automation-sessions|automation sessions]] together in one list: a title and a time for each, nothing more. An automation session (a scheduled job, a Kanban worker, a webhook, the API server) has the icon of where it came from before its title. Pinned sessions are on top; the rest are grouped Yesterday, This week and Older by the day of their last message, in your time zone. A session you have not read has its title in bold.',
             'A row says one word more only when the session needs you: Needs you means Hermes stopped to ask you something, Failed means the session ended with an error, and Draft means you started a [[draft]] and did not send it. All of this is read from Hermes every time, so it is always as Hermes has it.',
-            'Two buttons sit under the search box. Filters holds the kind of session (All, the default, or only Chats or only Automation), Failed only, Hide API noise (leaves out the short throwaway sessions of the API server), All profiles, Archived, Source and By project; a number on the button says how many are on. More holds Refresh, Compact view, Select sessions, Import, Claude Code and Codex, and Clean up. While one of these menus is open the rest of the page waits: Escape or a press outside closes it. The filters are kept in the address, so a bookmark or a link opens the list the way you left it.',
-            'In Talk the list shows this agent’s sessions. Switch on All profiles to list every profile’s sessions together, each marked with its profile; opening one switches this tab to that profile. Switch it off again to list only this agent’s sessions; that is also how you group by project.',
-            'The line under the list counts the sessions (and the profiles, with All profiles). Compact view packs more rows into the screen.',
+            'Two buttons sit under the search box. Filters holds the kind of session (All, the default, or only Chats or only Automation), Failed only, Hide API noise (leaves out the short throwaway sessions of the API server), All agents, Archived, Source and By project; a number on the button says how many are on. More holds Refresh, Compact view, Select sessions, Import, Claude Code and Codex, and Clean up. While one of these menus is open the rest of the page waits: Escape or a press outside closes it. The filters are kept in the address, so a bookmark or a link opens the list the way you left it.',
+            'In Talk the list shows this agent’s sessions. Switch on All agents to list every agent’s sessions together, each marked with its agent; opening one switches this tab to that agent. Switch it off again to list only this agent’s sessions; that is also how you group by project.',
+            'The line under the list counts the sessions (and the agents, with All agents). Compact view packs more rows into the screen.',
             'The list updates by itself when Hermes says its sessions changed, and stays where you were reading. Refresh (in More) reads it again; on a phone you can also pull the list down from its top.',
             'Long lists are read from Hermes a page at a time as you scroll.',
             'On a phone the Sessions button in the header opens this list as a sheet, one tap from the conversation, and choosing a session opens it. On a larger screen the list stays on the left beside the conversation. With no sessions yet, the screen offers New chat, the plus button at the top of the list.',
@@ -29,7 +29,7 @@ export const chatHelp: ModuleHelp = {
           ul: [
             'Each row has a ⋮ menu (it shows when you hover or focus the row): Pin, Archive, Mark as unread, Rename, Regenerate title, Move to a project, Select and Delete. Pin, archive, unread and rename happen at once, and a toast offers Undo, which puts Hermes back as it was. Archived, in Filters, shows the sessions you archived, so you can restore them.',
             'On a phone you can also swipe a row right to archive it, swipe it left to pin it, or press and hold it to open its ⋮ menu. The menu has every gesture too, so nothing depends on a swipe.',
-            'Deleting one session asks you to confirm and names the session and its profile. Hermes cannot bring a deleted session back.',
+            'Deleting one session asks you to confirm and names the session and its agent. Hermes cannot bring a deleted session back.',
             'Select (in More) turns on checkboxes (or Shift-click a row on a computer, and Shift-click another to select everything between). The bar at the bottom then pins, archives, moves or deletes all the selected sessions. Deleting many sessions asks for your passkey and for you to type how many you are deleting, because it cannot be undone.',
             'Clean up (in More) deletes the empty sessions (it tells you how many first) and prunes the old ones: ended sessions last active more than the number of days you choose. Pruning asks for your passkey and a typed confirmation too.',
             'By project (in Filters) groups the list by your [[hermes-project|projects]]. A project is a folder in Hermes: moving a session into one makes Hermes work in that folder from the next message on. You can make a project, rename it and give it a colour; Hermes keeps all of it. Which project a session is in comes from its folder, so Caduceus stores nothing about it.',
@@ -39,16 +39,16 @@ export const chatHelp: ModuleHelp = {
         { h: 'Searching your sessions' },
         {
           ul: [
-            'The field at the top of the list searches the words inside every message of this profile’s sessions ([[session-search]]). Hermes does the searching with its own index, so it finds sessions started anywhere: Telegram, the terminal, a scheduled job. Caduceus keeps no copy of the text. If Hermes is slow, the list says it is still searching after a few seconds and offers Cancel; Search again asks once more.',
-            'Each result shows the session’s title, its profile, where it came from and when, with the words around the match and the matched words marked. A word you start (“deplo”) also finds longer words (“deployment”). The words you searched for are in the address (?q=), so a search can be bookmarked.',
-            'Choose a result to open the session at the first message that has the words. Chat reads that part of the transcript from Hermes, however far back it is, scrolls to it and marks it, and the search inside the conversation opens on the same words. Press ↓ in the field to move into the results, ↑ and ↓ between them, and Escape to clear the field.',
+            'The field at the top of the list searches the words inside every message of this agent’s sessions ([[session-search]]). Hermes does the searching with its own index, so it finds sessions started anywhere: Telegram, the terminal, a scheduled job. Caduceus keeps no copy of the text. If Hermes is slow, the list says it is still searching after a few seconds and offers Cancel; Search again asks once more.',
+            'Each result shows the session’s title, its agent, where it came from and when, with the words around the match and the matched words marked. A word you start (“deplo”) also finds longer words (“deployment”). The words you searched for are in the address (?q=), so a search can be bookmarked.',
+            'Choose a result to open the session at the first message that has the words. Talk reads that part of the transcript from Hermes, however far back it is, scrolls to it and marks it, and the search inside the conversation opens on the same words. Press ↓ in the field to move into the results, ↑ and ↓ between them, and Escape to clear the field.',
             'The command palette (⌘K) lists the same sessions as you type, under Sessions, and opens them the same way.',
           ],
         },
         { h: 'Links to chats, and scheduled runs' },
         {
           ul: [
-            'A link to a chat that is in another profile (an old bookmark, or a link without ?profile=) opens it under the right agent: Chat looks in your other profiles before it says anything is missing. If no profile has it, the page says “That conversation no longer exists.” and offers Open the latest chat and New chat.',
+            'A link to a chat that is in another agent (an old bookmark, or a link without ?profile=) opens it under the right agent: Talk looks in your other agents before it says anything is missing. If no agent has it, the page says “That conversation no longer exists.” and offers Open the latest chat and New chat.',
             'A chat that a scheduled job started opens on the job’s own prompt. The instructions Hermes puts in front of every scheduled prompt are one folded line above it, “Scheduled run”.',
             'Typing / in the message box lists the commands you use most (status, compress, undo, retry…) first, then Hermes’s other commands by group, then your skills under their own heading.',
           ],
@@ -57,8 +57,8 @@ export const chatHelp: ModuleHelp = {
         {
           ul: [
             'Claude Code & Codex, in the tools above the list, opens the [[foreign-session|sessions]] those two tools saved on the machine Hermes runs on. Hermes finds and reads the logs, so this is the machine of your Hermes, which is not always the device you are holding. Filter by All, Claude Code or Codex. Each row shows the title, which tool it came from, its folder, how many turns it has and when it last changed. The list loads a page at a time.',
-            'Choose a row to read the end of it before you decide. The preview shows the last turns and says how many there are in all. If Hermes already imported that session into this profile, the preview says so and offers to open the chat it made.',
-            'Import into the profile asks you to confirm and names the profile of this tab, because the copy goes there. Hermes then makes a new session in that profile with the whole conversation and opens it, so you can carry on talking in Hermes. The copy lives in Hermes like any other session: Caduceus keeps nothing, and the log of Claude Code or Codex is only read, never changed. Importing the same log again opens the first copy instead of making a second.',
+            'Choose a row to read the end of it before you decide. The preview shows the last turns and says how many there are in all. If Hermes already imported that session into this agent, the preview says so and offers to open the chat it made.',
+            'Import into the agent asks you to confirm and names the agent of this tab, because the copy goes there. Hermes then makes a new session in that agent with the whole conversation and opens it, so you can carry on talking in Hermes. The copy lives in Hermes like any other session: Caduceus keeps nothing, and the log of Claude Code or Codex is only read, never changed. Importing the same log again opens the first copy instead of making a second.',
             'If Hermes cannot read a log, or it is gone by the time you choose it, the sheet shows Hermes’s own message.',
           ],
         },
@@ -68,7 +68,7 @@ export const chatHelp: ModuleHelp = {
             'Export, in a session’s ⋮ menu in the list and in the More menu (⋮) of an open conversation, takes one session out of Hermes as a file ([[session-export|an export]]). Choose Markdown (plain text any notes app opens), Web page (one file that looks like the app does now, in your colours, with nothing to load from the internet) or JSON (everything Hermes keeps for the session, so it can be imported again). Caduceus builds the file in your browser from what Hermes sends and keeps no copy.',
             'On a computer the file goes to your downloads. On a phone the share sheet of the phone opens, where you can save it to Files, send it to an app or open it.',
             'Import, in the tools above the list, brings sessions back from a JSON or JSONL file: one made by Export, or by Hermes’s own export on the command line. The file is checked here before anything is sent. If it is not valid, the sheet says which line and column are wrong, or which session Hermes would refuse and why.',
-            'A good file shows how many sessions and messages it holds and the profile they will go into. You can choose another profile. Import asks you to confirm and names that profile, then Hermes adds the sessions to its history. A session whose id the profile already has is skipped, so importing the same file twice does not make copies.',
+            'A good file shows how many sessions and messages it holds and the agent they will go into. You can choose another agent. Import asks you to confirm and names that agent, then Hermes adds the sessions to its history. A session whose id the agent already has is skipped, so importing the same file twice does not make copies.',
             'In read-only mode Import is switched off and says why. Export only reads, so it keeps working.',
           ],
         },
@@ -89,11 +89,11 @@ export const chatHelp: ModuleHelp = {
         { h: 'Reading and stopping a reply' },
         { p: 'The reply appears word by word while Hermes writes it. While it does, Send gives way to Steer, Queue and Stop: Stop interrupts the [[turn]]. What had been written stays, marked as stopped.' },
         { h: 'Coming back' },
-        { p: 'You can reload the page, lock your phone or lose the network in the middle of a reply. When you are back, Chat picks the conversation up where it was and the reply carries on without missing or repeating a word. If that takes more than a moment it says “Catching up…”. This works because Caduceus keeps your connection to Hermes open for a while after you leave (the [[grace-hold]]), and because Hermes remembers what it was saying.' },
+        { p: 'You can reload the page, lock your phone or lose the network in the middle of a reply. When you are back, Talk picks the conversation up where it was and the reply carries on without missing or repeating a word. If that takes more than a moment it says “Catching up…”. This works because Caduceus keeps your connection to Hermes open for a while after you leave (the [[grace-hold]]), and because Hermes remembers what it was saying.' },
         { h: 'The same chat on two devices' },
         { p: 'Open the same conversation on your phone and your laptop and both show the reply as it is written.' },
         { h: 'When something goes wrong' },
-        { p: 'If Hermes cannot answer, for example because it has no AI provider set up yet, Chat shows Hermes’s own message above the message box. Your message stays where you wrote it.' },
+        { p: 'If Hermes cannot answer, for example because it has no AI provider set up yet, Talk shows Hermes’s own message above the message box. Your message stays where you wrote it.' },
       ],
       related: ['chat-conversation', 'profile-scope', 'getting-around'],
     },
@@ -138,7 +138,7 @@ export const chatHelp: ModuleHelp = {
           ],
         },
         { h: 'After a drop' },
-        { p: 'If the connection drops, Chat reconnects by itself and carries on. Within the [[grace-hold]] the turn keeps running in Hermes while you are away. Chat shows “Catching up…” only if getting back in step takes longer than a moment.' },
+        { p: 'If the connection drops, Talk reconnects by itself and carries on. Within the [[grace-hold]] the turn keeps running in Hermes while you are away. Talk shows “Catching up…” only if getting back in step takes longer than a moment.' },
         { h: 'When Hermes asks you' },
         {
           p: 'Some things the agent does need your say-so. Hermes stops and asks, and the chat shows a card above the message box until you answer. The turn waits for you.',
@@ -209,9 +209,9 @@ export const chatHelp: ModuleHelp = {
         { h: 'Long conversations' },
         {
           ul: [
-            'Chat opens at the newest messages and follows a reply as it is written. Scroll up and it stops following, so you can read in peace; Jump to latest, above the message box, takes you back and follows again.',
+            'Talk opens at the newest messages and follows a reply as it is written. Scroll up and it stops following, so you can read in peace; Jump to latest, above the message box, takes you back and follows again.',
             'Older messages are read from Hermes as you scroll up (or press Load earlier messages); the page stays where you were while they arrive.',
-            'Copy link, under one of your messages, makes an address that opens the conversation at that message: Chat reads the messages around it from Hermes and highlights it, with Load earlier and Load later to read on, and Jump to latest to go back to the end.',
+            'Copy link, under one of your messages, makes an address that opens the conversation at that message: Talk reads the messages around it from Hermes and highlights it, with Load earlier and Load later to read on, and Jump to latest to go back to the end.',
           ],
         },
         { h: 'Slash commands' },
@@ -236,11 +236,11 @@ export const chatHelp: ModuleHelp = {
         },
         {
           ul: [
-            'A message takes at most 20 [[attachment|attachments]]. Beyond that Chat says which were left out and why; nothing is dropped without a line saying so.',
+            'A message takes at most 20 [[attachment|attachments]]. Beyond that Talk says which were left out and why; nothing is dropped without a line saying so.',
             'Images (PNG, JPEG, GIF, WebP, BMP) may be 25 MB each and PDFs 50 MB: Hermes shows an image to the model, and renders the first 25 pages of a PDF as pictures. Any other file may be 50 MB; Hermes stores it and the agent reads it with its own tools. An SVG or a HEIC photo goes as a file, since Hermes cannot show it to the model.',
             'A zip, tar, tar.gz or tgz archive is unpacked in your browser and each file in it is attached on its own. Folders, system files (such as .DS_Store), password-protected files, links, empty files and files over their limit are not attached, and each is named with its reason. An archive may be 100 MB and hold up to 200 MB once unpacked. A .rar or .7z file is attached as the one file it is.',
             'A very long paste (more than 4,000 characters) does not fill the message box: it becomes a Markdown file, pasted-text-1.md, and a toast says so. Undo, or Keep inline on the chip, puts the text back in the box.',
-            'Attachments go with a message that starts a reply. While Hermes is answering, Steer and Queue do not take them, and a slash command runs without them: Chat says so and keeps them. If Hermes refuses one, nothing is sent and its chip shows why.',
+            'Attachments go with a message that starts a reply. While Hermes is answering, Steer and Queue do not take them, and a slash command runs without them: Talk says so and keeps them. If Hermes refuses one, nothing is sent and its chip shows why.',
             'After you send, the message shows its images as thumbnails (press one to see it large) and its files as chips, and they are still there when you open the chat again, because Hermes keeps them with the message. To point Hermes at a file in the workspace instead of uploading it, choose A file of the workspace in the Add menu, or type @.',
           ],
         },
@@ -251,19 +251,19 @@ export const chatHelp: ModuleHelp = {
         {
           ul: [
             `${DRAFT_LIMITS_WORDS} Text or a file that Caduceus will not keep stays in this page and is named with the reason; typing and sending go on as usual.`,
-            'If another device saved the draft while you were typing here, Chat says so in a note above the message box and does not touch what you typed. Use the other draft puts that version in the box, Keep mine saves yours over it. If your save replaced a newer draft, the note offers to get that one back. The page looks again when you return to it.',
+            'If another device saved the draft while you were typing here, Talk says so in a note above the message box and does not touch what you typed. Use the other draft puts that version in the box, Keep mine saves yours over it. If your save replaced a newer draft, the note offers to get that one back. The page looks again when you return to it.',
             'A session you delete in Hermes takes its draft with it.',
-            'In read-only mode drafts are not saved and Chat says so; what you type stays in the box.',
+            'In read-only mode drafts are not saved and Talk says so; what you type stays in the box.',
           ],
         },
         { h: 'Saved prompts' },
         {
-          p: 'A [[saved-prompt]] is words you want to use again: a name, the text, tags, and optionally one profile it is for. They are kept by Caduceus and shown on every device. They are in the Add menu and in This chat; on a computer they open as a popover, on a phone as a sheet. The command palette has Saved prompts too.',
+          p: 'A [[saved-prompt]] is words you want to use again: a name, the text, tags, and optionally one agent it is for. They are kept by Caduceus and shown on every device. They are in the Add menu and in This chat; on a computer they open as a popover, on a phone as a sheet. The command palette has Saved prompts too.',
         },
         {
           ul: [
             'Search looks in names, text and tags; a tag chip narrows the list to the prompts that carry it. Choosing a prompt puts it in the message box where the cursor is (it replaces the words you selected); it is sent only when you press Send.',
-            `Save message keeps what is in the box as a prompt (or only the words you selected). Give it a name, up to ${MAX_PROMPT_TAGS} tags and say whether every profile shows it or only this one; a prompt for another profile is hidden here.`,
+            `Save message keeps what is in the box as a prompt (or only the words you selected). Give it a name, up to ${MAX_PROMPT_TAGS} tags and say whether every agent shows it or only this one; a prompt for another agent is hidden here.`,
             `Edit changes a prompt. Delete removes it at once and a toast offers Undo. Caduceus keeps up to ${MAX_SAVED_PROMPTS} prompts, and refuses one that looks like it holds a password, a key or a token.`,
             'In read-only mode saved prompts can be used but not created, edited or deleted.',
           ],
@@ -278,11 +278,11 @@ export const chatHelp: ModuleHelp = {
         },
         {
           ul: [
-            'Agent starts a new chat in the profile you choose: a conversation never moves between profiles.',
+            'Agent starts a new chat in the agent you choose: a conversation never moves between agents.',
             'Model opens Hermes’s own list of models with search and the providers they come from; use the arrow keys and Enter. The choice is for this chat only. A model Hermes warns about (an expensive one) asks you to confirm its warning first. Before a new chat has its first message, the pick is where it will start.',
             'Effort is the reasoning effort for this chat, from Off to Ultra.',
             'Folder is the folder Hermes’s agent works in. Moving a chat asks you to confirm, and Hermes refuses while it is writing a reply. Until you choose one, Hermes uses its default folder. Your workspaces from Work › Projects are listed under the folder: tap one to fill it in, then choose Use or Move.',
-            'Toolsets turns groups of tools on or off. Hermes keeps toolsets in the profile, not in one chat, so a change applies to every chat in that profile; you confirm it first.',
+            'Toolsets turns groups of tools on or off. Hermes keeps toolsets in the agent, not in one chat, so a change applies to every chat in that agent; you confirm it first.',
           ],
         },
         {
@@ -357,10 +357,10 @@ export const chatHelp: ModuleHelp = {
           ul: [
             'The Fast mode switch in This chat turns on [[fast-chat|Fast mode]]: your messages go straight to a model, with no agent, no tools, no approvals and no session. It is for a quick question that does not need Hermes to work. The switch turns amber and the page says so in a banner.',
             'A fast chat is not saved anywhere. It lives only in this browser tab: Hermes keeps no record of it and Caduceus keeps none either. Leaving the page or reloading it asks you first, because the conversation would be lost.',
-            'Each message is sent to Hermes’s one-shot call (llm.oneshot) together with the conversation so far, and the reply arrives whole, not word by word. The model that answers is the profile’s model, or the model of this chat when the chat already has a Hermes session: Hermes’s one-shot call takes no model of its own. Change model appears when the chat has a session.',
-            'Every call costs tokens on your provider. The first fast message in a tab asks you to confirm and names the profile and the model; after that this tab is not asked again. Reloading the page asks again.',
+            'Each message is sent to Hermes’s one-shot call (llm.oneshot) together with the conversation so far, and the reply arrives whole, not word by word. The model that answers is the agent’s model, or the model of this chat when the chat already has a Hermes session: Hermes’s one-shot call takes no model of its own. Change model appears when the chat has a session.',
+            'Every call costs tokens on your provider. The first fast message in a tab asks you to confirm and names the agent and the model; after that this tab is not asked again. Reloading the page asks again.',
             'If the model cannot answer (the model is not available, a rate limit, a refused key), the error is shown under your message in Hermes’s own words with a Retry button; Retry asks again for the same message. Copy reply copies a reply.',
-            'Continue as chat asks you to confirm, then Hermes saves the conversation as an ordinary session in this profile, with the same words, and the page opens it. From there it is a normal chat with tools. Clear forgets the conversation without saving it.',
+            'Continue as chat asks you to confirm, then Hermes saves the conversation as an ordinary session in this agent, with the same words, and the page opens it. From there it is a normal chat with tools. Clear forgets the conversation without saving it.',
             'A conversation that grows longer than one call takes is sent from its newest messages back, and a note says how many of the earliest were left out.',
           ],
         },
@@ -376,18 +376,18 @@ export const chatHelp: ModuleHelp = {
       route: '/chat/new',
       keywords: 'start create new chat plus someone else other agent crew',
       body: [
-        { p: 'The chat starts with the agent you were talking to, or the one whose + you chose. Until you send the first message, Someone else? lists the rest of the crew: choose one to start the new chat with that agent instead. Once a message is sent the chat stays with its agent, because a conversation never moves between profiles.' },
+        { p: 'The chat starts with the agent you were talking to, or the one whose + you chose. Until you send the first message, Someone else? lists the rest of the crew: choose one to start the new chat with that agent instead. Once a message is sent the chat stays with its agent, because a conversation never moves between agents.' },
         { p: 'Write your first message and send it. Hermes creates the [[session]] then, and the address of the page changes to that conversation so you can bookmark it or open it on another device.' },
         { p: 'A chat you open and never send anything in leaves nothing behind.' },
         { h: 'Links that start a chat' },
-        { p: 'A [[chat-link|link]] such as /chat/new?prompt=Review%20the%20diff&profile=coder opens a new chat in the profile it names with the prompt already in the message box. Nothing is sent: read the words, change them if you want, and send them yourself. Anything already in the box stays, and the prompt is added after it.' },
-        { p: 'The link keeps the chat in that profile for this tab only; it does not change Hermes’s default profile. If Hermes has no profile of that name, the chat opens in the profile this tab already uses and a notice says so. Once the words are in the box they are taken out of the address, so reloading the page does not add them again.' },
+        { p: 'A [[chat-link|link]] such as /chat/new?prompt=Review%20the%20diff&profile=coder opens a new chat in the agent it names with the prompt already in the message box. Nothing is sent: read the words, change them if you want, and send them yourself. Anything already in the box stays, and the prompt is added after it.' },
+        { p: 'The link keeps the chat in that agent for this tab only; it does not change Hermes’s default profile. If Hermes has no agent of that name, the chat opens in the agent this tab already uses and a notice says so. Once the words are in the box they are taken out of the address, so reloading the page does not add them again.' },
       ],
       related: ['chat', 'chat-conversation'],
     },
     {
       id: 'chat-settings',
-      title: 'Chat settings',
+      title: 'Talk settings',
       summary: 'Send key, completion sound, timestamps, density, auto-follow, finished marks, pin limit, the default activity mode and the composer chips.',
       route: '/settings/chat',
       keywords: 'send key enter command enter newline sound chime timestamps time density compact comfortable auto-follow scroll finished marks ring outline green tick agent sigil hide pin limit pinned activity mode default chips reset preferences',
@@ -419,7 +419,7 @@ export const chatHelp: ModuleHelp = {
     {
       id: 'hermes-project',
       term: 'Project',
-      definition: 'A named set of folders that Hermes keeps for a profile. A session belongs to the project whose folder it works in. Moving a session into a project changes the folder Hermes works in for it.',
+      definition: 'A named set of folders that Hermes keeps for an agent. A session belongs to the project whose folder it works in. Moving a session into a project changes the folder Hermes works in for it.',
       page: 'chat',
     },
     {
@@ -617,7 +617,7 @@ export const chatHelp: ModuleHelp = {
     {
       id: 'foreign-session',
       term: 'Claude Code or Codex session',
-      definition: 'A conversation that Claude Code or Codex saved as a log on the machine Hermes runs on. Hermes reads the log and can copy it into a profile as an ordinary session; the original log is never changed.',
+      definition: 'A conversation that Claude Code or Codex saved as a log on the machine Hermes runs on. Hermes reads the log and can copy it into an agent as an ordinary session; the original log is never changed.',
       page: 'chat',
     },
     {
@@ -652,7 +652,7 @@ export const chatHelp: ModuleHelp = {
     },
     {
       id: 'chat-preference',
-      term: 'Chat preference',
+      term: 'Talk preference',
       definition: 'A setting of how the chat behaves that Caduceus keeps for you, either for one device or for every device you sign in on. Hermes does not know about it and its config is not written.',
       page: 'chat-settings',
     },

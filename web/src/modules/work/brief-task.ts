@@ -107,8 +107,8 @@ export function briefProblems(fields: BriefFields, { mode, profiles, editing = f
   const problems: BriefErrors = {};
   if (fields.title.trim() === '') problems.title = 'Give the task a title.';
   else if (/[\r\n]/.test(fields.title)) problems.title = 'A title is one line.';
-  if (fields.assignee !== '' && !profiles.includes(fields.assignee)) problems.assignee = `There is no profile called “${fields.assignee}”.`;
-  else if (mode === 'run-now' && fields.assignee === '') problems.assignee = 'Choose the profile that runs it: a task nobody has cannot start.';
+  if (fields.assignee !== '' && !profiles.includes(fields.assignee)) problems.assignee = `There is no agent called “${fields.assignee}”.`;
+  else if (mode === 'run-now' && fields.assignee === '') problems.assignee = 'Choose the agent that runs it: a task nobody has cannot start.';
   if (fields.priority !== undefined && !Number.isInteger(fields.priority)) problems.priority = 'Priority is a whole number.';
   if (fields.provider !== '' && fields.model === '') problems.model = 'A provider needs a model.';
   if (fields.reasoningEffort !== '' && !TASK_REASONING.some((level) => level === fields.reasoningEffort)) problems.reasoningEffort = `Choose one of ${TASK_REASONING.join(', ')}.`;
@@ -212,7 +212,7 @@ const CONFIRMATIONS: Record<Exclude<DispatchMode, 'schedule'>, (title: string, d
     title: `Queue “${title}”?`,
     text: assignee
       ? `It goes to Ready. The dispatcher gives it to a worker of ${assignee} when its limits allow; that uses the model.`
-      : 'It goes to Ready. Nobody is assigned, so it waits in Ready until you assign a profile; then the dispatcher gives it to a worker.',
+      : 'It goes to Ready. Nobody is assigned, so it waits in Ready until you assign an agent; then the dispatcher gives it to a worker.',
     object: title,
     confirmLabel: 'Queue',
   }),

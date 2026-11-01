@@ -75,3 +75,7 @@
 .today-quiet__acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
 .today-quiet__details summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
 .today-quiet__details p { overflow-wrap: anywhere; font-size: var(--cd-text-sm); }
+
+/* While the link is down a tile's line is the time it was last true: quieter, and its sigil steps back. */
+.today-tile[data-stale] small { color: var(--cd-fg-subtle); font-style: italic; }
+.today-tile[data-stale] .sigil { opacity: 0.55; }

@@ -5,23 +5,23 @@ export const schedulesHelp: ModuleHelp = {
     {
       id: 'work-schedules',
       title: 'Schedules',
-      summary: 'Every Hermes cron job of every profile: what it is, when it runs next and how it last went.',
+      summary: 'Every Hermes cron job of the agent in scope, or of every agent: what it is, when it runs next and how it last went.',
       route: '/work/schedules',
       keywords: 'work schedules cron jobs scheduled timer next run last result paused profile type agent prompt script create task blueprint stale scheduler',
       body: [
-        { p: 'A [[schedule]] is a job Hermes runs by itself on a timer. This list shows the jobs of every profile at once, so you do not have to switch profiles to find one. Hermes keeps the jobs; Caduceus reads them each time and keeps no copy.' },
+        { p: 'A [[schedule]] is a job Hermes runs by itself on a timer. This list shows the jobs of the agent in scope; with All agents it shows every agent’s at once, so you do not have to switch agents to find one. Hermes keeps the jobs; Caduceus reads them each time and keeps no copy.' },
         { h: 'What a row shows' },
         {
           ul: [
             'The name, and a badge for the [[job-types|job type]]: Agent prompt, Script, Create task or Blueprint.',
-            'The profile the job belongs to, and its schedule in words, such as “Every Monday at 09:00”.',
+            'The agent the job belongs to, and its schedule in words, such as “Every Monday at 09:00”.',
             'When it runs next. A paused job has no next run, and a job that has finished its run limit says Finished.',
             'How the last run went: Succeeded or Failed, and how long ago. Hover or focus the tag of a failure to see Hermes’s error.',
           ],
         },
         { p: 'On a wide screen the jobs are a table. On a phone each job is a card. Open one to see its settings and its run history.' },
         { h: 'Filters' },
-        { p: 'The chips narrow the list to Active, Paused, Last run failed or Finished jobs. The two menus narrow it to one profile or one type. The address holds the filter, so a reload, a bookmark or a link shows the same list.' },
+        { p: 'The chips narrow the list to Active, Paused, Last run failed or Finished jobs. The menu narrows it to one type. The agent is not a filter of its own: it is the agent scope at the head of the side card. The address holds the filter, so a reload, a bookmark or a link shows the same list.' },
         { h: 'When the scheduler is stale' },
         { p: 'Jobs only run while Hermes’s scheduler ticks, once a minute. When it has not ticked for more than three minutes, a warning at the top says so. This is a [[stale-scheduler|stale scheduler]]: jobs are not running, whatever their next-run times say. Health explains why and what to do, which usually means starting the messaging gateway, where the scheduler lives.' },
         { h: 'Staying live' },
@@ -70,7 +70,7 @@ export const schedulesHelp: ModuleHelp = {
         { h: 'The four types' },
         {
           ul: [
-            'Agent prompt: an agent answers your prompt each time. You choose the profile, the model and the skills.',
+            'Agent prompt: an agent answers your prompt each time. You choose the agent, the model and the skills.',
             'Script: you write a script, and it runs each time. Its output is the result, or it goes to an agent as context for your prompt. See [[script-job|Script job]].',
             'Create task: each time the schedule fires, a new task goes on the board. This is how a recurring or scheduled task works. See [[create-task-job|Create-task job]].',
             'Blueprint: start from one of Hermes’s ready-made [[blueprint|blueprints]]. It asks only for what it needs, such as a time.',
@@ -90,7 +90,7 @@ export const schedulesHelp: ModuleHelp = {
         { p: 'Choose how often: every so many minutes, hours or days; daily; weekly on the days you tick; monthly on a day; once at a date and time; or a raw [[cron-expression|cron expression]]. The builder always shows the next three times it will run, worked out here from the exact text Hermes is sent, in your time zone.' },
         { p: 'A time of day means the clock Hermes keeps. If Hermes is set to another time zone than yours, the builder says so and shows the times in yours. Across the days the clocks change, a time of day stays the same on the wall clock: 09:00 is 09:00 before and after. A time the clocks skip runs an hour later that day.' },
         { h: 'Checks before it is saved' },
-        { p: 'A problem shows under its field when you leave the field, and all of them show when you press Create. The profile must exist, a prompt or a task title is needed, and a cron expression must have five fields that can run. If you have typed something and try to leave, the builder asks before it throws it away.' },
+        { p: 'A problem shows under its field when you leave the field, and all of them show when you press Create. The agent must exist, a prompt or a task title is needed, and a cron expression must have five fields that can run. If you have typed something and try to leave, the builder asks before it throws it away.' },
         { h: 'What it asks you to confirm' },
         { p: 'A job that runs no script (an Agent prompt or a Blueprint) asks for one confirmation. A Script job saves its script first, then creates the job, then sets the options Hermes cannot take when it creates a job (a monitor, a separate target for failures, attaching to a session): each asks for your passkey and the script’s name, because a script is code that runs on the Mac that runs Hermes. A Create-task job is a script that runs on the Mac that runs Hermes, so it asks you to type its name, twice: once to save the script and once to create the job. Caduceus writes a short script that calls only hermes kanban create with your fields.' },
       ],
@@ -116,7 +116,7 @@ export const schedulesHelp: ModuleHelp = {
       route: '/work/schedules/:jobId/edit',
       keywords: 'edit schedule change job name prompt schedule model skills create task script blueprint',
       body: [
-        { p: 'This is the schedule builder opened on a job that exists. Its profile cannot change: a job belongs to the profile it was made in. Only the fields you change are sent to Hermes, so changing the name does not restart the schedule.' },
+        { p: 'This is the schedule builder opened on a job that exists. Its agent cannot change: a job belongs to the agent it was made in. Only the fields you change are sent to Hermes, so changing the name does not restart the schedule.' },
         { p: 'A [[create-task-job|Create-task job]] opens from the fields in its script. Changing those fields writes the script again, which asks you to type the job’s name. Changing only the name or the schedule does not touch the script. A script that Caduceus did not write cannot be opened as fields, so only its name and schedule can be changed.' },
         { p: 'A [[blueprint|blueprint]]’s job keeps its name, which is how the list knows it is one. You can change its prompt and its schedule.' },
         { p: 'A [[script-job|Script job]] opens with its script’s code. Its file keeps its name. Changing the code saves the script again, which asks for your passkey and the script’s name.' },
@@ -128,7 +128,7 @@ export const schedulesHelp: ModuleHelp = {
     {
       id: 'schedule',
       term: 'Schedule',
-      definition: 'A Hermes cron job: something Hermes does by itself on a timer, such as asking an agent a question every morning or running a script every hour. Each belongs to one profile.',
+      definition: 'A Hermes cron job: something Hermes does by itself on a timer, such as asking an agent a question every morning or running a script every hour. Each belongs to one agent.',
       page: 'work-schedules',
     },
     {
@@ -158,7 +158,7 @@ export const schedulesHelp: ModuleHelp = {
     {
       id: 'script-job',
       term: 'Script job',
-      definition: 'A schedule that runs a script from the profile’s scripts folder. Either its output is the result and no model is used, or the output goes to an agent as context for a prompt. Saving a script and the job that runs it is a T3: it asks for your passkey and the script’s name.',
+      definition: 'A schedule that runs a script from the agent’s scripts folder. Either its output is the result and no model is used, or the output goes to an agent as context for a prompt. Saving a script and the job that runs it is a T3: it asks for your passkey and the script’s name.',
       page: 'work-schedule-new',
     },
     {

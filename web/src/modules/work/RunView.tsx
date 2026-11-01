@@ -106,7 +106,7 @@ function RunBody({ run, process, slug, onChanged }: { run: RunInfo; process: Wor
                 <span className="ptag__name">{run.profile}</span>
               </span>
             ) : (
-              <span className="subtle">No profile</span>
+              <span className="subtle">No agent</span>
             )}
             <span className="subtle" role="status">
               {state.live ? 'Live' : state.phase === 'ready' ? 'Reconnecting…' : ''}
@@ -118,7 +118,7 @@ function RunBody({ run, process, slug, onChanged }: { run: RunInfo; process: Wor
             {session.session && (
               <AppLink className="btn btn--secondary" to={chatHref(session.session.id, session.session.profile ?? run.profile)}>
                 <Icon name="chat" />
-                Open in Chat
+                Open in Talk
               </AppLink>
             )}
             <AppLink className="btn btn--secondary" to={taskPath}>
@@ -199,7 +199,7 @@ function RunBody({ run, process, slug, onChanged }: { run: RunInfo; process: Wor
             )}
             {session.phase === 'ready' && session.steps.length === 0 && <p className="subtle">The session has no worker turns yet.</p>}
             {session.steps.length > 0 && <StepList steps={session.steps} selected={open} onOpen={setOpen} />}
-            {session.truncated && <p className="subtle">The transcript is longer than this page reads. Open it in Chat for the rest.</p>}
+            {session.truncated && <p className="subtle">The transcript is longer than this page reads. Open it in Talk for the rest.</p>}
           </section>
           <WorkerLog log={log} density={density} runEnded={!going} />
         </div>

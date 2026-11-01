@@ -260,7 +260,7 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
         <Field label="Title" help="One line, as it shows on the board." error={errors.title} name="title">
           {(aria) => <input {...aria} className="input" value={fields.title} onChange={(event) => set({ title: event.target.value })} onBlur={() => touch('title')} autoComplete="off" />}
         </Field>
-        <Field label="Assign to" help={mode === 'run-now' && !editing ? 'A worker of this profile does the task.' : 'The profile whose worker does the task. Leave it unassigned to hand it out later.'} error={errors.assignee} name="assignee">
+        <Field label="Assign to" help={mode === 'run-now' && !editing ? 'A worker of this agent does the task.' : 'The agent whose worker does the task. Leave it unassigned to hand it out later.'} error={errors.assignee} name="assignee">
           {(aria) => (
             <select {...aria} className="input" value={fields.assignee} onChange={(event) => set({ assignee: event.target.value })} onBlur={() => touch('assignee')}>
               <option value="">Unassigned</option>
@@ -303,10 +303,10 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
 
       <Group id="run" title="How the worker runs" open={false}>
         <ModelField profile={workerProfile} model={fields.model} provider={fields.provider} onChange={(model, provider) => set({ model, provider })} error={errors.model} />
-        <Field label="Reasoning effort" help="How hard the model thinks. The profile’s own level when empty." error={errors.reasoningEffort} name="reasoningEffort">
+        <Field label="Reasoning effort" help="How hard the model thinks. The agent’s own level when empty." error={errors.reasoningEffort} name="reasoningEffort">
           {(aria) => (
             <select {...aria} className="input" value={fields.reasoningEffort} onChange={(event) => set({ reasoningEffort: event.target.value })}>
-              <option value="">The profile’s level</option>
+              <option value="">The agent’s level</option>
               {REASONING_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -315,8 +315,8 @@ function BriefForm({ profiles, initial, copyOf, edited, board, template }: FormP
             </select>
           )}
         </Field>
-        {scheduling && fields.reasoningEffort !== '' && <p className="field__help" role="note">A scheduled task cannot carry a reasoning effort: the job’s script calls <code>hermes kanban create</code>, which has no flag for it. The worker uses the profile’s level.</p>}
-        <Field label="Skills" help={lockedInfo ?? 'Skills the worker loads first, separated by commas. Empty leaves the profile’s own.'} error={errors.skills} name="skills">
+        {scheduling && fields.reasoningEffort !== '' && <p className="field__help" role="note">A scheduled task cannot carry a reasoning effort: the job’s script calls <code>hermes kanban create</code>, which has no flag for it. The worker uses the agent’s level.</p>}
+        <Field label="Skills" help={lockedInfo ?? 'Skills the worker loads first, separated by commas. Empty leaves the agent’s own.'} error={errors.skills} name="skills">
           {(aria) => <ListInput {...aria} value={fields.skills} onChange={(skills) => set({ skills })} options={skillNames} onBlur={() => touch('skills')} readOnly={lock} />}
         </Field>
         <div className="sb__row">
@@ -483,7 +483,7 @@ export function NewTask() {
   const source = useTaskToEdit(from, board);
   // A brief that Chat left is taken once, when the editor opens.
   const [prefill] = useState(takeBrief);
-  if (profiles.status === 'failed' || source.status === 'failed') return <Failed title="New task" what="the profiles are not known yet" onRetry={() => (profiles.status === 'failed' ? profiles.reload() : source.reload())} />;
+  if (profiles.status === 'failed' || source.status === 'failed') return <Failed title="New task" what="the agents are not known yet" onRetry={() => (profiles.status === 'failed' ? profiles.reload() : source.reload())} />;
   if (profiles.value === undefined || source.value === undefined || (from !== undefined && source.value === null)) return <Loading title="New task" />;
   let initial = newBriefFields();
   if (source.value) initial = { ...fieldsOfTask(source.value.task, source.value.links.parents), title: `${source.value.task.title} (copy)` };
@@ -504,7 +504,7 @@ export function EditTask() {
   const opened = useRef<{ id: string; detail: NonNullable<typeof loaded.value> }>(undefined);
   if (loaded.value && opened.current?.id !== taskId) opened.current = { id: taskId, detail: loaded.value };
   if (profiles.status === 'failed' || loaded.status === 'failed') {
-    return <Failed title="Edit task" what={loaded.status === 'failed' ? 'the task could not be read; it may have been deleted' : 'the profiles are not known yet'} onRetry={() => (loaded.status === 'failed' ? loaded.reload() : profiles.reload())} />;
+    return <Failed title="Edit task" what={loaded.status === 'failed' ? 'the task could not be read; it may have been deleted' : 'the agents are not known yet'} onRetry={() => (loaded.status === 'failed' ? loaded.reload() : profiles.reload())} />;
   }
   if (profiles.value === undefined || opened.current === undefined) return <Loading title="Edit task" />;
   const { task, links } = opened.current.detail;

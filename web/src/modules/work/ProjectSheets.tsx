@@ -84,7 +84,7 @@ export function NewProjectSheet({ profile, actions, onDone, onClose }: { profile
         <Field label="Name" error={problem && name.trim() === '' ? problem : undefined}>
           {(aria) => <input {...aria} className="input" value={name} maxLength={80} autoComplete="off" onChange={(event) => setName(event.target.value)} />}
         </Field>
-        <FolderField label="Folder" help={`The folder on the Mac that runs Hermes that the project’s sessions work in. Hermes keeps the project in the profile ${profile}.`} value={folder} onChange={setFolder} error={problem && name.trim() !== '' ? problem : undefined} />
+        <FolderField label="Folder" help={`The folder on the Mac that runs Hermes that the project’s sessions work in. Hermes keeps the project in the agent ${profile}.`} value={folder} onChange={setFolder} error={problem && name.trim() !== '' ? problem : undefined} />
         <div className="row">
           <button type="button" className="btn btn--secondary" onClick={onClose}>
             Cancel

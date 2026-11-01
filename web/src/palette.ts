@@ -269,7 +269,7 @@ export function searchProfiles({ scope, effective, profiles }: { scope: string |
 /** What the palette's footer says about where it searches. */
 export function searchScopeText(scope: string | undefined): string {
   if (scope === undefined) return '';
-  return scope === 'all' ? 'Searching all profiles' : `Searching profile ${scope} only`;
+  return scope === 'all' ? 'Searching all agents' : `Searching agent ${scope} only`;
 }
 
 /**

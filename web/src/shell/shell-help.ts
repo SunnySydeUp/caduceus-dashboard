@@ -63,14 +63,14 @@ export const shellHelp: ModuleHelp = {
         {
           ul: [
             'On a phone the tab bar at the bottom has Today, Talk and Work, and More opens Control, which lists everything else. The arrow at the left of the app bar goes back to where you came from; if you opened the page from a link, it goes up one level instead. The Today tab shows how many things need you.',
-            'On a tablet a rail down the side has the profile, Search, the same three places, a sigil for each agent, then Help and Control. Its menu button opens the full sidebar.',
-            'On a wide screen the sidebar has the profile and Search at the top, then Today, Talk and Work, then the crew, then Help and Control at the foot. It can be collapsed to the rail, and Caduceus remembers that on this device.',
+            'On a tablet a rail down the side has the agent scope, Search, the same three places, a sigil for each agent, then Help and Control. Its menu button opens the full sidebar.',
+            'On a wide screen the sidebar has the agent scope and Search at the top, then Today, Talk and Work, then the crew, then Help and Control at the foot. It can be collapsed to the rail, and Caduceus remembers that on this device.',
           ],
         },
         { h: 'The crew' },
         {
           ul: [
-            'The crew is one row for each agent (each [[profile-scope|profile]]): its sigil, its name, one line about what it is doing or asking, and since when. Choose a row to open that agent’s latest conversation in Talk. On a computer, pointing at a row (or tabbing to it) shows a + that starts a new chat with that agent instead.',
+            'The crew is one row for each agent: its sigil, its name, one line about what it is doing or asking, and since when. Choose a row to open that agent’s latest conversation in Talk. On a computer, pointing at a row (or tabbing to it) shows a + that starts a new chat with that agent instead.',
             'The ring and the small badge on a sigil show how the agent stands: waiting for you, working, finished something you have not opened, or blocked. The words are always written next to it as well.',
             'The agents that need you come first, so the top of the list is where to look.',
             'On a phone, Talk has a row of the same sigils under the app bar. Choose one to switch agent. New chat, first in the row, starts a new chat with the agent you are on.',
@@ -79,8 +79,8 @@ export const shellHelp: ModuleHelp = {
         { h: 'The app bar (phone) and the top of the side card' },
         {
           ul: [
-            'On a phone the app bar has the profile chip, the connection dot, Search and Help. On a tablet or a computer there is no app bar: the same things are in the side card.',
-            'The top of the side card shows the [[profile-scope|profile]] this tab is working on: its sigil and name. Open it to switch. On Talk it shows the agent whose chat is open. On Today, which always shows every profile, it just says All profiles. In the narrow rail it is a sigil with its name under it.',
+            'On a phone the app bar has the agent chip, the connection dot, Search and Help. On a tablet or a computer there is no app bar: the same things are in the side card.',
+            'The top of the side card shows the [[profile-scope|agent scope]] of this tab: the sigil and name of the agent it is working on. Open it to switch: a menu opens under it (beside it in the narrow rail), and on a phone a sheet does. On Talk it shows the agent whose chat is open. On Today, which always shows every agent, it just says All agents. In the narrow rail it is a sigil with its name under it.',
             'The ring round that sigil shows the live connection to Hermes: a thin green ring when connected, an amber ring while reconnecting, a dashed grey ring when offline. The same words are in the button’s name for a screen reader, and when the connection is not healthy a banner at the top of the page says so.',
             'Under it, the Search field (or the Search item in the rail) opens search and commands. ⌘K on a Mac, or Ctrl+K elsewhere, does the same.',
             'At the foot of the card, which never scrolls away, Help (or the ? key) opens this panel for the screen you are on, and Control opens the rest of Caduceus. Only the crew scrolls.',
@@ -106,7 +106,7 @@ export const shellHelp: ModuleHelp = {
             'This screen: actions of the screen you are on.',
             'Go to: Today, Talk, Work and Control come first, so the places you use most are one tap away.',
             'Actions: actions of other screens, plus Help, Keyboard shortcuts and Sign out.',
-            'Sessions and Tasks: once you start typing, the chats whose messages have those words, and the tasks whose titles do. On Today, which shows every profile, they come from every profile; the line at the foot of the search says where it looked. Choose one to open it.',
+            'Sessions and Tasks: once you start typing, the chats whose messages have those words, and the tasks whose titles do. On Today, which shows every agent, they come from every agent; the line at the foot of the search says where it looked. Choose one to open it.',
             'Navigate: every other screen, and every panel of Settings.',
             'Help: help pages and glossary words. Help appears once you start typing.',
           ],

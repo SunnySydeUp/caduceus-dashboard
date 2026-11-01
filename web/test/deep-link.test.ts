@@ -23,7 +23,7 @@ describe('/chat/new?prompt=&profile= (M1 #17)', () => {
 
   test('a profile Hermes does not have is reported and dropped from the address, so the tab falls back to its own profile; the prompt is kept', () => {
     expect(resolveNewChatLink('?profile=ghost&prompt=hello', profiles)).toEqual({ prompt: 'hello', unknownProfile: 'ghost', remaining: '' });
-    expect(UNKNOWN_PROFILE_NOTICE('ghost')).toBe('There is no profile “ghost”, so this chat uses your current profile.');
+    expect(UNKNOWN_PROFILE_NOTICE('ghost')).toBe('There is no agent “ghost”, so this chat uses your current agent.');
   });
 
   test('other parameters stay in the address', () => {

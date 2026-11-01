@@ -16,12 +16,20 @@ const GAP = 8;
  * `inset-inline-start`, which in a right-to-left page count from the right edge, so `rtl` says which). It opens below the
  * term with its start edge under the term's; with no room below it opens above, and with room on neither side it stays
  * below, pulled up to fit. Along the line it is pulled back from the end edge, and a pop-up wider than the viewport sits
- * at the margin.
+ * at the margin. With `beside` (the anchor is in a column down the side, such as the rail) it opens past the anchor's end
+ * edge instead, its top level with the anchor's and pulled up to fit.
  */
-export function placePopover({ anchor, size, viewport, rtl }: { anchor: Box; size: { width: number; height: number }; viewport: { width: number; height: number }; rtl: boolean }): {
+export function placePopover({ anchor, size, viewport, rtl, beside = false }: { anchor: Box; size: { width: number; height: number }; viewport: { width: number; height: number }; rtl: boolean; beside?: boolean }): {
   inlineStart: number;
   blockStart: number;
 } {
+  if (beside) {
+    const past = rtl ? viewport.width - anchor.left + GAP : anchor.right + GAP;
+    return {
+      inlineStart: Math.max(GAP, Math.min(past, viewport.width - GAP - size.width)),
+      blockStart: Math.max(GAP, Math.min(anchor.top, viewport.height - GAP - size.height)),
+    };
+  }
   const inline = rtl ? viewport.width - anchor.right : anchor.left;
   const below = anchor.bottom + GAP;
   const above = anchor.top - GAP - size.height;

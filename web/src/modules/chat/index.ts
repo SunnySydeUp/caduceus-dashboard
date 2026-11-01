@@ -26,7 +26,7 @@ function openNewChat(): void {
 
 export const chatModule: AppModule = {
   id: 'chat',
-  title: 'Chat',
+  title: 'Talk',
   icon: 'chat',
   desk: 'talk',
   path: '/chat',
@@ -37,7 +37,7 @@ export const chatModule: AppModule = {
   routes: [
     { path: '/chat', screen: Chat },
     { path: '/chat/new', screen: Chat, title: 'New chat', parent: '/chat' },
-    { path: '/chat/:id', screen: Chat, title: 'Chat', parent: '/chat' },
+    { path: '/chat/:id', screen: Chat, title: 'Talk', parent: '/chat' },
   ],
   // ⇧⌘O is reserved for it (shortcuts.ts); the owner can still remap it in Settings › Keyboard.
   paletteCommands: () => [
@@ -55,7 +55,7 @@ export const chatModule: AppModule = {
   settings: [
     {
       id: 'chat',
-      title: 'Chat',
+      title: 'Talk',
       summary: 'Send key, sound, timestamps, density, pin limit, auto-follow, finished marks and the default activity mode',
       icon: 'chat',
       screen: lazy(() => import('./ChatSettings.tsx').then((m) => ({ default: m.ChatSettings }))),

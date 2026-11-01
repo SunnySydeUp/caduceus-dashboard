@@ -62,8 +62,6 @@ export interface WorkInput {
 
 export interface WorkGroups {
   groups: Record<WorkGroupId, WorkRow[]>;
-  /** The agents who have a row, before the filter, sorted. */
-  agents: string[];
   /** Done tasks that are opened already, and so in no group. */
   settled: number;
 }
@@ -200,12 +198,11 @@ export function groupWork({ boards, runs, ready, jobs }: WorkInput, agent?: stri
     candidates.push({ row, order: [-item.at] });
   }
   candidates.push(...jobs.map(jobCandidate));
-  const everyone = new Set(candidates.flatMap(({ row }) => (row.profile === undefined ? [] : [row.profile])));
   const groups: Record<WorkGroupId, WorkRow[]> = { waiting: [], running: [], review: [], scheduled: [] };
   for (const candidate of candidates.sort(byOrder)) {
     if (agent === undefined || candidate.row.profile === agent) groups[candidate.row.group].push(candidate.row);
   }
-  return { groups, agents: [...everyone].sort((a, b) => a.localeCompare(b)), settled };
+  return { groups, settled };
 }
 
 /** A row's time in words: "Asked 6 min ago", "Running for 12 min", "Next in 3 h", "Paused". */

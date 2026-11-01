@@ -219,7 +219,7 @@ export function readDispatch(body: unknown, ready: readonly string[]): DispatchR
   const result = record(body);
   const wouldStart = rows(result.spawned).flatMap(([taskId, profile]): WouldStart[] => (typeof taskId === 'string' ? [{ taskId, profile: typeof profile === 'string' ? profile : '' }] : []));
   const waiting: Waiting[] = [
-    ...ids(result.skipped_unassigned).map((taskId) => ({ taskId, why: 'Nobody is assigned, and Hermes has no default profile to give it to.' })),
+    ...ids(result.skipped_unassigned).map((taskId) => ({ taskId, why: 'Nobody is assigned, and Hermes has no default agent to give it to.' })),
     ...ids(result.skipped_nonspawnable).map((taskId) => ({ taskId, why: 'Its assignee is not a Hermes profile, so no worker can start it.' })),
     ...rows(result.skipped_per_profile_capped).flatMap(([taskId, profile, running]): Waiting[] =>
       typeof taskId === 'string' ? [{ taskId, why: `${String(profile)} already has ${typeof running === 'number' ? counted(running, 'worker') : 'workers'} running, which is its limit.` }] : [],
@@ -467,8 +467,8 @@ export function dispatcherMode(settings: DispatcherSettings, gatewayRunning: boo
     all === null && each === null
       ? 'No limit of your own on workers running at once.'
       : all === null
-        ? `Up to ${counted(each!, 'worker')} for each profile at once.`
-        : `Up to ${counted(all, 'worker')} at once${each === null ? '' : `, ${each} for each profile`}.`;
+        ? `Up to ${counted(each!, 'worker')} for each agent at once.`
+        : `Up to ${counted(all, 'worker')} at once${each === null ? '' : `, ${each} for each agent`}.`;
   if (!gatewayRunning) return { state: 'stopped', label: 'Stopped', detail: 'The dispatcher runs inside the Hermes gateway, which is not running. Ready tasks wait until it is, or until you nudge.', limits };
   if (!settings.dispatchInGateway) return { state: 'manual', label: 'Manual', detail: 'Hermes does not dispatch by itself (its gateway is set not to). Ready tasks start when you nudge.', limits };
   return { state: 'auto', label: 'Automatic', detail: `Hermes looks for ready tasks every ${every(settings.intervalSeconds)} and starts a worker for each.`, limits };
@@ -480,14 +480,14 @@ const capWords = (value: number | null) => (value === null ? 'no limit' : String
 export function settingsSummary(before: DispatcherSettings, change: SettingsChange): string {
   const parts: string[] = [];
   if (change.maxInProgress !== undefined) parts.push(`Workers at once: ${capWords(before.maxInProgress)} → ${capWords(change.maxInProgress)}.`);
-  if (change.maxInProgressPerProfile !== undefined) parts.push(`Workers per profile: ${capWords(before.maxInProgressPerProfile)} → ${capWords(change.maxInProgressPerProfile)}.`);
+  if (change.maxInProgressPerProfile !== undefined) parts.push(`Workers per agent: ${capWords(before.maxInProgressPerProfile)} → ${capWords(change.maxInProgressPerProfile)}.`);
   if (change.staleTimeoutSeconds !== undefined) parts.push(`Reclaim a silent worker after: ${before.staleTimeoutSeconds === 0 ? 'never' : `${Math.round(before.staleTimeoutSeconds / 60)} min`} → ${change.staleTimeoutSeconds === 0 ? 'never' : `${Math.round(change.staleTimeoutSeconds / 60)} min`}.`);
   if (change.failureLimit !== undefined) parts.push(`Blocks a task after ${before.failureLimit} → ${change.failureLimit} failed attempts.`);
   if (change.intervalSeconds !== undefined) parts.push(`Looks every ${before.intervalSeconds} → ${change.intervalSeconds} seconds.`);
   if (change.autoDecompose !== undefined) parts.push(`Splits Triage tasks by itself: ${before.autoDecompose ? 'on' : 'off'} → ${change.autoDecompose ? 'on' : 'off'}.`);
   if (change.autoPromoteChildren !== undefined) parts.push(`Promotes finished tasks’ children by itself: ${before.autoPromoteChildren ? 'on' : 'off'} → ${change.autoPromoteChildren ? 'on' : 'off'}.`);
-  if (change.orchestratorProfile !== undefined) parts.push(`Orchestrator profile: ${before.orchestratorProfile || 'Hermes’s choice'} → ${change.orchestratorProfile || 'Hermes’s choice'}.`);
-  if (change.defaultAssignee !== undefined) parts.push(`Profile for tasks nobody has: ${before.defaultAssignee || 'none'} → ${change.defaultAssignee || 'none'}.`);
+  if (change.orchestratorProfile !== undefined) parts.push(`Orchestrator agent: ${before.orchestratorProfile || 'Hermes’s choice'} → ${change.orchestratorProfile || 'Hermes’s choice'}.`);
+  if (change.defaultAssignee !== undefined) parts.push(`Agent for tasks nobody has: ${before.defaultAssignee || 'none'} → ${change.defaultAssignee || 'none'}.`);
   return parts.join(' ');
 }
 

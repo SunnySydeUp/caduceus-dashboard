@@ -8,7 +8,7 @@ Scope: every capability in the research feature matrix (`../research/README.md` 
 |---|---|---|
 | Desk | **Today** (`/today`) | The opening screen. **Needs you**: one card per open approval, question or choice, answerable in place. **Ready for review**: work that is done and not opened since (Kanban tasks, finished background runs). Crew tiles (phone). **Today's schedule**: a 24-hour bar with a Now marker. **While you were away**: runs and routine results since the last visit |
 | Desk | **Talk** (`/chat`) | An agent's thread with its sessions kept (§4): session list, transcript, composer with the intents Ask, Delegate and Repeat, Details (Right now, workspace preview with Take over, Work, About), and the decide-anywhere tray for decisions of other agents |
-| Desk | **Work** › Overview (`/work`) | Everything with a lifecycle, by state: Waiting on you, Running, Ready for review, Scheduled. An agent filter narrows it. Board, Tasks, Schedules, Playbooks and Projects are views from here (below) |
+| Desk | **Work** › Overview (`/work`) | Everything with a lifecycle, by state: Waiting on you, Running, Ready for review, Scheduled. The agent scope (the card head; the app bar's chip on a phone) narrows it. Board, Tasks, Schedules, Playbooks and Projects are views from here (below) |
 | Desk | **Crew** (in the sidebar, rail and Today) | One row per profile: sigil, name, live line, time. It opens that agent's thread |
 | Control › Main | **Notices** (`/notices`) | What is not a decision: failed notices, FYI notices and items without a decision, with their actions, snooze and dismiss, and the Activity feed (runs that finished). Decisions are on Today and in the Talk tray (`work-model.md` §2.5) |
 | Work | **Board** | Kanban boards, lanes by status or profile, filters, dispatcher controls, orchestration settings |
@@ -61,15 +61,17 @@ The tab bar is a floating dock above the safe area. It shrinks while scrolling d
 Navigation is data, not code. Every module declares a Desk placement (`today`, `talk`, `work` or `control`) in the registry; `deskNavigation` (`web/src/shell/nav-order.ts`) turns the registry and the crew into the tab bar, rail, sidebar and Control. The crew is ordered waiting (longest wait first), blocked, working, finished, idle.
 
 ## 3. Global chrome
-- **App bar: phones only (< 600 px).** Back or the mark, the title once the heading has scrolled away, a **profile chip** (decision 6: sigil + name; tapping it opens a profile switcher sheet), a realtime status dot (connected / reconnecting / offline), search / palette and help. A screen can put one button in the bar's slot (`#appbar-slot`).
+- **App bar: phones only (< 600 px).** Back or the mark, the title once the heading has scrolled away, an **agent chip** (decision 6: sigil + name; tapping it opens the agent switcher as a bottom sheet), a realtime status dot (connected / reconnecting / offline), search / palette and help. A screen can put one button in the bar's slot (`#appbar-slot`).
 - **From 600 px there is no app bar.** Everything it held moved:
-  - the **scope** is the head of the side card: the scope's sigil, with the connection as a ring round it (the heartbeat: steady success ring connected, steady warning ring reconnecting, dashed neutral ring offline), and the scope's name, opening the profile switcher. On Talk it shows the open agent; on a screen locked to All profiles (Today) it is plain text, nothing to switch. In the rail it is a 44 px sigil button with a label. Its accessible name says the connection in words;
+  - the **scope** is the head of the side card: the scope's sigil, with the connection as a ring round it (the heartbeat: steady success ring connected, steady warning ring reconnecting, dashed neutral ring offline), and the scope's name, opening the agent switcher: from 600 px a popover anchored under the head (beside the button in the rail) that moves between agents with the arrow keys and gives focus back to the head on close, and a bottom sheet on a phone. It is the only agent control on a page: a screen that follows the scope (Work, Schedules) has no agent filter of its own. On Talk it shows the open agent; on a screen locked to All agents (Today) it is plain text, nothing to switch. In the rail it is a 44 px sigil button with a label. Its accessible name says the connection in words;
   - **search** is one slim field under the card head ("Search or jump to…", ⌘K), a Search item in the rail;
   - **Help** (route-aware) and Control are the card's foot, which never scrolls away; only the crew scrolls inside the card;
   - the **breadcrumb** of a deep page (a task, Health under Observe) is linked text above the title in the page header;
   - Work's **views** are canvas tabs at the top of the page column;
   - the page starts at the top of the window, level with the card's top edge.
-- **Banner stack.** At most one banner is visible at a time, ordered by priority; the rest collapse into a "+N" pill. Banners cover: offline / reconnecting, resource pressure, gateway down, budget exceeded, update available. From 600 px the connection banner is sticky at the top of the page column, so an unhealthy connection stays said in words while the page scrolls.
+- **Banner stack.** At most one banner is visible at a time, ordered by priority; the rest collapse into a "+N" pill. Banners cover: offline / reconnecting, resource pressure, gateway down, budget exceeded, update available. From 600 px the connection banner is sticky at the top of the page column; on a phone it is a sticky one-line strip under the app bar ("You are offline · since 9:57"; a tap opens the full banner). Either way an unhealthy connection stays said in words while the page scrolls.
+- **No false reassurance.** While the connection is unhealthy, nothing claims "nothing": the crew's live lines read "As of 9:57" (dimmed), and Today's empty blocks say "Can't check right now. Last checked at 9:57." When the link comes back, a brief "Back online" toast says so.
+- **Slow first read.** The last known crew and scope are remembered on the device: while the first read is pending the crew shows skeleton rows with those names and the head the last scope; if the read fails or takes too long, the crew says "Crew couldn't be read" with Retry.
 - **Toasts** go in a live region placed above the tab bar or composer. They never cover primary actions.
 
 ## 4. Talk screen anatomy (the chat thread)
@@ -96,9 +98,9 @@ All editors write Hermes files directly through the Hermes API (decision 1). The
   3. Hermes's active / default profile.
 - Every profile-scoped request carries it. This matches how the Hermes REST API is already scoped.
 - Switching the profile in one tab never affects other tabs or devices. **Make default** in Profiles is the only action that writes Hermes's sticky `active_profile`.
-- **Always All profiles:** Today. The tab's profile never filters it, also when the address names one, and its profile chip says All profiles and opens no switcher. The tab keeps its profile for the other screens.
+- **Always All agents:** Today. The tab's agent never filters it, also when the address names one, and its agent chip says All agents and opens no switcher. The tab keeps its profile for the other screens.
 - **Cross-profile by default:** Work (its state view), Notices, Board (kanban.db is shared across profiles), Schedules, the session history search, and Insights.
-- These views show a profile column or badge and a filter (Today shows each item's profile, with no filter). Profile-only screens (Memory, Skills, Model, Config, Keys) show the scoped profile in the page header.
+- These views show a profile column or badge; the agent scope narrows them, with no filter of their own (Today shows each item's profile and cannot be narrowed). Profile-only screens (Memory, Skills, Model, Config, Keys) show the scoped profile in the page header.
 
 ## 7. URL scheme (deep-linkable, shareable to notifications)
 ```

@@ -5,18 +5,18 @@ export const projectsHelp: ModuleHelp = {
     {
       id: 'work-projects',
       title: 'Projects and workspaces',
-      summary: 'Hermes’s projects across profiles, discovering repositories, and your list of workspaces.',
+      summary: 'Hermes’s projects across agents, discovering repositories, and your list of workspaces.',
       route: '/work/projects',
       keywords: 'work projects project workspace workspaces spaces folder repo repository repos discover tree active rename create registry add remove reorder allowed roots files untouched',
       body: [
-        { p: 'A [[project]] is a named set of folders that Hermes groups sessions and Kanban boards by. Hermes keeps projects and builds this tree from the sessions of every profile, so the page shows what Hermes has and keeps nothing of its own.' },
+        { p: 'A [[project]] is a named set of folders that Hermes groups sessions and Kanban boards by. Hermes keeps projects and builds this tree from the sessions of every agent, so the page shows what Hermes has and keeps nothing of its own.' },
         { h: 'The tree' },
         {
           ul: [
             'Projects you made come first, then the repositories Hermes found by looking at the folders your sessions worked in. Nobody made those: they cannot be renamed.',
             'On a wide window each project shows its repositories under it. On a phone, tap a project to open its page, where they are listed.',
-            'New project makes a project of a name and a folder. Rename and Make active work on the projects of the profile in use. Each asks you to confirm, because it changes Hermes.',
-            'Hermes builds the tree from each profile’s sessions, so a profile that has none shows no projects here yet.',
+            'New project makes a project of a name and a folder. Rename and Make active work on the projects of the agent in use. Each asks you to confirm, because it changes Hermes.',
+            'Hermes builds the tree from each agent’s sessions, so an agent that has none shows no projects here yet.',
           ],
         },
         { h: 'Discover repos' },

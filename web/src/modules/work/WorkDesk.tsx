@@ -1,9 +1,9 @@
-// Work's landing view (M8 #07): everything with a lifecycle in one place, by state: Waiting on you, Running, Ready for review, Scheduled, with a row of
-// agents to narrow it. Board, Tasks, Playbooks, Schedules and Projects are the chips above (the shell's Work sub-navigation). The grouping is `work-desk-model.ts`.
+// Work's landing view (M8 #07): everything with a lifecycle in one place, by state: Waiting on you, Running, Ready for review, Scheduled. Which agent it shows is the tab's
+// agent scope, the one control at the head of the side card (the app bar's chip on a phone): All agents, or one. Board, Tasks, Playbooks, Schedules and Projects are the chips
+// above (the shell's Work sub-navigation). The grouping is `work-desk-model.ts`.
 import { useMemo, useState } from 'react';
-import { useSearch } from '@tanstack/react-router';
 import { Icon } from '../../icons.tsx';
-import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
+import { AppLink } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { useProfileScope } from '../../shell/profile-context.tsx';
 import { Sigil, UnassignedSigil } from '../../shell/Sigil.tsx';
@@ -59,11 +59,10 @@ function Row({ row, now, busy, onToggle, onOpen }: { row: WorkRow; now: number; 
 }
 
 export function WorkDesk() {
-  const search = useSearch({ strict: false }) as Record<string, unknown>;
-  const agent = typeof search.agent === 'string' && search.agent.trim() !== '' ? search.agent : undefined;
-  const navigate = useAppNavigate();
   const now = useNow();
-  const { hermes } = useProfileScope();
+  const { scope, choose } = useProfileScope();
+  // `all` and a scope not known yet both show everything; the scope never reads as a filter of the view's own.
+  const agent = scope === undefined || scope === 'all' ? undefined : scope;
   const boards = useAllBoards();
   const { jobs, failed: jobsFailed, reload } = useJobs();
   const inbox = useInbox();
@@ -71,16 +70,12 @@ export function WorkDesk() {
   const [busy, setBusy] = useState<string>();
 
   const loaded = !boards.loading && (jobs !== undefined || jobsFailed) && review.asked;
-  const { groups, agents } = useMemo(
+  const { groups } = useMemo(
     () => groupWork({ boards: boards.boards, runs: inbox.running, ready: review.ready, jobs: jobs ?? [] }, agent),
     [boards.boards, inbox.running, review.ready, jobs, agent],
   );
-  // Everyone Hermes lists is a chip, whether or not they have work, and so is whoever has a row (or is in the address) that Hermes does not list.
-  const chips = useMemo(() => [...new Set([...(hermes?.profiles.map((profile) => profile.name) ?? []), ...agents, ...(agent ? [agent] : [])])], [hermes, agents, agent]);
   const shown = WORK_GROUPS.filter((id) => groups[id].length > 0);
   const waiting = groups.waiting.length;
-
-  const filterTo = (next: string | undefined) => void navigate(next === undefined ? '/work' : `/work?agent=${encodeURIComponent(next)}`, { replace: true });
 
   const toggle = async (job: Job) => {
     const resuming = !job.enabled;
@@ -136,18 +131,6 @@ export function WorkDesk() {
         </div>
       )}
 
-      <div className="wd-filters" role="group" aria-label="Filter by agent">
-        <button type="button" className="chip" aria-pressed={agent === undefined} onClick={() => filterTo(undefined)}>
-          All agents
-        </button>
-        {chips.map((name) => (
-          <button key={name} type="button" className="chip chip--profile" aria-pressed={agent === name} onClick={() => filterTo(name)}>
-            <Sigil name={name} size="xs" />
-            {name}
-          </button>
-        ))}
-      </div>
-
       <p className="sr-only" role="status">
         {loaded ? summary : ''}
       </p>
@@ -157,9 +140,9 @@ export function WorkDesk() {
         <div className="empty">
           <Icon name={agent ? 'filter' : 'work'} />
           <h2>{agent ? `${agent} has nothing here` : 'Nothing is going on'}</h2>
-          <p>{agent ? 'No task, run or schedule of this agent is in flight. Show every agent to see the rest.' : 'No task, run or schedule has a lifecycle to follow. Start a task, or schedule one.'}</p>
+          <p>{agent ? 'No task, run or schedule of this agent is in flight. Show all agents to see the rest.' : 'No task, run or schedule has a lifecycle to follow. Start a task, or schedule one.'}</p>
           {agent ? (
-            <button type="button" className="btn btn--primary" onClick={() => filterTo(undefined)}>
+            <button type="button" className="btn btn--primary" onClick={() => void choose('all')}>
               Show all agents
             </button>
           ) : (

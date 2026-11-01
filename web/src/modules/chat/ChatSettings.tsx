@@ -1,4 +1,4 @@
-// Settings › Chat (M1 #20): how the chat behaves, as Caduceus preferences. Each setting says whether it is this device's or the owner's (every device), takes effect in the
+// Settings › Talk (M1 #20): how Talk behaves, as Caduceus preferences. Each setting says whether it is this device's or the owner's (every device), takes effect in the
 // chat at once, and is never written into Hermes's config. Reset to defaults asks first (T1) and resets the whole panel.
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { ACTIVITY_DEFAULTS, DENSITIES, MAX_PIN_LIMIT, MIN_PIN_LIMIT, SEND_KEYS, type ChatBehaviour } from '@caduceus/contracts/chat-behaviour';
@@ -54,10 +54,10 @@ export function ChatSettings() {
   const saveDevice = (change: Partial<ChatBehaviour['device']>) => void saveChatBehaviour({ device: change }).then((ok) => !ok && refused());
   const saveAccount = (change: Partial<ChatBehaviour['account']>) => void saveChatBehaviour({ account: change }).then((ok) => !ok && refused());
   const reset = async () => {
-    const confirmed = await confirmTier({ tier: 'T1', moduleId: 'chat', action: 'chat.settings.reset', label: 'Reset the chat settings?', text: 'Every setting on this page goes back to its default: this device’s and the ones that follow you to every device. Hermes is not changed.', confirmLabel: 'Reset to defaults' });
+    const confirmed = await confirmTier({ tier: 'T1', moduleId: 'chat', action: 'chat.settings.reset', label: 'Reset the Talk settings?', text: 'Every setting on this page goes back to its default: this device’s and the ones that follow you to every device. Hermes is not changed.', confirmLabel: 'Reset to defaults' });
     if (!confirmed) return;
     setDensity('comfortable');
-    if (await saveChatBehaviour({ device: null, account: null })) toast('Chat settings are back to their defaults');
+    if (await saveChatBehaviour({ device: null, account: null })) toast('Talk settings are back to their defaults');
     else refused();
   };
   const commitPin = () => {
@@ -68,7 +68,7 @@ export function ChatSettings() {
   };
   return (
     <div className="stack cs">
-      <PageHeader title="Chat" subtitle="How the chat behaves. These are Caduceus settings: Hermes’s own config is not changed." />
+      <PageHeader title="Talk" subtitle="How Talk behaves. These are Caduceus settings: Hermes’s own config is not changed." />
       <Setting id="send-key" label="Send key" scope="device" about="What sends a message. Automatic uses Enter with a mouse or trackpad and ⌘/Ctrl+Enter on a touch screen. The other key starts a new line; Shift+Enter is always a new line and ⌘/Ctrl+Enter always sends.">
         <RadioGroup labelledBy="chat-send-key-label" className="seg" value={device.sendKey} options={SEND_KEYS.map((value) => ({ value, label: sendKeyLabel(value, finePointer) }))} onChange={(sendKey) => saveDevice({ sendKey })} />
       </Setting>

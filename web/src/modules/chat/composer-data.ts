@@ -58,7 +58,7 @@ export function saveProviderKey(profile: string, provider: string, keyVar: strin
       method: 'PUT',
       path: envPath(profile),
       body: { key: keyVar, value: key },
-      confirm: { title: `Save a key for ${provider}?`, text: `Hermes writes it to ${keyVar} in the profile’s environment. It is never shown again.`, object: keyVar, profile, confirmLabel: 'Save key' },
+      confirm: { title: `Save a key for ${provider}?`, text: `Hermes writes it to ${keyVar} in the agent’s environment. It is never shown again.`, object: keyVar, profile, confirmLabel: 'Save key' },
     }),
   );
 }

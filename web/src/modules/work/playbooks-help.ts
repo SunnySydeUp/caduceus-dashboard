@@ -82,7 +82,7 @@ export const playbooksHelp: ModuleHelp = {
           ],
         },
         { h: 'Warnings' },
-        { p: 'Caduceus asks Hermes live whether the profiles and skills a stage names exist, and keeps no copy. If one is missing, a banner says so and the stage is marked. It is a warning: the definition can still be saved.' },
+        { p: 'Caduceus asks Hermes live whether the agents and skills a stage names exist, and keeps no copy. If one is missing, a banner says so and the stage is marked. It is a warning: the definition can still be saved.' },
         { h: 'The YAML view' },
         {
           ul: [
@@ -102,8 +102,8 @@ export const playbooksHelp: ModuleHelp = {
         { h: 'Running it' },
         {
           ul: [
-            'Run starts a run of the version you are reading, when it is the newest. It opens a form with one question for each input, with the number of stages and the profiles that will get tasks.',
-            'Pressing Run in the form asks you to confirm. The question names the playbook, its version and the profiles. If you cancel, nothing is sent.',
+            'Run starts a run of the version you are reading, when it is the newest. It opens a form with one question for each input, with the number of stages and the agents that will get tasks.',
+            'Pressing Run in the form asks you to confirm. The question names the playbook, its version and the agents. If you cancel, nothing is sent.',
             'If Caduceus does not accept an answer, the form stays open and lists what it did not accept.',
             'Runs, at the bottom of the page, lists the runs of this playbook, newest first. Each opens its run page.',
           ],
@@ -168,7 +168,7 @@ export const playbooksHelp: ModuleHelp = {
         { h: 'The timeline' },
         {
           ul: [
-            'Each stage that has a task is a row, oldest first: its title, its status on the Kanban board, the profile it is assigned to, when it began and when it ended.',
+            'Each stage that has a task is a row, oldest first: its title, its status on the Kanban board, the agent it is assigned to, when it began and when it ended.',
             'A stage that was tried again, for example after a reject, has one row for each try. A row after the first says which [[attempt]] it is.',
             'Beside its status, a row shows its [[verdict]] once it has one: Passed, Failed, Approved, Rejected or Answered. Under it comes the note that went with it: Owner’s note (what you wrote when you rejected), Why it failed, or Owner’s answer.',
             'A stage that waits at a gate shows Waiting for you. An approval gate waits for you to Approve or Reject; a clarify gate asks you a question. Decide it on Today, not from this page; the run goes on when you do.',

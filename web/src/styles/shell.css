@@ -9,6 +9,7 @@
   --kb-inset: 0px;
 }
 /* The floating dock stands one gap above the bottom edge: the page keeps clear of its height, that gap and the same room again above it. */
+:root[data-shell-size="compact"] { --shell-top: calc(var(--cd-appbar-h) + var(--cd-safe-top) + var(--banner-h, 0px)); }
 :root[data-shell-size="compact"] { --shell-bottom: calc(var(--cd-tabbar-h) + var(--cd-safe-bottom) + var(--cd-space-4)); }
 /* The side nav floats one gap in from the window's edges (a rounded card when it is the sidebar, a pill when it is the rail); the page starts one gap past it. */
 :root[data-shell-nav="rail"] { --side-w: var(--cd-rail-w); }
@@ -59,7 +60,7 @@ a.btn { text-decoration: none; }
 .wordmark__glyph--sm { inline-size: 1.5rem; block-size: 1.5rem; font-size: var(--cd-text-sm); margin-inline: var(--cd-space-2) var(--cd-space-1); }
 
 /* ---- App bar (a phone, under 600 px) ---- */
-.appbar { position: sticky; inset-block-start: 0; z-index: var(--cd-z-appbar); display: flex; align-items: center; gap: var(--cd-space-1-5); min-block-size: var(--shell-top); padding-block-start: var(--cd-safe-top); padding-inline: var(--cd-space-1) var(--cd-space-2); background: var(--cd-bg-surface); border-block-end: 1px solid var(--cd-border-subtle); }
+.appbar { position: sticky; inset-block-start: 0; z-index: var(--cd-z-appbar); display: flex; align-items: center; gap: var(--cd-space-1-5); min-block-size: calc(var(--cd-appbar-h) + var(--cd-safe-top)); padding-block-start: var(--cd-safe-top); padding-inline: var(--cd-space-1) var(--cd-space-2); background: var(--cd-bg-surface); border-block-end: 1px solid var(--cd-border-subtle); }
 .appbar__title { flex: 1; min-inline-size: 0; display: flex; align-items: center; font-weight: var(--cd-weight-semibold); }
 .appbar__title-text { font-size: var(--cd-text-lg); opacity: 0; transition: opacity var(--cd-dur-base) var(--cd-ease-standard); }
 .appbar.is-scrolled .appbar__title-text { opacity: 1; }
@@ -103,7 +104,7 @@ a.btn { text-decoration: none; }
 .nav-pill { position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; }
 .nav-pill--tabs { background: var(--cd-accent); }
 .nav-pill--side { background: var(--cd-bg-selected); border-radius: var(--cd-radius-md); }
-.nav-pill--crew { background: var(--cd-bg-surface); box-shadow: 0 0 0 1px var(--cd-border-subtle); border-radius: var(--cd-radius-lg); }
+.nav-pill--crew { background: var(--cd-bg-selected); box-shadow: inset 0 0 0 1px var(--cd-border-strong); border-radius: var(--cd-radius-lg); }
 /* A place's icon takes a light fill while it is the current one; the stroke stays. */
 .nav-item > svg.i, .nav-item > .rail__icon > svg.i, .tab__icon > svg.i { fill: currentcolor; fill-opacity: 0; transition: fill-opacity var(--cd-dur-base) var(--cd-ease-standard); }
 .nav-item[aria-current="page"] > svg.i, .nav-item[aria-current="page"] > .rail__icon > svg.i, .tab[aria-current="page"] .tab__icon > svg.i { fill-opacity: 0.16; }
@@ -120,7 +121,17 @@ a.btn { text-decoration: none; }
 .side > .sidebar { flex: 1 1 auto; min-block-size: 0; }
 .side > .rail { flex: 0 1 auto; min-block-size: 0; }
 /* One column as wide as the rail: a long agent name is cut with an ellipsis, it never widens the column (which would push every item off centre). */
-.rail { display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-3) var(--cd-space-1); }
+.rail { display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-3) var(--cd-space-1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+/* The places and the crew scroll together between the head (fold toggle, scope, search) and the foot (Help, Control), which stay put while they fit. The scroller keeps room
+   for two items; when the head and the foot leave less than that (a window a few hundred px tall) the whole rail scrolls as one, so nothing is ever cut off. */
+.rail__scroll { flex: 1 1 auto; min-block-size: calc(3.5rem * 2 + var(--cd-space-1)); display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-1); margin: calc(var(--cd-space-1) * -1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
+/* A window too short for the head, two items and the foot (about 504 px: 480 px of rail plus its inset): the rail scrolls as one, so the places and the crew are not a
+   second scroller inside it. */
+@media (max-height: 31.5rem) {
+  .rail__scroll { flex: none; min-block-size: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; animation: none; }
+}
 .rail > * { min-inline-size: 0; }
 .rail__toggle { align-self: center; flex: none; margin-block-end: var(--cd-space-1); }
 .rail__item { flex: none; flex-direction: column; justify-content: center; gap: var(--cd-space-1); min-block-size: 3.5rem; padding: var(--cd-space-1) 0; font-size: var(--cd-text-xs); font-weight: var(--cd-weight-medium); text-align: center; }
@@ -134,6 +145,8 @@ a.btn { text-decoration: none; }
 .sidebar { display: flex; flex-direction: column; gap: var(--cd-space-3); padding: var(--cd-space-2) var(--cd-space-2) var(--cd-space-3); }
 .sidebar__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-1); min-block-size: 3rem; }
 .sidebar--drawer { block-size: 100%; }
+/* The drawer's crew keeps two rows however short the window is; what does not fit scrolls with the drawer's body. */
+.sidebar--drawer .crewlist { min-block-size: calc(3.5rem * 2 + var(--cd-space-8)); }
 .nav-list { flex: none; display: grid; gap: 1px; }
 .sidebar .nav-item, .sidebar .mate { position: relative; isolation: isolate; }
 .sidebar .nav-item[aria-current="page"] { background: transparent; }
@@ -183,7 +196,7 @@ a.btn { text-decoration: none; }
 @keyframes hc-fade-start { to { --fade-start: var(--cd-space-6); } }
 @keyframes hc-fade-end { from { --fade-end: var(--cd-space-6); } }
 @supports (animation-timeline: scroll()) {
-  .crewlist__scroll { animation: hc-fade-start linear both, hc-fade-end linear both; animation-timeline: scroll(self), scroll(self); animation-range: 0 var(--cd-space-6), calc(100% - var(--cd-space-6)) 100%; }
+  .crewlist__scroll, .rail__scroll { animation: hc-fade-start linear both, hc-fade-end linear both; animation-timeline: scroll(self), scroll(self); animation-range: 0 var(--cd-space-6), calc(100% - var(--cd-space-6)) 100%; }
 }
 .nav-heading { display: flex; align-items: center; justify-content: space-between; margin: 0; padding-inline: var(--cd-space-2); font: var(--cd-weight-medium) var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); letter-spacing: 0; color: var(--cd-fg-subtle); }
 .mate { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cd-space-3); min-block-size: max(3.5rem, var(--cd-target-min)); padding: var(--cd-space-2); border-radius: var(--cd-radius-lg); color: inherit; text-decoration: none; }
@@ -194,8 +207,21 @@ a.btn { text-decoration: none; }
 .mate__name { font-weight: var(--cd-weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mate__line { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mate__time { align-self: start; padding-block-start: var(--cd-space-0-5); color: var(--cd-fg-subtle); font-size: var(--cd-text-xs); white-space: nowrap; }
-.rail__crew { margin: var(--cd-space-1) 0 0; padding-block: var(--cd-space-2); border-block-start: 1px solid var(--cd-border-subtle); grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); flex: 0 1 auto; }
+.rail__crew { list-style: none; display: grid; margin: var(--cd-space-1) 0 0; padding: var(--cd-space-2) 0 0; border-block-start: 1px solid var(--cd-border-subtle); grid-template-columns: minmax(0, 1fr); gap: var(--cd-space-1); flex: none; }
 .rail__mate { padding-inline: var(--cd-space-1); gap: var(--cd-space-1-5); }
+/* Before the crew is read: skeleton rows in the rows' own shape. While the link is down the live lines are not news: they are quieter and say when they were last true. */
+.mate--pending { pointer-events: none; }
+.mate__skel-sigil { flex: none; inline-size: 2.125rem; block-size: 2.125rem; border-radius: 28%; }
+.mate--pending > .mate__skel-sigil { inline-size: 2.75rem; block-size: 2.75rem; }
+.mate__skel-line { block-size: var(--cd-space-3); inline-size: 70%; }
+.mate__skel-line--short { inline-size: 45%; margin-block-start: var(--cd-space-1-5); }
+.rail__mate.mate--pending > .mate__skel-line { inline-size: 3rem; }
+.crew-failed { display: grid; justify-items: start; gap: var(--cd-space-2); padding: var(--cd-space-2); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.crew-failed p { margin: 0; }
+.rail__crew--failed { justify-items: center; text-align: center; }
+.rail__crew--failed .crew-failed { justify-items: center; font-size: var(--cd-text-xs); padding-inline: var(--cd-space-1); }
+.mate[data-stale] .mate__line { color: var(--cd-fg-subtle); font-style: italic; }
+.mate[data-stale] .sigil, .rail__crew[data-stale] .sigil { opacity: 0.55; }
 /* A new chat with one agent (Nav.tsx): a + on its crew row, over the row's time in the sidebar and on the sigil's corner in the rail. It shows while the pointer is
    over the row or the keyboard is on it (a touch screen has no hover: there it shows only for a keyboard); while hidden it lets taps through to the row, which
    opens the agent's latest chat. */
@@ -245,6 +271,13 @@ a.btn { text-decoration: none; }
    its height in `--banner-h` for `--shell-top`. */
 .app:not([data-size="compact"]) .banners { --banners-top: calc(var(--cd-safe-top) + var(--shell-gap)); margin-block-start: calc(var(--banners-top) * -1); padding-block: var(--banners-top) var(--cd-space-3); }
 .app:not([data-size="compact"]) .banners[data-sticky] { position: sticky; inset-block-start: 0; z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
+
+/* On a phone the connection banner is a one-line strip: sticky under the app bar, as tall as a target, the words of the banner's title and since when. A tap opens the full banner. */
+.banner-strip { align-items: center; inline-size: 100%; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); font: inherit; text-align: start; cursor: pointer; }
+.banner-strip > svg.i { margin-block-start: 0; }
+.banner-strip__text { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app[data-size="compact"] .banners[data-strip] { padding-block: var(--cd-space-1); }
+.app[data-size="compact"] .banners[data-sticky] { position: sticky; inset-block-start: calc(var(--cd-appbar-h) + var(--cd-safe-top)); z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
 /* ---- Page header + sections (shared by every screen) ---- */
 /* The header always stands 24 px above the screen's first block, whatever the screen's `--page-gap`. */

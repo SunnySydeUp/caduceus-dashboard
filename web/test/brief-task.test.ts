@@ -21,7 +21,7 @@ describe('what is wrong with the fields', () => {
 
   test('Run now needs a profile that exists, because a task nobody has cannot start', () => {
     expect(problems({}, 'run-now').assignee).toContain('cannot start');
-    expect(problems({ assignee: 'nobody' }, 'queue').assignee).toBe('There is no profile called “nobody”.');
+    expect(problems({ assignee: 'nobody' }, 'queue').assignee).toBe('There is no agent called “nobody”.');
     expect(problems({ assignee: 'coder' }, 'run-now')).toEqual({});
   });
 
@@ -136,7 +136,7 @@ describe('Schedule mode', () => {
 
 describe('what Queue says it will do', () => {
   test('a task nobody has is said to wait in Ready, not to be given to a worker', () => {
-    expect(createPlan({ ...ok, assignee: '' }, 'queue').confirm.text).toContain('waits in Ready until you assign a profile');
+    expect(createPlan({ ...ok, assignee: '' }, 'queue').confirm.text).toContain('waits in Ready until you assign an agent');
     expect(createPlan({ ...ok, assignee: 'coder' }, 'queue').confirm.text).toContain('gives it to a worker of coder');
   });
 });

@@ -41,7 +41,7 @@ export function ScriptJobFields(props: FieldsProps & { lockedFile: boolean }) {
   const set = (patch: Partial<ScriptDraft>) => change({ script: { ...script, ...patch } });
   return (
     <>
-      <Field label="Script file" help={lockedFile ? 'A job keeps the file it was made with.' : <>The file in the profile’s scripts folder, the only place Hermes runs scripts from. Files ending in .sh or .bash run in bash; anything else runs in Python.</>} error={errors.scriptFile} name="scriptFile">
+      <Field label="Script file" help={lockedFile ? 'A job keeps the file it was made with.' : <>The file in the agent’s scripts folder, the only place Hermes runs scripts from. Files ending in .sh or .bash run in bash; anything else runs in Python.</>} error={errors.scriptFile} name="scriptFile">
         {(aria) => <input {...aria} className="input input--mono" value={script.file} readOnly={lockedFile} placeholder="report.sh" onChange={(event) => set({ file: event.target.value })} onBlur={() => touch('scriptFile')} autoComplete="off" autoCapitalize="none" spellCheck={false} />}
       </Field>
       <Field label="Script" help={<>The code. Saving it is a step of its own that asks for your passkey and the script’s name: it runs on the Mac that runs Hermes. <Term id="script-job">What a Script job is</Term>.</>} error={errors.scriptContent} name="scriptContent">

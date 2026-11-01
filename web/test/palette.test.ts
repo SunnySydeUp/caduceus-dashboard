@@ -517,12 +517,12 @@ describe('what the palette searches', () => {
 
   test('a screen that shows every profile (Today) searches every profile, and says so in the footer', () => {
     expect(searchProfiles({ scope: 'all', effective: 'research', profiles })).toEqual(profiles);
-    expect(searchScopeText('all')).toBe('Searching all profiles');
+    expect(searchScopeText('all')).toBe('Searching all agents');
   });
 
   test('any other screen searches the profile it shows, and says which', () => {
     expect(searchProfiles({ scope: 'research', effective: 'default', profiles })).toEqual(['research']);
-    expect(searchScopeText('research')).toBe('Searching profile research only');
+    expect(searchScopeText('research')).toBe('Searching agent research only');
   });
 
   test('before Hermes has listed its profiles only the profile this tab works on is known, and while even that is not known the scope says nothing', () => {

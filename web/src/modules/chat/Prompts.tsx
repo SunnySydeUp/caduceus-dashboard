@@ -76,7 +76,7 @@ function PromptEditor({ profile, prompt, initialText, onDone }: { profile: strin
         className="seg cfg-seg"
         value={scope}
         options={[
-          { value: 'all', label: 'Every profile' },
+          { value: 'all', label: 'Every agent' },
           { value: 'profile', label: `Only ${profile}` },
         ]}
         onChange={setScope}

@@ -172,7 +172,7 @@ function TemplateForm({ start, categories, profiles }: { start: Start; categorie
         <Field label="Title" help={<>One line. Write <code>{'{{name}}'}</code> where an answer goes, for example <code>{'Fix: {{bug}}'}</code>.</>} error={errors.title} name="title">
           {(aria) => <input {...aria} className="input" value={fields.title} onChange={(event) => set({ title: event.target.value })} autoComplete="off" />}
         </Field>
-        <Field label="Assign to" help="The profile whose worker does the task. Leave it unassigned to choose when you start it." error={errors.assignee} name="assignee">
+        <Field label="Assign to" help="The agent whose worker does the task. Leave it unassigned to choose when you start it." error={errors.assignee} name="assignee">
           {(aria) => (
             <select {...aria} className="input" value={fields.assignee} onChange={(event) => set({ assignee: event.target.value })}>
               <option value="">Unassigned</option>
@@ -232,10 +232,10 @@ function TemplateForm({ start, categories, profiles }: { start: Start; categorie
 
       <Group id="run" title="How the worker runs">
         <ModelField profile={fields.assignee !== '' ? fields.assignee : 'default'} model={fields.model} provider={fields.provider} onChange={(model, provider) => set({ model, provider })} error={errors.model} />
-        <Field label="Reasoning effort" help="How hard the model thinks. The profile’s own level when empty." error={errors.reasoningEffort} name="reasoningEffort">
+        <Field label="Reasoning effort" help="How hard the model thinks. The agent’s own level when empty." error={errors.reasoningEffort} name="reasoningEffort">
           {(aria) => (
             <select {...aria} className="input" value={fields.reasoningEffort} onChange={(event) => set({ reasoningEffort: event.target.value })}>
-              <option value="">The profile’s level</option>
+              <option value="">The agent’s level</option>
               {REASONING_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -351,7 +351,7 @@ export function TemplateEditor() {
       <Page title={isNew ? 'New template' : 'Edit template'}>
         <div className="banner" data-tone="danger" role="alert">
           <Icon name="alert" />
-          <span className="banner__content">{templates.error ? `The templates could not be read: ${templates.error}` : source.status === 'failed' ? 'Hermes did not answer, so the task could not be read; it may have been deleted.' : 'Hermes did not answer, so the profiles are not known yet.'}</span>
+          <span className="banner__content">{templates.error ? `The templates could not be read: ${templates.error}` : source.status === 'failed' ? 'Hermes did not answer, so the task could not be read; it may have been deleted.' : 'Hermes did not answer, so the agents are not known yet.'}</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={templates.error ? templates.reload : source.status === 'failed' ? source.reload : profiles.reload}>
             Try again
           </button>

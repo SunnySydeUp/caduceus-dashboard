@@ -77,7 +77,7 @@ function Settings({ job, now }: { job: Job; now: number }) {
   const prompt = text(config.prompt);
   const rows: [string, ReactNode][] = [
     ['Type', <TypeBadge key="type" type={job.type} />],
-    ['Profile', job.profile],
+    ['Agent', job.profile],
     ['Schedule', <>{job.schedule}{job.scheduleExpression && <span className="mono subtle"> · {job.scheduleExpression}</span>}</>],
     ['Next run', <NextRun key="next" job={job} now={now} />],
     ['Last result', <LastResult key="last" job={job} now={now} />],
@@ -237,7 +237,7 @@ export function Schedule() {
       {job && (
         <>
           <p className="help-text">
-            A <Term id="schedule">schedule</Term> of the <strong>{job.profile}</strong> profile. {job.schedule}. {job.enabled ? '' : 'It is paused, so it does not run.'}
+            A <Term id="schedule">schedule</Term> of the <strong>{job.profile}</strong> agent. {job.schedule}. {job.enabled ? '' : 'It is paused, so it does not run.'}
           </p>
           <SchedulerNotice status={scheduler} />
           <div className="jd__acts" role="group" aria-label="Actions">
