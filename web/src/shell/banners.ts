@@ -19,6 +19,8 @@ export interface Banner {
   tone: Tone;
   icon: IconName;
   title: string;
+  /** What the phone's one-line strip says in front of the time when the title is too long for it (the title itself when absent). */
+  stripTitle?: string;
   body?: string;
   actions?: BannerAction[];
   /** The owner may dismiss it, until the page is reloaded. */
@@ -70,6 +72,14 @@ const subscribe = (notify: () => void) => {
  */
 export function shownBanners(all: readonly Banner[], letIn: readonly string[], pathname = ''): Banner[] {
   return all.filter((banner) => (!banner.quiet || letIn.includes(banner.id)) && !banner.hideOn?.some((path) => pathname === path || pathname.startsWith(`${path}/`)));
+}
+
+/**
+ * Whether a banner is announced as an alert: what is wrong is said once, loudly. A warning or a danger is, and so is the connection banner whatever its tone (being offline is a fault
+ * the owner must hear). The stack says nothing while it is leaving (`BannerStack`).
+ */
+export function isAlert(banner: Banner): boolean {
+  return banner.id === 'connection' || banner.tone === 'warning' || banner.tone === 'danger';
 }
 
 /** The ids of the quiet banners waiting now: a page change lets all of them in. */

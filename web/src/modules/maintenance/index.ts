@@ -17,6 +17,8 @@ export const maintenanceModule: AppModule = {
   icon: 'tool',
   desk: 'control',
   group: 'system',
+  // Updates, diagnostics and backups are of Hermes and Caduceus as a whole (information architecture §6).
+  allProfiles: true,
   path: '/system/maintenance',
   order: 4,
   summary: 'Update Hermes and Caduceus, run diagnostics, back up and restore, restart, the console and the API reference',

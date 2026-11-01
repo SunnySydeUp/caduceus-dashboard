@@ -98,7 +98,8 @@ All editors write Hermes files directly through the Hermes API (decision 1). The
   3. Hermes's active / default profile.
 - Every profile-scoped request carries it. This matches how the Hermes REST API is already scoped.
 - Switching the profile in one tab never affects other tabs or devices. **Make default** in Profiles is the only action that writes Hermes's sticky `active_profile`.
-- **Always All agents:** Today. The tab's agent never filters it, also when the address names one, and its agent chip says All agents and opens no switcher. The tab keeps its profile for the other screens.
+- **Always All agents:** Today, and the screens whose data is Hermes-wide (the Control list, Health, Gateway, Maintenance, Plugins, Profiles, Artifacts). The tab's agent never filters them, also when the address names one, and the scope there is plain text, "All agents", with no switcher. The tab keeps its agent for the other screens.
+- **One switcher on phone Talk:** the bridge row of sigils switches agent there, so the app bar's agent chip is not shown on Talk.
 - **Cross-profile by default:** Work (its state view), Notices, Board (kanban.db is shared across profiles), Schedules, the session history search, and Insights.
 - These views show a profile column or badge; the agent scope narrows them, with no filter of their own (Today shows each item's profile and cannot be narrowed). Profile-only screens (Memory, Skills, Model, Config, Keys) show the scoped profile in the page header.
 

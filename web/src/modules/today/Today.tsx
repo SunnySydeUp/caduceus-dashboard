@@ -15,7 +15,6 @@ import { useCrew } from '../crew/use-crew.ts';
 import { inboxFeed, useInbox } from '../inbox/inbox-feed.ts';
 import { useJobs } from '../work/schedules-data.ts';
 import type { Job } from '../work/schedules-model.ts';
-import { InstallCard } from './InstallCard.tsx';
 import { readReady, recordVisit } from './today-data.ts';
 import { markOpened } from './ready-feed.ts';
 import { useVisibleDecisions } from './fold-store.ts';
@@ -23,8 +22,8 @@ import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type Empty
 import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
 import './today.css';
 
-/** The setup guide's offer is below the first screen and Today paints without it: its code is fetched once the page has settled. */
-const OnboardingCard = lazy(() => import('../onboarding/OnboardingCard.tsx').then((m) => ({ default: m.OnboardingCard })));
+/** The first-run card (the setup guide's offer, and installing the app) is below the first screen and Today paints without it: its code is fetched once the page has settled. */
+const FirstRunCard = lazy(() => import('./FirstRunCard.tsx').then((m) => ({ default: m.FirstRunCard })));
 /** So is the reminders calendar: it is last in its column, so its arrival moves nothing above it, and its code and its read wait for the page to settle. */
 const RemindersBlock = lazy(() => import('./RemindersBlock.tsx').then((m) => ({ default: m.RemindersBlock })));
 
@@ -129,13 +128,12 @@ export function Today() {
           )}
         </aside>
       </div>
-      {/* After the blocks, so that their arrival moves nothing on the first screen: the setup offer is read from the server, and the browser says it can install the app, both after Today has painted. Setup comes first: an unfinished setup matters more than a shortcut to the Home Screen. */}
+      {/* After the blocks, so that their arrival moves nothing on the first screen: the setup offer is read from the server, and the browser says it can install the app, both after Today has painted. One card offers both, setup first. */}
       {settled && (
         <Suspense fallback={null}>
-          <OnboardingCard />
+          <FirstRunCard />
         </Suspense>
       )}
-      <InstallCard />
     </div>
   );
 }

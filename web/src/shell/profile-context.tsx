@@ -44,7 +44,7 @@ const ProfileScopeContext = createContext<ProfileScopeState | undefined>(undefin
 export function ProfileScopeProvider({ children }: { children: ReactNode }) {
   const registry = useRegistry();
   const router = useRouter();
-  const { moduleId } = useRouteInfo();
+  const { moduleId, pathname } = useRouteInfo();
   const urlProfile = useUrlProfile();
   const backendReady = useBackend().status?.state === 'ready';
   const [hermes, setHermes] = useState<HermesProfiles>();
@@ -53,7 +53,8 @@ export function ProfileScopeProvider({ children }: { children: ReactNode }) {
   // This device's last choice as it was when the tab loaded: a choice made in another tab later does not move this one.
   const [lastChoice] = useState(() => deviceChoice(localStorage));
   const [lastScope] = useState(() => readLastScope(localStorage));
-  const mode = scopeMode(moduleId === undefined ? undefined : registry.module(moduleId));
+  // Control's own list is no module's page: it is Hermes-wide like the screens it leads to, so it says All agents.
+  const mode = pathname === '/control' ? 'all' : scopeMode(moduleId === undefined ? undefined : registry.module(moduleId));
 
   useEffect(() => {
     if (!backendReady) return;

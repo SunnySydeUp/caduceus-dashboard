@@ -79,7 +79,7 @@ export function Sheet({ title, detents = ['auto'], footer, role, dismissOnScrim,
         </div>
       )}
       <header className="overlay__head">
-        <h2 id={titleId}>{title}</h2>
+        <h2 id={titleId} tabIndex={-1}>{title}</h2>
         <button type="button" className="btn btn--ghost btn--icon" aria-label="Close" onClick={onClose} data-close>
           <Icon name="x" />
         </button>

@@ -10,6 +10,8 @@ export const artifactsModule: AppModule = {
   icon: 'package',
   desk: 'control',
   group: 'workspace',
+  // Artifacts are kept by Caduceus for every agent together (information architecture §6).
+  allProfiles: true,
   path: '/workspace/artifacts',
   order: 5,
   summary: 'Reports and files that runs, tasks and chats handed in',

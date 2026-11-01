@@ -1,4 +1,5 @@
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties, type SyntheticEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { controlBadge, crewAge, deskNavigation, placementOfPage, type CrewRow } from './nav-order.ts';
 import { Icon, type IconName } from '../icons.tsx';
 import { Layer } from '../overlays/Layer.tsx';
@@ -139,7 +140,7 @@ function HelpButton({ compact, glides }: { compact: boolean; glides: boolean }) 
   const { pathname } = useRouteInfo();
   const helpKey = useKeyboard().keymap.bindingOf(HELP_OPEN);
   return (
-    <button type="button" className={`nav-item nav-item--button${compact ? ' rail__item' : ''}`} style={named('nav-help', glides)} aria-haspopup="dialog" title="Help for this screen" onClick={() => openHelp({ screen: pathname })}>
+    <button type="button" className={`nav-item nav-item--button${compact ? ' rail__item' : ''}`} style={named('nav-help', glides)} aria-haspopup="dialog" onClick={() => openHelp({ screen: pathname })}>
       {compact ? (
         <span className="rail__icon">
           <Icon name="question" />
@@ -176,6 +177,41 @@ function ControlLink({ compact, glides }: { compact: boolean; glides: boolean })
   );
 }
 
+/** Under this window height the rail draws icons only (`shell.css`, "A rail on a short window"); keep the two in step. */
+const SHORT_WINDOW_QUERY = '(max-height: 30rem)';
+
+/** The gap between a rail item and the label tag beside it. */
+const RAIL_TAG_GAP_PX = 8;
+
+interface RailTagAt {
+  text: string;
+  top: number;
+  start: number;
+}
+
+/**
+ * The label of a rail item as a visible tag beside it, for a window short enough that the rail draws icons only: on a hover (with a mouse) and while the keyboard is on
+ * the item. The label stays the item's name for a screen reader. The tag is drawn in the overlay root, because the rail scrolls and would cut it off.
+ */
+function useRailTag() {
+  const [tag, setTag] = useState<RailTagAt>();
+  const hide = () => setTag(undefined);
+  const show = (event: SyntheticEvent<HTMLElement>) => {
+    if (!(event.target instanceof Element) || !matchMedia(SHORT_WINDOW_QUERY).matches) return;
+    const item = event.target.closest<HTMLElement>('.rail__item, .scope--rail');
+    const text = item?.querySelector('.nav-label, .scope__name')?.textContent;
+    if (!item || !text) return;
+    // A hover that a touch screen makes up after a tap would stay on the screen; the keyboard's focus is always worth showing.
+    const keyboard = event.type === 'focus' && item.matches(':focus-visible');
+    if (!keyboard && !(event.type === 'mouseover' && matchMedia('(hover: hover)').matches)) return;
+    const box = item.getBoundingClientRect();
+    const rtl = getComputedStyle(item).direction === 'rtl';
+    setTag({ text, top: box.top + box.height / 2, start: rtl ? document.documentElement.clientWidth - box.left + RAIL_TAG_GAP_PX : box.right + RAIL_TAG_GAP_PX });
+  };
+  const label = tag && createPortal(<span className="tooltip rail-tag" aria-hidden="true" style={{ insetBlockStart: tag.top, insetInlineStart: tag.start }}>{tag.text}</span>, document.getElementById('overlays')!);
+  return { handlers: { onMouseOver: show, onFocus: show, onMouseOut: hide, onBlur: hide, onClick: hide }, hide, label };
+}
+
 /**
  * Medium windows (and the collapsed large sidebar): the navigation rail. The fold toggle, the scope (a sigil button), Search, Today, Talk and Work, a sigil for each
  * agent (the only part that scrolls), and the foot that stays: Help and Control.
@@ -188,8 +224,9 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   const { openPalette } = useShellActions();
   const read = useCrewRead();
   const link = useLinkHealth();
+  const railTag = useRailTag();
   return (
-    <div className="rail">
+    <div className="rail" {...railTag.handlers}>
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
       <button
         type="button"
@@ -209,8 +246,8 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
         </span>
         <span className="nav-label">Search</span>
       </button>
-      {/* Places and crew scroll together between the head and the foot (with the sidebar's edge fades); when even the head and foot do not fit a short window, the whole rail scrolls. */}
-      <div className="rail__scroll">
+      {/* Places and crew scroll together between the head (fold toggle, scope, search) and the foot (Help, Control), which stay put; on a short window the rail draws icons only. */}
+      <div className="rail__scroll" onScroll={railTag.hide}>
         {destinations.map((destination) => (
           <AppLink preload key={destination.id} className="nav-item rail__item" to={destination.path} style={named(`nav-${destination.id}`)} aria-current={current === destination.id ? 'page' : undefined}>
             <span className="rail__icon">
@@ -246,6 +283,7 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
         <HelpButton compact glides />
         <ControlLink compact glides />
       </div>
+      {railTag.label}
     </div>
   );
 }
@@ -407,7 +445,7 @@ export function Sidebar() {
 /** Medium windows: the rail's menu button opens the same Desk as a drawer. */
 export function NavDrawer({ onClose }: { onClose(): void }) {
   return (
-    <Layer kind="drawer" panelClassName="drawer drawer--start" label="Navigation" initialFocus='[aria-current="page"]' onClose={onClose}>
+    <Layer kind="drawer" panelClassName="drawer drawer--start" label="Navigation" initialFocus="[data-close]" onClose={onClose}>
       <div className="overlay__body drawer__body" data-body>
         <div className="sidebar sidebar--drawer">
           <div className="sidebar__head">
@@ -443,15 +481,20 @@ export function SubNav() {
   );
 }
 
+/** Whether Talk's row of agents is on the page: on a phone, on Talk, with a crew. It is then the one place to switch agent, so the app bar has no chip beside it. */
+export function useBridgeShown(): boolean {
+  const { crew } = useDesk();
+  return useCurrentPlacement() === 'talk' && crew.length > 0;
+}
+
 /**
  * Talk on a phone: a row of the crew's sigils to switch agent without going back to the list. It starts with New chat, a new chat with the agent the tab is on: a
  * phone's Talk header has no room for that button beside the agent's name.
  */
 export function Bridge() {
   const { crew } = useDesk();
-  const current = useCurrentPlacement();
   const isCurrentAgent = useIsCurrentAgent();
-  if (current !== 'talk' || crew.length === 0) return null;
+  if (!useBridgeShown()) return null;
   const agent = crew.find(isCurrentAgent);
   return (
     <nav className="bridge" aria-label="Switch agent">

@@ -68,6 +68,8 @@ a.btn { text-decoration: none; }
 /* Once the title has taken the app bar (the heading scrolled away) the chip is only its sigil, so the title is not cut to a letter or two. */
 .appbar.is-scrolled .appbar__profile > .truncate, .appbar.is-scrolled .appbar__profile > svg:last-child { display: none; }
 .appbar__profile[data-cross] { border-style: dashed; }
+/* On a screen locked to All agents the chip is text, not a control: no pill to press. */
+span.appbar__profile { background: transparent; border-color: transparent; }
 .appbar__conn { display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-1); min-inline-size: var(--cd-space-6); block-size: var(--cd-space-6); }
 .appbar__conn .dot { inline-size: 10px; block-size: 10px; }
 .appbar__conn-count { font: var(--cd-text-xs)/1 var(--cd-font-mono); font-variant-numeric: tabular-nums; color: var(--cd-fg-muted); }
@@ -123,15 +125,10 @@ a.btn { text-decoration: none; }
 /* One column as wide as the rail: a long agent name is cut with an ellipsis, it never widens the column (which would push every item off centre). */
 .rail { display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-3) var(--cd-space-1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
 /* The places and the crew scroll together between the head (fold toggle, scope, search) and the foot (Help, Control), which stay put while they fit. The scroller keeps room
-   for two items; when the head and the foot leave less than that (a window a few hundred px tall) the whole rail scrolls as one, so nothing is ever cut off. */
+   for two items; when the head and the foot leave less than that (a window a few hundred px tall) the rail draws itself compact: see "A rail on a short window". */
 .rail__scroll { flex: 1 1 auto; min-block-size: calc(3.5rem * 2 + var(--cd-space-1)); display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-1); margin: calc(var(--cd-space-1) * -1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
   mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
-/* A window too short for the head, two items and the foot (about 504 px: 480 px of rail plus its inset): the rail scrolls as one, so the places and the crew are not a
-   second scroller inside it. */
-@media (max-height: 31.5rem) {
-  .rail__scroll { flex: none; min-block-size: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; animation: none; }
-}
 .rail > * { min-inline-size: 0; }
 .rail__toggle { align-self: center; flex: none; margin-block-end: var(--cd-space-1); }
 .rail__item { flex: none; flex-direction: column; justify-content: center; gap: var(--cd-space-1); min-block-size: 3.5rem; padding: var(--cd-space-1) 0; font-size: var(--cd-text-xs); font-weight: var(--cd-weight-medium); text-align: center; }
@@ -220,6 +217,19 @@ a.btn { text-decoration: none; }
 .crew-failed p { margin: 0; }
 .rail__crew--failed { justify-items: center; text-align: center; }
 .rail__crew--failed .crew-failed { justify-items: center; font-size: var(--cd-text-xs); padding-inline: var(--cd-space-1); }
+/* ---- A rail on a short window. Under 480 px tall (a phone on its side; the nav mode still follows the width only) the rail draws icons only, 44 px tall: a label is a visible
+   tag beside the item on a hover and on the keyboard's focus (`useRailTag` in Nav.tsx, which uses the same height), and it stays the item's name for a screen reader. The
+   head and the foot (Help and Control with its badge) stay put; only the places and the crew between them scroll, with the same edge fades. ---- */
+@media (max-height: 30rem) {
+  .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); }
+  .rail__scroll { min-block-size: 0; }
+  .rail__toggle { margin-block-end: 0; }
+  .rail__item, .scope--rail { flex-direction: row; min-block-size: 2.75rem; padding-block: 0; }
+  .rail__icon { block-size: 2.25rem; }
+  .rail__item .nav-label, .scope--rail .scope__name { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rail__crew { margin-block-start: 0; padding-block-start: var(--cd-space-1); }
+}
+.rail-tag { position: fixed; z-index: var(--cd-z-tooltip); translate: 0 -50%; pointer-events: none; box-shadow: var(--cd-shadow-popover); }
 .mate[data-stale] .mate__line { color: var(--cd-fg-subtle); font-style: italic; }
 .mate[data-stale] .sigil, .rail__crew[data-stale] .sigil { opacity: 0.55; }
 /* A new chat with one agent (Nav.tsx): a + on its crew row, over the row's time in the sidebar and on the sigil's corner in the rail. It shows while the pointer is
@@ -260,8 +270,14 @@ a.btn { text-decoration: none; }
 .app:not([data-size="compact"]) .subnav .chip:not([aria-current="page"]) { background: transparent; border-color: transparent; }
 
 /* ---- Banner stack ---- */
-.banners { inline-size: 100%; max-inline-size: var(--cd-page-max); margin-inline: auto; padding: var(--cd-space-3) var(--cd-page-px) 0; }
-.banners__inner { display: grid; gap: var(--cd-space-2); }
+.banners { inline-size: 100%; max-inline-size: var(--cd-page-max); margin-inline: auto; padding-inline: var(--cd-page-px); }
+/* A stack arriving or leaving glides: its one grid row runs between nothing and its own height (`BannerStack`'s `useGlide`), so the page below is moved smoothly and never jumps
+   by the banner's height. `.banners__inner` is the clip and has no padding of its own, so the closed row is truly empty; a stack with nothing to say is not drawn at all. */
+.banners__glide { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--cd-dur-moderate) var(--cd-ease-standard); }
+.banners__glide[data-open] { grid-template-rows: 1fr; }
+.banners__inner { min-block-size: 0; overflow: hidden; }
+/* The list scrolls on its own when the window is too short for it (the strip stays pinned at its top); its small side room keeps a focus ring from being clipped. */
+.banners__list { display: grid; gap: var(--cd-space-2); padding: var(--cd-space-3) var(--cd-space-1) var(--cd-space-1); margin-inline: calc(var(--cd-space-1) * -1); max-block-size: 50dvh; overflow-y: auto; overscroll-behavior: contain; }
 .banner__content { display: grid; gap: var(--cd-space-1); min-inline-size: 0; }
 .banner__content .banner__actions { margin-block-start: var(--cd-space-1); }
 .banner > .btn--icon { margin-block: calc(var(--cd-space-2) * -1); margin-inline-end: calc(var(--cd-space-1) * -1); }
@@ -269,14 +285,19 @@ a.btn { text-decoration: none; }
 /* From 600 px the stack is the first thing in the page column, level with the card's top: it reaches up into the page's top inset (a negative margin, so a banner that
    is not showing moves nothing). While the connection banner shows it is sticky, on the canvas, so the words stay in view while the page scrolls; `BannerStack` reports
    its height in `--banner-h` for `--shell-top`. */
-.app:not([data-size="compact"]) .banners { --banners-top: calc(var(--cd-safe-top) + var(--shell-gap)); margin-block-start: calc(var(--banners-top) * -1); padding-block: var(--banners-top) var(--cd-space-3); }
+.app:not([data-size="compact"]) .banners { --banners-top: calc(var(--cd-safe-top) + var(--shell-gap)); margin-block-start: calc(var(--banners-top) * -1); padding-block-start: var(--banners-top); }
+.app:not([data-size="compact"]) .banners__list { padding-block: 0 var(--cd-space-3); }
 .app:not([data-size="compact"]) .banners[data-sticky] { position: sticky; inset-block-start: 0; z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
-/* On a phone the connection banner is a one-line strip: sticky under the app bar, as tall as a target, the words of the banner's title and since when. A tap opens the full banner. */
-.banner-strip { align-items: center; inline-size: 100%; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); font: inherit; text-align: start; cursor: pointer; }
+/* On a phone the connection banner is a one-line strip: sticky under the app bar, as tall as a target, and it stays sticky while open. It says a short title and the time
+   since the link was last good; the title gives way (an ellipsis) before the time does. A tap opens the full banner under it, which scrolls under the pinned strip. */
+.banner-strip { align-items: center; inline-size: 100%; min-block-size: var(--cd-target-min); padding-block: var(--cd-space-1); column-gap: var(--cd-space-2); font: inherit; font-size: var(--cd-text-sm); text-align: start; cursor: pointer; }
 .banner-strip > svg.i { margin-block-start: 0; }
-.banner-strip__text { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.app[data-size="compact"] .banners[data-strip] { padding-block: var(--cd-space-1); }
+.banner-strip__text { min-inline-size: 0; display: flex; align-items: baseline; gap: var(--cd-space-1); white-space: nowrap; }
+.banner-strip__text > b { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
+.banner-strip__time { flex: none; }
+.banner-strip__pin { position: sticky; inset-block-start: 0; z-index: 1; padding-block: var(--cd-space-1); background: var(--cd-bg-canvas); }
+.app[data-size="compact"] .banners[data-strip] .banners__list { padding-block: 0 var(--cd-space-1); }
 .app[data-size="compact"] .banners[data-sticky] { position: sticky; inset-block-start: calc(var(--cd-appbar-h) + var(--cd-safe-top)); z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
 /* ---- Page header + sections (shared by every screen) ---- */
@@ -335,7 +356,7 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .layer { position: fixed; inset: 0; z-index: var(--cd-z-overlay); display: grid; place-items: center; padding: var(--cd-space-4); }
 .layer__scrim { position: absolute; inset: 0; background: var(--cd-scrim); animation: hc-fade-in var(--cd-dur-base) var(--cd-ease-standard); }
 .layer.is-closing { opacity: 0; pointer-events: none; transition: opacity var(--cd-dur-exit) var(--cd-ease-exit); }
-.layer [data-panel]:focus { outline: none; }
+.layer :is([data-panel], h2[tabindex="-1"]):focus { outline: none; }
 .overlay__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-3); flex: none; }
 .overlay__head h2 { font: var(--cd-weight-semibold) var(--cd-text-lg)/var(--cd-leading-lg) var(--cd-font-sans); letter-spacing: 0; min-inline-size: 0; }
 .overlay__body { flex: 1 1 auto; min-block-size: 0; overflow: auto; overscroll-behavior: contain; display: grid; gap: var(--cd-space-3); align-content: start; grid-auto-rows: max-content; }
@@ -359,7 +380,9 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 /* drawers */
 .layer--drawer { display: block; padding: 0; }
 .drawer { position: absolute; inset-block: 0; display: flex; flex-direction: column; background: var(--cd-bg-overlay); box-shadow: var(--cd-shadow-overlay); overflow: hidden; }
-.drawer--start { inset-inline-start: 0; inline-size: min(calc(var(--cd-sidebar-w) + var(--cd-space-8)), 88%); padding-inline-start: var(--cd-safe-left); background: var(--cd-bg-sidebar); animation: hc-drawer-start var(--cd-dur-slow) var(--cd-ease-sheet); }
+/* The medium window's drawer is the sidebar's card again: inset by the gap, the same radius, surface and one depth cue, not a flat panel from edge to edge. */
+.drawer--start { inset-block: calc(var(--cd-safe-top) + var(--shell-gap, var(--cd-space-3))) calc(var(--cd-safe-bottom) + var(--shell-gap, var(--cd-space-3))); inset-inline-start: calc(var(--cd-safe-left) + var(--shell-gap, var(--cd-space-3))); inline-size: min(calc(var(--cd-sidebar-w) + var(--cd-space-8)), 88%); border-radius: calc(var(--cd-radius-xl) * 1.5);
+  background: color-mix(in srgb, var(--cd-bg-surface) 86%, transparent); backdrop-filter: blur(18px) saturate(1.6); box-shadow: var(--cd-shadow-popover); animation: hc-drawer-start var(--cd-dur-slow) var(--cd-ease-sheet); }
 .drawer--end { inset-inline-end: 0; inline-size: min(var(--cd-inspector-w), 92%); padding-inline-end: var(--cd-safe-right); animation: hc-drawer-end var(--cd-dur-slow) var(--cd-ease-sheet); }
 [dir="rtl"] .drawer--start { animation-name: hc-drawer-end; }
 [dir="rtl"] .drawer--end { animation-name: hc-drawer-start; }
@@ -426,8 +449,6 @@ a.list-row:active { background: var(--cd-overlay-pressed); }
 .plist__sub { font-size: var(--cd-text-xs); color: var(--cd-fg-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plist__check { color: var(--cd-accent-fg); display: grid; place-items: center; }
 .plist__note { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); line-height: var(--cd-leading-sm); }
-.plist__default { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cd-space-3); padding-block-start: var(--cd-space-3); border-block-start: 1px solid var(--cd-border-subtle); font-size: var(--cd-text-sm); }
-.plist__default p { font-size: var(--cd-text-xs); margin-block-start: 2px; }
 
 /* ---- Shortcuts tab of the help panel ---- */
 .shortcuts { display: grid; gap: var(--cd-space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }

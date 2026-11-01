@@ -48,47 +48,38 @@ function ProfileRow({ profile, checked, isDefault, onChoose }: { profile: Profil
   );
 }
 
-/** The agent switcher's content (information architecture §6): choosing scopes this tab only; Hermes's default is never touched. */
+/** The agent switcher's content (information architecture §6): choosing scopes this tab; Hermes's default is never touched. The longer words are in the glossary term. */
 function SwitcherBody() {
   const { hermes, unavailable, scope, mode, choose } = useProfileScope();
   const crossProfile = mode === 'cross';
   return (
     <>
-      <p className="plist__note">
-        {crossProfile ? 'This view can show every agent. Pick one to narrow it, or keep all.' : 'Screens in this tab use the selected agent.'} Switching affects <strong>this tab only</strong>: other tabs and devices keep their own.{' '}
-        <Term id="profile-scope">What is agent scope?</Term>
-      </p>
+      <p className="plist__note">{crossProfile ? 'Show one agent, or all.' : 'Choose the agent to work with.'}</p>
       {!hermes && (
         <p className="plist__note" role="status">
           {unavailable ? 'Hermes is not answering, so its agents cannot be listed yet.' : 'Loading agents…'}
         </p>
       )}
       {hermes && (
-        <>
-          <div className="plist" role="radiogroup" aria-label="Agent scope" onKeyDown={moveFocus}>
-            {crossProfile && (
-              <button type="button" className="plist__row" role="radio" aria-checked={scope === 'all'} onClick={() => void choose('all')}>
-                <Sigil name="all" size="sm" />
-                <span className="plist__main">
-                  <span className="plist__name">All agents</span>
-                  <span className="plist__sub">Notices, Board, Schedules, history and Insights</span>
-                </span>
-                <span />
-                <span className="plist__check">{scope === 'all' && <Icon name="check" />}</span>
-              </button>
-            )}
-            {hermes.profiles.map((profile) => (
-              <ProfileRow key={profile.name} profile={profile} checked={scope === profile.name} isDefault={profile.name === hermes.hermesDefault} onChoose={() => void choose(profile.name)} />
-            ))}
-          </div>
-          <div className="plist__default">
-            <div>
-              <strong>Hermes default:</strong> <span className="mono">{hermes.hermesDefault}</span>
-              <p className="subtle">Used by new command-line sessions and anything with no agent chosen. Choosing an agent here never changes it; Control › Profiles does.</p>
-            </div>
-          </div>
-        </>
+        <div className="plist" role="radiogroup" aria-label="Agent scope" onKeyDown={moveFocus}>
+          {crossProfile && (
+            <button type="button" className="plist__row" role="radio" aria-checked={scope === 'all'} onClick={() => void choose('all')}>
+              <Sigil name="all" size="sm" />
+              <span className="plist__main">
+                <span className="plist__name">All agents</span>
+              </span>
+              <span />
+              <span className="plist__check">{scope === 'all' && <Icon name="check" />}</span>
+            </button>
+          )}
+          {hermes.profiles.map((profile) => (
+            <ProfileRow key={profile.name} profile={profile} checked={scope === profile.name} isDefault={profile.name === hermes.hermesDefault} onChoose={() => void choose(profile.name)} />
+          ))}
+        </div>
       )}
+      <p className="plist__note">
+        <Term id="profile-scope">What is agent scope?</Term>
+      </p>
     </>
   );
 }
@@ -98,7 +89,7 @@ function SwitcherBody() {
  * close it; but with no tint, and its panel set by hand: below the head, or beside the rail's button, always inside the window. The panel's size changes as the list
  * arrives, so it is placed again when it does.
  */
-function AnchoredSwitcher({ anchor, onClose, children }: { anchor: SwitcherAnchor; onClose(): void; children: ReactNode }) {
+function AnchoredSwitcher({ anchor, initialFocus, onClose, children }: { anchor: SwitcherAnchor; initialFocus: string; onClose(): void; children: ReactNode }) {
   const titleId = useId();
   const body = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -125,8 +116,8 @@ function AnchoredSwitcher({ anchor, onClose, children }: { anchor: SwitcherAncho
     };
   }, [anchor]);
   return (
-    <Layer kind="dialog" className="layer--anchored" panelClassName="swpop" labelledBy={titleId} initialFocus='[aria-checked="true"]' onClose={onClose}>
-      <h2 id={titleId} className="swpop__title">
+    <Layer kind="dialog" className="layer--anchored" panelClassName="swpop" labelledBy={titleId} initialFocus={initialFocus} onClose={onClose}>
+      <h2 id={titleId} className="swpop__title" tabIndex={-1}>
         {SWITCHER_TITLE}
       </h2>
       <div ref={body} className="swpop__body">
@@ -139,29 +130,20 @@ function AnchoredSwitcher({ anchor, onClose, children }: { anchor: SwitcherAncho
 /** The agent switcher: a popover anchored to where it was opened from on a window of 600 px or more, a bottom sheet on a phone. */
 function ProfileSwitcher({ onClose, anchor }: { onClose(): void; anchor?: SwitcherAnchor }) {
   const compact = useSizeClass() === 'compact';
+  const { hermes } = useProfileScope();
+  // Focus starts on the current choice, or on the title while there is no list yet: never on the glossary link.
+  const initialFocus = hermes ? '[aria-checked="true"]' : 'h2';
   if (compact || !anchor) {
     return (
-      <Sheet title={SWITCHER_TITLE} detents={['auto', 'full']} initialFocus='[aria-checked="true"]' onClose={onClose}>
+      <Sheet title={SWITCHER_TITLE} detents={['auto', 'full']} initialFocus={initialFocus} onClose={onClose}>
         <SwitcherBody />
       </Sheet>
     );
   }
   return (
-    <AnchoredSwitcher anchor={anchor} onClose={onClose}>
+    <AnchoredSwitcher anchor={anchor} initialFocus={initialFocus} onClose={onClose}>
       <SwitcherBody />
     </AnchoredSwitcher>
-  );
-}
-
-/** What the chip says on a screen locked to All agents (Today): there is nothing to switch, and the sheet says why. */
-function AllProfilesNote({ onClose }: { onClose(): void }) {
-  return (
-    <Sheet title="This screen shows every agent" detents={['auto']} onClose={onClose}>
-      <p className="plist__note">
-        Everything here comes from all your agents together, so nothing is hidden. The agent you pick on other screens does not filter it. To work with one agent, open Talk or Work and pick it from the agent chip at the top.{' '}
-        <Term id="profile-scope">What is agent scope?</Term>
-      </p>
-    </Sheet>
   );
 }
 
@@ -173,25 +155,26 @@ function useScopeLook() {
   return { label: named === 'all' ? 'All agents' : (named ?? 'Agent'), sigil: named ?? '?', cross: mode === 'cross', locked: false };
 }
 
-/** The phone's app bar chip: the scope of this tab, opening the switcher. On a screen locked to All agents it opens a note that says so: there is nothing to switch. */
+/** The phone's app bar chip: the scope of this tab, opening the switcher. On a screen locked to All agents it is plain text with no button, as the side card's head is: there is nothing to switch. */
 export function ProfileChip() {
   const { label, sigil, cross, locked } = useScopeLook();
   const [open, setOpen] = useState(false);
-  return (
-    <>
-      <button
-        type="button"
-        className="chip chip--profile appbar__profile"
-        data-cross={cross ? '' : undefined}
-        aria-haspopup="dialog"
-        aria-label={locked ? 'Agent scope: All agents. This screen always shows every agent' : `Agent scope: ${label}. Switch agent`}
-        onClick={() => setOpen(true)}
-      >
+  if (locked) {
+    return (
+      <span className="chip chip--profile appbar__profile">
         <Sigil name={sigil} size="xs" />
         <span className="truncate">{label}</span>
-        <Icon name={locked ? 'info' : 'chev-d'} small />
+      </span>
+    );
+  }
+  return (
+    <>
+      <button type="button" className="chip chip--profile appbar__profile" data-cross={cross ? '' : undefined} aria-haspopup="dialog" aria-label={`Agent scope: ${label}. Switch agent`} onClick={() => setOpen(true)}>
+        <Sigil name={sigil} size="xs" />
+        <span className="truncate">{label}</span>
+        <Icon name="chev-d" small />
       </button>
-      {open && (locked ? <AllProfilesNote onClose={() => setOpen(false)} /> : <ProfileSwitcher onClose={() => setOpen(false)} />)}
+      {open && <ProfileSwitcher onClose={() => setOpen(false)} />}
     </>
   );
 }

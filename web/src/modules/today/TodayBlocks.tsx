@@ -20,6 +20,25 @@ import { type AwayRow, type AwayView, type EmptyBlock, type ReadyRow, type Sched
 /** Where an empty block's action leads: the address of the module it names, which the screen reads from the registry. */
 export type EmptyTarget = (empty: EmptyBlock) => string;
 
+/** While the link is down, what a block that shows data from before the drop says about it: "As of 10:38". Nothing while the link is good. */
+function useAsOf(): string | undefined {
+  const link = useLinkHealth();
+  return link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
+}
+
+/** A block's title row: the title, the count beside it, and (while the link is down) when the block's data was last true, on the same line so that nothing moves. */
+function BlockHead({ id, title, count, asOf }: { id: string; title: string; count?: number; asOf?: string }) {
+  return (
+    <div className="today-block__head">
+      <h2 className="today-block__title" id={id}>
+        {title}
+        {count !== undefined && count > 0 && <span className="muted today-block__count">{count}</span>}
+      </h2>
+      {asOf !== undefined && <span className="today-block__asof">{asOf}</span>}
+    </div>
+  );
+}
+
 function EmptyState({ which, to, note }: { which: EmptyBlock; to: EmptyTarget; note?: string }) {
   const { text, action } = EMPTY[which];
   // While the link is down an empty block cannot tell "nothing is waiting" from "I cannot look": it says it cannot check, and since when.
@@ -50,6 +69,8 @@ interface BlockProps<T> {
   room?: string;
   to: EmptyTarget;
   className?: string;
+  /** The block's rows each say when they were last true while the link is down (the crew's lines), so its title does not say it again. */
+  ownLines?: boolean;
   children(data: T): ReactNode;
 }
 
@@ -68,9 +89,13 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
 }
 
 /** One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its usual answer takes. */
-export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, children }: BlockProps<T>) {
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, children }: BlockProps<T>) {
   const { state } = block;
   const which = state.status === 'ready' ? empty(state.data) : undefined;
+  // What it shows (its rows, or its error) is from before the link dropped: it is marked, never hidden. A block still loading shows nothing of the kind, an empty one already says
+  // it cannot check (`EmptyState`), and the crew says it on each of its own lines.
+  const asOf = useAsOf();
+  const stale = state.status !== 'loading' && !which && asOf !== undefined;
   // A wait that goes on says so, with the way out; and a Retry that is on its way says so on the button, so a press is never met with silence.
   const late = useTakingLonger(state.status === 'loading');
   const [retrying, setRetrying] = useState(false);
@@ -79,11 +104,8 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
     void Promise.resolve(block.reload()).finally(() => setRetrying(false));
   };
   return (
-    <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={state.status === 'loading'}>
-      <h2 className="today-block__title" id={`today-${id}`}>
-        {title}
-        {count !== undefined && count > 0 && <span className="muted today-block__count">{count}</span>}
-      </h2>
+    <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={state.status === 'loading'} data-stale={stale ? '' : undefined}>
+      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} />
       {state.status === 'loading' && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
@@ -153,13 +175,11 @@ export function NeedsYouBlock({ block, now, to }: { block: Block<InboxItem[]>; n
 /** Failed work and jobs (a task that gave up, a routine that failed, something Health flagged): a short list, each row leading to where it is dealt with. Nothing failed, nothing shown. */
 export function LookBlock({ items, now }: { items: readonly InboxItem[]; now: number }) {
   const { rows, more } = needsALook(items);
+  const asOf = useAsOf();
   if (rows.length === 0) return null;
   return (
-    <section className="today-block" aria-labelledby="today-look" data-block="look">
-      <h2 className="today-block__title" id="today-look">
-        Needs a look
-        <span className="muted today-block__count">{rows.length + more}</span>
-      </h2>
+    <section className="today-block" aria-labelledby="today-look" data-block="look" data-stale={asOf === undefined ? undefined : ''}>
+      <BlockHead id="today-look" title="Needs a look" count={rows.length + more} asOf={asOf} />
       <ul className="today-ready panel">
         {rows.map((row) => (
           <li key={row.id} className="today-row" data-failed>
@@ -210,10 +230,9 @@ export function ReadyBlock({ block, now, to, onOpen }: { block: Block<ReadyRow[]
 
 /** The crew as a swipeable row of tiles, for a phone: each opens that agent's thread. A wider screen has the crew in its sidebar and rail. While it loads it holds the height of one row of tiles (a tile and the strip's padding under it, 9.375 rem), so that the schedule below does not move when the crew arrives. */
 export function CrewBlock({ block, to }: { block: Block<CrewRow[]>; to: EmptyTarget }) {
-  const link = useLinkHealth();
-  const staleLine = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
+  const staleLine = useAsOf();
   return (
-    <TodayBlock id="crew" title="Crew" className="today-crew" block={block} empty={(rows) => (rows.length === 0 ? 'crew' : undefined)} room="9.375rem" to={to}>
+    <TodayBlock id="crew" title="Crew" className="today-crew" ownLines block={block} empty={(rows) => (rows.length === 0 ? 'crew' : undefined)} room="9.375rem" to={to}>
       {(rows) => (
         <ul className="today-tiles" aria-label="Crew">
           {rows.map((row) => (

@@ -3,6 +3,7 @@ import { useBackend, useGatewayStatus } from '../gateway.ts';
 import type { GatewayStatus } from '../gateway-connection.ts';
 import type { Reach } from '../offline.ts';
 import { clearBanner, setBanner } from './banners.ts';
+import { connectionBanner } from './connection-notice.ts';
 import { FIRST_LINK, nextLinkMemory, type LinkMemory } from './link-memory.ts';
 import { toast } from './toasts.ts';
 
@@ -71,49 +72,9 @@ export function useConnectionBanners(): void {
   useEffect(() => reportLink(healthy), [healthy]);
 
   useEffect(() => {
-    if (!online) {
-      setBanner({
-        id: 'connection',
-        priority: 0,
-        tone: 'neutral',
-        icon: 'wifi-off',
-        title: 'You are offline',
-        body: 'This page shows what was already loaded. Changes cannot be saved until you are back online.',
-      });
-    } else if (state === 'connected' || (state === 'reconnecting' && attempt === 0)) {
-      // Connected, or still making the first connection: nothing has been lost yet.
-      clearBanner('connection');
-    } else if (state === 'offline' && unreachable) {
-      setBanner({
-        id: 'connection',
-        priority: 0,
-        tone: 'warning',
-        icon: 'wifi-off',
-        title: 'Caduceus is not reachable',
-        body: `The server did not answer. This page keeps trying (attempt ${attempt}).`,
-      });
-    } else if (state === 'offline' && backendState === 'stopped') {
-      setBanner({
-        id: 'connection',
-        priority: 0,
-        tone: 'danger',
-        icon: 'alert',
-        title: 'The Hermes backend has stopped',
-        body: `Caduceus gave up restarting it. Check Health, or restart Caduceus on the Mac that runs it. This page keeps trying (attempt ${attempt}).`,
-        actions: [{ label: 'Open Health', to: '/observe/health' }],
-      });
-    } else if (state === 'offline') {
-      setBanner({ id: 'connection', priority: 0, tone: 'neutral', icon: 'wifi-off', title: 'Offline', body: reason });
-    } else {
-      setBanner({
-        id: 'connection',
-        priority: 1,
-        tone: 'warning',
-        icon: 'refresh',
-        title: backendState === 'starting' ? 'Hermes is starting' : 'Reconnecting to Hermes',
-        body: `Attempt ${attempt}. ${reason ?? ''} Pages that need Hermes fill in as soon as it is back.`,
-      });
-    }
-    return () => clearBanner('connection');
+    const banner = connectionBanner({ online, state, attempt, reason, backendState, unreachable });
+    if (banner) setBanner({ id: 'connection', ...banner });
+    else clearBanner('connection');
   }, [online, state, attempt, reason, backendState, unreachable]);
+  useEffect(() => () => clearBanner('connection'), []);
 }

@@ -5,6 +5,7 @@ import type { ConnectionState } from '../gateway-connection.ts';
 import { useConnection } from './connection.ts';
 import { useHeadingScrolledAway } from './heading-visibility.ts';
 import { AppLink, useRouteInfo } from './navigation.tsx';
+import { useBridgeShown } from './Nav.tsx';
 import { ProfileChip } from './ProfileSwitcher.tsx';
 import { useHelp } from './help-context.tsx';
 import { useRegistry } from './registry-context.tsx';
@@ -45,6 +46,7 @@ export function AppBar() {
   const { openPalette } = useShellActions();
   const { openHelp } = useHelp();
   const titleShown = useHeadingScrolledAway();
+  const bridgeShown = useBridgeShown();
 
   const shellModuleId = registry.shellModuleOf(info.moduleId, info.pathname);
   const module = shellModuleId ? registry.module(shellModuleId) : undefined;
@@ -80,7 +82,7 @@ export function AppBar() {
       </div>
       {/* A screen puts its own button here (a portal): the terminal mode toggle. */}
       <span id="appbar-slot" className="appbar__slot" />
-      <ProfileChip />
+      {!bridgeShown && <ProfileChip />}
       <ConnectionDot />
       <button type="button" className="btn btn--ghost btn--icon" aria-label="Search and commands" aria-haspopup="dialog" onClick={openPalette}>
         <Icon name="search" />

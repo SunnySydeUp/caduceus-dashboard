@@ -79,3 +79,11 @@
 /* While the link is down a tile's line is the time it was last true: quieter, and its sigil steps back. */
 .today-tile[data-stale] small { color: var(--cd-fg-subtle); font-style: italic; }
 .today-tile[data-stale] .sigil { opacity: 0.55; }
+
+/* While the link is down a block that shows data from before the drop says when it was last true, on its title row, and steps back like the crew's lines: its sigils and icons dim, its small
+   lines turn quiet and italic. It is marked, never hidden; its text keeps its colour. */
+.today-block__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--cd-space-1) var(--cd-space-3); min-inline-size: 0; }
+.today-block__asof { color: var(--cd-fg-subtle); font-size: var(--cd-text-sm); font-style: italic; }
+.today-block[data-stale] .sigil { opacity: 0.55; }
+.today-block[data-stale] .today-row__text small, .today-block[data-stale] .today-when__t small, .today-block[data-stale] .banner__body { font-style: italic; }
+.today-block[data-stale] .banner > svg.i { opacity: 0.55; }

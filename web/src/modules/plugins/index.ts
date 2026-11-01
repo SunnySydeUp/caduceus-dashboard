@@ -11,6 +11,8 @@ export const pluginsModule: AppModule = {
   icon: 'puzzle',
   desk: 'control',
   group: 'system',
+  // Plugins live in the Hermes home, which every agent shares (information architecture §6).
+  allProfiles: true,
   path: '/system/plugins',
   order: 3,
   summary: 'Hermes plugins: turn them on or off, install from git or the catalogue, update and remove',

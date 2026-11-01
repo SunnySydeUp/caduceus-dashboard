@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { quietIds, shownBanners, type Banner } from '../src/shell/banners.ts';
+import { isAlert, quietIds, shownBanners, type Banner } from '../src/shell/banners.ts';
 
 // A banner that is news and not a fault (an update is available) arrives after the page has painted and must not push it down: it waits for the next page.
 const banner = (id: string, quiet?: boolean): Banner => ({ id, priority: 1, tone: 'info', icon: 'download', title: id, ...(quiet ? { quiet } : {}) });
@@ -41,5 +41,17 @@ describe('banners that stay away from a page', () => {
 
   test('a banner with no such paths shows everywhere', () => {
     expect(shownBanners([banner('offline')], [], '/chat/s1').map((shown) => shown.id)).toEqual(['offline']);
+  });
+});
+
+describe('which banners are alerts', () => {
+  test('a fault is announced: a warning, a danger, and the connection whatever its tone', () => {
+    expect(isAlert({ ...banner('read-only'), tone: 'warning' })).toBe(true);
+    expect(isAlert({ ...banner('backend'), tone: 'danger' })).toBe(true);
+    expect(isAlert({ ...banner('connection'), tone: 'neutral' })).toBe(true);
+  });
+
+  test('news is not', () => {
+    expect(isAlert(banner('update-available:hermes', true))).toBe(false);
   });
 });

@@ -22,6 +22,8 @@ export const gatewayModule: AppModule = {
   icon: 'broadcast',
   desk: 'control',
   group: 'connect',
+  // The page lists every profile's gateway: the tab's agent does not filter it (information architecture §6).
+  allProfiles: true,
   path: '/connect/gateway',
   key: 'n',
   order: 1,

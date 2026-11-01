@@ -12,6 +12,8 @@ export const profilesModule: AppModule = {
   icon: 'agents',
   desk: 'control',
   group: 'agents',
+  // The page lists every profile, so the tab's agent does not filter it (information architecture §6).
+  allProfiles: true,
   path: '/agents/profiles',
   key: 'p',
   order: 1,
