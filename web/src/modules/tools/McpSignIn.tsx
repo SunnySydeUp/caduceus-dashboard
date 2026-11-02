@@ -123,7 +123,7 @@ export function McpSignIn({ server, profile, flow: first, onRetry, onFinished, o
             <span className="banner__content">The sign-in did not finish{flow.error ? `: ${flow.error}` : '.'}</span>
             <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
               <Icon name="refresh" />
-              Try again
+              Retry
             </button>
           </div>
         )}

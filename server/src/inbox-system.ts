@@ -20,7 +20,7 @@ const RESTART_GATEWAY: InboxAction = {
   primary: true,
 };
 
-/** Health's Repairs as notices. A Repair that is only for information is FYI, the rest are failures. Pure. */
+/** Health's Repairs as notices. A Repair that is only for information is FYI, the rest need a look: a warning is marked as one, a critical Repair is a failure. Pure. */
 export function repairNotices(repairs: readonly Repair[]): NoticeDraft[] {
   return repairs.map((repair) => ({
     id: `health:${repair.id}`,
@@ -33,6 +33,7 @@ export function repairNotices(repairs: readonly Repair[]): NoticeDraft[] {
     detail: repair.cause,
     actions: repair.id === 'gateway-unresponsive' ? [RESTART_GATEWAY] : [],
     link: repair.link ?? HEALTH_LINK,
+    ...(repair.severity === 'warning' ? { warning: true as const } : {}),
   }));
 }
 

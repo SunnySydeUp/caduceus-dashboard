@@ -200,11 +200,15 @@ export interface LookRow {
   at: number;
   /** Where it opens: the task or the job, else Notices. */
   to: string;
+  /** It needs a look but has not failed (`InboxNotice.warning`): drawn in the warning tone. */
+  warning?: true;
 }
 
-/** The failed work and jobs (a task that gave up, a run that stopped, a routine that failed), newest first. A decision or a piece of news is not a failure. */
+/** The failed work and jobs (a task that gave up, a run that stopped, a routine that failed) and Health's warnings, newest first. A decision or a piece of news is not one. */
 export function needsALook(items: readonly InboxItem[]): { rows: LookRow[]; more: number } {
-  const failures = items.flatMap((item): LookRow[] => (item.kind === 'notice' && item.group === 'failed' ? [{ id: item.id, title: item.title, line: item.detail, profile: item.profile, at: item.at, to: item.link?.to ?? '/notices' }] : []));
+  const failures = items.flatMap((item): LookRow[] =>
+    item.kind === 'notice' && item.group === 'failed' ? [{ id: item.id, title: item.title, line: item.detail, profile: item.profile, at: item.at, to: item.link?.to ?? '/notices', ...(item.warning ? { warning: true as const } : {}) }] : [],
+  );
   failures.sort((a, b) => b.at - a.at);
   return { rows: failures.slice(0, LOOK_SHOWN), more: Math.max(0, failures.length - LOOK_SHOWN) };
 }

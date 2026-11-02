@@ -161,7 +161,7 @@ export function ConfigYaml() {
             <p>The config file comes from Hermes, which is not reachable right now.</p>
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void refresh()}>
-            Try again
+            Retry
           </button>
         </div>
       )}

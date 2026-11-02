@@ -244,7 +244,7 @@ function BuilderForm({ data, initial, job, script, texts }: FormProps) {
               <Icon name="alert" />
               <span className="banner__content">Hermes did not answer, so the agents are not known yet.</span>
               <button type="button" className="btn btn--secondary btn--sm" onClick={data.reload}>
-                Try again
+                Retry
               </button>
             </div>
           )}

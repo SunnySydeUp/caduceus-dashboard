@@ -162,7 +162,7 @@ export function SignInSheet({ provider, code: first, profile, onFinished, onClos
             <span className="banner__content">{end.message ?? 'The sign-in did not finish.'}</span>
             <WriteButton type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={() => void retry()}>
               <Icon name="refresh" small />
-              Try again
+              Retry
             </WriteButton>
           </div>
         )}

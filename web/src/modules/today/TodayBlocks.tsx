@@ -1,13 +1,14 @@
 // The blocks of Today (M8 #03). Each is its own section: it loads on its own and, when what it reads does not answer, says so inside itself with a Retry while the
-// others carry on. An empty block says why and carries the action that fills it. The decisions are `DecisionCard`s, the Inbox's own answers, so they keep its tiers
-// and step-up.
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+// others carry on, unless the page says it once for several (`today-voice.ts`). An empty block says why and carries the action that fills it. The decisions are
+// `DecisionCard`s, the Inbox's own answers, so they keep its tiers and step-up.
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import type { InboxItem } from '@caduceus/contracts/inbox';
+import { CAUSE } from '../../failure-words.ts';
 import { Icon } from '../../icons.tsx';
 import { useLinkHealth, useOnline } from '../../shell/connection.ts';
-import { asOfWords, cannotCheckWords } from '../../shell/link-memory.ts';
+import { FailureDetails } from '../../shell/FailureDetails.tsx';
+import { asOfWords, clockWords } from '../../shell/link-memory.ts';
 import { Sigil } from '../../shell/Sigil.tsx';
-import { NetworkAction } from '../../shell/NetworkAction.tsx';
 import { AppLink } from '../../shell/navigation.tsx';
 import type { CrewRow } from '../../shell/nav-order.ts';
 import { isReading, STILL_READING_WORDS, type ReadStage } from '../../read-ladder.ts';
@@ -19,6 +20,7 @@ import { DecisionCard, Mark } from './DecisionCard.tsx';
 import { fold } from './fold.ts';
 import { foldAway, holdCard, releaseCard } from './fold-store.ts';
 import { type AwayRow, type AwayView, type EmptyBlock, type ReadyRow, type ScheduleView, EMPTY, needsALook, scheduleEmptyText } from './today-model.ts';
+import { SILENT, titleList, type BlockReport, type TodayVoice, type VoiceStore } from './today-voice.ts';
 
 /** Where an empty block's action leads: the address of the module it names, which the screen reads from the registry. */
 export type EmptyTarget = (empty: EmptyBlock) => string;
@@ -50,15 +52,16 @@ export function BlockHead({ id, title, count, asOf, slow }: { id: string; title:
   );
 }
 
-function EmptyState({ which, to, note, unsure }: { which: EmptyBlock; to: EmptyTarget; note?: string; unsure?: boolean }) {
+function EmptyState({ which, to, note, unsure, checkedAt }: { which: EmptyBlock; to: EmptyTarget; note?: string; unsure?: boolean; checkedAt: number | undefined }) {
   const { text, action } = EMPTY[which];
-  // While the link is down, or a read that bears on this block has failed, an empty block cannot tell "nothing is waiting" from "I cannot look": it says it cannot check (and, for
-  // the link, since when).
+  // A read that bears on this block has failed: an empty block cannot tell "nothing is waiting" from "I cannot look", so it says it cannot check. While the link is down it says
+  // what it found when it last answered, and when ("Nothing here as of 10:04."): that is true, where "right now" would not be.
   const link = useLinkHealth();
   const blind = !link.healthy || unsure;
+  const words = unsure || (!link.healthy && checkedAt === undefined) ? 'Can’t check right now.' : link.healthy || checkedAt === undefined ? (note ?? text) : `Nothing here as of ${clockWords(checkedAt, Date.now())}.`;
   return (
     <div className="today-empty panel" data-stale={blind ? '' : undefined}>
-      <p className="subtle">{link.healthy ? (unsure ? 'Can’t check right now.' : (note ?? text)) : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
+      <p className="subtle">{words}</p>
       {/* Plain navigation: it stays live offline, because reading mode still lets the owner move around the app (only actions that need the network are switched off). */}
       <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
         {action.label}
@@ -67,21 +70,16 @@ function EmptyState({ which, to, note, unsure }: { which: EmptyBlock; to: EmptyT
   );
 }
 
-/**
- * What a block says while the device is offline and it has nothing from before to show: one quiet line, in the voice of the empty blocks ("Can’t check right now. Last checked at
- * 10:38."). The banner says why; the block does not say it again, and shows no failure.
- */
-function CannotCheck({ retry }: { retry(): void }) {
-  const link = useLinkHealth();
-  return (
-    <div className="today-empty panel" data-stale="">
-      <p className="subtle">{cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
-      <NetworkAction className="btn btn--secondary btn--sm" label="Retry" onClick={retry}>
-        <Icon name="refresh" small />
-        Retry
-      </NetworkAction>
-    </div>
-  );
+/** The page's voice for its blocks (`today-voice.ts`): Today provides it, and each block reports what it cannot show to it. */
+export const TodayVoiceContext = createContext<VoiceStore | undefined>(undefined);
+
+const unsubscribed = () => () => {};
+const silentVoice = () => SILENT;
+
+/** What the page says for its blocks, and whether a block is spoken for. */
+export function useTodayVoice(): TodayVoice {
+  const store = useContext(TodayVoiceContext);
+  return useSyncExternalStore(store?.subscribe ?? unsubscribed, store?.get ?? silentVoice);
 }
 
 interface BlockProps<T> {
@@ -104,6 +102,8 @@ interface BlockProps<T> {
   unsure?: boolean;
   /** The block's rows each say when they were last true while the link is down (the crew's lines), so its title does not say it again. */
   ownLines?: boolean;
+  /** The block's data is a live stream, true until the link dropped (the decisions): it is "as of" the drop. Any other block is as of its last answer. */
+  live?: boolean;
   /** The step of the read ladder to show while the block loads, when something other than the block's own wait decides it (Needs you waits for two reads). */
   stage?: ReadStage;
   children(data: T): ReactNode;
@@ -123,13 +123,17 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
   );
 }
 
-/** One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its usual answer takes. */
-export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, unsure, stage: given, children }: BlockProps<T>) {
-  // While the device is offline a block is a reading mode: it keeps what it last showed (marked "As of"), or says it cannot check; it never shows a failure, because the banner is the
-  // one voice. A read that failed only because the device had no network is read again as soon as the network is back.
+/**
+ * One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its
+ * usual answer takes. What it cannot show it reports to the page's voice (`today-voice.ts`): when the page says it for several blocks at once, the block does not say it again.
+ */
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, live, unsure, stage: given, children }: BlockProps<T>) {
+  // While the device is offline a block is a reading mode: it keeps what it last showed (marked "As of"), or, with nothing to show, steps out of the way: the page lists what is not
+  // loaded, once. It never shows a failure, because the banner is the one voice. A read that failed only because the device had no network is read again when the network is back.
   const online = useOnline();
-  const last = useRef<{ data: T }>(undefined);
-  if (block.state.status === 'ready') last.current = { data: block.state.data };
+  const link = useLinkHealth();
+  const last = useRef<{ data: T; at: number }>(undefined);
+  if (block.state.status === 'ready' && last.current?.data !== block.state.data) last.current = { data: block.state.data, at: Date.now() };
   const offline = !online;
   const kept = offline && block.state.status !== 'ready' ? last.current : undefined;
   const state: Block<T>['state'] = kept ? { status: 'ready', data: kept.data } : block.state;
@@ -141,9 +145,11 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
     wasOnline.current = online;
   }, [online, reload]);
   const which = state.status === 'ready' ? empty(state.data) : undefined;
+  // When what it shows was last true: a live stream until the link dropped, anything else when it last answered. Shown only while the link is down.
+  const checkedAt = live ? link.lastHealthyAt : last.current?.at;
+  const asOf = link.healthy ? undefined : asOfWords(checkedAt, Date.now());
   // What it shows (its rows, or its error) is from before the link dropped: it is marked, never hidden. A block still loading shows nothing of the kind, an empty one already says
   // it cannot check (`EmptyState`), and the crew says it on each of its own lines.
-  const asOf = useAsOf();
   const stale = state.status !== 'loading' && !which && asOf !== undefined && !silent;
   // A read on its way climbs the one ladder (`read-ladder.ts`): a skeleton; "Still reading Hermes…" at the top of the block once the wait is long; and only once it has
   // passed the longer bound does the block say it could not be read, with a Retry. A read that really failed says so at once. A Retry that is on its way says so on the button,
@@ -161,10 +167,19 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
   const loading = state.status === 'loading' && !silent;
   const slow = loading && stage === 'still-reading';
   const failed = !silent && (state.status === 'error' || (state.status === 'loading' && stage === 'failed'));
+  // A failure asking again cannot help ("Hermes doesn't offer this yet") is this block's own: it is never folded into the page's line.
+  const unavailable = state.status === 'error' && state.next !== undefined ? state : undefined;
+  const cause = state.status === 'error' ? state.message : CAUSE.hermesSilent;
+  const store = useContext(TodayVoiceContext);
+  const report: BlockReport | undefined = silent ? { title, kind: 'unloaded' } : slow ? { title, kind: 'slow' } : failed && !unavailable ? { title, kind: 'failed', cause, retry } : undefined;
+  useEffect(() => store?.report(id, report));
+  useEffect(() => () => store?.report(id, undefined), [store, id]);
+  const spoken = useTodayVoice().spokenFor.has(id);
+  // Offline with nothing to show: the page's line names this block, so the block keeps out of the way.
+  if (silent) return null;
   return (
     <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={loading} data-stale={stale ? '' : undefined}>
-      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow} />
-      {silent && <CannotCheck retry={retry} />}
+      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow && !spoken} />
       {loading && !failed && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
@@ -180,22 +195,22 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
               <HeldAnswer which={held} />
             </div>
           )}
-          {/* A failure asking again cannot help is not an alarm: it says the step in place of a Retry, in the quiet tone (Hermes has no answer for this read yet). */}
-          {state.status === 'error' && state.next !== undefined ? (
+          {unavailable ? (
+            // Not an alarm: the step in place of a Retry, in the quiet tone (Hermes has no answer for this read yet).
             <div className="banner" data-tone="info" role="status">
               <Icon name="info" />
               <span className="banner__content">
                 <span className="banner__title">{title} isn’t available</span>
                 <span className="banner__body">
-                  {state.message}. {state.next}
+                  {unavailable.message}. {unavailable.next}
                 </span>
-                {state.detail !== undefined && (
-                  <details className="today-block__details">
-                    <summary>Details</summary>
-                    <code>{state.detail}</code>
-                  </details>
-                )}
+                <FailureDetails detail={unavailable.detail} />
               </span>
+            </div>
+          ) : spoken ? (
+            // The page's line says the cause and carries the one Retry: the block only says it has nothing to show.
+            <div className="today-empty panel" data-stale="">
+              <p className="subtle">Can’t check right now.</p>
             </div>
           ) : (
             <div className="banner" data-tone="danger" role="alert">
@@ -203,12 +218,7 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
               <span className="banner__content">
                 <span className="banner__title">{title} couldn’t be read</span>
                 <span className="banner__body">{state.status === 'error' ? state.message : 'Hermes hasn’t answered yet.'}</span>
-                {state.status === 'error' && state.detail !== undefined && (
-                  <details className="today-block__details">
-                    <summary>Details</summary>
-                    <code>{state.detail}</code>
-                  </details>
-                )}
+                {state.status === 'error' && <FailureDetails detail={state.detail} />}
               </span>
               <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
                 <Icon name="refresh" small />
@@ -218,8 +228,51 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
           )}
         </div>
       )}
-      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure} /> : children(state.data))}
+      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure} checkedAt={checkedAt} /> : children(state.data))}
     </section>
+  );
+}
+
+/**
+ * The page's one line for its blocks (`today-voice.ts`), at the top of Today: offline, which blocks are not loaded; a cause several blocks failed with, with one Retry and a way to
+ * Health; and that Hermes is still being read, when several blocks wait at once.
+ */
+export function TodayVoiceLine({ health }: { health: string | undefined }) {
+  const { lines } = useTodayVoice();
+  if (lines.length === 0) return null;
+  return (
+    <div className="today-voice">
+      {lines.map((line) =>
+        line.kind === 'unloaded' ? (
+          <p key="unloaded" className="today-voice__line subtle" role="status">
+            Today shows what was loaded. {titleList(line.titles)} {line.titles.length === 1 ? 'loads' : 'load'} when you are back online.
+          </p>
+        ) : line.kind === 'slow' ? (
+          <p key="slow" className="today-voice__line subtle" role="status">
+            {STILL_READING_WORDS} {titleList(line.titles)} will show when it answers.
+          </p>
+        ) : (
+          <div key="failed" className="banner" data-tone="danger" role="alert">
+            <Icon name="failed" />
+            <span className="banner__content">
+              <span className="banner__title">{line.cause}</span>
+              <span className="banner__body">Today couldn’t read {titleList(line.titles)}.</span>
+            </span>
+            <span className="today-voice__acts">
+              <button type="button" className="btn btn--secondary btn--sm" onClick={line.retry}>
+                <Icon name="refresh" small />
+                Retry
+              </button>
+              {health !== undefined && (
+                <AppLink className="btn btn--ghost btn--sm" to={health}>
+                  Open Health
+                </AppLink>
+              )}
+            </span>
+          </div>
+        ),
+      )}
+    </div>
   );
 }
 
@@ -235,7 +288,7 @@ export function NeedsYouBlock({ block, now, to, unsure, stage }: { block: Block<
     else foldAway(item.id);
   };
   return (
-    <TodayBlock id="need" title="Needs you" count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to} unsure={unsure} stage={stage}>
+    <TodayBlock id="need" title="Needs you" live count={block.state.status === 'ready' ? block.state.data.length : undefined} block={block} empty={(items) => (items.length === 0 ? 'needs' : undefined)} held="needs" to={to} unsure={unsure} stage={stage}>
       {(items) => (
         <ul className="today-cards">
           {items.map((item, at) => (
@@ -247,21 +300,37 @@ export function NeedsYouBlock({ block, now, to, unsure, stage }: { block: Block<
   );
 }
 
-/** Failed work and jobs (a task that gave up, a routine that failed, something Health flagged): a short list, each row leading to where it is dealt with. Nothing failed, nothing shown. */
+/**
+ * Failed work and jobs (a task that gave up, a routine that failed) and what Health says needs a look: a short list, each row leading to where it is dealt with. Nothing, nothing
+ * shown. The line is the cause and what happens next, so it is never cut; the time is on the title row. A warning is drawn in the warning tone, a failure in danger red; a row
+ * that belongs to no agent (Health's) leads with its tone's glyph, not an empty sigil.
+ */
 export function LookBlock({ items, now }: { items: readonly InboxItem[]; now: number }) {
   const { rows, more } = needsALook(items);
   const asOf = useAsOf();
   if (rows.length === 0) return null;
   return (
-    <section className="today-block" aria-labelledby="today-look" data-block="look" data-stale={asOf === undefined ? undefined : ''}>
+    <section className="today-block today-look" aria-labelledby="today-look" data-block="look" data-stale={asOf === undefined ? undefined : ''}>
       <BlockHead id="today-look" title="Needs a look" count={rows.length + more} asOf={asOf} />
       <ul className="today-ready panel">
         {rows.map((row) => (
-          <li key={row.id} className="today-row" data-failed>
-            <Mark profile={row.profile} size="sm" state="blocked" />
+          <li key={row.id} className="today-row" data-failed={row.warning ? undefined : ''}>
+            {row.profile === undefined ? (
+              <span className="today-look__glyph" data-tone={row.warning ? 'warning' : 'danger'} aria-hidden="true">
+                <Icon name={row.warning ? 'alert' : 'failed'} small />
+              </span>
+            ) : (
+              <Mark profile={row.profile} size="sm" state="blocked" />
+            )}
             <span className="today-row__text">
-              <b>{row.title}</b>
-              <small>{row.line ? `${row.line} · ${ageWords(row.at, now)}` : ageWords(row.at, now)}</small>
+              <span className="today-row__head">
+                <b>
+                  <span className="sr-only">{row.warning ? 'Warning: ' : 'Failed: '}</span>
+                  {row.title}
+                </b>
+                <time dateTime={new Date(row.at).toISOString()}>{ageWords(row.at, now)}</time>
+              </span>
+              {row.line && <small>{row.line}</small>}
             </span>
             <AppLink className="btn btn--secondary btn--sm" to={row.to} aria-label={`Open ${row.title}`}>
               Open
@@ -303,11 +372,15 @@ export function ReadyBlock({ block, now, to, onOpen }: { block: Block<ReadyRow[]
   );
 }
 
-/** The crew as a swipeable row of tiles, for a phone: each opens that agent's thread. A wider screen has the crew in its sidebar and rail. While it loads it holds the height of one row of tiles (a tile and the strip's padding under it, 9.375 rem), so that the schedule below does not move when the crew arrives. */
+/**
+ * The crew as a swipeable row of tiles, for a phone: each opens that agent's thread. A wider screen has the crew in its sidebar and rail. While it loads it holds the height of one
+ * row of tiles (a tile and the strip's padding under it, 9.375 rem), so that the schedule below does not move when the crew arrives. While the link is down a tile keeps what it
+ * knew, with when ("Waiting on you · As of 9:57"); one whose state was never known says only that it cannot check, with no time.
+ */
 export function CrewBlock({ block, to }: { block: Block<CrewRow[]>; to: EmptyTarget }) {
   const staleLine = useAsOf();
   return (
-    <TodayBlock id="crew" title="Crew" className="today-crew" ownLines block={block} empty={(rows) => (rows.length === 0 ? 'crew' : undefined)} room="9.375rem" to={to}>
+    <TodayBlock id="crew" title="Crew" className="today-crew" live ownLines block={block} empty={(rows) => (rows.length === 0 ? 'crew' : undefined)} room="9.375rem" to={to}>
       {(rows) => (
         <ul className="today-tiles" aria-label="Crew">
           {rows.map((row) => (
@@ -317,7 +390,7 @@ export function CrewBlock({ block, to }: { block: Block<CrewRow[]>; to: EmptyTar
                 <span className="today-tile__text">
                   <b>{row.profile}</b>
                   <span className="sr-only">: {row.stateLabel}. </span>
-                  <CrewLine row={row} text={staleLine} />
+                  <CrewLine row={row} text={staleLine === undefined || row.blind ? undefined : `${row.line} · ${staleLine}`} />
                 </span>
               </AppLink>
             </li>

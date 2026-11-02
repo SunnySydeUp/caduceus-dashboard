@@ -25,7 +25,7 @@ function Waiting({ reading, what }: { reading: Reading<unknown>; what: string })
         <Icon name="alert" />
         <span className="banner__content">Hermes did not give {what}: {reading.error}</span>
         <button type="button" className="btn btn--secondary btn--sm" onClick={reading.reload}>
-          Try again
+          Retry
         </button>
       </div>
     );

@@ -13,19 +13,28 @@ export interface ConnectionFacts {
   backendState: string | undefined;
   /** Caduceus did not answer the last diagnosis. */
   unreachable: boolean;
+  /**
+   * The device has just come back online and the first redial since has not failed yet. What the gateway and the backend diagnosis say until then was learned while there
+   * was no network, so it is not news about the Mac or about Hermes (`useConnectionBanners`).
+   */
+  redialing: boolean;
 }
 
 /**
  * The connection banner the facts call for, or nothing while the link is healthy (connected, or still making the first connection, when nothing has been lost).
  * One voice for being cut off: while the device has no network the banner says "You are offline" and nothing else, for as long as that lasts; the server's own words
- * ("Can’t reach your Mac") come only once the device is online and the server still does not answer. `stripTitle` is what the phone's one-line strip says in front of "since" and
+ * ("Can’t reach your Mac") come only once the device is online and the server still does not answer. While the first redial after the network came back is out, the banner says
+ * "Reconnecting to Hermes": the old "can’t reach" was learned without a network. `stripTitle` is what the phone's one-line strip says in front of "since" and
  * the time ("Offline since 11:58"), short enough to leave the time whole at 320 px.
  */
-export function connectionBanner({ online, state, attempt, reason, backendState, unreachable }: ConnectionFacts): Omit<Banner, 'id'> | undefined {
+export function connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing }: ConnectionFacts): Omit<Banner, 'id'> | undefined {
   if (!online) {
     return { priority: 0, tone: 'neutral', icon: 'wifi-off', title: CAUSE.offline, stripTitle: 'Offline', body: 'This page shows what was already loaded. Changes cannot be saved until you are back online.' };
   }
   if (state === 'connected' || (state === 'reconnecting' && attempt === 0)) return undefined;
+  if (redialing) {
+    return { priority: 1, tone: 'warning', icon: 'refresh', title: 'Reconnecting to Hermes', body: 'This device is back online. Pages that need Hermes fill in as soon as it is back.' };
+  }
   if (state === 'offline' && unreachable) {
     return { priority: 0, tone: 'warning', icon: 'wifi-off', title: CAUSE.mac, stripTitle: 'Can’t reach Mac', body: `Caduceus on the Mac did not answer. ${MAC_CHECK} This page keeps trying (attempt ${attempt}).` };
   }

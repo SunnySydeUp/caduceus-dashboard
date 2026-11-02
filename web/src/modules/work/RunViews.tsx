@@ -123,7 +123,7 @@ export function RawView({ run }: { run: Pick<RunDetail, 'root' | 'board' | 'time
         <Icon name="alert" />
         <span className="banner__content">The tasks could not be read: {raw.error}</span>
         <button type="button" className="btn btn--secondary btn--sm" onClick={raw.retry}>
-          Try again
+          Retry
         </button>
       </div>
     );

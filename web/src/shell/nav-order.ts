@@ -37,6 +37,8 @@ export interface CrewRow {
   line: string;
   /** A read the crew is made of is still on its way: the line is empty (draw a skeleton) or "Still reading Hermes…", and the state is not claimed (`CrewMember.pending`). */
   pending?: CrewMember['pending'];
+  /** Nothing is known of this agent because a read the crew is made of failed (`CrewMember.blind`): the "As of" words of a down link say nothing about it. */
+  blind?: CrewMember['blind'];
   /** Since when the state holds (ms since the epoch); `undefined` for an idle agent. */
   since: number | undefined;
   /** Talk, scoped to this agent's profile. */
@@ -88,6 +90,7 @@ export function deskNavigation<Screen>(registry: DeskSource<Screen>, crew: reado
       stateLabel: crewStateWords(member),
       line: member.line,
       ...(member.pending ? { pending: member.pending } : {}),
+      ...(member.blind ? { blind: member.blind } : {}),
       since: member.since,
       path: withProfile(talk?.path ?? '/', member.profile),
       ...(talk ? { newChat: withProfile(`${talk.path}/new`, member.profile) } : {}),

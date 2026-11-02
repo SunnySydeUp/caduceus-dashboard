@@ -197,7 +197,7 @@ export function ForeignSessions({ profile, initial, onClose, onImported, onReope
               </div>
               <button type="button" className="btn btn--secondary btn--sm" onClick={listing.rows.length === 0 ? retry : more}>
                 <Icon name="refresh" small />
-                Try again
+                Retry
               </button>
             </div>
           )}

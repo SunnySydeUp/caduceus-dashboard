@@ -141,7 +141,7 @@ export function Projects() {
           <Icon name="alert" />
           <span className="banner__content">Hermes did not give its projects: {tree.error}</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={tree.reload}>
-            Try again
+            Retry
           </button>
         </div>
       )}

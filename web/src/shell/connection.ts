@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useBackend, useGatewayStatus } from '../gateway.ts';
 import type { GatewayStatus } from '../gateway-connection.ts';
 import type { Reach } from '../offline.ts';
@@ -60,21 +60,35 @@ export function useConnection(): GatewayStatus {
   return online ? status : { state: 'offline', attempt: status.attempt, reason: 'This device has no network connection.' };
 }
 
+/**
+ * Whether the device has just come back online and the redial that follows has not failed yet. While the network was down the gateway and the backend diagnosis went to
+ * "offline" and "Caduceus is not reachable" because nothing could get through; that is stale the moment the network is back, and it stays until a redial with the
+ * network up fails (the gateway counts a new attempt) or connects. It is settled while rendering, so the stale words never reach the screen for a frame.
+ */
+function useRedialing(online: boolean, state: GatewayStatus['state'], attempt: number): boolean {
+  const [seen, setSeen] = useState<{ online: boolean; attemptAtReturn: number | undefined }>({ online, attemptAtReturn: undefined });
+  if (seen.online !== online) setSeen({ online, attemptAtReturn: online ? attempt : undefined });
+  // A connection ends the wait: the next drop counts its attempts from 0 again.
+  else if (state === 'connected' && seen.attemptAtReturn !== undefined) setSeen({ online, attemptAtReturn: undefined });
+  return online && seen.attemptAtReturn !== undefined && attempt <= seen.attemptAtReturn;
+}
+
 /** Raises and clears the connection banners while the shell is mounted, and keeps the link's memory (`useLinkHealth`). */
 export function useConnectionBanners(): void {
   const online = useOnline();
   const { state, attempt, reason } = useGatewayStatus();
   const { status, unreachable } = useBackend();
   const backendState = status?.state;
+  const redialing = useRedialing(online, state, attempt);
   // Healthy is the banner's own test: connected, or still making the first connection (nothing has been lost yet).
   const healthy = online && (state === 'connected' || (state === 'reconnecting' && attempt === 0));
 
   useEffect(() => reportLink(healthy), [healthy]);
 
   useEffect(() => {
-    const banner = connectionBanner({ online, state, attempt, reason, backendState, unreachable });
+    const banner = connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing });
     if (banner) setBanner({ id: 'connection', ...banner });
     else clearBanner('connection');
-  }, [online, state, attempt, reason, backendState, unreachable]);
+  }, [online, state, attempt, reason, backendState, unreachable, redialing]);
   useEffect(() => () => clearBanner('connection'), []);
 }

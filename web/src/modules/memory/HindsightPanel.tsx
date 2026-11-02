@@ -118,7 +118,7 @@ export function HindsightPanel({ profile }: { profile: string }) {
           <div className="mm-actions">
             <button type="button" className="btn btn--secondary" onClick={() => void view.reload()}>
               <Icon name="refresh" />
-              Try again
+              Retry
             </button>
             <AppLink className="btn btn--secondary" to="/agents/memory">
               Provider settings

@@ -652,7 +652,7 @@ export function PlaybookDetail() {
           <Icon name="alert" />
           <span className="banner__content">The playbook could not be read: {state.error}</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={state.reload}>
-            Try again
+            Retry
           </button>
         </div>
       )}

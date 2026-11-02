@@ -466,7 +466,7 @@ function Failed({ title, what, onRetry }: { title: string; what: string; onRetry
         <Icon name="alert" />
         <span className="banner__content">Hermes did not answer, so {what}.</span>
         <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
-          Try again
+          Retry
         </button>
       </div>
     </div>

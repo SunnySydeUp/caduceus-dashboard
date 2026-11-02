@@ -291,7 +291,7 @@ function RepairNotice({ stale, onRetry }: { stale: boolean; onRetry(): void }) {
       </div>
       <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
         <Icon name="refresh" />
-        Try again
+        Retry
       </button>
     </div>
   );

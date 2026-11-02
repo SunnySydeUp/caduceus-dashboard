@@ -274,7 +274,7 @@ export function Config() {
             <p>The settings come from Hermes, which is not reachable right now.</p>
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void reload()}>
-            Try again
+            Retry
           </button>
         </div>
       )}

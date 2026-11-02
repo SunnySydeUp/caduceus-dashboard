@@ -41,7 +41,7 @@ a.btn { text-decoration: none; }
 .status__detail { font-size: var(--cd-text-xs); }
 
 /* ---- Skip link ---- */
-.skip-link { position: fixed; z-index: var(--cd-z-system); inset-block-start: calc(var(--cd-safe-top) + var(--cd-space-2)); inset-inline-start: calc(var(--cd-safe-left) + var(--cd-space-2)); padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-accent); color: var(--cd-on-accent); font-weight: var(--cd-weight-semibold); text-decoration: none; transform: translateY(-300%); }
+.skip-link { position: fixed; z-index: var(--cd-z-system); inset-block-start: calc(var(--cd-safe-top) + var(--cd-space-2)); inset-inline-start: calc(var(--cd-safe-left) + var(--cd-space-2)); display: inline-flex; align-items: center; min-block-size: var(--cd-target-min); padding: var(--cd-space-2) var(--cd-space-3); border-radius: var(--cd-radius-md); background: var(--cd-accent); color: var(--cd-on-accent); font-weight: var(--cd-weight-semibold); text-decoration: none; transform: translateY(-300%); }
 .skip-link:not(:focus) { opacity: 0; }
 .skip-link:focus { transform: none; }
 
@@ -83,9 +83,10 @@ a.btn { text-decoration: none; }
 @media (hover: hover) { .crumbs a:hover { color: var(--cd-fg-default); text-decoration-color: currentcolor; } }
 
 /* ---- Floating dock (compact): a frosted pill above the page, 56 px tall. Only the current place shows its words; the others are an icon.
-   While the page scrolls down it shrinks and drops a little, and it comes back on scroll up; with the keyboard open it leaves. ---- */
+   While the page scrolls down it shrinks and drops a little, and it comes back on scroll up; with the keyboard open it leaves. It has one depth cue, the shadow (whose first
+   layer is a 1 px ring in both schemes), and no border of its own: a hairline plus a wide soft shadow is two cues for one edge. ---- */
 .tabbar { position: fixed; z-index: var(--cd-z-nav); inset-inline: 0; inset-block-end: calc(var(--cd-safe-bottom) + var(--cd-space-2)); inline-size: fit-content; max-inline-size: calc(100% - var(--cd-safe-left) - var(--cd-safe-right) - var(--cd-space-4)); margin-inline: auto;
-  box-sizing: border-box; block-size: var(--cd-tabbar-h); display: flex; align-items: center; gap: var(--cd-space-1); padding: calc((var(--cd-tabbar-h) - var(--cd-space-12) - 2px) / 2); border: 1px solid var(--cd-border-subtle); border-radius: var(--cd-radius-full);
+  box-sizing: border-box; block-size: var(--cd-tabbar-h); display: flex; align-items: center; gap: var(--cd-space-1); padding: calc((var(--cd-tabbar-h) - var(--cd-space-12)) / 2); border-radius: var(--cd-radius-full);
   background: color-mix(in srgb, var(--cd-bg-surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.6); box-shadow: var(--cd-shadow-overlay); transform-origin: 50% 100%;
   transition: scale var(--cd-dur-moderate) var(--cd-ease-spring), translate var(--cd-dur-moderate) var(--cd-ease-standard); }
 .app:not([data-size="compact"]) .tabbar, .app[data-size="compact"] .side { display: none; }
@@ -107,7 +108,7 @@ a.btn { text-decoration: none; }
 .nav-pill { position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; }
 .nav-pill--tabs { background: var(--cd-accent); }
 .nav-pill--side { background: var(--cd-bg-selected); border-radius: var(--cd-radius-md); }
-.nav-pill--crew { background: var(--cd-bg-selected); box-shadow: inset 0 0 0 1px var(--cd-border-strong); border-radius: var(--cd-radius-lg); }
+.nav-pill--crew { background: var(--cd-bg-selected); border-radius: var(--cd-radius-lg); }
 /* A place's icon takes a light fill while it is the current one; the stroke stays. */
 .nav-item > svg.i, .nav-item > .rail__icon > svg.i, .tab__icon > svg.i { fill: currentcolor; fill-opacity: 0; transition: fill-opacity var(--cd-dur-base) var(--cd-ease-standard); }
 .nav-item[aria-current="page"] > svg.i, .nav-item[aria-current="page"] > .rail__icon > svg.i, .tab[aria-current="page"] .tab__icon > svg.i { fill-opacity: 0.16; }
@@ -129,8 +130,14 @@ a.btn { text-decoration: none; }
    the places and the foot leave less than that (a window a few hundred px tall) the rail draws itself compact: see "A rail on a short window". */
 .rail__places { flex: none; display: flex; flex-direction: column; gap: var(--cd-space-1); }
 .rail__scroll { flex: 1 1 auto; min-block-size: 3.5rem; display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-1); margin: calc(var(--cd-space-1) * -1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  /* Rows rest on whole-row edges, so a short rail never parks on a row cut in half. The padding is the room above the first row (scroller 4 px + list margin 4 px + its 1 px rule + 8 px). */
+  scroll-snap-type: y mandatory; scroll-padding-block-start: calc(var(--cd-space-1) * 2 + 1px + var(--cd-space-2));
   -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
   mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
+.rail__scroll .crew__slot, .rail__scroll .rail__asof { scroll-snap-align: start; }
+/* "+3": how many agents are below the part of the crew the rail shows (`Rail`). A mark, not a control: it lies over the scroller's faded foot (pulled up by its own height and the
+   rail's gap), so it takes none of the crew's room, and lets every touch through to the rows. */
+.rail__more { flex: none; align-self: center; position: relative; z-index: 1; display: grid; place-items: center; block-size: 1.25rem; min-inline-size: 2rem; margin-block-start: calc(-1.25rem - var(--cd-space-1)); padding-inline: var(--cd-space-1-5); border-radius: var(--cd-radius-full); background: var(--cd-bg-inset); color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; pointer-events: none; }
 .rail > * { min-inline-size: 0; }
 .rail__toggle { align-self: center; flex: none; margin-block-end: var(--cd-space-1); }
 .rail__item { flex: none; flex-direction: column; justify-content: center; gap: var(--cd-space-1); min-block-size: 3.5rem; padding: var(--cd-space-1) 0; font-size: var(--cd-text-xs); font-weight: var(--cd-weight-medium); text-align: center; }
@@ -237,7 +244,7 @@ a.btn { text-decoration: none; }
 @media (max-height: 36rem) {
   .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); gap: 0; }
   .rail__places { gap: 0; }
-  .rail__scroll { min-block-size: 0; padding: 0; margin: 0; }
+  .rail__scroll { min-block-size: 0; padding: 0; margin: 0; scroll-padding-block-start: calc(var(--cd-space-1) + 1px); }
   .rail__toggle { margin-block-end: 0; }
   .rail__item, .scope--rail { flex-direction: row; min-block-size: max(2.75rem, var(--cd-target-min)); padding-block: 0; }
   .rail__icon { block-size: 2.25rem; }
@@ -254,7 +261,11 @@ a.btn { text-decoration: none; }
 .rail[data-hinting] .rail__icon > svg.i, .rail[data-hinting] .scope--rail .sigil, .rail[data-hinting] .rail__mate > .sigil { opacity: 0; }
 .rail[data-hinting] .rail__item .nav-label, .rail[data-hinting] .scope--rail .scope__name { inset: 50% 0 auto; inline-size: auto; block-size: auto; translate: 0 -50%; clip-path: none; overflow: hidden; text-overflow: ellipsis; text-align: center; padding-inline: var(--cd-space-0-5); font-size: var(--cd-text-xs); color: var(--cd-fg-default); }
 .fail-details { margin-block-start: var(--cd-space-1); }
-.fail-details summary { cursor: pointer; display: flex; align-items: center; min-block-size: var(--cd-target-min); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+/* The summary keeps a disclosure mark (display: flex drops the browser's own), so "Details" reads as something to open, not as a caption. */
+.fail-details summary { cursor: pointer; display: flex; align-items: center; gap: var(--cd-space-1); min-block-size: var(--cd-target-min); color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+.fail-details summary::before { content: "›"; display: inline-block; inline-size: 1ch; transition: rotate var(--cd-dur-fast) var(--cd-ease-standard); }
+.fail-details[open] summary::before { rotate: 90deg; }
+.fail-details summary::-webkit-details-marker { display: none; }
 .fail-details code { display: block; overflow-wrap: anywhere; font-size: var(--cd-text-sm); user-select: all; }
 .rail-tag { position: fixed; z-index: var(--cd-z-tooltip); translate: 0 -50%; pointer-events: none; box-shadow: var(--cd-shadow-popover); }
 /* A line that is not news steps back by colour, never by opacity (opacity pulled the 13 px lines under 4.5:1): the name goes to the muted text colour, the line to the subtle one, in italic. */
@@ -337,6 +348,8 @@ a.btn { text-decoration: none; }
 .banner-details { display: grid; gap: var(--cd-space-3); padding-block-end: var(--cd-space-2); }
 .banner-details__body { margin: 0; color: var(--cd-fg-muted); }
 .app[data-size="compact"] .banners[data-strip] .banners__list { padding-block: 0 var(--cd-space-1); }
+/* On Work the phone's sub-nav band sits right above the strip: a little canvas between them, inside the stack's own clip so it glides with the strip. The strip stays 40 px. */
+.app[data-size="compact"] .subnav ~ .banners[data-strip] .banners__list { padding-block-start: var(--cd-space-2); }
 .app[data-size="compact"] .banners[data-sticky] { position: sticky; inset-block-start: calc(var(--cd-appbar-h) + var(--cd-safe-top)); z-index: var(--cd-z-banner); background: var(--cd-bg-canvas); }
 
 /* ---- Page header + sections (shared by every screen) ---- */
@@ -555,8 +568,8 @@ html.has-overlay:has(.layer--palette) .toasts { inset-block-start: auto; inset-b
 .control__results { display: grid; gap: var(--cd-space-6); }
 /* From 1200 px the groups sit in two columns, so the list is not a narrow strip with two thirds of the screen empty. */
 @media (min-width: 75rem) { .control { max-inline-size: none; } .control__results { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } .control__results > .empty { grid-column: 1 / -1; } }
-/* A module's one-line summary keeps two lines, so the helpful part is not cut at the edge. */
-.control .list-row__sub { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+/* A module's summary wraps in full: it is the only thing that says what the row is for, so it is never cut at the edge. */
+.control .list-row__sub { white-space: normal; overflow: visible; }
 /* A list row that is a button (Help, Sign out) looks like the link rows. */
 button.list-row { inline-size: 100%; border: 0; background: transparent; font: inherit; text-align: start; cursor: pointer; }
 button.list-row:active { background: var(--cd-overlay-pressed); }

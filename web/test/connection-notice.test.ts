@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { connectionBanner, type ConnectionFacts } from '../src/shell/connection-notice.ts';
 
-const HEALTHY: ConnectionFacts = { online: true, state: 'connected', attempt: 0, reason: undefined, backendState: 'ready', unreachable: false };
+const HEALTHY: ConnectionFacts = { online: true, state: 'connected', attempt: 0, reason: undefined, backendState: 'ready', unreachable: false, redialing: false };
 const facts = (change: Partial<ConnectionFacts>): ConnectionFacts => ({ ...HEALTHY, ...change });
 
 describe('the connection banner', () => {
@@ -41,6 +41,16 @@ describe('the connection banner', () => {
 
   it('keeps the reconnecting words the browser check waits for', () => {
     expect(connectionBanner(facts({ state: 'reconnecting', attempt: 3, reason: 'The connection dropped.' }))?.title).toBe('Reconnecting to Hermes');
+  });
+
+  it('says "Reconnecting to Hermes", not "Can’t reach your Mac", while the first redial after the network came back is out', () => {
+    const stale = { state: 'offline', attempt: 7, unreachable: true, reason: 'Caduceus is not reachable.' } as const;
+    const banner = connectionBanner(facts({ ...stale, redialing: true }));
+    expect(banner?.title).toBe('Reconnecting to Hermes');
+    expect(banner?.body).not.toMatch(/attempt/i);
+    expect(connectionBanner(facts({ ...stale, redialing: false }))?.title).toBe('Can’t reach your Mac');
+    expect(connectionBanner(facts({ ...stale, online: false, redialing: true }))?.title).toBe('You are offline');
+    expect(connectionBanner(facts({ redialing: true }))).toBeUndefined();
   });
 
   it('gives the phone strip a short title that is never longer than the full one', () => {

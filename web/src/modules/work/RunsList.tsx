@@ -40,7 +40,7 @@ function Notice({ state, empty }: { state: Reading; empty: boolean }) {
         <Icon name="alert" />
         <span className="banner__content">The runs could not be read: {state.error}</span>
         <button type="button" className="btn btn--secondary btn--sm" onClick={state.reload}>
-          Try again
+          Retry
         </button>
       </div>
     );

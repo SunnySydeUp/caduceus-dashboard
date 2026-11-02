@@ -58,7 +58,7 @@ export function Workspaces() {
           <Icon name="alert" />
           <span className="banner__content">The workspaces could not be read: {error}</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={reload}>
-            Try again
+            Retry
           </button>
         </div>
       )}

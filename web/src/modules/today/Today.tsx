@@ -1,7 +1,8 @@
 // Today (M8 #03): what needs the owner, what is ready, the day's routines and what happened while they were away. Each block loads on its own and fails on its own
 // (`TodayBlocks.tsx`). The decisions come from the Inbox's live stream and keep its tiers, undo and step-up; the rest from Hermes's cron, the activity feed, the
 // crew and Caduceus's review state (`today-data.ts`).
-import { lazy, Suspense, useEffect, useMemo, useRef } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { CAUSE } from '../../failure-words.ts';
 import { Icon } from '../../icons.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { RollingNumber } from '../../shell/RollingNumber.tsx';
@@ -23,7 +24,8 @@ import { markOpened } from './ready-feed.ts';
 import { useVisibleDecisions } from './fold-store.ts';
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import { awayView, decisionsFor, emptyTarget, readyRows, scheduleDay, type AwayView, type EmptyBlock } from './today-model.ts';
-import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock } from './TodayBlocks.tsx';
+import { AwayBlock, CrewBlock, LookBlock, NeedsYouBlock, ReadyBlock, ScheduleBlock, TodayVoiceContext, TodayVoiceLine } from './TodayBlocks.tsx';
+import { VoiceStore } from './today-voice.ts';
 import './today.css';
 
 /** The first-run card (the setup guide's offer, and installing the app) is below the first screen and Today paints without it: its code is fetched once the page has settled. */
@@ -53,15 +55,15 @@ export function Today() {
   // review state above, and Hermes answers one thing at a time, so they are asked for once that has answered (or failed): the blocks hold their room meanwhile.
   const jobsAsked = ready.state.status !== 'loading';
   const jobs = useJobs(jobsAsked);
-  const firstLook = useRef(true);
+  // The stream's first answer (its items and its last finished run, arriving after the page asked) is not news: the read above already reflects it. Only a change after that is.
+  const seen = useRef<{ finished: number | undefined; items: number }>(undefined);
   const finished = feed.activity[0]?.seq;
   useEffect(() => {
-    if (firstLook.current) {
-      firstLook.current = false;
-      return;
-    }
-    ready.reload();
-  }, [finished, feed.items.length, ready.reload]);
+    if (feed.status !== 'live') return;
+    const before = seen.current;
+    seen.current = { finished, items: feed.items.length };
+    if (before && (before.finished !== finished || before.items !== feed.items.length)) ready.reload();
+  }, [feed.status, finished, feed.items.length, ready.reload]);
   useEffect(() => {
     const back = () => document.visibilityState === 'visible' && ready.reload();
     document.addEventListener('visibilitychange', back);
@@ -84,7 +86,7 @@ export function Today() {
     reload: () => jobs.reload(),
     // Held back until the review state above has answered (`useJobs` above): until then it is waiting, not reading, and must not be called slow.
     asked: jobsAsked,
-    state: jobs.jobs ? { status: 'ready', data: jobs.jobs } : jobs.failed ? { status: 'error', message: 'Hermes did not answer for its schedules.' } : { status: 'loading' },
+    state: jobs.jobs ? { status: 'ready', data: jobs.jobs } : jobs.failed ? { status: 'error', message: CAUSE.hermesSilent } : { status: 'loading' },
   };
   const schedule = mapBlock(jobsBlock, (list) => scheduleDay(list, now));
   // Away needs the visit (when the owner was last here), the jobs (what ran) and the Inbox's stream (what finished): it waits for all three and fails if one does.
@@ -105,7 +107,9 @@ export function Today() {
             : { status: 'loading' },
   };
   const rows = useMemo(() => deskNavigation(registry, crew).crew, [registry, crew]);
-  const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: 'Hermes did not answer for its agents.' } : { status: 'loading' } };
+  const crewBlock: Block<typeof rows> = { reload: reloadProfiles, state: hermes ? { status: 'ready', data: rows } : unavailable ? { status: 'error', message: CAUSE.hermesSilent } : { status: 'loading' } };
+  // The page's one voice for its blocks: they report what they cannot show, in this order, and the page says it once when several say the same (`today-voice.ts`).
+  const [voice] = useState(() => new VoiceStore(['need', 'ready', 'crew', 'day', 'away', 'reminders']));
 
   const to = (which: EmptyBlock) => emptyTarget(which, (module) => registry.module(module)?.path);
   // The pill counts what Needs you draws, so that it and the block's title agree while a card folds; the nav badge keeps the stream's count.
@@ -113,6 +117,7 @@ export function Today() {
   const waiting = visible.state.status === 'ready' ? visible.state.data.length : 0;
 
   return (
+    <TodayVoiceContext.Provider value={voice}>
     <div className="today">
       <PageHeader
         title="Today"
@@ -128,6 +133,7 @@ export function Today() {
           ) : undefined
         }
       />
+      <TodayVoiceLine health={registry.module('health')?.path} />
       <div className="today__grid">
         <div className="today__col">
           <NeedsYouBlock block={visible} now={now} to={to} unsure={known === 'unread'} stage={isPending(known) ? known : undefined} />
@@ -152,5 +158,6 @@ export function Today() {
         </Suspense>
       )}
     </div>
+    </TodayVoiceContext.Provider>
   );
 }

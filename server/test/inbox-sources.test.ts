@@ -113,6 +113,11 @@ describe('what Health says is wrong', () => {
     expect(repairNotices([repair({ severity: 'info' })])[0]?.group).toBe('fyi');
   });
 
+  test('a warning needs a look and says it is a warning; a critical Repair is a failure', () => {
+    expect(repairNotices([repair({ severity: 'warning' })])[0]).toMatchObject({ group: 'failed', warning: true });
+    expect(repairNotices([repair({ severity: 'critical' })])[0]).not.toHaveProperty('warning');
+  });
+
   test('an update waiting is for information, and nothing is said when Hermes is up to date or could not say', () => {
     expect(updateNotice({ update_available: true, behind: 12, current_version: '0.21.4' })).toMatchObject([{ id: 'update:hermes', group: 'fyi', category: 'system', stamp: '12', title: 'A Hermes update is available' }]);
     expect(updateNotice({ update_available: false, behind: 0 })).toEqual([]);

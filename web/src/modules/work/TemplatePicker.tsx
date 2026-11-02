@@ -59,7 +59,7 @@ export function TemplatePicker({ preselect, onStart }: TemplatePickerProps) {
           <Icon name="alert" />
           <span className="banner__content">The templates could not be read: {error}</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={reload}>
-            Try again
+            Retry
           </button>
         </div>
       )}

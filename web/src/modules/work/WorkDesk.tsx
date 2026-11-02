@@ -134,7 +134,7 @@ export function WorkDesk() {
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={retry}>
             <Icon name="refresh" />
-            Try again
+            Retry
           </button>
         </div>
       )}

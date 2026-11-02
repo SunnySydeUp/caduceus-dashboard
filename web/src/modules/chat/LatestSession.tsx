@@ -9,6 +9,7 @@ import { needsConnection } from '../../shell/link-memory.ts';
 import { AppLink, useAppNavigate } from '../../shell/navigation.tsx';
 import { PageHeader } from '../../shell/PageHeader.tsx';
 import { Sigil } from '../../shell/Sigil.tsx';
+import { useSizeClass } from '../../shell/use-size-class.ts';
 import { readHermes } from './read-hermes.ts';
 import { listPath, parseSessions, readSessionsView } from './sessions-model.ts';
 import { latestSession, TALK_SCOPE } from './talk-sessions.ts';
@@ -20,6 +21,7 @@ export function LatestSession({ profile }: { profile: string }) {
   const navigate = useAppNavigate();
   const [failure, setFailure] = useState<PlainFailure>();
   const online = useOnline();
+  const size = useSizeClass();
   useEffect(() => {
     setFailure(undefined);
     // Offline the list cannot be asked for: the page waits, and reads it when the device is back (the banner says why, once).
@@ -39,20 +41,23 @@ export function LatestSession({ profile }: { profile: string }) {
     // The router's navigate changes with the address; opening the agent's newest conversation happens once for each agent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, online]);
-  // The header is the real Talk header's shape (`TalkHeader`), in the same place: the crew row's sigil and name fly to it (`shell.css`, `desk-flight`) and the
-  // conversation's own header then takes its place without a jump.
+  // The list is a column from 600 px and a sheet on a phone, so only there is this pane the one place that can say the list could not be read.
+  const listBesideIt = size !== 'compact';
   return (
     <section className="chat__conversation" aria-label="Conversation">
       <div className="talk__header">
-        <PageHeader lead={<Sigil name={profile} size="md" />} title={profile} subtitle="Latest conversation" />
+        {/* While a conversation opens, the header is the real Talk header's shape (`TalkHeader`), in the same place: the crew row's sigil and name fly to it
+            (`shell.css`, `desk-flight`) and the conversation's own header then takes its place without a jump. When none opens there is no conversation header. */}
+        {failure !== undefined ? (
+          <PageHeader title="Talk" />
+        ) : (
+          <PageHeader lead={<Sigil name={profile} size="md" />} title={profile} subtitle="Latest conversation" />
+        )}
       </div>
       <div className="chat__none">
         {!online ? (
           <div className="empty" role="status">
-            <span className="empty__icon">
-              <Icon name="wifi-off" />
-            </span>
-            <h3>Waiting for a connection</h3>
+            <h2>Waiting for a connection</h2>
             <p>{profile}’s latest conversation opens by itself when you are back online.</p>
             <button type="button" className="btn btn--primary" disabled aria-label={needsConnection('Start a new chat')}>
               <Icon name="plus" />
@@ -65,12 +70,18 @@ export function LatestSession({ profile }: { profile: string }) {
           </p>
         ) : (
           <div className="empty">
-            <span className="empty__icon">
-              <Icon name="alert" />
-            </span>
-            <h3>{failure.message}</h3>
-            <p>{failure.next ?? `${profile}’s sessions could not be read.`}</p>
-            <FailureDetails detail={failure.detail} />
+            {listBesideIt ? (
+              <>
+                <h2>No conversation is open</h2>
+                <p>Start a new chat with {profile}.</p>
+              </>
+            ) : (
+              <>
+                <h2>{failure.message}</h2>
+                <p>{failure.next ?? `${profile}’s sessions could not be read.`}</p>
+                <FailureDetails detail={failure.detail} />
+              </>
+            )}
             <AppLink className="btn btn--primary" to="/chat/new">
               <Icon name="plus" />
               Start a new chat

@@ -103,7 +103,7 @@ export function RunPage() {
             <Icon name="alert" />
             <span className="banner__content">The run could not be read: {state.error}</span>
             <button type="button" className="btn btn--secondary btn--sm" onClick={state.reload}>
-              Try again
+              Retry
             </button>
           </div>
         )}

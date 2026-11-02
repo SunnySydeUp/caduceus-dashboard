@@ -98,6 +98,11 @@ export interface InboxNotice extends InboxItemCore {
   actions: InboxAction[];
   /** Where in Caduceus to look, when that is not one of the actions. */
   link: { label: string; to: string } | undefined;
+  /**
+   * A notice in the failed group that has not failed: something needs a look (a check that could not be made, a gateway that is not running). Drawn in the warning tone, not
+   * as a failure; absent for a failure.
+   */
+  warning?: true;
 }
 
 export type InboxItem = InboxApproval | InboxClarify | InboxNotice;

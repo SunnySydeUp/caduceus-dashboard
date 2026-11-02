@@ -9,7 +9,6 @@ import { Icon } from '../../icons.tsx';
 import { morph } from '../../motion.ts';
 import { useLinkHealth, useOnline } from '../../shell/connection.ts';
 import { NetworkAction } from '../../shell/NetworkAction.tsx';
-import { cannotCheckWords } from '../../shell/link-memory.ts';
 import { useBlock } from '../../use-block.ts';
 import { TodayBlock } from './TodayBlocks.tsx';
 import { agenda, dateKey, type DayCell, dayKey, monthCells, monthOf, overdueBefore, remindersOn, shiftDay, shiftMonth, timeWords, weekOf } from './reminders-model.ts';
@@ -219,8 +218,9 @@ function useHiddenTrouble(): [boolean, (hidden: boolean) => void] {
 }
 
 /**
- * Reminders are optional, so when they cannot be read the block is one calm line: what is wrong is behind Details, Retry says it is trying, and Hide puts the line away on this
- * device. While the link is down it speaks in the voice of the blocks beside it, which cannot tell "nothing is due" from "I cannot look": it can't check, and since when.
+ * Reminders are optional, so when they cannot be read the block is one calm line and what is wrong in Caduceus's own words, which say what to do ("Install it with: brew …");
+ * Retry says it is trying, and Hide puts the line away on this device. While the link is down it speaks in the voice of the blocks beside it, which cannot tell "nothing is due"
+ * from "I cannot look": it can't check.
  */
 function RemindersTrouble({ message, reload, onHide }: { message: string; reload(): void | Promise<void>; onHide(): void }) {
   const link = useLinkHealth();
@@ -235,7 +235,8 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
         Reminders
       </h2>
       <div className="today-quiet panel" data-stale={link.healthy ? undefined : ''}>
-        <p className="subtle">{link.healthy ? 'Reminders are not available right now. Everything else on Today works.' : cannotCheckWords(link.lastHealthyAt, Date.now())}</p>
+        <p className="subtle">{link.healthy ? 'Reminders are not available right now. Everything else on Today works.' : 'Can’t check right now.'}</p>
+        {link.healthy && <p className="subtle">{message}</p>}
         <div className="today-quiet__acts">
           <NetworkAction className="btn btn--secondary btn--sm" label="Retry" disabled={retrying} busy={retrying} onClick={retry}>
             <Icon name="refresh" small />
@@ -247,7 +248,6 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
         </div>
         <details className="today-quiet__details">
           <summary>Details</summary>
-          <p className="subtle">{message}</p>
           <p className="subtle">Caduceus reads Reminders with the remindctl command on the Mac that runs it. Run “remindctl status” on that Mac to see what it needs.</p>
         </details>
       </div>
@@ -255,12 +255,16 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
   );
 }
 
+/** Where this device remembers what Reminders last answered with, the calendar or the trouble line, so that the block holds the room of that answer while it loads. */
+const SHAPE_KEY = 'caduceus.today.reminders-shape';
+
 export function RemindersBlock({ now }: { now: number }) {
   const block = useBlock(readReminders, 'reminders', true);
   const { reload } = block;
   const [hidden, setHidden] = useHiddenTrouble();
   const { state } = block;
   const online = useOnline();
+  const [troubleLast] = useState(() => localStorage.getItem(SHAPE_KEY) === 'trouble');
   useEffect(() => {
     const back = () => document.visibilityState === 'visible' && reload();
     document.addEventListener('visibilitychange', back);
@@ -270,11 +274,16 @@ export function RemindersBlock({ now }: { now: number }) {
   useEffect(() => {
     if (state.status === 'ready' && hidden) setHidden(false);
   });
+  useEffect(() => {
+    if (state.status === 'ready') localStorage.setItem(SHAPE_KEY, 'calendar');
+    else if (state.status === 'error' && online) localStorage.setItem(SHAPE_KEY, 'trouble');
+  }, [state.status, online]);
   if (hidden && state.status !== 'ready') return null;
   // Offline the block is a reading mode like the others (`TodayBlock`): what was shown stays, or it says it cannot check. The trouble line is for a Mac that is on and does not answer.
   if (state.status === 'error' && online) return <RemindersTrouble message={state.message} reload={reload} onHide={() => setHidden(true)} />;
   return (
-    <TodayBlock id="reminders" title="Reminders" block={block} empty={() => undefined} room="22rem" to={noTarget}>
+    // The calendar is about 22rem tall; the trouble line about 11rem.
+    <TodayBlock id="reminders" title="Reminders" block={block} empty={() => undefined} room={troubleLast ? '11rem' : '22rem'} to={noTarget}>
       {(reminders) => <Calendar reminders={reminders} today={dateKey(new Date(now))} />}
     </TodayBlock>
   );

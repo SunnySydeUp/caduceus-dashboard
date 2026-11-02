@@ -908,7 +908,7 @@ export function SessionsPane({ profile, activeId, scope = 'everyone' }: { profil
           {state.errorNext === undefined && (
             <button type="button" className="btn btn--secondary btn--sm" onClick={() => void list?.refresh()}>
               <Icon name="refresh" small />
-              Try again
+              Retry
             </button>
           )}
         </div>

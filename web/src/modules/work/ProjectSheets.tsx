@@ -240,7 +240,7 @@ export function DiscoverSheet({ profile, actions, owned, startFolder, onDone, on
                 setRound((previous) => previous + 1);
               }}
             >
-              Try again
+              Retry
             </button>
           </div>
         )}

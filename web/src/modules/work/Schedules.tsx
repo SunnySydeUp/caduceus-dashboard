@@ -70,7 +70,7 @@ export function Schedules() {
           </div>
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void reload()}>
             <Icon name="refresh" />
-            Try again
+            Retry
           </button>
         </div>
       )}

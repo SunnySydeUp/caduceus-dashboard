@@ -43,10 +43,7 @@ export function SessionGone({ profile, storedId }: { profile: string; storedId: 
   return (
     <section className="chat__conversation chat__none" aria-label="Conversation">
       <div className="empty">
-        <span className="empty__icon">
-          <Icon name="alert" />
-        </span>
-        <h3>That conversation no longer exists.</h3>
+        <h2>That conversation no longer exists.</h2>
         <p>{home.kind === 'unknown' ? 'It is not in this agent, and Hermes did not answer for every other agent, so it may still be in one of them.' : 'It may have been deleted, or the link may be for another Hermes.'}</p>
         <div className="empty__actions">
           <button type="button" className="btn btn--primary" onClick={() => void navigate(`/chat?profile=${encodeURIComponent(profile)}`, { replace: true })}>
@@ -58,7 +55,7 @@ export function SessionGone({ profile, storedId }: { profile: string; storedId: 
           </button>
           {home.kind === 'unknown' && (
             <button type="button" className="btn btn--ghost" onClick={() => setAsked((count) => count + 1)}>
-              Try again
+              Retry
             </button>
           )}
         </div>

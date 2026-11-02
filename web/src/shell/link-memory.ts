@@ -26,11 +26,6 @@ export function asOfWords(at: number | undefined, now: number): string {
   return at === undefined ? 'Can’t check right now' : `As of ${clockWords(at, now)}`;
 }
 
-/** What a screen that would say "nothing is waiting" says while the link is down. */
-export function cannotCheckWords(at: number | undefined, now: number): string {
-  return at === undefined ? 'Can’t check right now.' : `Can’t check right now. Last checked at ${clockWords(at, now)}.`;
-}
-
 /** What an action that needs the network says while the device is offline: its name, then why it is off. */
 export const NEEDS_CONNECTION = 'Needs a connection';
 

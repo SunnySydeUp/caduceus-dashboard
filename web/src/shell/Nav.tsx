@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { useRailTags } from './rail-tags.tsx';
 import { controlBadge, crewAge, deskNavigation, placementOfPage, type CrewRow } from './nav-order.ts';
 import { Icon, type IconName } from '../icons.tsx';
@@ -197,8 +197,9 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
   const railTags = useRailTags();
   const crewScroller = useRef<HTMLDivElement>(null);
   useCurrentInView(crewScroller);
-  const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, Date.now());
+  const asOf = link.healthy || crew.every((row) => row.blind) ? undefined : asOfWords(link.lastHealthyAt, Date.now());
   const skeletal = crew.length === 0 && (read.status === 'loading' || read.status === 'slow' || read.status === 'offline');
+  const below = useRowsBelow(crewScroller, crew.length);
   return (
     <div className="rail" ref={railTags.rail} data-hinting={railTags.hinting ? '' : undefined} {...railTags.handlers}>
       {/* Medium windows open the full Desk as a drawer; a collapsed large sidebar expands again, as one morph (`shell.css`, "Folding the sidebar"). */}
@@ -261,6 +262,12 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
           read.status !== 'ready' && <CrewPending read={read} variant="rail" />
         )}
       </div>
+      {/* How many agents are below what the scroller shows: a mark over the scroller's faded foot, so it takes none of the crew's room (a short rail has room for about two rows). Scrolling, a swipe or Tab reaches them. */}
+      {below > 0 && (
+        <span className="rail__more" aria-hidden="true">
+          +{below}
+        </span>
+      )}
       <div className="nav-foot">
         <HelpButton compact glides />
         <ControlLink compact glides />
@@ -268,6 +275,33 @@ export function Rail({ size, onOpenDrawer }: { size: Exclude<SizeClass, 'compact
       {railTags.label}
     </div>
   );
+}
+
+/** The crew rows the rail's scroller does not show in full (a row cut at the bottom edge counts). */
+function rowsBelow(scroller: HTMLElement): HTMLElement[] {
+  const bottom = scroller.getBoundingClientRect().top + scroller.clientHeight;
+  return [...scroller.querySelectorAll<HTMLElement>('.crew__slot')].filter((slot) => slot.getBoundingClientRect().bottom > bottom + 1);
+}
+
+/** How many agents of the crew are below what the rail's scroller shows: counted from its own scroll and size, so the "+N" under it is true as the owner scrolls and as the window changes. */
+function useRowsBelow(scroller: RefObject<HTMLElement | null>, crewSize: number): number {
+  const [below, setBelow] = useState(0);
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const count = () => setBelow(rowsBelow(element).length);
+    count();
+    element.addEventListener('scroll', count, { passive: true });
+    // The scroller changes size with the window and with the "+N" under it; its list changes size when a row comes, goes or grows. The list is a different element once the crew has loaded: `crewSize` sets this up again then.
+    const observer = new ResizeObserver(count);
+    observer.observe(element);
+    if (element.firstElementChild) observer.observe(element.firstElementChild);
+    return () => {
+      element.removeEventListener('scroll', count);
+      observer.disconnect();
+    };
+  }, [scroller, crewSize]);
+  return below;
 }
 
 /**
@@ -329,7 +363,8 @@ function DeskNav({ variant }: { variant: 'sidebar' | 'drawer' }) {
   const now = useNow(crew.some((row) => row.since !== undefined), CREW_CLOCK_MS);
   const read = useCrewRead();
   const link = useLinkHealth();
-  const asOf = link.healthy ? undefined : asOfWords(link.lastHealthyAt, now);
+  // "As of 11:58" says when the rows were last true: with every row blind (a read failed, nothing was ever known) there is no such time to give.
+  const asOf = link.healthy || crew.every((row) => row.blind) ? undefined : asOfWords(link.lastHealthyAt, now);
   const scroller = useRef<HTMLDivElement>(null);
   useCurrentInView(scroller);
   const middle = (
@@ -357,7 +392,7 @@ function DeskNav({ variant }: { variant: 'sidebar' | 'drawer' }) {
           <ul className="crewlist__scroll" ref={glides ? (scroller as RefObject<HTMLUListElement | null>) : undefined}>
             {crew.map((row, index) => (
               <li key={row.profile} className="crew__slot">
-                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} stale={asOf !== undefined} />
+                <CrewMate row={row} now={now} current={isCurrentAgent(row)} index={index} glides={glides} stale={asOf !== undefined && !row.blind} />
               </li>
             ))}
           </ul>
