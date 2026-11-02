@@ -1,6 +1,7 @@
-// Sending attachments to Hermes (M1 #10), free of the DOM and of React: each one goes through the gateway method that matches its kind
-// (`image.attach_bytes`, `pdf.attach`, `file.attach`), with the bytes in the frame, since the browser's files are not on Hermes's disk.
-import type { AttachedImageResult, FileAttachResult, ImageDetachResult, PdfAttachResult } from '@caduceus/contracts/hermes/gateway';
+// Sending attachments to Hermes (M1 #10), free of the DOM and of React: an image goes through `image.attach_bytes`, anything else (a PDF too)
+// through `file.attach`, with the bytes in the frame, since the browser's files are not on Hermes's disk. A PDF is not sent through `pdf.attach`:
+// that renders its pages to PNG images and drops the PDF itself, so the agent could not read its text or keep the file.
+import type { AttachedImageResult, FileAttachResult, ImageDetachResult } from '@caduceus/contracts/hermes/gateway';
 
 export type UploadKind = 'image' | 'pdf' | 'file';
 
@@ -25,7 +26,7 @@ export interface UploadStep {
 export interface Uploaded {
   /** The line that names each file in the prompt. */
   fileRefs: string[];
-  /** Hermes's paths of the images and PDF pages it queued. */
+  /** Hermes's paths of the images it queued. */
   imagePaths: string[];
 }
 
@@ -57,10 +58,6 @@ export async function uploadAttachments(request: Requester, sessionId: string, u
         const result = await request<AttachedImageResult>('image.attach_bytes', { session_id: sessionId, content_base64: content, filename: upload.name });
         if (!result.attached || !result.path) throw new Error(result.message ?? 'Hermes did not take the image.');
         done.imagePaths.push(result.path);
-      } else if (upload.kind === 'pdf') {
-        const result = await request<PdfAttachResult>('pdf.attach', { session_id: sessionId, content_base64: content, filename: upload.name });
-        if (!result.attached) throw new Error('Hermes did not take the PDF.');
-        done.imagePaths.push(...result.pages.map((page) => page.path));
       } else {
         const result = await request<FileAttachResult>('file.attach', { session_id: sessionId, data_url: `data:${upload.body.type || 'application/octet-stream'};base64,${content}`, name: upload.name });
         if (!result.attached) throw new Error('Hermes did not take the file.');

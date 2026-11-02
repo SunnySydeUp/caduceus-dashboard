@@ -1,5 +1,5 @@
 // What the composer attaches to a message (M1 #10), free of the DOM and of React: what counts as an image, a PDF or a file, how many may go and
-// how large each may be (Hermes's own caps: 25 MB an image, 50 MB a PDF), and the large paste that becomes a Markdown file. Unpacking an
+// how large each may be (Hermes's own cap: 25 MB an image), and the large paste that becomes a Markdown file. Unpacking an
 // archive is `archive.ts`; sending is `attachment-upload.ts`.
 import type { Upload, UploadKind } from './attachment-upload.ts';
 
@@ -7,7 +7,7 @@ import type { Upload, UploadKind } from './attachment-upload.ts';
 export const MAX_ATTACHMENTS = 20;
 
 const MB = 1024 * 1024;
-/** The most one attachment may hold, by kind: Hermes refuses an image over 25 MB and a PDF over 50 MB; a file has no cap of Hermes's, and 50 MB keeps one message's frame sane. */
+/** The most one attachment may hold, by kind: Hermes refuses an image over 25 MB; a PDF or another file (staged by `file.attach`) has no cap of Hermes's, and 50 MB keeps one message's frame sane. */
 export const SIZE_LIMIT: Readonly<Record<UploadKind, number>> = { image: 25 * MB, pdf: 50 * MB, file: 50 * MB };
 
 /** Something the owner picked, pasted or dropped, before it is an attachment. `origin` says where it came from when it is not the owner's own file (an archive's entry). */

@@ -237,7 +237,7 @@ export const chatHelp: ModuleHelp = {
         {
           ul: [
             'A message takes at most 20 [[attachment|attachments]]. Beyond that Talk says which were left out and why; nothing is dropped without a line saying so.',
-            'Images (PNG, JPEG, GIF, WebP, BMP) may be 25 MB each and PDFs 50 MB: Hermes shows an image to the model, and renders the first 25 pages of a PDF as pictures. Any other file may be 50 MB; Hermes stores it and the agent reads it with its own tools. An SVG or a HEIC photo goes as a file, since Hermes cannot show it to the model.',
+            'Images (PNG, JPEG, GIF, WebP, BMP) may be 25 MB each: Hermes shows an image to the model. A PDF or any other file may be 50 MB; Hermes stores it as it is and the agent reads it with its own tools. An SVG or a HEIC photo goes as a file, since Hermes cannot show it to the model.',
             'A zip, tar, tar.gz or tgz archive is unpacked in your browser and each file in it is attached on its own. Folders, system files (such as .DS_Store), password-protected files, links, empty files and files over their limit are not attached, and each is named with its reason. An archive may be 100 MB and hold up to 200 MB once unpacked. A .rar or .7z file is attached as the one file it is.',
             'A very long paste (more than 4,000 characters) does not fill the message box: it becomes a Markdown file, pasted-text-1.md, and a toast says so. Undo, or Keep inline on the chip, puts the text back in the box.',
             'Attachments go with a message that starts a reply. While Hermes is answering, Steer and Queue do not take them, and a slash command runs without them: Talk says so and keeps them. If Hermes refuses one, nothing is sent and its chip shows why.',

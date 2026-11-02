@@ -9,28 +9,19 @@ import { launchTestHermes, type TestHermes } from './fixtures/real-hermes.ts';
 import { startStubLlm, type StubLlm } from './fixtures/stub-llm.ts';
 import { ownerCookie } from './fixtures/owner.ts';
 
-// Attachments (M1 #10): images, files and PDFs reach Hermes through the gateway's `image.attach_bytes`, `file.attach` and `pdf.attach`, and
-// what was attached is in the message the model is sent and in the transcript after a reload. The chat engine over the browser's gateway
-// connection through Caduceus (so every call passes the policy proxy), in front of the real Hermes whose provider is the stub LLM.
-// Hermes renders a PDF with `pdftoppm`, which this Mac may not have: a stand-in program on Hermes's PATH, the only fake here, writes two pages
-// and records the arguments it was run with.
+// Attachments (M1 #10): images reach Hermes through the gateway's `image.attach_bytes`, files and PDFs through `file.attach`, and what was
+// attached is in the message the model is sent and in the transcript after a reload. The chat engine over the browser's gateway connection
+// through Caduceus (so every call passes the policy proxy), in front of the real Hermes whose provider is the stub LLM.
 const PIXEL_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==', 'base64');
 let hermes: TestHermes;
 let llm: StubLlm;
 let server: CaduceusServer | undefined;
 let cookie: string | undefined;
 let work: string;
-let tools: string;
 const pages: TestGatewayConnection[] = [];
 const chats: Chat[] = [];
 beforeAll(async () => {
-  tools = fs.mkdtempSync(path.join(os.tmpdir(), 'caduceus-pdftoppm-'));
-  fs.writeFileSync(
-    path.join(tools, 'pdftoppm'),
-    `#!/bin/sh\necho "$@" >> "${tools}/runs"\nfor last; do :; done\nfor page in 1 2; do echo ${PIXEL_PNG.toString('base64')} | base64 -d > "$last-$page.png"; done\n`,
-    { mode: 0o755 },
-  );
-  hermes = await launchTestHermes({ env: { PATH: `${tools}:${process.env.PATH}` } });
+  hermes = await launchTestHermes();
   await hermes.backend.ready();
   llm = await startStubLlm();
   await llm.connect(hermes);
@@ -38,7 +29,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await llm.close();
   await hermes.stop();
-  fs.rmSync(tools, { recursive: true, force: true });
 });
 beforeEach(() => {
   work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'caduceus-attach-')));
@@ -113,26 +103,28 @@ describe('files and PDFs', () => {
     expect(JSON.stringify(afterTool!.messages.at(-1))).toContain('PELICAN-7');
   });
 
-  test('a PDF is rendered to page images by Hermes (pdf.attach) and each page is in the message as an @image: line', async () => {
+  test('a PDF stays a PDF: Hermes stages the file itself, the message names it, and no page is turned into an image', async () => {
     const chat = await openChat({ cwd: work });
-    const pdf = { name: 'report.pdf', kind: 'pdf' as const, body: new Blob(['%PDF-1.4\n%stand-in\n'], { type: 'application/pdf' }) };
+    const bytes = '%PDF-1.4\n%stand-in\n';
+    const pdf = { name: 'report.pdf', kind: 'pdf' as const, body: new Blob([bytes], { type: 'application/pdf' }) };
+    const staged = path.join(fs.realpathSync(hermes.home), 'attachments', 'report.pdf');
     expect(await chat.send('Read this report', { attachments: [pdf] })).toBe(true);
     await chat.until(finished(2));
 
-    expect(chat.state.messages[0]!.text.match(/\n@image:\S+\.png/g)).toHaveLength(2);
-    // Hermes was asked for the pages from the first, within its cap of 25 per call.
-    expect(fs.readFileSync(path.join(tools, 'runs'), 'utf8')).toMatch(/-png -r 150 -f 1 -l 25 /);
+    expect(chat.state.messages[0]!.text).toBe(`Read this report\n[User attached file: ${staged}]`);
+    expect(fs.readFileSync(staged, 'utf8')).toBe(bytes);
+    expect(JSON.stringify(lastCompletion().messages)).not.toMatch(/@image:|\.png/);
   });
 
   test('an attachment Hermes refuses stops the send: nothing is sent, the error names the file, and the images queued before it are taken back', async () => {
     const chat = await openChat({ cwd: work });
     const steps: string[] = [];
-    const notAPdf = { name: 'fake.pdf', kind: 'pdf' as const, body: new Blob(['plain text'], { type: 'application/pdf' }) };
+    const empty = { name: 'empty.png', kind: 'image' as const, body: new Blob([], { type: 'image/png' }) };
     const before = llm.completions.length;
-    expect(await chat.send('Read both', { attachments: [image('first.png'), notAPdf], onProgress: (step) => steps.push(`${step.name}:${step.state}`) })).toBe(false);
+    expect(await chat.send('Read both', { attachments: [image('first.png'), empty], onProgress: (step) => steps.push(`${step.name}:${step.state}`) })).toBe(false);
 
-    expect(steps).toEqual(['first.png:uploading', 'first.png:attached', 'fake.pdf:uploading', 'fake.pdf:failed']);
-    expect(chat.state.error).toMatch(/fake\.pdf: .*%PDF/);
+    expect(steps).toEqual(['first.png:uploading', 'first.png:attached', 'empty.png:uploading', 'empty.png:failed']);
+    expect(chat.state.error).toMatch(/^empty\.png: /);
     expect(chat.state).toMatchObject({ running: false, turn: undefined });
     expect(llm.completions.length).toBe(before);
 
