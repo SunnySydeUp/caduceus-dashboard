@@ -73,7 +73,6 @@ a.btn { text-decoration: none; }
 .appbar__profile--text { display: inline-flex; align-items: center; gap: var(--cd-space-1-5); padding-inline: var(--cd-space-1); color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-sm)/1 var(--cd-font-sans); white-space: nowrap; }
 .appbar__conn { display: inline-flex; align-items: center; justify-content: center; gap: var(--cd-space-1); min-inline-size: var(--cd-space-6); block-size: var(--cd-space-6); }
 .appbar__conn .dot { inline-size: 10px; block-size: 10px; }
-.appbar__conn-count { font: var(--cd-text-xs)/1 var(--cd-font-mono); font-variant-numeric: tabular-nums; color: var(--cd-fg-muted); }
 
 /* ---- Breadcrumb: linked text above the title of a deep page (PageHeader), from 600 px ---- */
 .crumbs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--cd-space-1-5); min-inline-size: 0; font-size: var(--cd-text-sm); font-weight: var(--cd-weight-medium); }
@@ -125,7 +124,7 @@ a.btn { text-decoration: none; }
 .side > .sidebar { flex: 1 1 auto; min-block-size: 0; }
 .side > .rail { flex: 0 1 auto; min-block-size: 0; }
 /* One column as wide as the rail: a long agent name is cut with an ellipsis, it never widens the column (which would push every item off centre). */
-.rail { display: flex; flex-direction: column; gap: var(--cd-space-1); padding: var(--cd-space-3) var(--cd-space-1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.rail { --rail-gap: var(--cd-space-1); display: flex; flex-direction: column; gap: var(--rail-gap); padding: var(--cd-space-3) var(--cd-space-1); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
 /* The crew scrolls between the places (fixed under the head) and the foot (Help, Control), which stay put while they fit. The scroller keeps room for one row; when the head,
    the places and the foot leave less than that (a window a few hundred px tall) the rail draws itself compact: see "A rail on a short window". */
 .rail__places { flex: none; display: flex; flex-direction: column; gap: var(--cd-space-1); }
@@ -135,9 +134,9 @@ a.btn { text-decoration: none; }
   -webkit-mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent);
   mask-image: linear-gradient(to bottom, transparent, var(--cd-bg-canvas) var(--fade-start), var(--cd-bg-canvas) calc(100% - var(--fade-end)), transparent); }
 .rail__scroll .crew__slot, .rail__scroll .rail__asof { scroll-snap-align: start; }
-/* "+3": how many agents are below the part of the crew the rail shows (`Rail`). A mark, not a control: it lies over the scroller's faded foot (pulled up by its own height and the
-   rail's gap), so it takes none of the crew's room, and lets every touch through to the rows. */
-.rail__more { flex: none; align-self: center; position: relative; z-index: 1; display: grid; place-items: center; block-size: 1.25rem; min-inline-size: 2rem; margin-block-start: calc(-1.25rem - var(--cd-space-1)); padding-inline: var(--cd-space-1-5); border-radius: var(--cd-radius-full); background: var(--cd-bg-inset); color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; pointer-events: none; }
+/* "+3": how many agents are below the part of the crew the rail shows (`Rail`). A mark, not a control: a divider label centred on the foot's top rule, so it belongs to the line
+   between the crew and the foot and not to a sigil. Its margins cancel its height, so it takes none of the crew's room, and it lets every touch through to the rows. */
+.rail__more { flex: none; align-self: center; position: relative; z-index: 1; display: grid; place-items: center; block-size: 1rem; min-inline-size: 2rem; margin-block: -0.5rem calc(-0.5rem - var(--rail-gap)); padding-inline: var(--cd-space-1-5); border-radius: var(--cd-radius-full); background: var(--cd-bg-inset); color: var(--cd-fg-default); font: var(--cd-weight-medium) var(--cd-text-xs)/1 var(--cd-font-sans); font-variant-numeric: tabular-nums; pointer-events: none; }
 .rail > * { min-inline-size: 0; }
 .rail__toggle { align-self: center; flex: none; margin-block-end: var(--cd-space-1); }
 .rail__item { flex: none; flex-direction: column; justify-content: center; gap: var(--cd-space-1); min-block-size: 3.5rem; padding: var(--cd-space-1) 0; font-size: var(--cd-text-xs); font-weight: var(--cd-weight-medium); text-align: center; }
@@ -242,7 +241,7 @@ a.btn { text-decoration: none; }
    Search), the places (Today, Talk, Work) and the foot (Help and Control with its badge) are fixed; only the crew between them scrolls, with the same edge fades.
    Under 30rem tall even that leaves the crew no room, so Search and Help leave the rail (Search is the drawer's first row and Help is in its foot; the palette and Help have their shortcuts). ---- */
 @media (max-height: 36rem) {
-  .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); gap: 0; }
+  .side > .rail { flex: 1 1 auto; overflow: hidden; padding-block: var(--cd-space-2); --rail-gap: 0px; }
   .rail__places { gap: 0; }
   .rail__scroll { min-block-size: 0; padding: 0; margin: 0; scroll-padding-block-start: calc(var(--cd-space-1) + 1px); }
   .rail__toggle { margin-block-end: 0; }
@@ -566,8 +565,14 @@ html.has-overlay:has(.layer--palette) .toasts { inset-block-start: auto; inset-b
 .control { --page-gap: var(--cd-space-6); display: grid; gap: var(--page-gap); max-inline-size: 48rem; }
 .control__search { position: sticky; inset-block-start: calc(var(--shell-top) + var(--cd-space-2)); z-index: var(--cd-z-sticky); }
 .control__results { display: grid; gap: var(--cd-space-6); }
-/* From 1200 px the groups sit in two columns, so the list is not a narrow strip with two thirds of the screen empty. */
-@media (min-width: 75rem) { .control { max-inline-size: none; } .control__results { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } .control__results > .empty { grid-column: 1 / -1; } }
+/* From 1200 px the groups flow in two columns, so the list is not a narrow strip with two thirds of the screen empty. Columns, not a row-aligned grid: a short group never leaves a hole
+   under it. A group stays whole; the DOM order is the visual order (all of the first column, then the second). */
+@media (min-width: 75rem) {
+  .control { max-inline-size: none; }
+  .control__results { display: block; columns: 2; column-gap: var(--cd-space-6); }
+  .control__results > .control__group { break-inside: avoid; margin-block-end: var(--cd-space-6); }
+  .control__results > .empty { column-span: all; }
+}
 /* A module's summary wraps in full: it is the only thing that says what the row is for, so it is never cut at the edge. */
 .control .list-row__sub { white-space: normal; overflow: visible; }
 /* A list row that is a button (Help, Sign out) looks like the link rows. */

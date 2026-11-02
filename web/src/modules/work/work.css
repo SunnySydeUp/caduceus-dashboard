@@ -1,7 +1,9 @@
 /* Work › Board and the task page. Tokens only (design system); logical properties throughout. */
 .bpage { display: grid; gap: var(--page-gap); min-inline-size: 0; }
-.wb-repair p { margin: var(--cd-space-1) 0 0; font-size: var(--cd-text-sm); }
-.wb-repair a { color: inherit; text-decoration: underline; }
+.wb-repair p { margin: var(--cd-space-1) 0 0; max-inline-size: 65ch; font-size: var(--cd-text-sm); }
+.wb-repair a { position: relative; color: inherit; text-decoration: underline; }
+/* The inline link (Health) is a line of text high; its hit area reaches `--cd-target-min` (44 px on a touch screen) without moving the words. */
+.wb-repair a::after { content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--cd-target-min)) / 2)); inset-inline: min(0px, calc((100% - var(--cd-target-min)) / 2)); }
 
 /* ---- Toolbar: search · filter chips · view controls ---- */
 .btools { display: grid; gap: var(--cd-space-2); grid-template-columns: minmax(0, 1fr); align-items: center; min-inline-size: 0; }

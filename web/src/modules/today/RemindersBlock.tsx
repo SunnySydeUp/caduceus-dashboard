@@ -5,9 +5,11 @@
 // every block. Reminders has no event to listen for, so it is read again when the tab comes back and when the gateway reconnects (`useBlock`); there is no timer.
 import { useEffect, useId, useMemo, useState } from 'react';
 import type { Reminder } from '@caduceus/contracts/today';
+import { CAUSE } from '../../failure-words.ts';
 import { Icon } from '../../icons.tsx';
 import { morph } from '../../motion.ts';
-import { useLinkHealth, useOnline } from '../../shell/connection.ts';
+import { useOnline } from '../../shell/connection.ts';
+import { FailureDetails } from '../../shell/FailureDetails.tsx';
 import { NetworkAction } from '../../shell/NetworkAction.tsx';
 import { useBlock } from '../../use-block.ts';
 import { TodayBlock } from './TodayBlocks.tsx';
@@ -218,12 +220,10 @@ function useHiddenTrouble(): [boolean, (hidden: boolean) => void] {
 }
 
 /**
- * Reminders are optional, so when they cannot be read the block is one calm line and what is wrong in Caduceus's own words, which say what to do ("Install it with: brew …");
- * Retry says it is trying, and Hide puts the line away on this device. While the link is down it speaks in the voice of the blocks beside it, which cannot tell "nothing is due"
- * from "I cannot look": it can't check.
+ * Reminders are optional, so when the Mac cannot read them the block is one calm line, then what is wrong in Caduceus's own words, which say what to do ("Allow it in System
+ * Settings …"); Retry says it is trying, and Hide puts the line away on this device. It says nothing about the rest of Today, which speaks for itself.
  */
 function RemindersTrouble({ message, reload, onHide }: { message: string; reload(): void | Promise<void>; onHide(): void }) {
-  const link = useLinkHealth();
   const [retrying, setRetrying] = useState(false);
   const retry = () => {
     setRetrying(true);
@@ -234,9 +234,8 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
       <h2 className="today-block__title" id="today-reminders">
         Reminders
       </h2>
-      <div className="today-quiet panel" data-stale={link.healthy ? undefined : ''}>
-        <p className="subtle">{link.healthy ? 'Reminders are not available right now. Everything else on Today works.' : 'Can’t check right now.'}</p>
-        {link.healthy && <p className="subtle">{message}</p>}
+      <div className="today-quiet panel">
+        <p className="subtle">Reminders can’t be read right now. {message}</p>
         <div className="today-quiet__acts">
           <NetworkAction className="btn btn--secondary btn--sm" label="Retry" disabled={retrying} busy={retrying} onClick={retry}>
             <Icon name="refresh" small />
@@ -246,10 +245,7 @@ function RemindersTrouble({ message, reload, onHide }: { message: string; reload
             Hide
           </button>
         </div>
-        <details className="today-quiet__details">
-          <summary>Details</summary>
-          <p className="subtle">Caduceus reads Reminders with the remindctl command on the Mac that runs it. Run “remindctl status” on that Mac to see what it needs.</p>
-        </details>
+        <FailureDetails detail="Caduceus reads Reminders with the remindctl command on the Mac that runs it. Run “remindctl status” on that Mac to see what it needs." />
       </div>
     </section>
   );
@@ -279,11 +275,12 @@ export function RemindersBlock({ now }: { now: number }) {
     else if (state.status === 'error' && online) localStorage.setItem(SHAPE_KEY, 'trouble');
   }, [state.status, online]);
   if (hidden && state.status !== 'ready') return null;
-  // Offline the block is a reading mode like the others (`TodayBlock`): what was shown stays, or it says it cannot check. The trouble line is for a Mac that is on and does not answer.
-  if (state.status === 'error' && online) return <RemindersTrouble message={state.message} reload={reload} onHide={() => setHidden(true)} />;
+  // The trouble line is for the Mac's own answer about Reminders (not installed, not allowed, failed): it stays true offline too. A failure of the network (offline, the Mac not
+  // answering) is the page's, and the block speaks in the voice of the blocks beside it (`TodayBlock`).
+  if (state.status === 'error' && state.message !== CAUSE.offline && state.message !== CAUSE.mac) return <RemindersTrouble message={state.message} reload={reload} onHide={() => setHidden(true)} />;
   return (
     // The calendar is about 22rem tall; the trouble line about 11rem.
-    <TodayBlock id="reminders" title="Reminders" block={block} empty={() => undefined} room={troubleLast ? '11rem' : '22rem'} to={noTarget}>
+    <TodayBlock id="reminders" title="Reminders" reader="Reminders" block={block} empty={() => undefined} room={troubleLast ? '11rem' : '22rem'} to={noTarget}>
       {(reminders) => <Calendar reminders={reminders} today={dateKey(new Date(now))} />}
     </TodayBlock>
   );

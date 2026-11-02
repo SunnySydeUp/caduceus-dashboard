@@ -20,6 +20,7 @@ const LOOK_AT = 50;
 export function LatestSession({ profile }: { profile: string }) {
   const navigate = useAppNavigate();
   const [failure, setFailure] = useState<PlainFailure>();
+  const [attempt, setAttempt] = useState(0);
   const online = useOnline();
   const size = useSizeClass();
   useEffect(() => {
@@ -40,7 +41,7 @@ export function LatestSession({ profile }: { profile: string }) {
     return () => abort.abort();
     // The router's navigate changes with the address; opening the agent's newest conversation happens once for each agent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, online]);
+  }, [profile, online, attempt]);
   // The list is a column from 600 px and a sheet on a phone, so only there is this pane the one place that can say the list could not be read.
   const listBesideIt = size !== 'compact';
   return (
@@ -77,15 +78,23 @@ export function LatestSession({ profile }: { profile: string }) {
               </>
             ) : (
               <>
-                <h2>{failure.message}</h2>
-                <p>{failure.next ?? `${profile}’s sessions could not be read.`}</p>
+                <h2>{failure.next === undefined ? failure.message : 'Past chats aren’t available'}</h2>
+                <p>{failure.next === undefined ? `${profile}’s sessions could not be read.` : `${failure.message}. ${failure.next}`}</p>
                 <FailureDetails detail={failure.detail} />
               </>
             )}
-            <AppLink className="btn btn--primary" to="/chat/new">
-              <Icon name="plus" />
-              Start a new chat
-            </AppLink>
+            <div className="empty__actions">
+              {listBesideIt || failure.next !== undefined ? null : (
+                <button type="button" className="btn btn--secondary" onClick={() => setAttempt((n) => n + 1)}>
+                  <Icon name="refresh" />
+                  Retry
+                </button>
+              )}
+              <AppLink className="btn btn--primary" to="/chat/new">
+                <Icon name="plus" />
+                Start a new chat
+              </AppLink>
+            </div>
           </div>
         )}
       </div>

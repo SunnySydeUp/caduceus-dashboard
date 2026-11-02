@@ -121,10 +121,10 @@ function contractFinding(report: CompatibilityReport, readOnlyOn: boolean): { pr
           id: 'contract-unreadable',
           severity: 'warning',
           subsystem: 'backend',
-          title: 'Caduceus cannot check Hermes’s contracts',
+          title: 'Caduceus can’t check that Hermes still matches what it was built for',
           cause:
-            'Caduceus could not read part of what it compares Hermes with, so it cannot tell whether Hermes still matches the contracts it was built for: ' +
-            `${report.reasons.join('; ')}. Caduceus checks again whenever Hermes starts.`,
+            `Caduceus could not read part of what it compares Hermes with: ${report.reasons.join('; ')}. ` +
+            'Restart the Hermes backend in Health: Caduceus checks again whenever Hermes starts.',
         },
       ],
     };

@@ -33,9 +33,9 @@ function useAsOf(): string | undefined {
 
 /**
  * A block's title row: the title, the count beside it, and on the same line, so that nothing moves, one quiet note: when the block's data was last true while the link is down, or
- * that Hermes is still being read when a read is slow. It is the top of the block, where the eye already is, not under the room the answer will fill.
+ * that `reader` (Hermes, or the Mac's Reminders) is still being read when a read is slow. It is the top of the block, where the eye already is, not under the room the answer will fill.
  */
-export function BlockHead({ id, title, count, asOf, slow }: { id: string; title: string; count?: number; asOf?: string; slow?: boolean }) {
+export function BlockHead({ id, title, count, asOf, slow, reader = 'Hermes' }: { id: string; title: string; count?: number; asOf?: string; slow?: boolean; reader?: string }) {
   return (
     <div className="today-block__head">
       <h2 className="today-block__title" id={id}>
@@ -45,7 +45,7 @@ export function BlockHead({ id, title, count, asOf, slow }: { id: string; title:
       {asOf !== undefined && <span className="today-block__asof">{asOf}</span>}
       {slow && (
         <span className="today-block__slow" role="status">
-          {STILL_READING_WORDS}
+          {reader === 'Hermes' ? STILL_READING_WORDS : `Still reading ${reader}…`}
         </span>
       )}
     </div>
@@ -61,11 +61,16 @@ function EmptyState({ which, to, note, unsure, checkedAt }: { which: EmptyBlock;
   const words = unsure || (!link.healthy && checkedAt === undefined) ? 'Can’t check right now.' : link.healthy || checkedAt === undefined ? (note ?? text) : `Nothing here as of ${clockWords(checkedAt, Date.now())}.`;
   return (
     <div className="today-empty panel" data-stale={blind ? '' : undefined}>
-      <p className="subtle">{words}</p>
-      {/* Plain navigation: it stays live offline, because reading mode still lets the owner move around the app (only actions that need the network are switched off). */}
-      <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
-        {action.label}
-      </AppLink>
+      <p className="subtle" role={unsure ? 'status' : undefined}>
+        {words}
+      </p>
+      {/* Plain navigation: it stays live offline, because reading mode still lets the owner move around the app. A block that cannot check offers nothing to fill it: the action
+          would not help until the read it waits on answers (the page's line has the Retry). */}
+      {!unsure && (
+        <AppLink className="btn btn--secondary btn--sm" to={to(which)}>
+          {action.label}
+        </AppLink>
+      )}
     </div>
   );
 }
@@ -98,8 +103,10 @@ interface BlockProps<T> {
   room?: string;
   to: EmptyTarget;
   className?: string;
-  /** A read beside this block failed, one its quiet answer depends on: an empty block says it cannot check, not that there is nothing. */
-  unsure?: boolean;
+  /** A read beside this block failed, one its quiet answer depends on: an empty block says it cannot check, not that there is nothing; the page names it with that read's cause, and its Retry asks that read again. */
+  unsure?: { cause: string; retry(): void };
+  /** What the block reads, when it is not Hermes (the Mac's Reminders): its slow note and the cause of a read given up name it. */
+  reader?: string;
   /** The block's rows each say when they were last true while the link is down (the crew's lines), so its title does not say it again. */
   ownLines?: boolean;
   /** The block's data is a live stream, true until the link dropped (the decisions): it is "as of" the drop. Any other block is as of its last answer. */
@@ -127,17 +134,21 @@ function HeldAnswer({ which }: { which: EmptyBlock }) {
  * One block: a title, then its body, its error with a Retry, or its empty state with the action that fills it. While it loads, and when it could not load, it keeps the room its
  * usual answer takes. What it cannot show it reports to the page's voice (`today-voice.ts`): when the page says it for several blocks at once, the block does not say it again.
  */
-export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, live, unsure, stage: given, children }: BlockProps<T>) {
+export function TodayBlock<T>({ id, title, count, block, empty, note, held, room, to, className, ownLines, live, unsure, reader = 'Hermes', stage: given, children }: BlockProps<T>) {
   // While the device is offline a block is a reading mode: it keeps what it last showed (marked "As of"), or, with nothing to show, steps out of the way: the page lists what is not
   // loaded, once. It never shows a failure, because the banner is the one voice. A read that failed only because the device had no network is read again when the network is back.
   const online = useOnline();
   const link = useLinkHealth();
   const last = useRef<{ data: T; at: number }>(undefined);
   if (block.state.status === 'ready' && last.current?.data !== block.state.data) last.current = { data: block.state.data, at: Date.now() };
+  // An answer the network does not change ("Hermes doesn't offer this yet") stays true offline: the block keeps saying it, and the page does not promise it will load.
+  const told = useRef<Extract<Block<T>['state'], { status: 'error' }>>(undefined);
+  if (block.state.status === 'error' && block.state.next !== undefined) told.current = block.state;
+  else if (block.state.status === 'ready') told.current = undefined;
   const offline = !online;
   const kept = offline && block.state.status !== 'ready' ? last.current : undefined;
-  const state: Block<T>['state'] = kept ? { status: 'ready', data: kept.data } : block.state;
-  const silent = offline && state.status !== 'ready';
+  const state: Block<T>['state'] = kept ? { status: 'ready', data: kept.data } : offline && block.state.status !== 'ready' && told.current ? told.current : block.state;
+  const silent = offline && (state.status === 'loading' || (state.status === 'error' && state.next === undefined));
   const wasOnline = useRef(online);
   const { reload } = block;
   useEffect(() => {
@@ -169,17 +180,37 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
   const failed = !silent && (state.status === 'error' || (state.status === 'loading' && stage === 'failed'));
   // A failure asking again cannot help ("Hermes doesn't offer this yet") is this block's own: it is never folded into the page's line.
   const unavailable = state.status === 'error' && state.next !== undefined ? state : undefined;
-  const cause = state.status === 'error' ? state.message : CAUSE.hermesSilent;
+  const cause = state.status === 'error' ? state.message : `${reader} isn’t answering`;
+  // An empty block that cannot check (a read its answer depends on failed) is blind for that read's cause: the page names it with the others, and its Retry asks that read.
+  const blind = which !== undefined && unsure !== undefined && online;
   const store = useContext(TodayVoiceContext);
-  const report: BlockReport | undefined = silent ? { title, kind: 'unloaded' } : slow ? { title, kind: 'slow' } : failed && !unavailable ? { title, kind: 'failed', cause, retry } : undefined;
+  // The page's slow line speaks for Hermes: a block that waits on something else (the Mac's Reminders) says its own wait.
+  const report: BlockReport | undefined = silent
+    ? { title, kind: 'unloaded' }
+    : slow && reader === 'Hermes'
+      ? { title, kind: 'slow' }
+      : failed && !unavailable
+        ? { title, kind: 'failed', cause, retry }
+        : blind
+          ? { title, kind: 'failed', cause: unsure.cause, retry: unsure.retry }
+          : undefined;
   useEffect(() => store?.report(id, report));
   useEffect(() => () => store?.report(id, undefined), [store, id]);
   const spoken = useTodayVoice().spokenFor.has(id);
   // Offline with nothing to show: the page's line names this block, so the block keeps out of the way.
   if (silent) return null;
+  // The page's line says the cause and carries the one Retry: the block only says, in one line, that it has nothing to show. No card, no held room.
+  if (spoken && (blind || (failed && !unavailable))) {
+    return (
+      <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} data-stale="">
+        <BlockHead id={`today-${id}`} title={title} count={count} />
+        <p className="today-block__quiet subtle">Can’t check right now.</p>
+      </section>
+    );
+  }
   return (
     <section className={`today-block ${className ?? ''}`} aria-labelledby={`today-${id}`} data-block={id} aria-busy={loading} data-stale={stale ? '' : undefined}>
-      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow && !spoken} />
+      <BlockHead id={`today-${id}`} title={title} count={count} asOf={stale && !ownLines ? asOf : undefined} slow={slow && !spoken} reader={reader} />
       {loading && !failed && (
         <div className="today-empty today-empty--pending panel" role="status" style={room ? ({ '--room': room } as CSSProperties) : undefined}>
           <span className="skel today-empty__shimmer" aria-hidden="true" />
@@ -207,17 +238,12 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
                 <FailureDetails detail={unavailable.detail} />
               </span>
             </div>
-          ) : spoken ? (
-            // The page's line says the cause and carries the one Retry: the block only says it has nothing to show.
-            <div className="today-empty panel" data-stale="">
-              <p className="subtle">Can’t check right now.</p>
-            </div>
           ) : (
             <div className="banner" data-tone="danger" role="alert">
               <Icon name="failed" />
               <span className="banner__content">
                 <span className="banner__title">{title} couldn’t be read</span>
-                <span className="banner__body">{state.status === 'error' ? state.message : 'Hermes hasn’t answered yet.'}</span>
+                <span className="banner__body">{state.status === 'error' ? state.message : `${reader} hasn’t answered yet.`}</span>
                 {state.status === 'error' && <FailureDetails detail={state.detail} />}
               </span>
               <button type="button" className="btn btn--secondary btn--sm" disabled={retrying} aria-busy={retrying} onClick={retry}>
@@ -228,7 +254,7 @@ export function TodayBlock<T>({ id, title, count, block, empty, note, held, room
           )}
         </div>
       )}
-      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure} checkedAt={checkedAt} /> : children(state.data))}
+      {state.status === 'ready' && (which ? <EmptyState which={which} to={to} note={note?.(state.data)} unsure={unsure !== undefined} checkedAt={checkedAt} /> : children(state.data))}
     </section>
   );
 }
@@ -245,7 +271,7 @@ export function TodayVoiceLine({ health }: { health: string | undefined }) {
       {lines.map((line) =>
         line.kind === 'unloaded' ? (
           <p key="unloaded" className="today-voice__line subtle" role="status">
-            Today shows what was loaded. {titleList(line.titles)} {line.titles.length === 1 ? 'loads' : 'load'} when you are back online.
+            {titleList(line.titles)} {line.titles.length === 1 ? 'loads' : 'load'} when you are back online.
           </p>
         ) : line.kind === 'slow' ? (
           <p key="slow" className="today-voice__line subtle" role="status">
@@ -281,7 +307,7 @@ export function TodayVoiceLine({ health }: { health: string | undefined }) {
  * also counts in its pill. A card whose answer is on its way stays where it stands; once it has folded into its agent it stays gone. An answer cannot be undone, so a folded card has
  * nothing to come back for. `unsure`: a read that bears on what needs the owner has failed or been given up (what is ready for review), so an empty list says it cannot check rather than that nothing needs them. `stage` is the read ladder's step while that read is on its way: the block is then a skeleton, never an empty list (`crew/knowledge.ts`).
  */
-export function NeedsYouBlock({ block, now, to, unsure, stage }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget; unsure: boolean; stage?: ReadStage }) {
+export function NeedsYouBlock({ block, now, to, unsure, stage }: { block: Block<InboxItem[]>; now: number; to: EmptyTarget; unsure?: { cause: string; retry(): void }; stage?: ReadStage }) {
   const answered = async (item: InboxItem, card: HTMLElement | null) => {
     // A card that left the page while its answer was on its way has nothing to fold.
     if (card) await fold(card, item.profile, () => foldAway(item.id));

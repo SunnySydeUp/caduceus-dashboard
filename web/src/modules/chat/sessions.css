@@ -7,7 +7,7 @@
 .app:not([data-size="compact"]) .chat__list.sl { display: flex; flex-direction: column; gap: var(--sl-gap); overflow-y: visible; block-size: calc(100dvh - var(--shell-top) - var(--cd-space-8)); }
 .talk-sessions .chat__list.sl { display: flex; flex-direction: column; gap: var(--sl-gap); overflow-y: visible; }
 .sl__top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); min-block-size: var(--cd-target-min); }
-.sl__title-text { margin: 0; padding-inline-start: var(--sl-inset); font: var(--cd-weight-semibold) var(--cd-text-base)/var(--cd-leading-base) var(--cd-font-sans); }
+.sl__title-text { margin: 0; padding-inline-start: var(--sl-inset); font: var(--cd-weight-semibold) var(--cd-text-md)/var(--cd-leading-md) var(--cd-font-sans); }
 .sl__new { margin-inline-start: auto; }
 .sl__bar { position: relative; flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); }
 .sl__tool { color: var(--cd-fg-muted); }

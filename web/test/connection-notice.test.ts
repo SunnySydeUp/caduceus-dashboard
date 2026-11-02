@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { connectionBanner, type ConnectionFacts } from '../src/shell/connection-notice.ts';
+import { connectionBanner, nextCantReachHold, type ConnectionFacts } from '../src/shell/connection-notice.ts';
 
-const HEALTHY: ConnectionFacts = { online: true, state: 'connected', attempt: 0, reason: undefined, backendState: 'ready', unreachable: false, redialing: false };
+const HEALTHY: ConnectionFacts = { online: true, state: 'connected', attempt: 0, reason: undefined, backendState: 'ready', unreachable: false, redialing: false, cantReachHeld: false };
 const facts = (change: Partial<ConnectionFacts>): ConnectionFacts => ({ ...HEALTHY, ...change });
 
 describe('the connection banner', () => {
@@ -51,6 +51,31 @@ describe('the connection banner', () => {
     expect(connectionBanner(facts({ ...stale, redialing: false }))?.title).toBe('Can’t reach your Mac');
     expect(connectionBanner(facts({ ...stale, online: false, redialing: true }))?.title).toBe('You are offline');
     expect(connectionBanner(facts({ redialing: true }))).toBeUndefined();
+  });
+
+  it('holds "Can’t reach your Mac" through the flips a failed redial makes, until a connection or the loss of the network ends it', () => {
+    const down = { online: true, redialing: false, unreachable: true } as const;
+    // The server does not answer with the device online: the words start.
+    let held = nextCantReachHold(false, { ...down, state: 'offline' });
+    expect(held).toBe(true);
+    // Each redial flips the gateway to reconnecting and back: the words stay, and the banner keeps saying them.
+    for (const state of ['reconnecting', 'offline', 'reconnecting', 'reconnecting', 'offline'] as const) {
+      held = nextCantReachHold(held, { ...down, state });
+      expect(held).toBe(true);
+      const banner = connectionBanner(facts({ state, attempt: 4, unreachable: state === 'offline', cantReachHeld: held }));
+      expect(banner?.title).toBe('Can’t reach your Mac');
+    }
+    // Without the hold, a redial in flight reads as reconnecting.
+    expect(connectionBanner(facts({ state: 'reconnecting', attempt: 4 }))?.title).toBe('Reconnecting to Hermes');
+    // A connection ends it; so does the network going away; so does a server that answers again while the gateway is still down.
+    expect(nextCantReachHold(held, { ...down, state: 'connected' })).toBe(false);
+    expect(nextCantReachHold(held, { ...down, online: false, state: 'reconnecting' })).toBe(false);
+    expect(nextCantReachHold(held, { ...down, unreachable: false, state: 'offline' })).toBe(false);
+  });
+
+  it('does not start the hold from the stale words of the first redial after the network came back', () => {
+    expect(nextCantReachHold(false, { online: true, state: 'offline', unreachable: true, redialing: true })).toBe(false);
+    expect(nextCantReachHold(false, { online: true, state: 'reconnecting', unreachable: true, redialing: false })).toBe(false);
   });
 
   it('gives the phone strip a short title that is never longer than the full one', () => {

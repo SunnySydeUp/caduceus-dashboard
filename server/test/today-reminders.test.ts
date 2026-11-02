@@ -96,18 +96,27 @@ describe('GET /_caduceus/api/today/reminders', () => {
 
   test('says so when remindctl fails, with its first line of complaint, and recovers when it works again', async () => {
     fake = makeFakeRemindctl();
-    fake.fails(1, 'Reminders access denied\nrun remindctl authorize\n');
+    fake.fails(1, 'Reminders store unavailable\nsee the log\n');
     const get = await open(fake.command);
 
     const res = await get();
     expect(res.status).toBe(503);
     const failure = (await res.json()) as RemindersFailure;
     expect(failure).toMatchObject({ error: 'reminders-unavailable', reason: 'failed' });
-    expect(failure.message).toContain('Reminders access denied');
-    expect(failure.message).not.toContain('run remindctl authorize');
+    expect(failure.message).toContain('Reminders store unavailable');
+    expect(failure.message).not.toContain('see the log');
 
     fake.prints(JSON.stringify([entry({ id: 'back' })]));
     expect(((await (await get()).json()) as RemindersState).reminders.map((r) => r.id)).toEqual(['back']);
+  });
+
+  test('when the Mac has not allowed access to Reminders, says so as a denial with the step that allows it, not in remindctl’s words', async () => {
+    fake = makeFakeRemindctl();
+    fake.fails(1, 'Reminders access denied. Run `remindctl authorize` to trigger the prompt\n');
+    const failure = (await (await (await open(fake.command))()).json()) as RemindersFailure;
+    expect(failure.reason).toBe('denied');
+    expect(failure.message).toContain('System Settings');
+    expect(failure.message).not.toContain('remindctl failed');
   });
 
   test('says so when remindctl prints something that is not a list of reminders', async () => {

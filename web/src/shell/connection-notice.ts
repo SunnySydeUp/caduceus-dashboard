@@ -18,6 +18,22 @@ export interface ConnectionFacts {
    * was no network, so it is not news about the Mac or about Hermes (`useConnectionBanners`).
    */
   redialing: boolean;
+  /**
+   * "Can’t reach your Mac" has been shown and no connection, and no loss of the network, has come since (`nextCantReachHold`). Each failed redial flips the gateway between
+   * "reconnecting" and "offline" within a moment; the words hold through that, so they do not flicker.
+   */
+  cantReachHeld: boolean;
+}
+
+/**
+ * Whether "Can’t reach your Mac" is held. It starts when the gateway is offline with the device online and the server does not answer (not a redial that has not failed yet).
+ * While the gateway redials ("reconnecting") it stays. It ends when the gateway connects, the device goes offline, or the server answers again while the gateway is still offline
+ * (then the words are about Hermes, not the Mac).
+ */
+export function nextCantReachHold(held: boolean, { online, state, unreachable, redialing }: Pick<ConnectionFacts, 'online' | 'state' | 'unreachable' | 'redialing'>): boolean {
+  if (!online || state === 'connected') return false;
+  if (state === 'offline') return unreachable && (held || !redialing);
+  return held;
 }
 
 /**
@@ -27,7 +43,7 @@ export interface ConnectionFacts {
  * "Reconnecting to Hermes": the old "can’t reach" was learned without a network. `stripTitle` is what the phone's one-line strip says in front of "since" and
  * the time ("Offline since 11:58"), short enough to leave the time whole at 320 px.
  */
-export function connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing }: ConnectionFacts): Omit<Banner, 'id'> | undefined {
+export function connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing, cantReachHeld }: ConnectionFacts): Omit<Banner, 'id'> | undefined {
   if (!online) {
     return { priority: 0, tone: 'neutral', icon: 'wifi-off', title: CAUSE.offline, stripTitle: 'Offline', body: 'This page shows what was already loaded. Changes cannot be saved until you are back online.' };
   }
@@ -35,7 +51,7 @@ export function connectionBanner({ online, state, attempt, reason, backendState,
   if (redialing) {
     return { priority: 1, tone: 'warning', icon: 'refresh', title: 'Reconnecting to Hermes', body: 'This device is back online. Pages that need Hermes fill in as soon as it is back.' };
   }
-  if (state === 'offline' && unreachable) {
+  if (cantReachHeld || (state === 'offline' && unreachable)) {
     return { priority: 0, tone: 'warning', icon: 'wifi-off', title: CAUSE.mac, stripTitle: 'Can’t reach Mac', body: `Caduceus on the Mac did not answer. ${MAC_CHECK} This page keeps trying (attempt ${attempt}).` };
   }
   if (state === 'offline' && backendState === 'stopped') {

@@ -19,7 +19,7 @@ const CONNECTION: Record<ConnectionState, { label: string; tone: 'success' | 'wa
 };
 
 /**
- * The realtime dot: connected, reconnecting with the attempt count, or offline, with the plain reason a screen reader can read. While the phone's connection strip is on screen the
+ * The realtime dot: connected, reconnecting, or offline, with the plain reason and the attempt count in words a screen reader can read (the eye gets the dot alone: a count beside it reads like a button). While the phone's connection strip is on screen the
  * strip says the state in words, so the dot is only a picture and a screen reader skips it: the state is said once.
  */
 function ConnectionDot() {
@@ -31,11 +31,6 @@ function ConnectionDot() {
   return (
     <span className="appbar__conn" role="status" aria-hidden={stripShown ? true : undefined}>
       <span className={`dot${state === 'offline' ? ' dot--dashed' : ''}${state === 'reconnecting' ? ' pulse' : ''}`} data-tone={tone} aria-hidden="true" />
-      {counted && (
-        <span className="appbar__conn-count" aria-hidden="true">
-          Retry {attempt}
-        </span>
-      )}
       <span className="sr-only">{words}</span>
     </span>
   );

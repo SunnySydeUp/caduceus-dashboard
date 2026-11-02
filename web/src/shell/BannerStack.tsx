@@ -88,7 +88,8 @@ export function BannerStack() {
   const first = shown[0];
   const strip = phone && first?.id === 'connection';
   const sticky = drawn && !open && first?.id === 'connection';
-  const since = !link.healthy && link.lastHealthyAt !== undefined ? clockWords(link.lastHealthyAt, Date.now()) : undefined;
+  // "since 10:42" says when the link was lost, so only a banner that says the link is lost takes it (`stripTitle`: Offline, Can't reach Mac); "Reconnecting to Hermes" says what is happening now, with no time.
+  const since = first?.stripTitle !== undefined && !link.healthy && link.lastHealthyAt !== undefined ? clockWords(link.lastHealthyAt, Date.now()) : undefined;
   useEffect(() => {
     if (!strip || leaving) setDetails(false);
   }, [strip, leaving]);
@@ -137,12 +138,10 @@ export function BannerStack() {
                   {banner.body && <div className="banner__body">{banner.body}</div>}
                   <BannerActions banner={banner} />
                 </div>
-                {banner.dismissible ? (
+                {banner.dismissible && (
                   <button type="button" className="btn btn--ghost btn--icon btn--sm" aria-label={`Dismiss: ${banner.title}`} onClick={() => dismissBanner(banner.id)}>
                     <Icon name="x" />
                   </button>
-                ) : (
-                  <span />
                 )}
               </div>
             ))}

@@ -3,7 +3,7 @@ import { useBackend, useGatewayStatus } from '../gateway.ts';
 import type { GatewayStatus } from '../gateway-connection.ts';
 import type { Reach } from '../offline.ts';
 import { clearBanner, setBanner } from './banners.ts';
-import { connectionBanner } from './connection-notice.ts';
+import { connectionBanner, nextCantReachHold } from './connection-notice.ts';
 import { FIRST_LINK, nextLinkMemory, type LinkMemory } from './link-memory.ts';
 import { toast } from './toasts.ts';
 
@@ -80,15 +80,19 @@ export function useConnectionBanners(): void {
   const { status, unreachable } = useBackend();
   const backendState = status?.state;
   const redialing = useRedialing(online, state, attempt);
+  // "Can't reach your Mac" holds through the flips a failed redial makes between reconnecting and offline (settled while rendering, like `redialing`).
+  const [held, setHeld] = useState(false);
+  const cantReachHeld = nextCantReachHold(held, { online, state, unreachable, redialing });
+  if (cantReachHeld !== held) setHeld(cantReachHeld);
   // Healthy is the banner's own test: connected, or still making the first connection (nothing has been lost yet).
   const healthy = online && (state === 'connected' || (state === 'reconnecting' && attempt === 0));
 
   useEffect(() => reportLink(healthy), [healthy]);
 
   useEffect(() => {
-    const banner = connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing });
+    const banner = connectionBanner({ online, state, attempt, reason, backendState, unreachable, redialing, cantReachHeld });
     if (banner) setBanner({ id: 'connection', ...banner });
     else clearBanner('connection');
-  }, [online, state, attempt, reason, backendState, unreachable, redialing]);
+  }, [online, state, attempt, reason, backendState, unreachable, redialing, cantReachHeld]);
   useEffect(() => () => clearBanner('connection'), []);
 }

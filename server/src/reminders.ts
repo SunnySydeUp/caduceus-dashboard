@@ -80,8 +80,13 @@ function run(command: string): Promise<string> {
     const failure = error as RunFailure;
     if (failure.code === 'ENOENT') return done.reject(new RemindersUnavailable('not-installed', 'remindctl is not installed on this Mac. Install it with: brew install steipete/tap/remindctl'));
     if (failure.killed === true || failure.signal === 'SIGTERM') return done.reject(new RemindersUnavailable('timeout', 'remindctl did not answer in time.'));
-    // Its first line of complaint says what is wrong (no access to Reminders, say); the rest of its output is not passed on, and the line is cut at a whole word.
-    const complaint = clipWords(stderr.split('\n')[0]?.trim() ?? '', 200);
+    // Its first line of complaint says what is wrong; the rest of its output is not passed on, and the line is cut at a whole word. A denial of access is said in Caduceus's own
+    // words, with the step that allows it, because remindctl's own words for it run long and are cut before their end.
+    const first = stderr.split('\n')[0]?.trim() ?? '';
+    if (/access denied|not authori[sz]ed/i.test(first)) {
+      return done.reject(new RemindersUnavailable('denied', 'This Mac has not allowed Caduceus to read Reminders. Allow it in System Settings › Privacy & Security › Reminders, or run “remindctl authorize” on the Mac.'));
+    }
+    const complaint = clipWords(first, 200);
     done.reject(new RemindersUnavailable('failed', complaint ? `remindctl failed: ${complaint}` : 'remindctl failed. Run "remindctl status" on the Mac to check its access to Reminders.'));
   });
   // It is asked for nothing: its input is closed.

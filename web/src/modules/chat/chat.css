@@ -393,6 +393,8 @@ button.rich__toggle:focus-visible { outline: var(--cd-focus-ring-width) solid va
 .draft-hint { display: flex; align-items: flex-start; gap: var(--cd-space-1-5); margin: var(--cd-space-2) var(--cd-space-3) 0; font-size: var(--cd-text-sm); }
 @media (pointer: coarse) { .draft-hint a { display: inline-flex; align-items: center; min-block-size: var(--cd-target-min); } }
 .chat__none .empty__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--cd-space-2); margin-block-start: var(--cd-space-2); }
+/* The pane's state heading sits a step below the page title (Talk's title is 16) and above the body words. */
+.chat__none .empty h2 { font-size: var(--cd-text-md); line-height: var(--cd-leading-md); }
 .prompts { display: grid; gap: var(--cd-space-3); min-inline-size: 0; }
 .prompts__help { margin: 0; font-size: var(--cd-text-xs); }
 .prompts__bar { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); align-items: center; min-inline-size: 0; }

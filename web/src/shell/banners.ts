@@ -19,7 +19,7 @@ export interface Banner {
   tone: Tone;
   icon: IconName;
   title: string;
-  /** What the phone's one-line strip says in front of the time when the title is too long for it (the title itself when absent). */
+  /** What the phone's one-line strip says in front of "since" and the time when the title is too long for it (the title itself when absent). A banner without one says what is happening now and takes no time. */
   stripTitle?: string;
   body?: string;
   actions?: BannerAction[];

@@ -336,15 +336,11 @@ describe('a Hermes that no longer matches the contracts Caduceus was built for',
     const health = await report(url, cookie);
     const readOnly = await (await fetch(`${url}/_caduceus/api/policy/read-only`, { headers: { cookie } })).json();
 
-    expect(health.repairs).toContainEqual({
-      id: 'contract-unreadable',
-      severity: 'warning',
-      subsystem: 'backend',
-      title: 'Caduceus cannot check Hermes’s contracts',
-      cause:
-        'Caduceus could not read part of what it compares Hermes with, so it cannot tell whether Hermes still matches the contracts it was built for: ' +
-        'Gateway contract unavailable: Hermes install directory unknown. Caduceus checks again whenever Hermes starts.',
-    });
+    // A warning that carries the reason Caduceus could not read, and the step that makes it check again.
+    const unreadable = health.repairs.find((repair) => repair.id === 'contract-unreadable');
+    expect(unreadable).toMatchObject({ severity: 'warning', subsystem: 'backend' });
+    expect(unreadable?.cause).toContain('Gateway contract unavailable: Hermes install directory unknown');
+    expect(unreadable?.cause).toContain('Restart the Hermes backend');
     expect(repairIds(health)).not.toContain('contract-mismatch');
     expect(subsystem(health, 'backend')).toMatchObject({ state: 'degraded', reason: 'The private Hermes backend is running, but Caduceus could not check Hermes against the contracts it was built for.' });
     expect(readOnly).toEqual({ readOnly: false });

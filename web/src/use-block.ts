@@ -55,8 +55,9 @@ export function useBlock<T>(load: () => Promise<T>, key: string, enabled: boolea
   useGatewayEvent('sessions.changed', () => changedBy.includes('sessions.changed') && enabled && reload());
   useGatewayEvent('platforms.changed', () => changedBy.includes('platforms.changed') && enabled && reload());
 
-  // Change broadcasts are not replayed: after a reconnect or a Hermes restart anything may have moved while the page was away.
-  useLiveLoad((ready) => ready !== undefined && enabled && reload());
+  // Change broadcasts are not replayed: after a reconnect or a Hermes restart anything may have moved while the page was away. The page's first connect is no such gap: a block
+  // that asked a moment before it has its answer (or is about to), and reads again only if that read failed (Hermes was not up yet).
+  useLiveLoad((ready) => ready !== undefined && enabled && (ready.reconnected || ready.restarted || state.status === 'error') && reload());
 
   return { state, reload, asked: enabled };
 }

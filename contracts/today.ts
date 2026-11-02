@@ -69,8 +69,11 @@ export interface RemindersState {
   reminders: Reminder[];
 }
 
-/** Why the reminders could not be read; the answer is HTTP 503 with this, and never carries more of `remindctl` than its first line of complaint. */
-export type RemindersFailureReason = 'not-installed' | 'timeout' | 'failed' | 'unreadable';
+/**
+ * Why the reminders could not be read; the answer is HTTP 503 with this, and never carries more of `remindctl` than its first line of complaint. `denied`: the Mac has not
+ * allowed access to Reminders, said in Caduceus's words with the step that allows it.
+ */
+export type RemindersFailureReason = 'not-installed' | 'timeout' | 'denied' | 'failed' | 'unreadable';
 
 export interface RemindersFailure {
   error: 'reminders-unavailable';

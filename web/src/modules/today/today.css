@@ -85,8 +85,6 @@
 .today-quiet p { margin: 0; max-inline-size: 65ch; }
 .today .banner__body { max-inline-size: 65ch; }
 .today-quiet__acts { display: flex; flex-wrap: wrap; gap: var(--cd-space-2); }
-.today-quiet__details summary { cursor: pointer; min-block-size: var(--cd-target-min); display: flex; align-items: center; color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
-.today-quiet__details p { overflow-wrap: anywhere; font-size: var(--cd-text-sm); }
 
 /* While the link is down a tile's line is the time it was last true: quieter, and its sigil steps back. */
 .today-tile[data-stale] small { color: var(--cd-fg-subtle); font-style: italic; }
@@ -98,6 +96,10 @@
 .today-block__asof { color: var(--cd-fg-subtle); font-size: var(--cd-text-sm); font-style: italic; }
 /* A read that is slow says so on the title row, in the same quiet voice and place as "As of": it is not an alarm. A failed read's cause has its code behind Details (`FailureDetails`). */
 .today-block__slow { color: var(--cd-fg-muted); font-size: var(--cd-text-sm); }
+/* A block the page's line speaks for: one quiet line under its title, no card. */
+.today-block__quiet { margin: 0; }
 .today-block[data-stale] .sigil { opacity: 0.55; }
 .today-block[data-stale] .today-row__text small, .today-block[data-stale] .today-when__t small, .today-block[data-stale] .banner__body { font-style: italic; }
+/* A cause of several lines (Needs a look) stays upright: italic marks a short line as old, and is hard to read at paragraph length. */
+.today-look[data-stale] .today-row__text small { font-style: normal; }
 .today-block[data-stale] .banner > svg.i { opacity: 0.55; }

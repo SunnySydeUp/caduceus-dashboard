@@ -37,7 +37,7 @@ export function useJobs(enabled = true): JobsState {
     if (enabled) open.resolve();
   }, [enabled, open]);
 
-  const load = useCallback(async () => {
+  const readJobs = useCallback(async () => {
     const request = ++latest.current;
     await open.promise;
     try {
@@ -51,6 +51,16 @@ export function useJobs(enabled = true): JobsState {
       if (request === latest.current) setFailed(true);
     }
   }, [open]);
+  // Asks made in the same moment (one Retry for two blocks that read the jobs) share one read; an ask after that read has started is a read of its own.
+  const queued = useRef<Promise<void>>(undefined);
+  const load = useCallback(
+    () =>
+      (queued.current ??= Promise.resolve().then(() => {
+        queued.current = undefined;
+        return readJobs();
+      })),
+    [readJobs],
+  );
 
   useLiveLoad(() => void load());
   useGatewayEvent('cron.changed', () => void load());

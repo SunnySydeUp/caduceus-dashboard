@@ -73,14 +73,22 @@ export function Today() {
   const decisions = useMemo(() => decisionsFor(feed.items), [feed.items]);
   const stream = feedBlock(feed, decisions, () => inboxFeed().retry());
   // "Nothing needs you right now" is true only once what it is made of has answered: the Inbox's stream (the decisions) and the review state above (a finished task waits on the owner
-  // too). Until then Needs you is a skeleton, then "Still reading Hermes…", and when a read failed or was given up it says it cannot check (`crew/knowledge.ts`).
-  const readyAnswer: ReadyAnswer = ready.state.status === 'loading' ? 'waiting' : ready.state.status === 'error' ? 'failed' : 'answered';
+  // too). Until then Needs you is a skeleton, then "Still reading Hermes…", and when a read failed or was given up it says it cannot check (`crew/knowledge.ts`). A review state Hermes
+  // does not offer will never answer: it is no reason to doubt the decisions, so it counts as answered.
+  const readyAnswer: ReadyAnswer = ready.state.status === 'loading' ? 'waiting' : ready.state.status === 'error' && ready.state.next === undefined ? 'failed' : 'answered';
   const reading = feed.status === 'connecting' || readyAnswer === 'waiting';
   const stage = useReadLadder(isReading({ status: reading ? 'loading' : 'ready', asked: ready.asked }), false);
   const known = knowledge({ feed: feed.status, hermesUp: feed.hermesUp, ready: readyAnswer, stage });
   const quiet = stream.state.status === 'ready' && stream.state.data.length === 0;
   const needs: Block<InboxItem[]> = quiet && isPending(known) ? { ...stream, state: { status: 'loading' } } : stream;
   const readyBlock = mapBlock(ready, readyRows);
+  // Why Needs you cannot check, and what asks again: the review state's failure, else the live stream (Caduceus lost it, or Hermes behind it is down).
+  const blindness =
+    known !== 'unread'
+      ? undefined
+      : ready.state.status === 'error' && ready.state.next === undefined
+        ? { cause: ready.state.message, retry: () => void ready.reload() }
+        : { cause: feed.status === 'offline' ? CAUSE.mac : CAUSE.hermesSilent, retry: () => inboxFeed().retry() };
 
   const jobsBlock: Block<Job[]> = {
     reload: () => jobs.reload(),
@@ -136,7 +144,7 @@ export function Today() {
       <TodayVoiceLine health={registry.module('health')?.path} />
       <div className="today__grid">
         <div className="today__col">
-          <NeedsYouBlock block={visible} now={now} to={to} unsure={known === 'unread'} stage={isPending(known) ? known : undefined} />
+          <NeedsYouBlock block={visible} now={now} to={to} unsure={blindness} stage={isPending(known) ? known : undefined} />
           {stream.state.status === 'ready' && <LookBlock items={feed.items} now={now} />}
           <ReadyBlock block={readyBlock} now={now} to={to} onOpen={(row) => void markOpened(row)} />
           <CrewBlock block={crewBlock} to={to} />
