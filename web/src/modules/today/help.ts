@@ -52,7 +52,7 @@ export const todayHelp: ModuleHelp = {
           ],
         },
         { h: 'Empty blocks, Install and Setup' },
-        { p: 'A block with nothing to show says why and has one action: Talk to an agent, Give the crew work (opens a new task), Schedule a routine (opens a new schedule) or Add an agent. At the bottom, a card offers the setup guide while it is unfinished, then a card offers to install the app. Not now on Install stays in Settings › Install app.' },
+        { p: 'A block with nothing to show says why and has one action: Talk to an agent (opens a new chat), Give the crew work (opens a new task), Schedule a routine (opens a new schedule) or Add an agent. At the bottom, a card offers the setup guide while it is unfinished, then a card offers to install the app. Not now on Install stays in Settings › Install app.' },
       ],
       related: ['notices', 'profile-scope', 'chat', 'risk-tiers', 'getting-around'],
     },

@@ -164,7 +164,8 @@ describe('an empty block', () => {
   const paths: Record<string, string> = { chat: '/chat', tasks: '/work/tasks', schedules: '/work/schedules', profiles: '/profiles' };
   const pathOf = (module: string) => paths[module];
 
-  test('"Give the crew work" opens the new task, and "Schedule a routine" the new schedule, not a list', () => {
+  test('"Talk to an agent" opens a new chat, "Give the crew work" the new task, and "Schedule a routine" the new schedule, not a list', () => {
+    expect(emptyTarget('needs', pathOf)).toBe('/chat/new');
     expect(emptyTarget('ready', pathOf)).toBe('/work/tasks/new');
     expect(emptyTarget('schedule', pathOf)).toBe('/work/schedules/new');
     expect(emptyTarget('away-quiet', pathOf)).toBe('/work/schedules/new');
@@ -172,7 +173,6 @@ describe('an empty block', () => {
 
   test('an action that only looks leads to its module\'s own screen, and a module the app does not have leads home', () => {
     expect(emptyTarget('away-first', pathOf)).toBe('/work/schedules');
-    expect(emptyTarget('needs', pathOf)).toBe('/chat');
     expect(emptyTarget('crew', () => undefined)).toBe('/');
   });
 });

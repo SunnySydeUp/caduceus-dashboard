@@ -173,7 +173,7 @@ interface EmptyAction {
 
 /** What an empty block says and the one action that fills it. A label that promises to do something opens the screen where it is done. */
 export const EMPTY: Record<EmptyBlock, { text: string; action: EmptyAction }> = {
-  needs: { text: 'Nothing needs you right now. When an agent needs a decision, it shows here.', action: { label: 'Talk to an agent', module: 'chat' } },
+  needs: { text: 'Nothing needs you right now. When an agent needs a decision, it shows here.', action: { label: 'Talk to an agent', module: 'chat', suffix: '/new' } },
   ready: { text: 'Nothing is waiting for your review. Finished tasks, runs and routines show here until you open them.', action: { label: 'Give the crew work', module: 'tasks', suffix: '/new' } },
   schedule: { text: 'No routines run today. A routine you schedule shows here, with when it runs next.', action: { label: 'Schedule a routine', module: 'schedules', suffix: '/new' } },
   'away-first': { text: 'This is your first visit to Today. Runs and routines that finish while you are away show here.', action: { label: 'See the schedule', module: 'schedules' } },
