@@ -43,13 +43,28 @@ afterEach(async () => {
   fs.rmSync(work, { recursive: true, force: true });
 });
 
-async function openChat(options: Parameters<typeof createChat>[1] = {}) {
+/** A chat on a page. With `refuseSubmit`, the page's next `prompt.submit` is refused with those words before it reaches Hermes, as Caduceus refuses a turn while it drains. */
+async function openChat(options: Parameters<typeof createChat>[1] = {}, refuseSubmit?: string) {
   server ??= await startCaduceusServer({ backend: hermes.backend, hermesRoot: hermes.home });
   cookie ??= await ownerCookie(server.url);
   const page = openGatewayConnection(server.url, cookie);
   pages.push(page);
   await page.until((status) => status.state === 'connected');
-  const chat = createChat(page.connection, { history: page.rest, ...options });
+  let refusal = refuseSubmit;
+  const client = new Proxy(page.connection.client, {
+    get(target, property) {
+      if (property === 'request')
+        return (method: string, ...rest: unknown[]) => {
+          if (method !== 'prompt.submit' || refusal === undefined) return (target.request as Function)(method, ...rest);
+          const error = new Error(refusal);
+          refusal = undefined;
+          return Promise.reject(error);
+        };
+      const value = Reflect.get(target, property, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  const chat = createChat({ client, status: page.connection.status, onReady: page.connection.onReady.bind(page.connection) }, { history: page.rest, ...options });
   chats.push(chat);
   return chat;
 }
@@ -83,6 +98,16 @@ describe('images', () => {
     const again = await openChat({ storedId: chat.state.storedId! });
     await again.until((state) => state.messages.length === 2);
     expect(again.state.messages[0]!.text).toBe(sent!.text);
+  });
+
+  test('an image whose prompt does not go is taken back from Hermes: the next message is sent without it', async () => {
+    const chat = await openChat({ cwd: work }, 'Caduceus is updating or restarting, so new turns are paused. Try again in a moment.');
+    expect(await chat.send('What is in this picture?', { attachments: [image('dot.png')] })).toBe(false);
+    expect(chat.state.error).toMatch(/new turns are paused/);
+
+    expect(await chat.send('Just words')).toBe(true);
+    await chat.until(finished(2));
+    expect(lastCompletion().messages.at(-1)).toEqual({ role: 'user', content: 'Just words' });
   });
 });
 

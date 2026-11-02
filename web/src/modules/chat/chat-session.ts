@@ -48,7 +48,7 @@ import type { GatewayConnection } from '../../gateway-connection.ts';
 import { approvalParams, cancelledApprovals, clarifyResult, denyNote, needsStepUp, requestOf, settledOf, DEFAULT_CLARIFY_TIMEOUT_S, type ApprovalDecision, type ClarifyAnswers, type OpenRequest, type SettledRequest } from './requests.ts';
 import { endTurn, entriesOf, withSnapshots, foldSubagents, foldTurn, hermesSettingsFor, noticeOf, statsOf, todosOf, withLiveSubagents, type ActivityItem, type ActivityMode, type Notice, type ReplyStats, type SubagentActivity, type Todo, type TurnSegment } from './activity.ts';
 import { referenceValue, type FolderEntry } from './path-reference.ts';
-import { uploadAttachments, type Upload, type UploadStep } from './attachment-upload.ts';
+import { takeBack, uploadAttachments, type Requester, type Upload, type UploadStep } from './attachment-upload.ts';
 import { aroundUrl, fromAround, fromLatest, latestUrl, mergeLatest, newerUrl, olderUrl, withNewer, withOlder, type HistoryBody, type HistoryWindow } from './history-window.ts';
 import { afterCompression, mergeUsage } from './composer-model.ts';
 import { createStore, type Store } from './store.ts';
@@ -830,13 +830,17 @@ export function createChat(connection: ChatConnection, options: ChatOptions = {}
       return false;
     }
     const uncut = cutBefore === undefined ? undefined : loaded;
+    /** The images this send queued in Hermes, and the runtime session they are queued in, until the prompt that carries them has gone. */
+    let queued: { sessionId: string; paths: readonly string[] } | undefined;
+    const request: Requester = (method, params) => client.request(method, { ...params, ...profile });
     delivering = true;
     try {
       await attach();
       await chat.start();
       await inProgress;
       // Attachments are Hermes's before the prompt goes: it queues the images for the next prompt and stages the files, whose references go in the text.
-      const uploaded = await uploadAttachments((method, params) => client.request(method, { ...params, ...profile }), runtimeId!, sending.attachments ?? [], sending.onProgress);
+      const uploaded = await uploadAttachments(request, runtimeId!, sending.attachments ?? [], sending.onProgress);
+      queued = { sessionId: runtimeId!, paths: uploaded.imagePaths };
       if (uploaded.fileRefs.length > 0) {
         text = [text, ...uploaded.fileRefs].filter((part) => part !== '').join('\n');
         shown = [shown, ...uploaded.fileRefs].filter((part) => part !== '').join('\n');
@@ -854,12 +858,15 @@ export function createChat(connection: ChatConnection, options: ChatOptions = {}
         await sync();
         await submit();
       });
+      queued = undefined;
       return true;
     } catch (error) {
       // Refused (read-only mode, a step-up, Hermes down): the prompt did not go, and the screen says why. A transcript that was cut for it is Hermes's again, whole.
       if (uncut) publish(uncut);
       store.set({ running: false, turn: undefined });
       fail(error);
+      // The images it would have carried are taken back, or Hermes would send them with the next message (which goes on the same connection, after this).
+      if (queued) await takeBack(request, queued.sessionId, queued.paths);
       return false;
     } finally {
       delivering = false;

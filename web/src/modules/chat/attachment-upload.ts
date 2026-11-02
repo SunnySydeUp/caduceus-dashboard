@@ -45,8 +45,16 @@ export async function toBase64(body: Blob): Promise<string> {
 const words = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /**
- * Sends the attachments one after the other. Stops at the first Hermes refuses: the images already queued are taken off the session again
- * (`image.detach`), so that a second try does not send them twice, and the error says which attachment it was.
+ * Takes images queued for the next prompt off the session again (`image.detach`). Hermes keeps a queued image until a prompt goes, so one whose
+ * prompt did not go would otherwise be sent with the next message. An image Hermes no longer holds (its prompt went after all) is left alone.
+ */
+export async function takeBack(request: Requester, sessionId: string, imagePaths: readonly string[]): Promise<void> {
+  await Promise.all(imagePaths.map((path) => request<ImageDetachResult>('image.detach', { session_id: sessionId, path }).catch(() => undefined)));
+}
+
+/**
+ * Sends the attachments one after the other. Stops at the first Hermes refuses: the images already queued are taken back (`takeBack`), so that a
+ * second try does not send them twice, and the error says which attachment it was.
  */
 export async function uploadAttachments(request: Requester, sessionId: string, uploads: readonly Upload[], onStep: (step: UploadStep) => void = () => undefined): Promise<Uploaded> {
   const done: Uploaded = { fileRefs: [], imagePaths: [] };
@@ -67,7 +75,7 @@ export async function uploadAttachments(request: Requester, sessionId: string, u
       onStep({ index, name: upload.name, state: 'attached' });
     } catch (error) {
       onStep({ index, name: upload.name, state: 'failed', error: words(error) });
-      for (const path of done.imagePaths) await request<ImageDetachResult>('image.detach', { session_id: sessionId, path }).catch(() => undefined);
+      await takeBack(request, sessionId, done.imagePaths);
       throw new Error(`${upload.name}: ${words(error)}`);
     }
   }
