@@ -471,7 +471,7 @@ export async function startCaduceusServer(options: CaduceusServerOptions): Promi
   const inbox = createInbox({ sources, activity, runs: liveRequests.runs, store, now, live: () => observer.up });
   const inboxRoutes = mountInbox(app, { inbox, requests: liveRequests, policy });
   mountToday(app, { store, backend, activity, now });
-  mountReminders(app, { command: options.remindctl, backend, now });
+  mountReminders(app, { command: options.remindctl, backend, policy, audit, now });
   const pushSubscriptions = mountPush(app, { store, now, test: (device) => pushWatcher.sendTest(device), policy, allowLoopback: options.allowLoopbackPush === true });
   const presence = createPresence(now);
   mountPresence(app, presence);

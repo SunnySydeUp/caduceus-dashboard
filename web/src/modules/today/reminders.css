@@ -33,9 +33,12 @@ html:active-view-transition-type(reminders) .rem__list { view-transition-name: r
 .rem__heading[data-tone="danger"] { color: var(--cd-tone-danger-fg); }
 .rem__none { margin: 0; }
 .rem__rows { list-style: none; margin: 0; padding: 0; display: grid; }
-/* A row is when, then what. Nothing in it is a control: the block only reads Reminders. The when column is one width for every row, so the titles line up, and
+/* A row is when, then what; an overdue Apple Reminder ends with its Done button, and nothing else in a row is a control. The when column is one width for every row, so the titles line up, and
    fits a ticked 12-hour time (`✓ 10:30 AM`) and a short date (`Sat 17 Oct`). */
 .rem-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--cd-space-3); align-items: baseline; padding-block: var(--cd-space-2); min-inline-size: 0; }
+.rem-row[data-act] { grid-template-columns: 5.5rem minmax(0, 1fr) auto; align-items: center; }
+.rem__head { display: flex; align-items: center; justify-content: space-between; gap: var(--cd-space-2); flex-wrap: wrap; }
+.rem__head .rem__heading { margin-block-end: 0; }
 .rem-row + .rem-row { border-block-start: 1px solid var(--cd-border-subtle); }
 .rem-row__when { display: inline-flex; align-items: center; gap: var(--cd-space-1); color: var(--cd-fg-muted); font: var(--cd-text-sm)/var(--cd-leading-sm) var(--cd-font-sans); font-variant-numeric: tabular-nums; }
 .rem-row__when .i { color: var(--cd-tone-success-fg); flex: none; }

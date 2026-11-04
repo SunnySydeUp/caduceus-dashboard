@@ -1,14 +1,18 @@
 // Today's reminders: the owner's Apple Reminders that have a due date, read from the `remindctl` command, and the reminders an agent set (Hermes's one-time jobs).
-// Read-only by construction: the command line is a fixed list of arguments (nothing of a request reaches it, and no shell is involved), it is `export`, which only
-// prints, and what comes back is cut down to the six things the calendar shows. A reminder's notes, URL and list id, and a job's prompt, never leave this file.
-// Nothing is stored: every ask runs the command and reads Hermes's jobs (answers that overlap share one run), because Reminders and Hermes are the sources of truth.
+// Every command line is a fixed list of arguments (no shell is involved): `export`, which only prints, and, when the owner marks Overdue reminders done from Today,
+// `complete` and its undo `edit --incomplete`, which name only reminders `export` has just listed. What comes back is cut down to the six things the calendar shows: a
+// reminder's notes, URL and list id, and a job's prompt, never leave this file. Nothing is stored: every ask runs the command and reads Hermes's jobs (answers that
+// overlap share one run), because Reminders and Hermes are the sources of truth.
 import { execFile } from 'node:child_process';
 import type { Hono } from 'hono';
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { Reminder, RemindersFailure, RemindersFailureReason, RemindersState } from '@caduceus/contracts/today';
 import { isOneTimeJob } from '@caduceus/contracts/scheduler';
 import type { HermesBackend } from './hermes-backend.ts';
-import type { AuthEnv } from './auth-routes.ts';
+import { authClient, type AuthEnv } from './auth-routes.ts';
+import type { AuditLog } from './audit-log.ts';
+import { gateRequest } from './policy-gate.ts';
+import type { RestPolicy } from './policy.ts';
 import { clipWords } from '@caduceus/contracts/clip-words';
 
 /** What is run: `remindctl export --json`, which includes completed reminders. Fixed on purpose. */
@@ -93,13 +97,13 @@ interface RunFailure {
   stderr?: string;
 }
 
-/** Runs the command and resolves with what it printed. Rejects with `RemindersUnavailable`. */
-function run(command: string): Promise<string> {
+/** Runs the command with `args` and resolves with what it printed. Rejects with `RemindersUnavailable`. */
+function run(command: string, args: readonly string[] = ARGUMENTS): Promise<string> {
   const done = Promise.withResolvers<string>();
   const env: NodeJS.ProcessEnv = {};
   for (const name of ENV_KEPT) if (process.env[name] !== undefined) env[name] = process.env[name];
   env.PATH = `${env.PATH ?? '/usr/bin:/bin'}:${EXTRA_PATH}`;
-  const child = execFile(command, [...ARGUMENTS], { env, timeout: TIMEOUT_MS, maxBuffer: MAX_OUTPUT, encoding: 'utf8' }, (error, stdout, stderr) => {
+  const child = execFile(command, [...args], { env, timeout: TIMEOUT_MS, maxBuffer: MAX_OUTPUT, encoding: 'utf8' }, (error, stdout, stderr) => {
     if (!error) return done.resolve(stdout);
     const failure = error as RunFailure;
     if (failure.code === 'ENOENT') return done.reject(new RemindersUnavailable('not-installed', 'remindctl is not installed on this Mac. Install it with: brew install steipete/tap/remindctl'));
@@ -123,7 +127,39 @@ export interface RemindersDeps {
   command?: string;
   /** Hermes, whose one-time jobs are the reminders an agent set. */
   backend: HermesBackend;
+  /** Judges and audits marking reminders done and undoing it (`contracts/policy/owned.ts`). */
+  policy: RestPolicy;
+  audit: AuditLog;
   now: () => number;
+}
+
+/** The most reminders one change names (all of Overdue at once). */
+const MAX_CHANGED = 100;
+const MAX_CHANGE_BODY = 16 * 1024;
+/** The fixed part of each change; the ids go last, after every option. `edit` takes one reminder at a time. */
+const COMPLETE = ['complete', '--no-input', '--no-color'] as const;
+const REOPEN = ['edit', '--incomplete', '--no-input', '--no-color'] as const;
+
+/**
+ * The ids of a change's body: Apple Reminders ids only (an agent's reminder is a Hermes job, done when it runs), never one that could read as an option or, all
+ * digits, as remindctl's index of a row instead of an id.
+ */
+function changedIds(body: unknown): string[] | undefined {
+  if (!isRecord(body) || !Array.isArray(body.ids) || body.ids.length === 0 || body.ids.length > MAX_CHANGED) return undefined;
+  const ids = body.ids.filter((id): id is string => typeof id === 'string' && id !== '' && id.length <= 256 && !id.startsWith('-') && !/^\d+$/.test(id) && !id.startsWith('hermes:'));
+  return ids.length === body.ids.length ? [...new Set(ids)] : undefined;
+}
+
+/** The ids of every reminder Reminders holds, open or done, as `remindctl export` lists them. */
+function exportedIds(stdout: string): Set<string> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    throw new RemindersUnavailable('unreadable', 'remindctl did not print a list of reminders.');
+  }
+  if (!Array.isArray(parsed)) throw new RemindersUnavailable('unreadable', 'remindctl did not print a list of reminders.');
+  return new Set(parsed.flatMap((raw) => (isRecord(raw) && typeof raw.id === 'string' ? [raw.id] : [])));
 }
 
 /** Hermes's list of jobs. Throws when Hermes does not answer. */
@@ -133,11 +169,39 @@ async function readJobs(backend: HermesBackend): Promise<unknown> {
   return res.json();
 }
 
-export function mountReminders(app: Hono<AuthEnv>, { command = 'remindctl', backend, now }: RemindersDeps): void {
+export function mountReminders(app: Hono<AuthEnv>, { command = 'remindctl', backend, policy, audit, now }: RemindersDeps): void {
   let running: Promise<string> | undefined;
+  const exported = () => (running ??= run(command).finally(() => (running = undefined)));
+
+  /**
+   * Marks reminders done (`complete`) or not done again (`reopen`, the undo). Each id is checked against what Reminders holds now, so the command is only ever told of
+   * a reminder that exists, by its whole id, after its fixed options.
+   */
+  const change = (route: 'complete' | 'reopen') =>
+    app.post(`/_caduceus/api/today/reminders/${route}`, async (c) => {
+      const gated = await gateRequest(policy, c, 'POST', MAX_CHANGE_BODY);
+      if ('refusal' in gated) return gated.refusal;
+      const ids = changedIds(gated.body);
+      if (!ids) return c.json({ error: 'bad-request' }, 400);
+      try {
+        const known = exportedIds(await exported());
+        if (ids.some((id) => !known.has(id))) return c.json({ error: 'not-found', message: 'Reminders has no such reminder. It may have been deleted on another device.' }, 404);
+        // A T0 is not audited by the policy; a change to the owner's own Reminders is, by how many and never by what (no ids, no titles).
+        audit.record({ actor: 'owner', action: `today.reminders-${route}`, target: `${ids.length} reminder${ids.length === 1 ? '' : 's'}`, source: authClient(c).source, tier: 'T0' });
+        if (route === 'complete') await run(command, [...COMPLETE, ...ids]);
+        else for (const id of ids) await run(command, [...REOPEN, id]);
+      } catch (error) {
+        if (error instanceof RemindersUnavailable) return c.json({ error: 'reminders-unavailable', reason: error.reason, message: error.message } satisfies RemindersFailure, 503);
+        throw error;
+      }
+      return c.json({ ok: true });
+    });
+  change('complete');
+  change('reopen');
+
   app.get('/_caduceus/api/today/reminders', async (c) => {
     // Asks that overlap (two tabs, a reload) share one run of the command.
-    const started = (running ??= run(command).finally(() => (running = undefined)));
+    const started = exported();
     const jobs = readJobs(backend).then(
       (list) => agentReminders(list, now()),
       // Hermes not answering is said by Today's Hermes blocks and its banner; the Apple Reminders, read from this Mac, are still worth showing.

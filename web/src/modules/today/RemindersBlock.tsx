@@ -1,7 +1,8 @@
 // Today's reminders: the owner's Apple Reminders (read from `remindctl` by the server) and the reminders an agent set (Hermes's one-time jobs) as an agenda, what is overdue, then today and tomorrow, under a strip of
 // the week with a count on each day, so the rest of the week reads at a glance without a list. The strip unfolds into the month (a View Transition grows it in place: the week
-// moves to where it sits in the month and the agenda slides down) for picking a day further out; picking one folds it again and lists that day. Read-only: nothing
-// here completes or edits a reminder, so nothing looks like a checkbox. It loads by itself after Today has settled (it is a lazy chunk) and fails on its own, like
+// moves to where it sits in the month and the agenda slides down) for picking a day further out; picking one folds it again and lists that day. Overdue Apple Reminders
+// can be marked done, one by one or all at once, with an undo in the toast; nothing else here changes a reminder, and a row is never drawn as a checkbox. An agent's
+// reminder is done when its job has run. It loads by itself after Today has settled (it is a lazy chunk) and fails on its own, like
 // every block. Reminders has no event to listen for, so it is read again when the tab comes back and when the gateway reconnects (`useBlock`); there is no timer.
 import { useEffect, useId, useMemo, useState } from 'react';
 import type { Reminder } from '@caduceus/contracts/today';
@@ -14,7 +15,8 @@ import { NetworkAction } from '../../shell/NetworkAction.tsx';
 import { useBlock } from '../../use-block.ts';
 import { TodayBlock } from './TodayBlocks.tsx';
 import { agenda, dateKey, type DayCell, dayKey, monthCells, monthOf, overdueBefore, remindersOn, shiftDay, shiftMonth, timeWords, weekOf } from './reminders-model.ts';
-import { readReminders } from './reminders-data.ts';
+import { markReminders, readReminders } from './reminders-data.ts';
+import { toast } from '../../shell/toasts.ts';
 import './reminders.css';
 
 /** The type its folds give the View Transition: `reminders.css` names the grid, the week and the agenda only while one runs. */
@@ -27,14 +29,24 @@ const noTarget = () => '/today';
 
 const dayWords = (key: string, long = true) => new Date(`${key}T12:00:00`).toLocaleDateString([], { weekday: long ? 'long' : 'short', day: 'numeric', month: long ? 'long' : 'short' });
 
+/** What the owner can do to overdue Apple Reminders: mark them done, `busy` while a change is on its way. */
+interface Marking {
+  done(reminders: readonly Reminder[]): void;
+  busy: boolean;
+}
+
+/** An Apple Reminder still to do can be marked done here; one an agent set is done when its job runs. */
+const markable = (reminder: Reminder) => !reminder.completed && reminder.agent === undefined;
+
 /** `overdueSince` is today's key when the row is in Overdue: its time is then its day (Yesterday, or the date); the hour, when it has one, goes with its list. */
-function ReminderRow({ reminder, overdueSince }: { reminder: Reminder; overdueSince?: string }) {
+function ReminderRow({ reminder, overdueSince, marking }: { reminder: Reminder; overdueSince?: string; marking?: Marking }) {
   const overdue = overdueSince !== undefined;
   const when = overdue ? (dayKey(reminder) === shiftDay(overdueSince, -1) ? 'Yesterday' : dayWords(dayKey(reminder), false)) : timeWords(reminder);
   // An Apple Reminder names its list; one an agent set names the agent.
   const meta = [overdue && timeWords(reminder), reminder.agent === undefined ? reminder.list : `Set by ${reminder.agent}`].filter(Boolean).join(' · ');
+  const action = marking && markable(reminder);
   return (
-    <li className="rem-row" data-done={reminder.completed || undefined}>
+    <li className="rem-row" data-done={reminder.completed || undefined} data-act={action || undefined}>
       <span className="rem-row__when">
         {reminder.completed ? (
           <>
@@ -48,23 +60,37 @@ function ReminderRow({ reminder, overdueSince }: { reminder: Reminder; overdueSi
         <b>{reminder.title}</b>
         {meta && <small>{meta}</small>}
       </span>
+      {action && (
+        <button type="button" className="btn btn--ghost btn--sm" aria-label={`Mark “${reminder.title}” done`} disabled={marking.busy} onClick={() => marking.done([reminder])}>
+          <Icon name="check" small />
+          Done
+        </button>
+      )}
     </li>
   );
 }
 
-function DayList({ title, reminders, overdueSince, none }: { title: string; reminders: Reminder[]; overdueSince?: string; none?: string }) {
+function DayList({ title, reminders, overdueSince, none, marking }: { title: string; reminders: Reminder[]; overdueSince?: string; none?: string; marking?: Marking }) {
   const id = useId();
+  const all = marking ? reminders.filter(markable) : [];
   return (
     <section aria-labelledby={id}>
-      <h3 className="rem__heading" id={id} data-tone={overdueSince === undefined ? undefined : 'danger'}>
-        {title} {reminders.length > 0 && <span className="muted">{reminders.length}</span>}
-      </h3>
+      <div className="rem__head">
+        <h3 className="rem__heading" id={id} data-tone={overdueSince === undefined ? undefined : 'danger'}>
+          {title} {reminders.length > 0 && <span className="muted">{reminders.length}</span>}
+        </h3>
+        {marking && all.length > 1 && (
+          <button type="button" className="btn btn--ghost btn--sm" disabled={marking.busy} onClick={() => marking.done(all)}>
+            {`Mark all ${all.length} done`}
+          </button>
+        )}
+      </div>
       {reminders.length === 0 ? (
         <p className="subtle rem__none">{none}</p>
       ) : (
         <ul className="rem__rows">
           {reminders.map((reminder) => (
-            <ReminderRow key={reminder.id} reminder={reminder} overdueSince={overdueSince} />
+            <ReminderRow key={reminder.id} reminder={reminder} overdueSince={overdueSince} marking={marking} />
           ))}
         </ul>
       )}
@@ -72,7 +98,7 @@ function DayList({ title, reminders, overdueSince, none }: { title: string; remi
   );
 }
 
-function Calendar({ reminders, today }: { reminders: Reminder[]; today: string }) {
+function Calendar({ reminders, today, marking }: { reminders: Reminder[]; today: string; marking: Marking }) {
   // The day listed and the day whose week the folded strip shows; null follows today, so a Today left open overnight moves on to the new day by itself.
   const [selected, setSelected] = useState<string | null>(null);
   const [anchor, setAnchor] = useState<string | null>(null);
@@ -193,7 +219,7 @@ function Calendar({ reminders, today }: { reminders: Reminder[]; today: string }
         </tbody>
       </table>
       <div className="rem__list" aria-live="polite">
-        {overdue.length > 0 && <DayList title="Overdue" reminders={overdue} overdueSince={today} />}
+        {overdue.length > 0 && <DayList title="Overdue" reminders={overdue} overdueSince={today} marking={marking} />}
         {days.map(({ key, reminders: due }) => (
           <DayList
             key={key}
@@ -275,6 +301,32 @@ export function RemindersBlock({ now }: { now: number }) {
     if (state.status === 'ready') localStorage.setItem(SHAPE_KEY, 'calendar');
     else if (state.status === 'error' && online) localStorage.setItem(SHAPE_KEY, 'trouble');
   }, [state.status, online]);
+  // Marking overdue reminders done: at once, then the calendar reads Reminders again; the toast's Undo marks them not done again.
+  const [busy, setBusy] = useState(false);
+  // A change that failed part way may have changed some reminders: the calendar reads Reminders again either way.
+  const failed = (error: unknown) => {
+    toast(error instanceof Error ? error.message : 'Reminders did not take the change.', { tone: 'danger' });
+    void reload();
+  };
+  const marking: Marking = {
+    busy,
+    done(reminders) {
+      const ids = reminders.map((reminder) => reminder.id);
+      setBusy(true);
+      markReminders(ids, true)
+        .then(async (sent) => {
+          if (!sent) return;
+          await reload();
+          toast(reminders.length === 1 ? `Marked “${reminders[0]!.title}” done` : `Marked ${reminders.length} reminders done`, {
+            undo: () =>
+              void markReminders(ids, false)
+                .then(() => reload())
+                .catch(failed),
+          });
+        }, failed)
+        .finally(() => setBusy(false));
+    },
+  };
   if (hidden && state.status !== 'ready') return null;
   // The trouble line is for the Mac's own answer about Reminders (not installed, not allowed, failed): it stays true offline too. A failure of the network (offline, the Mac not
   // answering) is the page's, and the block speaks in the voice of the blocks beside it (`TodayBlock`).
@@ -282,7 +334,7 @@ export function RemindersBlock({ now }: { now: number }) {
   return (
     // The calendar is about 22rem tall; the trouble line about 11rem.
     <TodayBlock id="reminders" title="Reminders" reader="Reminders" block={block} empty={() => undefined} room={troubleLast ? '11rem' : '22rem'} to={noTarget}>
-      {(reminders) => <Calendar reminders={reminders} today={dateKey(new Date(now))} />}
+      {(reminders) => <Calendar reminders={reminders} today={dateKey(new Date(now))} marking={marking} />}
     </TodayBlock>
   );
 }

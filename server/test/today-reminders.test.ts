@@ -160,6 +160,66 @@ describe('GET /_caduceus/api/today/reminders', () => {
   });
 });
 
+describe('marking Apple Reminders done, and undoing it', () => {
+  /** A POST from the owner's page. */
+  const post = (route: string, body: unknown) => fetch(`${server!.url}/_caduceus/api/today/reminders/${route}`, { method: 'POST', headers: { origin: server!.url, cookie, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+  test('completes the reminders it is given and reopens them on undo, naming each by its full id after the fixed arguments, and only reminders Reminders has', async () => {
+    fake = makeFakeRemindctl();
+    fake.prints(JSON.stringify([entry({ id: 'AAA-1', dueDate: iso(-2 * DAY) }), entry({ id: 'BBB-2', dueDate: iso(-DAY) })]));
+    await open(fake.command);
+
+    const done = await post('complete', { ids: ['AAA-1', 'BBB-2'] });
+    expect(done.status, await done.clone().text()).toBe(200);
+    const undone = await post('reopen', { ids: ['AAA-1'] });
+    expect(undone.status).toBe(200);
+    // Each change is checked against what Reminders holds first, so an id that is not a reminder never reaches the command.
+    expect(fake.calls()).toEqual([
+      ['export', '--json', '--no-input', '--no-color'],
+      ['complete', '--no-input', '--no-color', 'AAA-1', 'BBB-2'],
+      ['export', '--json', '--no-input', '--no-color'],
+      ['edit', '--incomplete', '--no-input', '--no-color', 'AAA-1'],
+    ]);
+    // Each change is audited by how many reminders it named, never by their ids or titles.
+    const audit = JSON.stringify(await (await fetch(`${server!.url}/_caduceus/api/audit`, { headers: { cookie } })).json());
+    expect(audit).toContain('today.reminders-complete');
+    expect(audit).toContain('2 reminders');
+    expect(audit).not.toContain('AAA-1');
+
+    const before = fake.calls().length;
+    expect((await post('complete', { ids: ['AAA-1', 'not-a-reminder'] })).status).toBe(404);
+    expect((await post('complete', { ids: ['--delete-all'] })).status).toBe(400);
+    expect((await post('complete', { ids: [] })).status).toBe(400);
+    expect((await post('complete', { ids: 'AAA-1' })).status).toBe(400);
+    // All digits is remindctl's index of a row in its own listing, not an id.
+    expect((await post('complete', { ids: ['12'] })).status).toBe(400);
+    // A reminder an agent set is a Hermes job: it is done when it has run, never through Reminders.
+    expect((await post('complete', { ids: ['hermes:default:abc'] })).status).toBe(400);
+    expect(fake.calls().slice(before).every((call) => call[0] === 'export')).toBe(true);
+  });
+
+  test('says why when Reminders refuses the change, in the same words as a read', async () => {
+    fake = makeFakeRemindctl();
+    fake.prints(JSON.stringify([entry({ id: 'AAA-1' })]));
+    await open(fake.command);
+    fake.fails(1, 'Reminders access denied. Run `remindctl authorize`\n');
+    const res = await post('complete', { ids: ['AAA-1'] });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: 'reminders-unavailable', reason: 'denied' });
+  });
+
+  test('is behind sign-in, and is a T0 in the policy map: it changes the owner’s Reminders and the undo puts it back', async () => {
+    fake = makeFakeRemindctl();
+    await open(fake.command);
+    const res = await fetch(`${server!.url}/_caduceus/api/today/reminders/complete`, { method: 'POST', headers: { origin: server!.url, 'content-type': 'application/json' }, body: JSON.stringify({ ids: ['AAA-1'] }) });
+    expect(res.status).toBe(401);
+    expect(fake.calls()).toEqual([]);
+    for (const route of ['complete', 'reopen']) {
+      expect(createRestClassifier()('POST', `/_caduceus/api/today/reminders/${route}`)).toMatchObject({ ok: true, policy: { tier: 'T0', read: false } });
+    }
+  });
+});
+
 describe('parseReminders', () => {
   test('keeps what a reminder needs and nothing else (no notes, no ids of lists)', () => {
     const [only] = parseReminders(JSON.stringify([entry({ notes: 'private notes', url: 'https://example.com/secret', id: 'x' })]), NOW);

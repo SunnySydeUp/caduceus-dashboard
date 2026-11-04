@@ -7,7 +7,7 @@ export const todayHelp: ModuleHelp = {
       title: 'Today',
       summary: 'What needs you, what is ready for review, the day’s routines, what happened while you were away, and the reminders due.',
       route: '/today',
-      keywords: 'home start overview inbox needs a look failed gave up warning needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty reminders apple calendar due date remindctl week month agenda tomorrow overdue offline as of can’t check still reading update hermes slow',
+      keywords: 'home start overview inbox needs a look failed gave up warning needs you decision approval approve allow deny question clarify choice badge notification pending command tool answer ready review finished done opened schedule routine cron next run away overnight crew tiles retry empty reminders apple calendar due date remindctl week month agenda tomorrow overdue mark done complete clear undo offline as of can’t check still reading update hermes slow',
       body: [
         { p: 'Today is where Caduceus opens. It answers four questions, in this order on a phone: what needs me, what is ready, what are my routines doing, and what happened while I was away. On a wide screen the schedule and the away list sit in a second column. Every block loads by itself, and the others carry on while one waits.' },
         { p: 'Today always shows every agent, with no filter. Its scope is [[profile-scope|All agents]] and cannot be changed here.' },
@@ -36,7 +36,7 @@ export const todayHelp: ModuleHelp = {
         { p: 'Your [[apple-reminders|Apple Reminders]] that have a due date, and the reminders you asked an agent to set, last on the page. A strip of this week shows how many are still to do on each day. Under it: what is overdue, then today and tomorrow. Choose a day to list it; choose the month’s name to open the whole month.' },
         {
           ul: [
-            'Reminders are shown, never changed. Complete or edit Apple Reminders in the Reminders app.',
+            'An overdue Apple Reminder has a Done button, and Mark all done clears the whole Overdue list. Undo in the message that follows puts them back. Anything else, such as a new date or deleting one, is done in the Reminders app.',
             'A reminder an agent set says Set by and the agent’s name. It is a one-time scheduled job in Hermes: it is ticked once it has run, and you can change or delete it in Work › Schedules. When it runs, your devices with notifications on are told what the agent says.',
             'If they cannot be read, the block is one quiet line. Details says why, Retry tries again, and Hide puts the line away on this device. Reminders return by themselves when they can be read.',
             'Apple Reminders are read with remindctl on the Mac that runs Caduceus. Run remindctl status there if they do not load.',
@@ -91,7 +91,7 @@ export const todayHelp: ModuleHelp = {
     {
       id: 'apple-reminders',
       term: 'Apple Reminders',
-      definition: 'The Reminders app on your Mac, iPhone and iPad. Caduceus reads the reminders that have a due date through the remindctl command on the Mac it runs on, and only reads them.',
+      definition: 'The Reminders app on your Mac, iPhone and iPad. Caduceus reads the reminders that have a due date through the remindctl command on the Mac it runs on. The only change it makes is marking overdue ones done when you ask.',
       page: 'today',
     },
     {

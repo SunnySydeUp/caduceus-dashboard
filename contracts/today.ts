@@ -49,8 +49,8 @@ export interface TodayVisit {
 }
 
 /**
- * One dated reminder: an Apple Reminder as `remindctl` reports it, or one an agent set (a Hermes one-time job, `agent` set). Read-only: Caduceus never adds,
- * completes or deletes a reminder.
+ * One dated reminder: an Apple Reminder as `remindctl` reports it, or one an agent set (a Hermes one-time job, `agent` set). Caduceus never adds or deletes a
+ * reminder; the one change it makes is marking overdue Apple Reminders done when the owner asks, and the undo of that (`POST /_caduceus/api/today/reminders/complete|reopen`).
  */
 export interface Reminder {
   /** Reminders's own id for it; `hermes:<profile>:<job id>` for one an agent set. */
