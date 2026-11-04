@@ -78,7 +78,7 @@ Destructive buttons never sit in the thumb's primary position on the first scree
 - **Permission flow:**
   1. Ask only after a meaningful action (e.g. the first approval) and from a user tap.
   2. On iOS, ask only after Home Screen install. An install guide explains why (ip §12 #3, #23).
-- **Categories (per device):** Approvals & questions · Reviews & blocked tasks · Failures (runs, cron, gateway) · Finished runs · Pairing · Budget · Updates. Each has on/off settings and a quiet-hours window. A digest option covers FYI categories. There is no push while any Caduceus client is visible (ip §12 #22).
+- **Categories (per device):** Approvals & questions · Reminders (agent-set one-time jobs, when they run) · Reviews & blocked tasks · Tasks done · Failures (runs, cron, gateway) · Finished runs · Pairing · Budget · Updates. Each has on/off settings and a quiet-hours window. A digest option covers FYI categories. There is no push while any Caduceus client is visible (ip §12 #22).
 - **Payloads:** title = the decision ("Approve `git push` on coder?"); body = the exact preview. The deep link opens the decision sheet. iOS gets no notification actions, so the deep link *is* the action.
 - **Badging:** `navigator.setAppBadge(n)`, where n is the number of items that need the owner (the Today tab's count). It is supported on installed PWAs, including iOS 16.4+ Home Screen apps.
 - **Install:**

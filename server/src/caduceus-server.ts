@@ -36,6 +36,7 @@ import { createInbox, mountInbox } from './inbox.ts';
 import { createPresence, mountPresence } from './presence.ts';
 import { mountPush } from './push.ts';
 import { createPushWatcher } from './push-watcher.ts';
+import { createPushNews } from './push-news.ts';
 import { createActivityFeed, createRunTracker } from './inbox-activity.ts';
 import { createCronSource } from './inbox-cron.ts';
 import { mountJobNotifications } from './job-notifications.ts';
@@ -455,12 +456,14 @@ export async function startCaduceusServer(options: CaduceusServerOptions): Promi
     onFailure: (error) => options.budgetGuard?.failed?.(error),
   });
   guard.mount(app);
+  // What the cron and Work sources read is also news for the push watcher: a reminder that came due, a task that reached Done.
+  const news = createPushNews({ backend, now });
   const sources: InboxSource[] = [
     liveRequests,
     budgets.source,
     guard.source,
-    createCronSource({ backend, observer, now, pollMs: readMs, mutes: jobMutes }),
-    createWorkSource({ backend, now, pollMs: readMs }),
+    createCronSource({ backend, observer, now, pollMs: readMs, mutes: jobMutes, onJobs: news.jobs }),
+    createWorkSource({ backend, now, pollMs: readMs, onBoards: news.boards }),
     createPairingSource({ backend, observer, now, pollMs: readMs }),
     createSystemSource({ backend, observer, now, pollMs: readMs, report: () => health.report(), updateEveryMs: 30 * 60_000, checkUpdates: options.hermesUpdateCheck === true }),
     ...(options.inboxSources ?? []),
@@ -468,12 +471,12 @@ export async function startCaduceusServer(options: CaduceusServerOptions): Promi
   const inbox = createInbox({ sources, activity, runs: liveRequests.runs, store, now, live: () => observer.up });
   const inboxRoutes = mountInbox(app, { inbox, requests: liveRequests, policy });
   mountToday(app, { store, backend, activity, now });
-  mountReminders(app, { command: options.remindctl, now });
+  mountReminders(app, { command: options.remindctl, backend, now });
   const pushSubscriptions = mountPush(app, { store, now, test: (device) => pushWatcher.sendTest(device), policy, allowLoopback: options.allowLoopbackPush === true });
   const presence = createPresence(now);
   mountPresence(app, presence);
   // The push watcher (M2 #03) listens to what the Inbox does and tells the devices that subscribed. The tests give it a short tick and their own clock.
-  const pushWatcher = createPushWatcher({ store, subscriptions: pushSubscriptions, inbox, activity, presence, now, tickMs: options.pushTickMs ?? 30_000, subject: 'mailto:caduceus@localhost', allowLoopback: options.allowLoopbackPush === true, looked: options.pushLooked });
+  const pushWatcher = createPushWatcher({ store, subscriptions: pushSubscriptions, inbox, activity, news, presence, now, tickMs: options.pushTickMs ?? 30_000, subject: 'mailto:caduceus@localhost', allowLoopback: options.allowLoopbackPush === true, looked: options.pushLooked });
   const stopAnnouncing = observer.onStatus(() => inboxRoutes.announce());
 
   if (options.webRoot) {

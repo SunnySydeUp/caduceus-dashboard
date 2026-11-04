@@ -1,9 +1,10 @@
-// The Inbox's cron source (M2 #02): a scheduled job whose last run failed, and one that is overdue. Both come from Hermes's list of jobs
-// (`GET /api/cron/jobs?profile=all`), read again when Hermes says its jobs moved (`cron.changed` on the observer connection) and now and then
-// (overdue is a matter of time). A job that runs well again, or is paused or deleted, simply stops being in the list, and so stops being an item.
+// The Inbox's cron source (M2 #02): a scheduled job whose last run failed, one whose result Hermes could deliver nowhere, and one that is overdue. All come from
+// Hermes's list of jobs (`GET /api/cron/jobs?profile=all`), read again when Hermes says its jobs moved (`cron.changed` on the observer connection) and now and then
+// (overdue is a matter of time). A job that runs well again, or is paused or deleted, simply stops being in the list, and so stops being an item. The list it read
+// is also handed on (`onJobs`): the reminders an agent set are in it, and the push watcher sends them (`push-news.ts`).
 import type { InboxAction } from '@caduceus/contracts/inbox';
 import { isRecord } from '@caduceus/contracts/policy/guards';
-import { SCHEDULER_STALE_AFTER_S } from '@caduceus/contracts/scheduler';
+import { isOneTimeJob, SCHEDULER_STALE_AFTER_S } from '@caduceus/contracts/scheduler';
 import type { GatewayObserver } from './gateway-observer.ts';
 import type { HermesBackend } from './hermes-backend.ts';
 import type { JobMutes } from './job-notifications.ts';
@@ -55,6 +56,11 @@ export function cronNotices(jobs: unknown, now: number, muted: (profile: string,
     if (text(job.last_status) === 'error') {
       return [{ ...common, id: `cron-failed:${profile}:${id}`, stamp: `failed:${String(job.last_run_at ?? '')}`, title: `“${name}” failed`, detail: text(job.last_error)?.slice(0, 400) ?? 'Its last run ended with an error.', actions: [runNow, pause], link: open }];
     }
+    // The run went well and Hermes had nowhere to send its result (no messaging platform for `all`, a target gone). A reminder is sent by Caduceus itself, so it is
+    // never this; a routine's result is then only in its output, and the owner should know.
+    if (text(job.last_status) === 'delivery_failed' && !isOneTimeJob(job)) {
+      return [{ ...common, id: `cron-undelivered:${profile}:${id}`, stamp: `undelivered:${String(job.last_run_at ?? '')}`, title: `“${name}” ran but was not delivered`, detail: text(job.last_delivery_error)?.slice(0, 400) ?? 'Hermes could not send its result anywhere.', actions: [runNow, pause], link: open }];
+    }
     const next = instant(job.next_run_at);
     const age = job.scheduler_heartbeat_age_s;
     // A scheduler that is not ticking is the reason jobs are late, and the system source says so once: not once for every job.
@@ -73,16 +79,20 @@ export interface CronSourceDeps {
   pollMs: number;
   /** The owner's per-job notification switch (`job-notifications.ts`): a job it silences is no item. */
   mutes?: JobMutes;
+  /** Told the list of jobs after every read that got one. */
+  onJobs?: (jobs: unknown) => void;
 }
 
-export function createCronSource({ backend, observer, now, pollMs, mutes }: CronSourceDeps): InboxSource {
+export function createCronSource({ backend, observer, now, pollMs, mutes, onJobs }: CronSourceDeps): InboxSource {
   return createPolledSource({
     now,
     pollMs,
     async read() {
       const res = await backend.fetch('/api/cron/jobs?profile=all');
       if (!res.ok) throw new Error(`Hermes answered HTTP ${res.status}`);
-      return cronNotices(await res.json(), now(), mutes ? (profile, id) => mutes.muted(profile, id) : undefined);
+      const jobs: unknown = await res.json();
+      onJobs?.(jobs);
+      return cronNotices(jobs, now(), mutes ? (profile, id) => mutes.muted(profile, id) : undefined);
     },
     wake(refresh) {
       const stopObserving = observer.onEvent((type) => type === 'cron.changed' && refresh());

@@ -1,5 +1,6 @@
-// The push watcher (M2 #03; architecture §4): it listens to what the Inbox listens to (the same sources, through the Inbox, and the activity feed of finished
-// runs) and tells each subscribed device, in the words of `push-rules.ts`, of what that device asked to hear of. Rules of delivery:
+// The push watcher (M2 #03; architecture §4): it listens to what the Inbox listens to (the same sources, through the Inbox, the activity feed of finished
+// runs, and the news the cron and Work sources hand on: reminders that came due and tasks that reached Done, `push-news.ts`) and tells each subscribed device, in
+// the words of `push-rules.ts`, of what that device asked to hear of. Rules of delivery:
 //  - Presence: nothing is sent while any Caduceus page of the owner is in view.
 //  - Dedupe: a device is told of one Hermes state once. The claim is written to the store before the message goes, so a reconnect, a second look at the same
 //    list, or a restart of Caduceus never tells it again.
@@ -10,6 +11,7 @@ import type { InboxItem } from '@caduceus/contracts/inbox';
 import type { CaduceusStore } from './caduceus-store.ts';
 import type { ActivityFeed } from './inbox-activity.ts';
 import type { Inbox } from './inbox.ts';
+import type { PushNews } from './push-news.ts';
 import type { Presence } from './presence.ts';
 import { digestDue, inQuietHours, messageFor, notification, pushCategoryOf } from './push-rules.ts';
 import type { PushSubscriptions, Subscription } from './push.ts';
@@ -29,6 +31,7 @@ export interface PushWatcherDeps {
   subscriptions: PushSubscriptions;
   inbox: Inbox;
   activity: ActivityFeed;
+  news: PushNews;
   presence: Presence;
   now: () => number;
   /** How often the watcher looks again with no change to prompt it: a lapsed presence, the end of quiet hours, a digest's hour. */
@@ -42,7 +45,7 @@ export interface PushWatcherDeps {
   looked?: () => void;
 }
 
-/** What one device may be told of: an Inbox item, or a run that finished. */
+/** What one device may be told of: an Inbox item, a run that finished, or news (a reminder that came due, a task that reached Done). */
 interface Candidate {
   /** What a dedupe claim and an override are made against. */
   key: string;
@@ -60,10 +63,15 @@ const candidateOfItem = (item: InboxItem): Candidate | undefined => {
   return { key: `${item.id}|${item.stamp}`, ref: item.ref, category, fyi: item.group === 'fyi', title: item.kind === 'notice' ? item.title : item.sessionTitle, message: (origin, badge) => messageFor(item, origin, badge), urgent: item.group === 'decision' };
 };
 
-export function createPushWatcher({ store, subscriptions, inbox, activity, presence, now, tickMs, subject, fetch: send, allowLoopback, looked }: PushWatcherDeps): PushWatcher {
+export function createPushWatcher({ store, subscriptions, inbox, activity, news, presence, now, tickMs, subject, fetch: send, allowLoopback, looked }: PushWatcherDeps): PushWatcher {
   const { db } = store;
   /** The newest finished run already looked at: a run that finished before Caduceus started is not news. */
   let watermark = Math.max(0, ...activity.events().map((event) => event.seq));
+  /**
+   * A task that reached Done before Caduceus started is not news either, like a run (Hermes stamps a finish by the second, so this second counts whole). Without it,
+   * the first start of this version would send the last day of them at once, and every restart what finished while Caduceus was off.
+   */
+  const startedAt = Math.floor(now() / 1000) * 1000;
   let stopped = false;
   let running: Promise<void> | undefined;
   let again = false;
@@ -120,6 +128,13 @@ export function createPushWatcher({ store, subscriptions, inbox, activity, prese
           message: (origin, badge) => notification(`Finished: ${event.title}`, event.profile ?? '', event.storedSessionId ? `${origin}/chat/${encodeURIComponent(event.storedSessionId)}` : `${origin}/today`, badge),
         });
       }
+      // News from before the device subscribed is not news to it. Hermes stamps a finish by the second, so the device's second counts whole. A task that reached Done
+      // before Caduceus started is not news either; a reminder that came due while it was off still is (its own window is an hour).
+      const subscribed = Math.floor(sub.createdAt / 1000) * 1000;
+      for (const item of news.items()) {
+        if (item.at < (item.urgent ? subscribed : Math.max(subscribed, startedAt))) continue;
+        candidates.push({ key: item.key, ref: item.ref, category: item.category, fyi: !item.urgent, title: item.title, urgent: item.urgent, message: (origin, badge) => notification(item.title, item.body, `${origin}${item.to}`, badge) });
+      }
       for (const candidate of candidates) {
         // A run that finished while someone was looking is not news; an item that is still waiting is, once nobody is.
         if (candidate.category === 'finished' && !hidden) continue;
@@ -149,7 +164,7 @@ export function createPushWatcher({ store, subscriptions, inbox, activity, prese
       });
   };
 
-  const stops = [inbox.subscribe(trigger), presence.subscribe(trigger), subscriptions.subscribe(trigger)];
+  const stops = [inbox.subscribe(trigger), news.subscribe(trigger), presence.subscribe(trigger), subscriptions.subscribe(trigger)];
   const timer = setInterval(trigger, tickMs);
   timer.unref();
   trigger();

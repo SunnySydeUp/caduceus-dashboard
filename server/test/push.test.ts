@@ -15,6 +15,7 @@ import { createChat, type Chat } from '../../web/src/modules/chat/chat-session.t
 import type { InboxItem } from '@caduceus/contracts/inbox';
 import type { InboxSource } from '../src/inbox-source.ts';
 import type { PushSettings } from '@caduceus/contracts/push';
+import { isRecord } from '@caduceus/contracts/policy/guards';
 
 // Web Push (M2 #03), through the Caduceus API the way the page and its service worker use it, in front of the real Hermes. The push service is a
 // local stand-in (`fixtures/push-stub.ts`) that decrypts what it is sent as a browser would: nothing here reaches a real push service.
@@ -495,6 +496,94 @@ describe('what a device asked to hear of', () => {
     expect(message.notification.body).toBe('work');
     expect(message.notification.navigate).toBe(`${server!.url}/chat/${encodeURIComponent(chat.state.storedId!)}`);
     expect(doesNot.received).toBe(0);
+  }, 60_000);
+
+  test('a one-time job (a reminder an agent set) that runs is sent with what the agent said, at once and whatever Hermes could deliver; a routine that runs is not', async () => {
+    await openServer();
+    const device = stub.subscribe();
+    await enable(device);
+    // `all` is what an agent asks for with no messaging platform set up: Hermes runs the job and records that it could deliver it nowhere.
+    const job = async (name: string, schedule: string) => {
+      const made = await hermes.backend.fetch('/api/cron/jobs?profile=work', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, schedule, prompt: `Remind me: ${name}`, deliver: 'all' }) });
+      expect(made.status, await made.clone().text()).toBe(200);
+      const body: unknown = await made.json();
+      if (!isRecord(body) || typeof body.id !== 'string') throw new Error('Hermes made no job');
+      return body.id;
+    };
+    const routine = await job('Daily digest', '0 3 * * *');
+    const reminder = await job('Reminder: call Mum', new Date(Date.now() + 24 * 3_600_000).toISOString());
+    const run = (id: string) => hermes.backend.fetch(`/api/cron/jobs/${id}/trigger?profile=work`, { method: 'POST' });
+
+    llm.nextReply({ chunks: ['Digest ', 'written.'] });
+    expect((await run(routine)).status).toBe(200);
+    llm.nextReply({ chunks: ['Time to ', 'call Mum.'] });
+    expect((await run(reminder)).status).toBe(200);
+    const { message, headers } = await device.next();
+
+    expect(message.notification).toMatchObject({ title: 'Reminder: call Mum', body: 'Time to call Mum.' });
+    // A tap opens the run's session, where the reply is: the job's newest run, as Hermes lists it.
+    const runs: unknown = await (await hermes.backend.fetch(`/api/cron/jobs/${reminder}/runs?profile=work&limit=1`)).json();
+    const newest = isRecord(runs) && Array.isArray(runs.runs) && isRecord(runs.runs[0]) ? runs.runs[0].id : undefined;
+    expect(message.notification.navigate).toBe(`${server!.url}/chat/${encodeURIComponent(String(newest))}?profile=work`);
+    // A reminder is due now: the push service is told to wake the device for it.
+    expect(headers.urgency).toBe('high');
+    await lookAgain(4);
+    expect(device.received).toBe(1);
+  }, 60_000);
+
+  test('a task that reaches Done is sent under Tasks done with its summary, and one done before the device subscribed is not', async () => {
+    const task = async (title: string) => {
+      // No assignee: nobody picks it up, so it is Done only when the test says so.
+      const made = await hermes.backend.fetch('/api/plugins/kanban/tasks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title }) });
+      expect(made.status).toBe(200);
+      const body: unknown = await made.json();
+      if (!isRecord(body) || !isRecord(body.task) || typeof body.task.id !== 'string') throw new Error('Hermes made no task');
+      return body.task.id;
+    };
+    const finish = async (id: string, summary: string) => {
+      const done = await hermes.backend.fetch(`/api/plugins/kanban/tasks/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'done', result: summary, summary }) });
+      expect(done.status).toBe(200);
+    };
+    await finish(await task('Old news'), 'Done long ago');
+    // Hermes stamps a finish by the second: the device subscribes in a later second than the old task's.
+    const second = Math.floor(Date.now() / 1000);
+    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50 }).toBeGreaterThan(second);
+    await openServer();
+    const device = stub.subscribe();
+    await enable(device);
+
+    const fresh = await task('Write the report');
+    await finish(fresh, 'The report is in the shared folder.');
+    const { message } = await device.next();
+
+    expect(message.notification).toMatchObject({ title: 'Done: Write the report', body: 'The report is in the shared folder.', navigate: `${server!.url}/work/tasks/${fresh}?board=default` });
+    await lookAgain(4);
+    expect(device.received).toBe(1);
+  }, 60_000);
+
+  test('a restart of Caduceus does not send what reached Done before it started (the first start of this version included), only what finishes after', async () => {
+    const done = async (title: string) => {
+      const made = await hermes.backend.fetch('/api/plugins/kanban/tasks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title }) });
+      const body: unknown = await made.json();
+      if (!isRecord(body) || !isRecord(body.task) || typeof body.task.id !== 'string') throw new Error('Hermes made no task');
+      expect((await hermes.backend.fetch(`/api/plugins/kanban/tasks/${body.task.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'done', result: title, summary: title }) })).status).toBe(200);
+    };
+    await openServer();
+    const device = stub.subscribe();
+    await enable(device);
+    await server!.close();
+    server = undefined;
+    await done('Finished while Caduceus was off');
+    // Hermes stamps a finish by the second: Caduceus starts again in a later second.
+    const second = Math.floor(Date.now() / 1000);
+    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50 }).toBeGreaterThan(second);
+
+    await openServer();
+    // The task that finishes now is sent; were the one from before sent too, it would be among what came.
+    await done('Finished now');
+    expect((await device.next()).message.notification.title).toBe('Done: Finished now');
+    await lookAgain(4);
+    expect(device.received).toBe(1);
   }, 60_000);
 });
 

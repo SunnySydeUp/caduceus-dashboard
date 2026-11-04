@@ -35,6 +35,8 @@ export interface Job {
   /** `ok`, `error`, or whatever else Hermes recorded; undefined before the first run. */
   lastStatus?: string;
   lastError?: string;
+  /** Why Hermes could not send the last run's result anywhere (`last_status` is then `delivery_failed`). */
+  lastDeliveryError?: string;
   /** Seconds since this profile's scheduler last ticked; undefined when it never has. */
   schedulerAgeS?: number;
   /** The record as Hermes sent it: the configuration the detail shows, a duplicate is made from, and diagnostics report. */
@@ -159,6 +161,7 @@ export function parseJobs(body: unknown, blueprintTitles: readonly string[] = []
         lastRunAt: instant(entry.last_run_at),
         lastStatus: text(entry.last_status),
         lastError: text(entry.last_error),
+        lastDeliveryError: text(entry.last_delivery_error),
         schedulerAgeS: typeof age === 'number' ? age : undefined,
         config: entry,
       },

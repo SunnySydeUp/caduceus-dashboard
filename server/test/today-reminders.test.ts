@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRestClassifier } from '@caduceus/contracts/policy/rest';
+import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { Reminder, RemindersFailure, RemindersState } from '@caduceus/contracts/today';
 import { startCaduceusServer, type CaduceusServer } from '../src/caduceus-server.ts';
 import { parseReminders } from '../src/reminders.ts';
@@ -117,6 +118,31 @@ describe('GET /_caduceus/api/today/reminders', () => {
     expect(failure.reason).toBe('denied');
     expect(failure.message).toContain('System Settings');
     expect(failure.message).not.toContain('remindctl failed');
+  });
+
+  test('lists the reminders an agent set (Hermes’s one-time jobs) beside the Apple ones, named by their agent; a routine is not a reminder', async () => {
+    fake = makeFakeRemindctl();
+    fake.prints(JSON.stringify([entry({ id: 'apple', title: 'Apple one', dueDate: iso(DAY) })]));
+    const runAt = new Date(Date.now() + 3 * DAY).toISOString().replace(/\.\d+Z$/, 'Z');
+    const made: string[] = [];
+    for (const [name, schedule] of [['Reminder: water the plants', runAt], ['Morning digest', '0 7 * * *']]) {
+      const res = await hermes.backend.fetch('/api/cron/jobs?profile=default', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, schedule, prompt: name, deliver: 'local' }) });
+      expect(res.status, await res.clone().text()).toBe(200);
+      const body: unknown = await res.json();
+      if (!isRecord(body) || typeof body.id !== 'string') throw new Error('Hermes made no job');
+      made.push(body.id);
+    }
+    try {
+      const res = await (await open(fake.command))();
+      expect(res.status).toBe(200);
+      const { reminders } = (await res.json()) as RemindersState;
+      const hermesOne = reminders.find((reminder) => reminder.agent !== undefined);
+      expect(reminders.map((reminder) => reminder.title)).toEqual(['Apple one', 'Reminder: water the plants']);
+      expect(hermesOne).toEqual({ id: `hermes:default:${made[0]}`, title: 'Reminder: water the plants', list: 'default', agent: 'default', due: expect.any(String), allDay: false, day: undefined, completed: false } satisfies Reminder);
+      expect(Date.parse(hermesOne!.due)).toBe(Date.parse(runAt));
+    } finally {
+      for (const id of made) await hermes.backend.fetch(`/api/cron/jobs/${id}?profile=default`, { method: 'DELETE' });
+    }
   });
 
   test('says so when remindctl prints something that is not a list of reminders', async () => {

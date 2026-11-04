@@ -48,23 +48,29 @@ export interface TodayVisit {
   at: number;
 }
 
-/** One Apple Reminder that has a due date, as `remindctl` reports it. Read-only: Caduceus never adds, completes or deletes a reminder. */
+/**
+ * One dated reminder: an Apple Reminder as `remindctl` reports it, or one an agent set (a Hermes one-time job, `agent` set). Read-only: Caduceus never adds,
+ * completes or deletes a reminder.
+ */
 export interface Reminder {
-  /** Reminders's own id for it. */
+  /** Reminders's own id for it; `hermes:<profile>:<job id>` for one an agent set. */
   id: string;
   title: string;
-  /** The Reminders list it belongs to. */
+  /** The Reminders list it belongs to; for one an agent set, the agent's profile. */
   list: string;
+  /** The profile of the agent that set it (a Hermes one-time job); absent for an Apple Reminder. */
+  agent?: string;
   /** When it is due (an ISO 8601 instant). A reminder with a time is placed on the day that instant falls on where the page is read. */
   due: string;
   /** Due on a day and not at a time of it. */
   allDay: boolean;
   /** For an all-day reminder: the calendar day it is due (`YYYY-MM-DD`), as the Mac that reads Reminders names it, so that a device in another time zone does not move it to the day before or after. */
   day: string | undefined;
+  /** Done; for one an agent set, its job has run. */
   completed: boolean;
 }
 
-/** `GET /_caduceus/api/today/reminders`: the owner's dated reminders, soonest first. Open ones are all there; completed ones only from the last 90 days. */
+/** `GET /_caduceus/api/today/reminders`: the owner's dated reminders (Apple's and the agents'), soonest first. Open ones are all there; completed ones only from the last 90 days. */
 export interface RemindersState {
   reminders: Reminder[];
 }

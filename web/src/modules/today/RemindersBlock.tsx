@@ -1,4 +1,4 @@
-// Today's reminders: the owner's Apple Reminders (read from `remindctl` by the server) as an agenda, what is overdue, then today and tomorrow, under a strip of
+// Today's reminders: the owner's Apple Reminders (read from `remindctl` by the server) and the reminders an agent set (Hermes's one-time jobs) as an agenda, what is overdue, then today and tomorrow, under a strip of
 // the week with a count on each day, so the rest of the week reads at a glance without a list. The strip unfolds into the month (a View Transition grows it in place: the week
 // moves to where it sits in the month and the agenda slides down) for picking a day further out; picking one folds it again and lists that day. Read-only: nothing
 // here completes or edits a reminder, so nothing looks like a checkbox. It loads by itself after Today has settled (it is a lazy chunk) and fails on its own, like
@@ -31,7 +31,8 @@ const dayWords = (key: string, long = true) => new Date(`${key}T12:00:00`).toLoc
 function ReminderRow({ reminder, overdueSince }: { reminder: Reminder; overdueSince?: string }) {
   const overdue = overdueSince !== undefined;
   const when = overdue ? (dayKey(reminder) === shiftDay(overdueSince, -1) ? 'Yesterday' : dayWords(dayKey(reminder), false)) : timeWords(reminder);
-  const meta = [overdue && timeWords(reminder), reminder.list].filter(Boolean).join(' · ');
+  // An Apple Reminder names its list; one an agent set names the agent.
+  const meta = [overdue && timeWords(reminder), reminder.agent === undefined ? reminder.list : `Set by ${reminder.agent}`].filter(Boolean).join(' · ');
   return (
     <li className="rem-row" data-done={reminder.completed || undefined}>
       <span className="rem-row__when">

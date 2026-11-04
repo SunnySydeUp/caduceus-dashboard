@@ -154,13 +154,16 @@ Caduceus's own **observer connection** receives global change events. Together w
 | Server→client `approval` / `clarify` requests on sessions whose device is not visible | high-priority push |
 | `message.complete` for runs the user started | "Finished" |
 | Kanban `review`, `blocked:needs_input`, `gave_up` and failures | push |
-| Cron failures (from `cron.changed`, then a REST diff of `/runs`) | push |
+| Cron failures, and a routine whose result Hermes could deliver nowhere (`delivery_failed`), from the jobs list read on `cron.changed` | push |
+| A reminder an agent set (a Hermes one-time job, `schedule.kind: once`) that ran: the agent's last reply in that run (`push-news.ts`) | "Reminders", high priority, on by default |
+| A Kanban task that reached Done (`completed_at`), read with the Work source's boards | "Tasks done", FYI, on by default |
 | `pairing.changed` with pending requests | push |
 | Gateway down; budget thresholds | push |
 
 Delivery rules:
 - **Presence-aware:** no push while any Caduceus client for that user is visible.
 - **Server-side dedupe:** there is no `tag` support on iOS.
+- **News is only news once:** a reminder's run and a task's finish are sent only within a day of happening and only to a device that subscribed before they happened, and a task's finish only if Caduceus was running then (a restart never sends a backlog of tasks; a reminder due during a restart is still sent within its hour).
 - **iOS rules:** permission is requested from a tap after Home Screen install; every push shows a notification (`userVisibleOnly`); declarative payloads on iOS 18.4+ with a service-worker fallback.
 - Every notification **deep-links to the decision**: a notification that named the Inbox opens Today (`/today`). Inline notification actions are added only where the platform supports them (`industry-patterns.md` §4, §12 #2–3).
 

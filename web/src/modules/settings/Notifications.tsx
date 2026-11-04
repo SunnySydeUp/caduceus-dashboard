@@ -11,7 +11,9 @@ import { toast } from '../../shell/toasts.ts';
 /** What each category tells the owner, under its name. */
 const CATEGORY_HELP: Record<PushCategory, string> = {
   approvals: 'A tool approval or a question an agent is waiting on. The title is the decision, and tapping it opens it.',
+  reminders: 'A reminder you asked an agent for, when it comes due, with what the agent says.',
   reviews: 'A task waiting for your review, or blocked on a question for you.',
+  tasks: 'A task on the board that reached Done, with its summary. Tapping it opens the task.',
   failures: 'A scheduled job or a task that failed, a gateway that is down, anything Health reports as broken.',
   finished: 'A chat run that finished while you were away.',
   pairing: 'Someone asking to be paired with your bot.',

@@ -74,6 +74,8 @@ export interface WorkSourceDeps {
   backend: HermesBackend;
   now: () => number;
   pollMs: number;
+  /** Told every board and its tasks after every read that got them all: the tasks that reached Done are pushed (`push-news.ts`). */
+  onBoards?: (boards: readonly BoardTasks[]) => void;
 }
 
 /** A board's answer, as the tasks of its columns with each column's name as the task's status. */
@@ -83,7 +85,7 @@ export function boardTasks(body: unknown): { tasks: unknown[]; cursor: number } 
   return { tasks, cursor: typeof body.latest_event_id === 'number' ? body.latest_event_id : 0 };
 }
 
-export function createWorkSource({ backend, now, pollMs }: WorkSourceDeps): InboxSource {
+export function createWorkSource({ backend, now, pollMs, onBoards }: WorkSourceDeps): InboxSource {
   /** One standing events socket per board: any frame means a task moved, and the source reads again. */
   const watches = new Map<string, { socket: WebSocket; closed: boolean }>();
   let wake: (() => void) | undefined;
@@ -126,6 +128,7 @@ export function createWorkSource({ backend, now, pollMs }: WorkSourceDeps): Inbo
         entry.socket.close();
         watches.delete(slug);
       }
+      onBoards?.(boards);
       return workNotices(boards);
     },
     wake(refresh) {

@@ -44,6 +44,12 @@ describe('cron jobs', () => {
     expect(cronNotices([late(OVERDUE_AFTER_MS - 60_000)], NOW)).toEqual([]);
   });
 
+  test('a routine that ran but whose result Hermes could deliver nowhere is a failure with Hermes’s reason; a one-time job (a reminder) is not, because Caduceus sends it itself', () => {
+    const undelivered = { last_status: 'delivery_failed', last_error: null, last_delivery_error: 'no delivery target resolved for deliver=all' };
+    expect(cronNotices([job(undelivered)], NOW)).toMatchObject([{ id: 'cron-undelivered:work:abc123', ref: 'cron:work:abc123', group: 'failed', title: '“Nightly report” ran but was not delivered', detail: 'no delivery target resolved for deliver=all' }]);
+    expect(cronNotices([job({ ...undelivered, schedule: { kind: 'once', run_at: '2026-10-19T03:00:00+00:00' }, state: 'completed', enabled: false, next_run_at: null })], NOW)).toEqual([]);
+  });
+
   test('jobs are not overdue one by one when the scheduler is not ticking: that is one problem, and the system source says it', () => {
     expect(cronNotices([job({ next_run_at: new Date(NOW - 3_600_000).toISOString(), scheduler_heartbeat_age_s: SCHEDULER_STALE_AFTER_S + 1 })], NOW)).toEqual([]);
   });

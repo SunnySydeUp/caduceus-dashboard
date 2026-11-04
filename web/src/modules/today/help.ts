@@ -33,12 +33,13 @@ export const todayHelp: ModuleHelp = {
         { h: 'While you were away' },
         { p: 'What happened since you last opened Today: the chat runs that finished and the routines that ran. Opening Today again soon after is the same visit. The first time, there is nothing to be away from yet, and it says so.' },
         { h: 'Reminders' },
-        { p: 'Your [[apple-reminders|Apple Reminders]] that have a due date, last on the page. A strip of this week shows how many are still to do on each day. Under it: what is overdue, then today and tomorrow. Choose a day to list it; choose the month’s name to open the whole month.' },
+        { p: 'Your [[apple-reminders|Apple Reminders]] that have a due date, and the reminders you asked an agent to set, last on the page. A strip of this week shows how many are still to do on each day. Under it: what is overdue, then today and tomorrow. Choose a day to list it; choose the month’s name to open the whole month.' },
         {
           ul: [
-            'Reminders are shown, never changed. Complete or edit them in the Reminders app.',
+            'Reminders are shown, never changed. Complete or edit Apple Reminders in the Reminders app.',
+            'A reminder an agent set says Set by and the agent’s name. It is a one-time scheduled job in Hermes: it is ticked once it has run, and you can change or delete it in Work › Schedules. When it runs, your devices with notifications on are told what the agent says.',
             'If they cannot be read, the block is one quiet line. Details says why, Retry tries again, and Hide puts the line away on this device. Reminders return by themselves when they can be read.',
-            'Reminders are read with remindctl on the Mac that runs Caduceus. Run remindctl status there if they do not load.',
+            'Apple Reminders are read with remindctl on the Mac that runs Caduceus. Run remindctl status there if they do not load.',
           ],
         },
         { h: 'When Today can’t check' },

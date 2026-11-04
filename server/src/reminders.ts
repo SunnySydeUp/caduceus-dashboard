@@ -1,11 +1,13 @@
-// Today's reminders: the owner's Apple Reminders that have a due date, read from the `remindctl` command. Read-only by construction: the command line is a fixed
-// list of arguments (nothing of a request reaches it, and no shell is involved), it is `export`, which only prints, and what comes back is cut down to the six
-// things the calendar shows. A reminder's notes, URL and list id never leave this file. Nothing is stored: every ask runs the command (answers that overlap share
-// one run), because Reminders is the source of truth and Hermes has no event for it.
+// Today's reminders: the owner's Apple Reminders that have a due date, read from the `remindctl` command, and the reminders an agent set (Hermes's one-time jobs).
+// Read-only by construction: the command line is a fixed list of arguments (nothing of a request reaches it, and no shell is involved), it is `export`, which only
+// prints, and what comes back is cut down to the six things the calendar shows. A reminder's notes, URL and list id, and a job's prompt, never leave this file.
+// Nothing is stored: every ask runs the command and reads Hermes's jobs (answers that overlap share one run), because Reminders and Hermes are the sources of truth.
 import { execFile } from 'node:child_process';
 import type { Hono } from 'hono';
 import { isRecord } from '@caduceus/contracts/policy/guards';
 import type { Reminder, RemindersFailure, RemindersFailureReason, RemindersState } from '@caduceus/contracts/today';
+import { isOneTimeJob } from '@caduceus/contracts/scheduler';
+import type { HermesBackend } from './hermes-backend.ts';
 import type { AuthEnv } from './auth-routes.ts';
 import { clipWords } from '@caduceus/contracts/clip-words';
 
@@ -59,7 +61,29 @@ export function parseReminders(stdout: string, now: number): Reminder[] {
     const allDay = raw.dueDateIsAllDay === true;
     reminders.push({ id: raw.id, title: raw.title, list: typeof raw.listName === 'string' ? raw.listName : '', due: raw.dueDate, allDay, day: allDay ? localDay(due) : undefined, completed });
   }
-  return reminders.sort((a, b) => Date.parse(a.due) - Date.parse(b.due) || a.id.localeCompare(b.id)).slice(0, MAX_REMINDERS);
+  return soonestFirst(reminders);
+}
+
+const soonestFirst = (reminders: Reminder[]): Reminder[] => reminders.sort((a, b) => Date.parse(a.due) - Date.parse(b.due) || a.id.localeCompare(b.id)).slice(0, MAX_REMINDERS);
+
+/**
+ * The reminders an agent set: Hermes's one-time jobs (`GET /api/cron/jobs?profile=all`), due when the job is to run, done once it has run, under the agent's name.
+ * Only the name and the time leave this file: never the prompt. A routine (a job that repeats) is not a reminder.
+ */
+export function agentReminders(jobs: unknown, now: number): Reminder[] {
+  if (!Array.isArray(jobs)) return [];
+  return jobs.flatMap((job): Reminder[] => {
+    if (!isRecord(job) || !isOneTimeJob(job) || !isRecord(job.schedule) || typeof job.id !== 'string' || job.id === '') return [];
+    const due = [job.schedule.run_at, job.next_run_at, job.last_run_at].find((value): value is string => typeof value === 'string' && !Number.isNaN(Date.parse(value)));
+    if (due === undefined) return [];
+    // A reminder the owner paused is not due; one that ran is done (Hermes then marks it off: `enabled` false, `state` completed).
+    if (job.state === 'paused') return [];
+    const completed = typeof job.last_run_at === 'string' || job.state === 'completed';
+    if (completed && Date.parse(due) < now - COMPLETED_KEPT_MS) return [];
+    const agent = typeof job.profile === 'string' && job.profile !== '' ? job.profile : 'default';
+    const title = typeof job.name === 'string' && job.name.trim() !== '' ? job.name : 'A reminder';
+    return [{ id: `hermes:${agent}:${job.id}`, title, list: agent, agent, due, allDay: false, day: undefined, completed }];
+  });
 }
 
 interface RunFailure {
@@ -97,16 +121,30 @@ function run(command: string): Promise<string> {
 export interface RemindersDeps {
   /** The command to run; `remindctl`, found on the PATH, by default. A test gives the path of a stand-in. */
   command?: string;
+  /** Hermes, whose one-time jobs are the reminders an agent set. */
+  backend: HermesBackend;
   now: () => number;
 }
 
-export function mountReminders(app: Hono<AuthEnv>, { command = 'remindctl', now }: RemindersDeps): void {
+/** Hermes's list of jobs. Throws when Hermes does not answer. */
+async function readJobs(backend: HermesBackend): Promise<unknown> {
+  const res = await backend.fetch('/api/cron/jobs?profile=all');
+  if (!res.ok) throw new Error(`Hermes answered HTTP ${res.status}`);
+  return res.json();
+}
+
+export function mountReminders(app: Hono<AuthEnv>, { command = 'remindctl', backend, now }: RemindersDeps): void {
   let running: Promise<string> | undefined;
   app.get('/_caduceus/api/today/reminders', async (c) => {
     // Asks that overlap (two tabs, a reload) share one run of the command.
     const started = (running ??= run(command).finally(() => (running = undefined)));
+    const jobs = readJobs(backend).then(
+      (list) => agentReminders(list, now()),
+      // Hermes not answering is said by Today's Hermes blocks and its banner; the Apple Reminders, read from this Mac, are still worth showing.
+      (): Reminder[] => [],
+    );
     try {
-      return c.json({ reminders: parseReminders(await started, now()) } satisfies RemindersState);
+      return c.json({ reminders: soonestFirst([...parseReminders(await started, now()), ...(await jobs)]) } satisfies RemindersState);
     } catch (error) {
       if (error instanceof RemindersUnavailable) return c.json({ error: 'reminders-unavailable', reason: error.reason, message: error.message } satisfies RemindersFailure, 503);
       throw error;

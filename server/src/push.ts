@@ -22,6 +22,8 @@ export interface Subscription {
   /** Where this device's pages are served from; a notification's tap goes to a path under it. */
   origin: string;
   settings: PushSettings;
+  /** When the device subscribed (ms since the epoch): news from before it is not sent to it. */
+  createdAt: number;
 }
 
 export interface PushSubscriptions {
@@ -65,7 +67,7 @@ export function mountPush(app: Hono<AuthEnv>, { store, now, test, policy, allowL
     last_sent_at: number | null;
   }
   const rowOf = (deviceId: string) => db.prepare('SELECT * FROM push_subscriptions WHERE device_id = ?').get(deviceId) as Row | undefined;
-  const subscriptionOf = (row: Row): Subscription => ({ id: row.id, deviceId: row.device_id, endpoint: row.endpoint, p256dh: row.p256dh, auth: row.auth, origin: row.origin, settings: storedSettings(row.settings) });
+  const subscriptionOf = (row: Row): Subscription => ({ id: row.id, deviceId: row.device_id, endpoint: row.endpoint, p256dh: row.p256dh, auth: row.auth, origin: row.origin, settings: storedSettings(row.settings), createdAt: row.created_at });
 
   const subscriptions: PushSubscriptions = {
     keys,

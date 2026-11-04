@@ -3,7 +3,9 @@
 /** What a device can ask to be notified about, in the order Settings › Notifications lists them. */
 export const PUSH_CATEGORIES = {
   approvals: 'Approvals & questions',
+  reminders: 'Reminders',
   reviews: 'Reviews & blocked tasks',
+  tasks: 'Tasks done',
   failures: 'Failures',
   finished: 'Finished runs',
   pairing: 'Pairing',
@@ -13,7 +15,7 @@ export const PUSH_CATEGORIES = {
 
 export type PushCategory = keyof typeof PUSH_CATEGORIES;
 
-/** How often a device that asked for a digest hears of its FYI categories (finished runs, updates): one notification for all of them, in its own time zone. */
+/** How often a device that asked for a digest hears of its FYI categories (finished runs, tasks done, updates): one notification for all of them, in its own time zone. */
 export type PushDigest = 'off' | 'hourly' | 'daily';
 
 /** The hour a daily digest is sent at (device time). */
@@ -30,9 +32,9 @@ export interface PushSettings {
   overrides: Record<string, boolean>;
 }
 
-/** What a device that subscribes without saying is given: what needs a decision or has gone wrong, and nothing that is only news. */
+/** What a device that subscribes without saying is given: what needs a decision, has gone wrong, is due (a reminder) or is done (a task), and nothing that is only chatter. */
 export const DEFAULT_PUSH_SETTINGS: PushSettings = {
-  categories: { approvals: true, reviews: true, failures: true, finished: false, pairing: true, budget: true, updates: false },
+  categories: { approvals: true, reminders: true, reviews: true, tasks: true, failures: true, finished: false, pairing: true, budget: true, updates: false },
   quietHours: { enabled: false, start: '22:00', end: '07:00' },
   timeZone: 'UTC',
   digest: 'off',

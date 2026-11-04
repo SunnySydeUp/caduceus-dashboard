@@ -90,6 +90,14 @@ describe('while you were away', () => {
     expect(view).toMatchObject({ kind: 'rows', rows: [{ title: 'Backup', line: 'Failed: disk full', failed: true }] });
   });
 
+  test('says a routine whose result Hermes could deliver nowhere ran but was not delivered, with why; a reminder Caduceus sends itself just ran', () => {
+    const undelivered = { lastStatus: 'delivery_failed', lastDeliveryError: 'no delivery target resolved for deliver=all' };
+    const jobs = [job({ id: 'd', name: 'Digest', lastRunAt: at(5), ...undelivered }), job({ id: 'r', name: 'Call Mum', lastRunAt: at(6), ...undelivered, config: { schedule: { kind: 'once' } } })];
+    const view = awayView({ since: at(2), now, activity: [], jobs });
+    expect(view).toMatchObject({ kind: 'rows', rows: [{ title: 'Call Mum', line: 'Ran', failed: false }, { title: 'Digest', line: 'Ran, not delivered: no delivery target resolved for deliver=all', failed: false }] });
+    expect(scheduleDay(jobs, at(9)).rows.map((row) => row.line)).toEqual(['Ran', 'Ran, not delivered: no delivery target resolved for deliver=all']);
+  });
+
   test('is quiet when nothing happened, and shows the runs and routines of every profile', () => {
     expect(awayView({ since: at(2), now, activity: [], jobs: [] })).toEqual({ kind: 'quiet' });
     const jobs = [job({ id: 'a', profile: 'coder', lastRunAt: at(5) }), job({ id: 'b', profile: 'property', lastRunAt: at(6) })];

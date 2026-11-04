@@ -3,6 +3,7 @@
 // and nothing kept (D1).
 import type { ActivityEvent, InboxItem } from '@caduceus/contracts/inbox';
 import type { ReadyItem } from '@caduceus/contracts/today';
+import { isOneTimeJob } from '@caduceus/contracts/scheduler';
 import { sigilFor } from '../../shell/sigil-model.ts';
 import { relativeTime, type Job } from '../work/schedules-model.ts';
 
@@ -52,6 +53,16 @@ const short = (text: string): string => {
 };
 
 /**
+ * What a job's last run came to, in a line: failed with why, ran, or ran with nowhere to send its result. A reminder (a one-time job) is sent by Caduceus itself,
+ * so Hermes having had nowhere to send it is no news.
+ */
+function lastRunLine(job: Job): { failed: boolean; line: string } {
+  if (job.lastStatus === 'error') return { failed: true, line: `Failed: ${short(job.lastError ?? 'it did not finish')}` };
+  if (job.lastStatus === 'delivery_failed' && !isOneTimeJob(job.config)) return { failed: false, line: `Ran, not delivered: ${short(job.lastDeliveryError ?? 'Hermes had nowhere to send it')}` };
+  return { failed: false, line: 'Ran' };
+}
+
+/**
  * The day around `now` as a 24-hour bar and a list: each job's last run and its next run, where they fall today. Hermes keeps one of each on the job, so a
  * routine that fires many times a day shows its latest and its coming one. Runs still to come are listed first (soonest first), then those that ran (latest first).
  */
@@ -65,9 +76,10 @@ export function scheduleDay(jobs: readonly Job[], now: number): ScheduleView {
     const hue = sigilFor(job.profile).hue;
     const key = `${job.profile}:${job.id}`;
     if (today(job.lastRunAt)) {
-      const kind: RunKind = job.lastStatus === 'error' ? 'failed' : 'ran';
+      const { failed, line } = lastRunLine(job);
+      const kind: RunKind = failed ? 'failed' : 'ran';
       markers.push({ id: `${key}:ran`, at: place(job.lastRunAt), kind, hue });
-      rows.push({ id: `${key}:ran`, when: job.lastRunAt, kind, name: job.name, profile: job.profile, line: kind === 'failed' ? `Failed: ${short(job.lastError ?? 'it did not finish')}` : 'Ran' });
+      rows.push({ id: `${key}:ran`, when: job.lastRunAt, kind, name: job.name, profile: job.profile, line });
     }
     if (job.enabled && today(job.nextRunAt)) {
       markers.push({ id: `${key}:next`, at: place(job.nextRunAt), kind: 'next', hue });
@@ -125,8 +137,8 @@ export function awayView({ since, now, activity, jobs }: AwayInput): AwayView {
     .map((event): AwayRow => ({ id: `run:${event.seq}`, at: event.at, kind: 'run', profile: event.profile, title: event.title, line: 'Finished', failed: false, to: event.storedSessionId === undefined ? undefined : `/chat/${encodeURIComponent(event.storedSessionId)}${event.profile === undefined ? '' : `?${new URLSearchParams({ profile: event.profile })}`}` }));
   const routines = jobs.flatMap((job): AwayRow[] => {
     if (job.lastRunAt === undefined || job.lastRunAt <= since || job.lastRunAt > now) return [];
-    const failed = job.lastStatus === 'error';
-    return [{ id: `routine:${job.profile}:${job.id}`, at: job.lastRunAt, kind: 'routine', profile: job.profile, title: job.name, line: failed ? `Failed: ${short(job.lastError ?? 'it did not finish')}` : 'Ran', failed, to: undefined }];
+    const { failed, line } = lastRunLine(job);
+    return [{ id: `routine:${job.profile}:${job.id}`, at: job.lastRunAt, kind: 'routine', profile: job.profile, title: job.name, line, failed, to: undefined }];
   });
   const rows = [...runs, ...routines].sort((a, b) => b.at - a.at);
   return rows.length === 0 ? { kind: 'quiet' } : { kind: 'rows', rows: rows.slice(0, AWAY_SHOWN), more: Math.max(0, rows.length - AWAY_SHOWN) };
