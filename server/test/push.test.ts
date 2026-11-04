@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { startCaduceusServer, type CaduceusServer, type CaduceusServerOptions } from '../src/caduceus-server.ts';
-import { launchTestHermes, type TestHermes } from './fixtures/real-hermes.ts';
+import { HERMES_WORK_TIMEOUT_MS, launchTestHermes, type TestHermes } from './fixtures/real-hermes.ts';
 import { ownerCookie } from './fixtures/owner.ts';
 import { addPasskey, stepUp } from './fixtures/step-up.ts';
 import type { SoftwareAuthenticator } from './fixtures/software-authenticator.ts';
@@ -547,7 +547,7 @@ describe('what a device asked to hear of', () => {
     await finish(await task('Old news'), 'Done long ago');
     // Hermes stamps a finish by the second: the device subscribes in a later second than the old task's.
     const second = Math.floor(Date.now() / 1000);
-    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50 }).toBeGreaterThan(second);
+    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50, timeout: 5_000 }).toBeGreaterThan(second);
     await openServer();
     const device = stub.subscribe();
     await enable(device);
@@ -576,7 +576,7 @@ describe('what a device asked to hear of', () => {
     await done('Finished while Caduceus was off');
     // Hermes stamps a finish by the second: Caduceus starts again in a later second.
     const second = Math.floor(Date.now() / 1000);
-    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50 }).toBeGreaterThan(second);
+    await expect.poll(() => Math.floor(Date.now() / 1000), { interval: 50, timeout: 5_000 }).toBeGreaterThan(second);
 
     await openServer();
     // The task that finishes now is sent; were the one from before sent too, it would be among what came.
@@ -584,7 +584,8 @@ describe('what a device asked to hear of', () => {
     expect((await device.next()).message.notification.title).toBe('Done: Finished now');
     await lookAgain(4);
     expect(device.received).toBe(1);
-  }, 60_000);
+    // Two starts of Caduceus and two finishes on a real Hermes: under a full run each step can take a quarter of a minute.
+  }, 2 * HERMES_WORK_TIMEOUT_MS);
 });
 
 describe('quiet hours and the digest', () => {
